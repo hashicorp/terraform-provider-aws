@@ -38,7 +38,6 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecondarySubnetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &secondarySubnetResource{}
 

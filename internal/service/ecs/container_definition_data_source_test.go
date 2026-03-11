@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,7 +14,7 @@ import (
 
 func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_containter_definition_%s", rString)
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)

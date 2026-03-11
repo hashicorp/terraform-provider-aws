@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ import (
 func TestAccWAFRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -53,8 +52,8 @@ func TestAccWAFRule_basic(t *testing.T) {
 func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
-	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
+	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -88,7 +87,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 func TestAccWAFRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Rule
-	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -115,7 +114,7 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 	var byteMatchSet awstypes.ByteMatchSet
 
 	var before, after awstypes.Rule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -159,7 +158,7 @@ func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 	var geoMatchSet awstypes.GeoMatchSet
 
 	var v awstypes.Rule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -215,7 +214,7 @@ func TestAccWAFRule_webACL(t *testing.T) {
 func TestAccWAFRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -239,7 +238,7 @@ func TestAccWAFRule_noPredicates(t *testing.T) {
 func TestAccWAFRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
-	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_rule.wafrule"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

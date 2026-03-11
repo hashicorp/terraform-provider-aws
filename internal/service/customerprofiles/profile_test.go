@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,8 +20,8 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	accountNumber := sdkacctest.RandString(8)
-	accountNumberUpdated := sdkacctest.RandString(8)
+	accountNumber := acctest.RandString(t, 8)
+	accountNumberUpdated := acctest.RandString(t, 8)
 	domain := acctest.RandomDomainName()
 	email := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
@@ -179,7 +178,7 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	accountNumber := sdkacctest.RandString(8)
+	accountNumber := acctest.RandString(t, 8)
 	domain := acctest.RandomDomainName()
 	email := acctest.RandomEmailAddress(domain)
 

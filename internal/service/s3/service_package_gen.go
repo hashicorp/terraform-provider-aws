@@ -444,6 +444,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newBucketVersioningResourceAsListResource,
+			TypeName: "aws_s3_bucket_versioning",
+			Name:     "Bucket Versioning",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
+		},
+		{
 			Factory:  newObjectResourceAsListResource,
 			TypeName: "aws_s3_object",
 			Name:     "Object",

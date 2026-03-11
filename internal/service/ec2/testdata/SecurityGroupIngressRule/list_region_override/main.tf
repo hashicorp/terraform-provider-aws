@@ -1,12 +1,11 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  region = var.region
-}
 
 resource "aws_vpc_security_group_ingress_rule" "test" {
   count = 2
+
+  region = var.region
 
   security_group_id = aws_security_group.test.id
   cidr_ipv4         = "10.0.${count.index}.0/24"
@@ -16,11 +15,15 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 
 resource "aws_security_group" "test" {
+  region = var.region
+
   name   = "tf-acc-test"
   vpc_id = aws_vpc.test.id
 }
 
 resource "aws_vpc" "test" {
+  region = var.region
+
   cidr_block = "10.0.0.0/16"
 }
 

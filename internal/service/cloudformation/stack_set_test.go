@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -279,7 +278,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ExpectError: regexache.MustCompile(`expected length`),
 			},
 			{
-				Config:      testAccStackSetConfig_name(sdkacctest.RandStringFromCharSet(129, sdkacctest.CharSetAlpha)),
+				Config:      testAccStackSetConfig_name(acctest.RandStringFromCharSet(t, 129, acctest.CharSetAlpha)),
 				ExpectError: regexache.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{

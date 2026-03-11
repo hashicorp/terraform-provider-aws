@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -47,7 +48,6 @@ const (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.VpcEndpoint")
 // @Testing(preIdentityVersion="v6.12.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
@@ -149,7 +149,6 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
@@ -240,6 +239,22 @@ func resourceVPCEndpoint() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() != "" && diff.HasChange("private_dns_enabled") {
+					if v := awstypes.VpcEndpointType(diff.Get("vpc_endpoint_type").(string)); v != awstypes.VpcEndpointTypeInterface {
+						if err := diff.ForceNew("private_dns_enabled"); err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+			customdiff.ComputedIf("network_interface_ids", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("subnet_configuration") || diff.HasChange(names.AttrSubnetIDs)
+			}),
+		),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),

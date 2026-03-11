@@ -321,7 +321,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports", "client-999", "client-888"),
+				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports", "client-999", "client-888", "openid", names.AttrEmail),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -343,6 +343,10 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("client-888"),
 										knownvalue.StringExact("client-999"),
 									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrEmail),
+									}),
 									"discovery_url": knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
 								}),
 							}),
@@ -358,7 +362,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 			{
-				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology", "client-111", "client-222"),
+				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology", "client-111", "client-222", "openid", names.AttrProfile),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
@@ -379,6 +383,10 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 									"allowed_clients": knownvalue.SetExact([]knownvalue.Check{
 										knownvalue.StringExact("client-111"),
 										knownvalue.StringExact("client-222"),
+									}),
+									"allowed_scopes": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("openid"),
+										knownvalue.StringExact(names.AttrProfile),
 									}),
 									"discovery_url": knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
 								}),
@@ -967,7 +975,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 `, rName, envKey, envValue, rImageUri))
 }
 
-func testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2 string) string {
+func testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
 	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime" "test" {
   agent_runtime_name = %[1]q
@@ -984,6 +992,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
       discovery_url    = %[3]q
       allowed_audience = [%[4]q, %[5]q]
       allowed_clients  = [%[6]q, %[7]q]
+      allowed_scopes   = [%[8]q, %[9]q]
     }
   }
 
@@ -991,7 +1000,7 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     network_mode = "PUBLIC"
   }
 }
-`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2))
+`, rName, rImageUri, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
 }
 
 func testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, serverProtocol string) string {

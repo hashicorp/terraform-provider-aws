@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -31,18 +30,18 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
@@ -74,19 +73,19 @@ func TestAccVPCSubnet_tags_defaultAndIgnoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					testAccCheckSubnetUpdateTags(ctx, &subnet, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
+					testAccCheckSubnetUpdateTags(ctx, t, &subnet, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -131,9 +130,9 @@ func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -142,8 +141,8 @@ func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					testAccCheckSubnetUpdateTags(ctx, &subnet, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
+					testAccCheckSubnetUpdateTags(ctx, t, &subnet, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -182,13 +181,13 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -198,7 +197,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				},
 				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -221,7 +220,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				},
 				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
@@ -239,7 +238,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				},
 				Config: testAccVPCSubnetConfig_ipv6(rName, 3, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
@@ -257,7 +256,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				},
 				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -274,18 +273,18 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_prev6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 				),
@@ -298,7 +297,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtTrue),
 				),
@@ -306,7 +305,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_prev6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 				),
@@ -319,18 +318,18 @@ func TestAccVPCSubnet_availabilityZoneID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_availabilityZoneID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
 				),
@@ -348,18 +347,18 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -373,18 +372,18 @@ func TestAccVPCSubnet_customerOwnedIPv4Pool(t *testing.T) {
 	var subnet awstypes.Subnet
 	coipDataSourceName := "data.aws_ec2_coip_pool.test"
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_customerOwnedv4Pool(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ipv4_pool", coipDataSourceName, "pool_id"),
 				),
 			},
@@ -401,18 +400,18 @@ func TestAccVPCSubnet_mapCustomerOwnedIPOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_mapCustomerOwnedOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtTrue),
 				),
 			},
@@ -429,18 +428,18 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 				),
 			},
@@ -452,14 +451,14 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 				),
 			},
@@ -472,18 +471,18 @@ func TestAccVPCSubnet_outpost(t *testing.T) {
 	var v awstypes.Subnet
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
@@ -500,18 +499,18 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_enableDNS64(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
 				),
 			},
@@ -523,14 +522,14 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_enableDNS64(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccVPCSubnetConfig_enableDNS64(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
 				),
 			},
@@ -542,18 +541,18 @@ func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_ipv4ToIPv6Before(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
@@ -563,7 +562,7 @@ func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_ipv4ToIPv6After(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
@@ -578,18 +577,18 @@ func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
@@ -601,14 +600,14 @@ func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
 			{
 				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
@@ -620,18 +619,18 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, true, "resource-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
@@ -645,7 +644,7 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, false, true, "ip-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
@@ -654,7 +653,7 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 			{
 				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, false, "resource-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
@@ -668,18 +667,18 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Subnet
 	resourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_ipv6Native(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_native", acctest.CtTrue),
@@ -697,19 +696,19 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_ipv4IPAMAllocation(rName, 27),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_netmask_length", "27"),
 					testAccCheckSubnetCIDRPrefix(&subnet, "27"),
@@ -729,20 +728,20 @@ func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 func TestAccVPCSubnet_IPAM_ipv4AllocationExplicitCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
 	cidr := "10.0.0.0/27"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_ipv4IPAMAllocationExplicitCIDR(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, cidr),
 					testAccCheckSubnetCIDRPrefix(&subnet, "27"),
@@ -762,19 +761,19 @@ func TestAccVPCSubnet_IPAM_ipv4AllocationExplicitCIDR(t *testing.T) {
 func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_ipv6IPAMAllocation(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetExists(ctx, t, resourceName, &subnet),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "60"),
 					testAccCheckSubnetIPv6CIDRPrefix(&subnet, "60"),
@@ -795,19 +794,19 @@ func TestAccVPCSubnet_IPAM_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
 	poolResourceName := "aws_vpc_ipam_pool.vpc"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_ipamCrossRegion(rName, 28),
@@ -840,9 +839,9 @@ func testAccCheckSubnetIPv6CIDRBlockAssociationSet(subnet *awstypes.Subnet) reso
 	}
 }
 
-func testAccCheckSubnetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSubnetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -866,7 +865,7 @@ func testAccCheckSubnetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSubnetExists(ctx context.Context, n string, v *awstypes.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetExists(ctx context.Context, t *testing.T, n string, v *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -877,7 +876,7 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *awstypes.Subnet)
 			return fmt.Errorf("No EC2 Subnet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
 
@@ -916,9 +915,9 @@ func testAccCheckSubnetExistsWithProvider(ctx context.Context, n string, v *awst
 	}
 }
 
-func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckSubnetUpdateTags(ctx context.Context, t *testing.T, subnet *awstypes.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.ToString(subnet.SubnetId), oldTags, newTags)
 	}
