@@ -850,6 +850,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_training_job.test"
+	customImage := acctest.SkipIfEnvVarNotSet(t, trainingJobCustomImageEnvVar)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -861,7 +862,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrainingJobConfig_remoteDebug(rName),
+				Config: testAccTrainingJobConfig_remoteDebug(rName, rName, customImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
@@ -870,7 +871,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrainingJobConfig_remoteDebugUpdate(rNameUpdated),
+				Config: testAccTrainingJobConfig_remoteDebugUpdate(rName, rNameUpdated, customImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
@@ -1014,7 +1015,7 @@ func testAccTrainingJobConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity", "sts:TagSession"]
     principals {
       type        = "Service"
       identifiers = ["sagemaker.amazonaws.com"]
@@ -2753,15 +2754,36 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName, novaModelARN)
 }
 
-func testAccTrainingJobConfig_remoteDebug(rName string) string {
+func testAccTrainingJobConfig_remoteDebug(rName, jobName, customImage string) string {
 	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_role_policy" "ecr" {
+  name = "%[1]s-ecr"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
+  training_job_name = %[2]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    training_image      = %[3]q
   }
 
   output_data_config {
@@ -2782,20 +2804,41 @@ resource "aws_sagemaker_training_job" "test" {
     enable_remote_debug = false
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.ecr]
 }
-`, rName))
+`, rName, jobName, customImage))
 }
 
-func testAccTrainingJobConfig_remoteDebugUpdate(rName string) string {
+func testAccTrainingJobConfig_remoteDebugUpdate(rName, jobName, customImage string) string {
 	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_role_policy" "ecr" {
+  name = "%[1]s-ecr"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
+  training_job_name = %[2]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    training_image      = %[3]q
   }
 
   output_data_config {
@@ -2816,9 +2859,9 @@ resource "aws_sagemaker_training_job" "test" {
     enable_remote_debug = true
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.ecr]
 }
-`, rName))
+`, rName, jobName, customImage))
 }
 
 func testAccTrainingJobConfig_sessionChaining(rName string) string {
