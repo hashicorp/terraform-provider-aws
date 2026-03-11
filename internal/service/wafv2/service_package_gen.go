@@ -40,6 +40,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newRuleGroupPermissionPolicyResource,
+			TypeName: "aws_wafv2_rule_group_permission_policy",
+			Name:     "Rule Group Permission Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourceWebACLRuleGroupAssociation,
 			TypeName: "aws_wafv2_web_acl_rule_group_association",
 			Name:     "Web ACL Rule Group Association",
