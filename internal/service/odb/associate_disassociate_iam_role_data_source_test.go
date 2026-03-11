@@ -33,7 +33,7 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		//CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: iamRoleAssociationDisassociationDSTestEntity.testAccAssociateDisassociateIAMRoleDataSourceAutonomousCloudVmClusterConfig(),

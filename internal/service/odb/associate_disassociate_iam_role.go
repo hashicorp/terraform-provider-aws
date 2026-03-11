@@ -39,9 +39,9 @@ var AssociateDisassociateIAMRole = newResourceAssociateDisassociateIAMRole
 func newResourceAssociateDisassociateIAMRole(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAssociateDisassociateIAMRole{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(36 * time.Hour)
+	r.SetDefaultUpdateTimeout(36 * time.Hour)
+	r.SetDefaultDeleteTimeout(36 * time.Hour)
 
 	return r, nil
 }
@@ -115,26 +115,26 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARN resourceCompositeARNModel
-	flex.Flatten(ctx, &combinedARN, plan.IAMRoleResourceCombinedARN)
+	var combinedARNs []dataSourceCompositeARNModel
+	plan.CompositeARN.ElementsAs(ctx, &combinedARNs, false)
 	var input odb.AssociateIamRoleToResourceInput
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.ResourceArn = combinedARN.ResourceARN.ValueStringPointer()
-	input.IamRoleArn = combinedARN.IAMRoleARN.ValueStringPointer()
+	input.ResourceArn = combinedARNs[0].ResourceARN.ValueStringPointer()
+	input.IamRoleArn = combinedARNs[0].IAMRoleARN.ValueStringPointer()
 	out, err := conn.AssociateIamRoleToResource(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, plan.IAMRoleResourceCombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, plan.IAMRoleResourceCombinedARN.String(), nil),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -144,14 +144,25 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 		return
 	}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
+	out, err = waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAssociateDisassociateIAMRole, plan.IAMRoleResourceCombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
+	iamRoleOut, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, input.ResourceArn, input.IamRoleArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.Status = fwtypes.StringEnumValue(iamRoleOut.Status)
+	plan.StatusReason = types.StringPointerValue(iamRoleOut.StatusReason)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -162,9 +173,21 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARN resourceCompositeARNModel
-	flex.Flatten(ctx, &combinedARN, state.IAMRoleResourceCombinedARN)
-	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARN.ResourceARN.ValueStringPointer(), combinedARN.ResourceARN.ValueStringPointer())
+	var combinedARNs []resourceCompositeARNModel
+	resp.Diagnostics.Append(state.CompositeARN.ElementsAs(ctx, &combinedARNs, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(combinedARNs) == 0 {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), errors.New("missing composite_arn")),
+			"Expected at least one composite_arn entry in state.",
+		)
+		return
+	}
+
+	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -173,7 +196,7 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, state.IAMRoleResourceCombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -182,6 +205,18 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	compositeARN, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []resourceCompositeARNModel{
+		{
+			IAMRoleARN:  types.StringPointerValue(out.IamRoleArn),
+			ResourceARN: combinedARNs[0].ResourceARN,
+		},
+	})
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.CompositeARN = compositeARN
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -192,35 +227,47 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARN resourceCompositeARNModel
-	flex.Flatten(ctx, &combinedARN, state.IAMRoleResourceCombinedARN)
+	var combinedARNs []resourceCompositeARNModel
+	resp.Diagnostics.Append(state.CompositeARN.ElementsAs(ctx, &combinedARNs, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(combinedARNs) == 0 {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), errors.New("missing composite_arn")),
+			"Expected at least one composite_arn entry in state.",
+		)
+		return
+	}
+
 	var input odb.DisassociateIamRoleFromResourceInput
 	resp.Diagnostics.Append(flex.Expand(ctx, state, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
-	input.IamRoleArn = combinedARN.IAMRoleARN.ValueStringPointer()
-	input.ResourceArn = combinedARN.ResourceARN.ValueStringPointer()
+	input.IamRoleArn = combinedARNs[0].IAMRoleARN.ValueStringPointer()
+	input.ResourceArn = combinedARNs[0].ResourceARN.ValueStringPointer()
 	output, err := conn.DisassociateIamRoleFromResource(ctx, &input)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.IAMRoleResourceCombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if output == nil {
-		err = errors.New("disassociate IAM role returning nil response  : " + state.IAMRoleResourceCombinedARN.String())
+		err = errors.New("disassociate IAM role returning nil response  : " + state.CompositeARN.String())
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.IAMRoleResourceCombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitAssociateDisassociateIAMRoleDeleted(ctx, conn, combinedARN.ResourceARN.ValueStringPointer(), combinedARN.IAMRoleARN.ValueStringPointer(), deleteTimeout)
+	_, err = waitAssociateDisassociateIAMRoleDeleted(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer(), deleteTimeout)
 	if err != nil {
-		err = errors.New("disassociate IAM role returning nil response  : " + state.IAMRoleResourceCombinedARN.String())
+		err = errors.New("disassociate IAM role returning nil response  : " + state.CompositeARN.String())
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.IAMRoleResourceCombinedARN.String(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForDeletion, ResNameAssociateDisassociateIAMRole, state.CompositeARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -411,11 +458,11 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 
 type resourceAssociateDisassociateIAMRoleResourceModel struct {
 	framework.WithRegionModel
-	IAMRoleResourceCombinedARN fwtypes.ListNestedObjectValueOf[resourceCompositeARNModel] `tfsdk:"composite_arn"`
-	AWSIntegration             types.String                                               `tfsdk:"aws_integration"`
-	Status                     fwtypes.StringEnum[odbtypes.IamRoleStatus]                 `tfsdk:"status"`
-	StatusReason               types.String                                               `tfsdk:"status_reason"`
-	Timeouts                   timeouts.Value                                             `tfsdk:"timeouts"`
+	CompositeARN   fwtypes.ListNestedObjectValueOf[resourceCompositeARNModel] `tfsdk:"composite_arn" noflatten:"true" noexpand:"true"`
+	AWSIntegration types.String                                               `tfsdk:"aws_integration"`
+	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                 `tfsdk:"status"`
+	StatusReason   types.String                                               `tfsdk:"status_reason"`
+	Timeouts       timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
 // Composite ID for IAM role resource

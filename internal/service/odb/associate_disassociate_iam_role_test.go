@@ -39,7 +39,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//testAccPreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,7 +73,7 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//testAccPreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -105,9 +105,17 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 				continue
 			}
 
-			comboID := rs.Primary.Attributes["iam_role_resource_combined_arn"]
-			fmt.Println(comboID)
-			_, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, nil, nil)
+			resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+			if !ok || resourceARN == "" {
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("resource ARN not found in state"))
+			}
+
+			iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+			if !ok || iamRoleARN == "" {
+				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
+			}
+
+			_, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, &resourceARN, &iamRoleARN)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -157,21 +165,19 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 
 func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster() string {
 	return fmt.Sprintf(`
-data "aws_odb_cloud_vm_cluster" "test" {
-  tags = {
-    env = "tf-test"
-  }
+data "aws_iam_role" "test" {
+  name = "OracleDBKMS_avmc_r1a9jpx43r"
 }
 
-data "aws_iam_role" "test" {
-  name = "my-role-name"
+data "aws_odb_cloud_autonomous_vm_cluster" "test" {
+  id = "avmc_r1a9jpx43r"
 }
 
 resource "aws_odb_associate_disassociate_iam_role" "test" {
   aws_integration = "KmsTde"
   composite_arn {
-    iam_role_arn = data.aws_iam_role.arn
-    resource_arn = aws_odb_cloud_vm_cluster.test.arn
+    iam_role_arn = data.aws_iam_role.test.arn
+    resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
   }
 }
 `)
