@@ -37,7 +37,7 @@ import (
 )
 
 // @FrameworkResource("aws_bedrockagentcore_resource_policy", name="Resource Policy")
-// @IdentityAttribute("resource_arn")
+// @ArnIdentity("resource_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.DescribeResourcePolicyResponse")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="...;...")
