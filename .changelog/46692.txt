@@ -1,5 +1,5 @@
 ```release-note:new-resource
-aws_workmail_organization: Add support for workmail organization
+aws_workmail_organization
 ```
 
 ```release-note:new-list-resource
