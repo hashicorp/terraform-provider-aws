@@ -26,7 +26,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -170,10 +169,8 @@ func (r *transitGatewayMeteringPolicyResource) Update(ctx context.Context, reque
 	if !new.MiddleboxAttachmentIDs.Equal(old.MiddleboxAttachmentIDs) {
 		id := fwflex.StringValueFromFramework(ctx, new.TransitGatewayMeteringPolicyID)
 
-		oldIDs := inttypes.Set[string](fwflex.ExpandFrameworkStringValueSet(ctx, old.MiddleboxAttachmentIDs))
-		newIDs := inttypes.Set[string](fwflex.ExpandFrameworkStringValueSet(ctx, new.MiddleboxAttachmentIDs))
-		add := newIDs.Difference(oldIDs)
-		remove := oldIDs.Difference(newIDs)
+		oldIDs, newIDs := fwflex.ExpandFrameworkStringValueSet(ctx, old.MiddleboxAttachmentIDs), fwflex.ExpandFrameworkStringValueSet(ctx, new.MiddleboxAttachmentIDs)
+		add, remove := newIDs.Difference(oldIDs), oldIDs.Difference(newIDs)
 
 		input := ec2.ModifyTransitGatewayMeteringPolicyInput{
 			AddMiddleboxAttachmentIds:      add,
