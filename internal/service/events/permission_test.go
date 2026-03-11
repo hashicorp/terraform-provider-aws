@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -53,7 +52,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccPermissionConfig_basic(principal1, sdkacctest.RandString(65)),
+				Config:      testAccPermissionConfig_basic(principal1, acctest.RandString(t, 65)),
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
@@ -159,7 +158,7 @@ func TestAccEventsPermission_action(t *testing.T) {
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccPermissionConfig_action(sdkacctest.RandString(65), principal, statementID),
+				Config:      testAccPermissionConfig_action(acctest.RandString(t, 65), principal, statementID),
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{

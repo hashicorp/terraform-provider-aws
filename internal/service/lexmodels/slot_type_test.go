@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +23,7 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -70,7 +69,7 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -117,7 +116,7 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -162,7 +161,7 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -212,8 +211,8 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID1 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testSlotTypeID2 := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID1 := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testSlotTypeID2 := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -258,7 +257,7 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -303,7 +302,7 @@ func TestAccLexModelsSlotType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -333,7 +332,7 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 
 	slotTypeResourceName := "aws_lex_slot_type.test"
 	intentResourceName := "aws_lex_intent.test"
-	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

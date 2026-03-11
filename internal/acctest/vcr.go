@@ -54,7 +54,22 @@ import (
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
-type metaMap map[string]*conns.AWSClient
+// providerMetaStore caches the provider instance and AWS client for a
+// running test.
+//
+// The provider pointer is stored to distinguish repeated configuration
+// calls within a single test step (where the cached meta is returned
+// as-is) from configuration of a new provider instance in a subsequent
+// step (where the provider must be re-configured, e.g. to pick up
+// changed default_tags). When a new provider instance is detected, the
+// VCR-enabled HTTP client from the prior entry is carried forward to
+// ensure all interactions for the test are recorded to a single cassette.
+type providerMetaStore struct {
+	provider *schema.Provider
+	meta     *conns.AWSClient
+}
+
+type metaMap map[string]*providerMetaStore
 
 func (m metaMap) Lock() {
 	conns.GlobalMutexKV.Lock(m.key())
@@ -68,14 +83,12 @@ func (m metaMap) key() string {
 	return "vcr-metas"
 }
 
-type (
-	randomnessSource struct {
-		seed   int64
-		source rand.Source
-	}
+type randomnessSource struct {
+	seed   int64
+	source rand.Source
+}
 
-	randomnessSourceMap map[string]*randomnessSource
-)
+type randomnessSourceMap map[string]*randomnessSource
 
 func (m randomnessSourceMap) Lock() {
 	conns.GlobalMutexKV.Lock(m.key())
@@ -90,7 +103,7 @@ func (m randomnessSourceMap) key() string {
 }
 
 var (
-	providerMetas     = metaMap(make(map[string]*conns.AWSClient, 0))
+	providerMetas     = metaMap(make(map[string]*providerMetaStore, 0))
 	randomnessSources = randomnessSourceMap(make(map[string]*randomnessSource, 0))
 )
 
@@ -99,11 +112,14 @@ func ProviderMeta(_ context.Context, t *testing.T) *conns.AWSClient {
 	t.Helper()
 
 	providerMetas.Lock()
-	meta, ok := providerMetas[t.Name()]
+	store, ok := providerMetas[t.Name()]
 	providerMetas.Unlock()
 
+	var meta *conns.AWSClient
 	if !ok {
 		meta = Provider.Meta().(*conns.AWSClient)
+	} else {
+		meta = store.meta
 	}
 
 	return meta
@@ -145,47 +161,32 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		testName := t.Name()
 
 		providerMetas.Lock()
-		meta, ok := providerMetas[testName]
+		store, ok := providerMetas[testName]
 		providerMetas.Unlock()
 
+		// Return cached meta if the same provider instance is being reconfigured
+		// (e.g. during plan, apply, refresh within a single test step).
+		if ok && store.provider == provider {
+			return store.meta, nil
+		}
+
+		// Reuse the existing VCR-enabled HTTP client if one was already created
+		// for a prior step, otherwise create a new one with a recorder.
+		var httpClient *http.Client
+		var err error
 		if ok {
-			return meta, nil
-		}
-
-		vcrMode, err := vcr.Mode()
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
-		}
-
-		// Real transport config, cribbed from aws-sdk-go-base.
-		httpClient := cleanhttp.DefaultPooledClient()
-		transport := httpClient.Transport.(*http.Transport)
-		transport.MaxIdleConnsPerHost = 10
-		if transport.TLSClientConfig == nil {
-			transport.TLSClientConfig = &tls.Config{
-				MinVersion: tls.VersionTLS13,
+			httpClient = store.meta.HTTPClient(ctx)
+		} else {
+			httpClient, err = vcrHTTPClient(ctx, testName)
+			if err != nil {
+				return nil, sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-
-		cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
-
-		// Create a VCR recorder around a default HTTP client.
-		r, err := recorder.New(cassetteName,
-			recorder.WithHook(vcrSensitiveHeaderHook, recorder.AfterCaptureHook),
-			recorder.WithMatcher(vcrMatcherFunc(ctx)),
-			recorder.WithMode(vcrMode),
-			recorder.WithRealTransport(httpClient.Transport),
-			recorder.WithSkipRequestLatency(true),
-		)
-
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		// Use the wrapped HTTP Client for AWS APIs.
 		// As the HTTP client is used in the provider's ConfigureContextFunc
 		// we must do this setup before calling the ConfigureContextFunc.
-		httpClient.Transport = r
+		var meta *conns.AWSClient
 		if v, ok := provider.Meta().(*conns.AWSClient); ok {
 			meta = v
 		} else {
@@ -207,7 +208,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		meta.SetRandomnessSource(s.source)
 
 		providerMetas.Lock()
-		providerMetas[testName] = meta
+		providerMetas[testName] = &providerMetaStore{provider: provider, meta: meta}
 		providerMetas.Unlock()
 
 		return meta, diags
@@ -282,6 +283,40 @@ func vcrMatcherFunc(ctx context.Context) recorder.MatcherFunc {
 	}
 }
 
+func vcrHTTPClient(ctx context.Context, testName string) (*http.Client, error) {
+	vcrMode, err := vcr.Mode()
+	if err != nil {
+		return nil, err
+	}
+
+	// Real transport config, cribbed from aws-sdk-go-base.
+	httpClient := cleanhttp.DefaultPooledClient()
+	transport := httpClient.Transport.(*http.Transport)
+	transport.MaxIdleConnsPerHost = 10
+	if transport.TLSClientConfig == nil {
+		transport.TLSClientConfig = &tls.Config{
+			MinVersion: tls.VersionTLS13,
+		}
+	}
+
+	cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
+
+	// Create a VCR recorder around a default HTTP client.
+	r, err := recorder.New(cassetteName,
+		recorder.WithHook(vcrSensitiveHeaderHook, recorder.AfterCaptureHook),
+		recorder.WithMatcher(vcrMatcherFunc(ctx)),
+		recorder.WithMode(vcrMode),
+		recorder.WithRealTransport(httpClient.Transport),
+		recorder.WithSkipRequestLatency(true),
+	)
+	if err != nil {
+		return httpClient, err
+	}
+
+	httpClient.Transport = r
+	return httpClient, nil
+}
+
 // vcrRandomnessSource returns a rand.Source for VCR testing
 //
 // In RECORD_ONLY mode, generates a new seed to use as a source. This seed is
@@ -345,12 +380,12 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	}
 
 	providerMetas.Lock()
-	meta, ok := providerMetas[testName]
+	store, ok := providerMetas[testName]
 	providerMetas.Unlock()
 
 	if ok {
 		if !t.Failed() {
-			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
+			if v, ok := store.meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				if err := v.Stop(); err != nil {
 					t.Error(err)
 				}
@@ -384,17 +419,45 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	}
 }
 
+// vcrTestCase configures VCR for the given TestCase, wrapping any
+// ProtoV5ProviderFactories at the test case or step level
+//
+// Returns false if no factories were found or if ExternalProviders are
+// configured (which VCR cannot record) and the test should be skipped.
+func vcrTestCase(ctx context.Context, t *testing.T, c *resource.TestCase) bool {
+	t.Helper()
+
+	if c.ExternalProviders != nil {
+		return false
+	}
+
+	if c.ProtoV5ProviderFactories != nil {
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+		return true
+	}
+
+	var hasFactories bool
+	for i := range c.Steps {
+		if c.Steps[i].ExternalProviders != nil {
+			return false
+		}
+		if c.Steps[i].ProtoV5ProviderFactories != nil {
+			hasFactories = true
+			c.Steps[i].ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.Steps[i].ProtoV5ProviderFactories)
+		}
+	}
+	return hasFactories
+}
+
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled
 func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if vcr.IsEnabled() {
-		if c.ProtoV5ProviderFactories != nil {
-			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
-			defer closeVCRRecorder(ctx, t)
-		} else {
-			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		if !vcrTestCase(ctx, t, &c) {
+			t.Skip("ProtoV5ProviderFactories not set at TestCase or TestStep level")
 		}
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.ParallelTest(t, c)
@@ -405,12 +468,10 @@ func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if vcr.IsEnabled() {
-		if c.ProtoV5ProviderFactories != nil {
-			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
-			defer closeVCRRecorder(ctx, t)
-		} else {
-			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		if !vcrTestCase(ctx, t, &c) {
+			t.Skip("ProtoV5ProviderFactories not set at TestCase or TestStep level")
 		}
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.Test(t, c)
@@ -455,11 +516,21 @@ func RandIntRange(t *testing.T, minInt int, maxInt int) int {
 	return rand.New(s.source).Intn(maxInt-minInt) + minInt
 }
 
+const (
+	// CharSetAlphaNum is the alphanumeric character set for use with
+	// RandStringFromCharSet
+	CharSetAlphaNum = "abcdefghijklmnopqrstuvwxyz012346789"
+
+	// CharSetAlpha is the alphabetical character set for use with
+	// RandStringFromCharSet
+	CharSetAlpha = "abcdefghijklmnopqrstuvwxyz"
+)
+
 // RandString is a VCR-friendly replacement for sdkacctest.RandString
 func RandString(t *testing.T, strlen int) string {
 	t.Helper()
 
-	return RandStringFromCharSet(t, strlen, sdkacctest.CharSetAlphaNum)
+	return RandStringFromCharSet(t, strlen, CharSetAlphaNum)
 }
 
 // RandStringFromCharSet is a VCR-friendly replacement for sdkacctest.RandStringFromCharSet

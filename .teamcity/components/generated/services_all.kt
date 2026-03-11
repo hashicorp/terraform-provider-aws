@@ -187,7 +187,7 @@ val services = mapOf(
     "pricing" to ServiceSpec("Pricing Calculator", regionOverride = "us-east-1"),
     "qbusiness" to ServiceSpec("Amazon Q Business"),
     "quicksight" to ServiceSpec("QuickSight"),
-    "ram" to ServiceSpec("RAM (Resource Access Manager)"),
+    "ram" to ServiceSpec("RAM (Resource Access Manager)", parallelismOverride = 10),
     "rbin" to ServiceSpec("Recycle Bin (RBin)"),
     "rds" to ServiceSpec("RDS (Relational Database)", vpcLock = true),
     "rdsdata" to ServiceSpec("RDS Data"),

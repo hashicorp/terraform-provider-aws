@@ -45,9 +45,11 @@ const dataLakeMutexKey = "aws_securitylake_data_lake"
 // @FrameworkResource("aws_securitylake_data_lake", name="Data Lake")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
+// Manually-created tests
 // @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securitylake/types;awstypes;awstypes.DataLakeResource")
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataLakeResource{}
 
@@ -68,7 +70,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,

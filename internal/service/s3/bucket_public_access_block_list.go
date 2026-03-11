@@ -63,7 +63,7 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
+			// A Bucket Policy is optionally associated with a Bucket (1:0..1)
 			// So always try to read it to see if it is present.
 			tflog.Info(ctx, "Reading S3 Bucket Public Access Block")
 			diags := resourceBucketPublicAccessBlockRead(ctx, rd, l.Meta())

@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -195,7 +194,7 @@ func TestAccWAFV2RegexPatternSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RegexPatternSet
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rNewName := fmt.Sprintf("regex-pattern-set-%s", sdkacctest.RandString(5))
+	rNewName := fmt.Sprintf("regex-pattern-set-%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

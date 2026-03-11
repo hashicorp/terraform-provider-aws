@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,8 +24,8 @@ import (
 func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
-	name := sdkacctest.RandString(10)
-	updatedName := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
+	updatedName := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -62,7 +61,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -118,7 +117,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -140,7 +139,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -158,7 +157,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -176,7 +175,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t 
 
 func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

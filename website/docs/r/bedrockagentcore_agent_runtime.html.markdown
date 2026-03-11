@@ -93,6 +93,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["my-app", "mobile-app"]
       allowed_clients  = ["client-123", "client-456"]
+      allowed_scopes   = ["openid", "email"]
     }
   }
 
@@ -200,6 +201,7 @@ The `custom_jwt_authorizer` block supports the following:
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
+* `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 
 ### `lifecycle_configuration`
 

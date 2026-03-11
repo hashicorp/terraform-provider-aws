@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -96,8 +95,8 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	netBiosName := "tftest-" + sdkacctest.RandString(7)
-	domainNetbiosName := "tftest" + sdkacctest.RandString(4)
+	netBiosName := "tftest-" + acctest.RandString(t, 7)
+	domainNetbiosName := "tftest" + acctest.RandString(t, 4)
 	domainName := domainNetbiosName + ".local"
 	var v datasync.DescribeLocationFsxOntapOutput
 	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
