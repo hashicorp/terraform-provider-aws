@@ -22,7 +22,6 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -56,7 +55,8 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"dkim_verification_status": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.DnsRecordVerificationStatus](),
+				Computed:   true,
 			},
 			"is_default": schema.BoolAttribute{
 				Computed: true,
@@ -71,26 +71,10 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"ownership_verification_status": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.DnsRecordVerificationStatus](),
+				Computed:   true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"records": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dnsRecordModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"hostname": schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrType: schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrValue: schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			"records": framework.ResourceComputedListOfObjectsAttribute[dnsRecordModel](ctx),
 		},
 	}
 }
@@ -117,13 +101,13 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Read back to populate computed fields
-	out, err := findDomainByOrgAndName(ctx, conn, plan.OrganizationId.String(), plan.DomainName.String())
+	out, err := findDomainByOrgAndName(ctx, conn, plan.OrganizationId.ValueString(), plan.DomainName.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DomainName.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -140,7 +124,7 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	out, err := findDomainByOrgAndName(ctx, conn, state.OrganizationId.String(), state.DomainName.String())
+	out, err := findDomainByOrgAndName(ctx, conn, state.OrganizationId.ValueString(), state.DomainName.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -151,7 +135,7 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -228,13 +212,14 @@ func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, d
 }
 
 type domainResourceModel struct {
-	DomainName                  types.String                                    `tfsdk:"domain_name"`
-	DkimVerificationStatus      types.String                                    `tfsdk:"dkim_verification_status"`
-	IsDefault                   types.Bool                                      `tfsdk:"is_default"`
-	IsTestDomain                types.Bool                                      `tfsdk:"is_test_domain"`
-	OrganizationId              types.String                                    `tfsdk:"organization_id"`
-	OwnershipVerificationStatus types.String                                    `tfsdk:"ownership_verification_status"`
-	Records                     fwtypes.ListNestedObjectValueOf[dnsRecordModel] `tfsdk:"records"`
+	framework.WithRegionModel
+	DomainName                  types.String                                             `tfsdk:"domain_name"`
+	DkimVerificationStatus      fwtypes.StringEnum[awstypes.DnsRecordVerificationStatus] `tfsdk:"dkim_verification_status"`
+	IsDefault                   types.Bool                                               `tfsdk:"is_default"`
+	IsTestDomain                types.Bool                                               `tfsdk:"is_test_domain"`
+	OrganizationId              types.String                                             `tfsdk:"organization_id"`
+	OwnershipVerificationStatus fwtypes.StringEnum[awstypes.DnsRecordVerificationStatus] `tfsdk:"ownership_verification_status"`
+	Records                     fwtypes.ListNestedObjectValueOf[dnsRecordModel]          `tfsdk:"records"`
 }
 
 type dnsRecordModel struct {

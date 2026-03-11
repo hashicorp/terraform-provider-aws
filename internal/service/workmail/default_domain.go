@@ -254,6 +254,7 @@ func findTestDomainByOrgID(ctx context.Context, conn *workmail.Client, orgID str
 }
 
 type defaultDomainResourceModel struct {
+	framework.WithRegionModel
 	ID             types.String `tfsdk:"id"`
 	OrganizationId types.String `tfsdk:"organization_id"`
 	DomainName     types.String `tfsdk:"domain_name"`
