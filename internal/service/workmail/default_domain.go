@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,7 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,12 +41,12 @@ const (
 
 type defaultDomainResource struct {
 	framework.ResourceWithModel[defaultDomainResourceModel]
+	framework.WithNoOpDelete
 }
 
 func (r *defaultDomainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
 			},
@@ -66,21 +69,10 @@ func (r *defaultDomainResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	orgID := plan.OrganizationId.ValueString()
-	domainName := plan.DomainName.ValueString()
-
-	input := workmail.UpdateDefaultMailDomainInput{
-		OrganizationId: aws.String(orgID),
-		DomainName:     aws.String(domainName),
-	}
-
-	_, err := conn.UpdateDefaultMailDomain(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, orgID)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.putDefaultMailDomain(ctx, conn, &plan))
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	plan.ID = types.StringValue(orgID)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -94,21 +86,18 @@ func (r *defaultDomainResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	orgID := state.ID.ValueString()
-
-	domainName, err := findDefaultDomainByOrgID(ctx, conn, orgID)
+	domainName, err := findDefaultDomainByOrgID(ctx, conn, state.OrganizationId.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, orgID)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.DomainName.String())
 		return
 	}
 
-	state.OrganizationId = types.StringValue(orgID)
-	state.DomainName = types.StringValue(domainName)
+	state.DomainName = flex.StringValueToFramework(ctx, domainName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -122,74 +111,40 @@ func (r *defaultDomainResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	orgID := plan.OrganizationId.ValueString()
-	domainName := plan.DomainName.ValueString()
-
-	input := workmail.UpdateDefaultMailDomainInput{
-		OrganizationId: aws.String(orgID),
-		DomainName:     aws.String(domainName),
-	}
-
-	_, err := conn.UpdateDefaultMailDomain(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, orgID)
-		return
-	}
-
-	plan.ID = types.StringValue(orgID)
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-}
-
-func (r *defaultDomainResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().WorkMailClient(ctx)
-
-	var state defaultDomainResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.putDefaultMailDomain(ctx, conn, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	orgID := state.ID.ValueString()
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+}
 
-	// Reset the default domain back to the auto-provisioned test domain
-	testDomain, err := findTestDomainByOrgID(ctx, conn, orgID)
+func (r *defaultDomainResource) putDefaultMailDomain(ctx context.Context, conn *workmail.Client, plan *defaultDomainResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	var input workmail.UpdateDefaultMailDomainInput
+	smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, plan, &input))
+	if diags.HasError() {
+		return diags
+	}
+
+	_, err := conn.UpdateDefaultMailDomain(ctx, &input)
 	if err != nil {
-		// If we can't find the test domain, just remove from state without error.
-		// The org may have been deleted already.
-		return
+		smerr.AddError(ctx, &diags, err, smerr.ID, plan.DomainName.String())
 	}
 
-	// If the current default is already the test domain, nothing to do
-	if testDomain == state.DomainName.ValueString() {
-		return
-	}
-
-	input := workmail.UpdateDefaultMailDomainInput{
-		OrganizationId: aws.String(orgID),
-		DomainName:     aws.String(testDomain),
-	}
-
-	_, err = conn.UpdateDefaultMailDomain(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.MailDomainNotFoundException](err) {
-			return
-		}
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		if errs.IsA[*awstypes.OrganizationNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, orgID)
-		return
-	}
+	return diags
 }
 
 func (r *defaultDomainResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), req.ID)...)
+	parts, err := intflex.ExpandResourceId(req.ID, domainIDParts, false)
+	if err != nil {
+		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[1])...)
 }
 
 func findDefaultDomainByOrgID(ctx context.Context, conn *workmail.Client, orgID string) (string, error) {
@@ -221,41 +176,8 @@ func findDefaultDomainByOrgID(ctx context.Context, conn *workmail.Client, orgID 
 	})
 }
 
-func findTestDomainByOrgID(ctx context.Context, conn *workmail.Client, orgID string) (string, error) {
-	input := workmail.ListMailDomainsInput{
-		OrganizationId: aws.String(orgID),
-	}
-
-	pages := workmail.NewListMailDomainsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return "", smarterr.NewError(err)
-		}
-
-		for _, d := range page.MailDomains {
-			domainName := aws.ToString(d.DomainName)
-
-			out, err := conn.GetMailDomain(ctx, &workmail.GetMailDomainInput{
-				OrganizationId: aws.String(orgID),
-				DomainName:     aws.String(domainName),
-			})
-			if err != nil {
-				continue
-			}
-
-			if out.IsTestDomain {
-				return domainName, nil
-			}
-		}
-	}
-
-	return "", fmt.Errorf("no test domain found for WorkMail organization %s", orgID)
-}
-
 type defaultDomainResourceModel struct {
 	framework.WithRegionModel
-	ID             types.String `tfsdk:"id"`
 	OrganizationId types.String `tfsdk:"organization_id"`
 	DomainName     types.String `tfsdk:"domain_name"`
 }

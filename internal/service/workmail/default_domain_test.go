@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkmail "github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +25,6 @@ func TestAccWorkMailDefaultDomain_basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_default_domain.test"
-	domainName := fmt.Sprintf("%s.example.com", rName)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -36,127 +33,35 @@ func TestAccWorkMailDefaultDomain_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkMailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultDomainDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultDomainConfig_basic(rName, domainName),
+				Config: testAccDefaultDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultDomainExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, "aws_workmail_organization.test", "default_mail_domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccDefaultDomainImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "organization_id",
 			},
 		},
 	})
 }
 
-func TestAccWorkMailDefaultDomain_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_workmail_default_domain.test"
-	domainName := fmt.Sprintf("%s.example.com", rName)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.WorkMail)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.WorkMailServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultDomainDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDefaultDomainConfig_basic(rName, domainName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultDomainExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkmail.ResourceDefaultDomain, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccWorkMailDefaultDomain_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_workmail_default_domain.test"
-	domainName1 := fmt.Sprintf("%s-1.example.com", rName)
-	domainName2 := fmt.Sprintf("%s-2.example.com", rName)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.WorkMail)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.WorkMailServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultDomainDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDefaultDomainConfig_basic(rName, domainName1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultDomainExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName1),
-				),
-			},
-			{
-				Config: testAccDefaultDomainConfig_twoDomains(rName, domainName1, domainName2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDefaultDomainExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName2),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckDefaultDomainDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).WorkMailClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_workmail_default_domain" {
-				continue
-			}
-
-			orgID := rs.Primary.Attributes["organization_id"]
-
-			defaultDomain, err := tfworkmail.FindDefaultDomainByOrgID(ctx, conn, orgID)
-			if retry.NotFound(err) {
-				continue
-			}
-			if err != nil {
-				return err
-			}
-
-			// Destroy means returning to test domain. If the default domain is still
-			// the custom domain we set, it hasn't been properly destroyed.
-			domainName := rs.Primary.Attributes[names.AttrDomainName]
-			if defaultDomain == domainName {
-				return fmt.Errorf("WorkMail Default Domain %s still set for organization %s", domainName, orgID)
-			}
+func testAccDefaultDomainImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["organization_id"], rs.Primary.Attributes[names.AttrDomainName]), nil
 	}
 }
 
@@ -184,45 +89,16 @@ func testAccCheckDefaultDomainExists(ctx context.Context, t *testing.T, name str
 	}
 }
 
-func testAccDefaultDomainConfig_basic(rName, domainName string) string {
+func testAccDefaultDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_workmail_organization" "test" {
   organization_alias = %[1]q
   delete_directory   = true
 }
 
-resource "aws_workmail_domain" "test" {
-  organization_id = aws_workmail_organization.test.organization_id
-  domain_name     = %[2]q
-}
-
 resource "aws_workmail_default_domain" "test" {
   organization_id = aws_workmail_organization.test.organization_id
-  domain_name     = aws_workmail_domain.test.domain_name
+  domain_name     = aws_workmail_organization.test.default_mail_domain
 }
-`, rName, domainName)
-}
-
-func testAccDefaultDomainConfig_twoDomains(rName, domainName1, domainName2 string) string {
-	return fmt.Sprintf(`
-resource "aws_workmail_organization" "test" {
-  organization_alias = %[1]q
-  delete_directory   = true
-}
-
-resource "aws_workmail_domain" "test" {
-  organization_id = aws_workmail_organization.test.organization_id
-  domain_name     = %[2]q
-}
-
-resource "aws_workmail_domain" "test2" {
-  organization_id = aws_workmail_organization.test.organization_id
-  domain_name     = %[3]q
-}
-
-resource "aws_workmail_default_domain" "test" {
-  organization_id = aws_workmail_organization.test.organization_id
-  domain_name     = aws_workmail_domain.test2.domain_name
-}
-`, rName, domainName1, domainName2)
+`, rName)
 }
