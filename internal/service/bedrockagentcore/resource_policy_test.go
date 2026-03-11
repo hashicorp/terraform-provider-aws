@@ -197,8 +197,8 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_bedrockagentcore_resource_policy" "test" {
-	resource_arn = "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:resourcepolicy/%s"
-	policy       = %q
+  resource_arn = "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:resourcepolicy/%s"
+  policy       = %q
 }
 `, rName, policy)
 }
