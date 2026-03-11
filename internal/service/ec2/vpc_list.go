@@ -159,16 +159,18 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 			rd := l.ResourceData()
 			rd.SetId(aws.ToString(vpc.VpcId))
 
-			tflog.Info(ctx, "Reading resource")
-			err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
-			if retry.NotFound(err) {
-				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-				continue
-			}
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+			if request.IncludeResource {
+				tflog.Info(ctx, "Reading resource")
+				err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
 			}
 
 			if v, ok := tags["Name"]; ok {
