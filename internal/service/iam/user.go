@@ -157,16 +157,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, user.Arn)
-	d.Set(names.AttrName, user.UserName)
-	d.Set(names.AttrPath, user.Path)
-	if user.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
-	} else {
-		d.Set("permissions_boundary", nil)
-	}
-	d.Set("unique_id", user.UserId)
-
+	resourceUserFlatten(user, d)
 	setTagsOut(ctx, user.Tags)
 
 	return diags
@@ -666,4 +657,16 @@ func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUse
 	}
 
 	return output, err
+}
+
+func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrName, user.UserName)
+	d.Set(names.AttrPath, user.Path)
+	if user.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
+	}
+	d.Set("unique_id", user.UserId)
 }
