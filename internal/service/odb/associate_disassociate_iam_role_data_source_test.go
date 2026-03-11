@@ -4,7 +4,6 @@
 package odb_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,31 +44,8 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_basic(t *testing.T) {
 	})
 }
 
-/*func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name string, associatedisassociateiamrole *odbtypes.IamRole) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.AssociateDisassociateIAMRoleDataSource, name, errors.New("not found"))
-		}
-
-		comboID := rs.Primary.Attributes["iam_role_resource_combined_arn"]
-		fmt.Println(comboID)
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-		resp, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx, conn, nil, nil)
-		if err != nil {
-			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.AssociateDisassociateIAMRoleDataSource, rs.Primary.ID, err)
-		}
-
-		*associatedisassociateiamrole = *resp
-
-		return nil
-	}
-}*/
-
 func (iamRoleAssociationDisassociationDSTest) testAccAssociateDisassociateIAMRoleDataSourceAutonomousCloudVmClusterConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_iam_role" "test" {
   name = "OracleDBKMS_avmc_hvlokll3j2"
 }
@@ -87,5 +63,5 @@ data "aws_odb_associate_disassociate_iam_role" "test" {
 }
 
 
-`)
+`
 }

@@ -164,7 +164,7 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 }*/
 
 func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_iam_role" "test" {
   name = "OracleDBKMS_avmc_r1a9jpx43r"
 }
@@ -180,5 +180,5 @@ resource "aws_odb_associate_disassociate_iam_role" "test" {
     resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
   }
 }
-`)
+`
 }
