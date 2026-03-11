@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -135,7 +134,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *resourcePolicyResource) flatten(ctx context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) (diags diag.Diagnostics) {
-	diags.Append(fwflex.Flatten(ctx, resourcePolicy, data)...)
+	diags.Append(flex.Flatten(ctx, resourcePolicy, data)...)
 	return diags
 }
 
