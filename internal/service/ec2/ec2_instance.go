@@ -1993,16 +1993,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				InstanceId: aws.String(d.Id()),
 			}
 
-			if d.HasChange("cpu_options.0.core_count") {
+			// The AWS API requires both CoreCount and ThreadsPerCore to be specified
+			// together when modifying CPU options, so always send both when either changes.
+			// Both attributes are Optional+Computed, so even if only one is in the
+			// configuration, the other will be populated from state (read back from AWS).
+			if d.HasChange("cpu_options.0.core_count") || d.HasChange("cpu_options.0.threads_per_core") {
 				input.CoreCount = aws.Int32(int32(tfMap["core_count"].(int)))
+				input.ThreadsPerCore = aws.Int32(int32(tfMap["threads_per_core"].(int)))
 			}
 
 			if d.HasChange("cpu_options.0.nested_virtualization") {
 				input.NestedVirtualization = awstypes.NestedVirtualizationSpecification(tfMap["nested_virtualization"].(string))
-			}
-
-			if d.HasChange("cpu_options.0.threads_per_core") {
-				input.ThreadsPerCore = aws.Int32(int32(tfMap["threads_per_core"].(int)))
 			}
 
 			_, err := conn.ModifyInstanceCpuOptions(ctx, &input)
