@@ -193,9 +193,9 @@ func testAccResourcePolicyConfig_basic(rName string) string {
 	policy := `{"Version":"2012-10-17","Statement":[]}`
 
 	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_resource_policy" "test" {
-	resource_arn = %q
-	policy       = %q
-}
-`, arn, policy)
+	resource "aws_bedrockagentcore_resource_policy" "test" {
+	  resource_arn = %q
+	  policy       = %q
+	}
+	`, arn, policy)
 }
