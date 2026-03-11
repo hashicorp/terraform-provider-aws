@@ -1,169 +1,369 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagentcore
 
 import (
 	"context"
+	"errors"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourcePolicy() *schema.Resource {
-	return &schema.Resource{
-		Create: resourcePolicyCreate,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ARN of the Bedrock Agent Core resource to attach the policy to.",
+// @FrameworkResource("aws_bedrockagentcore_resource_policy", name="Resource Policy")
+// @IdentityAttribute("resource_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.DescribeResourcePolicyResponse")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importIgnore="...;...")
+// @Testing(hasNoPreExistingResource=true)
+func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourcePolicyResource{}
+	return r, nil
+}
+
+const (
+	ResNameResourcePolicy = "Resource Policy"
+)
+
+type resourcePolicyResource struct {
+	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithTimeouts
+	framework.WithImportByIdentity
+}
+
+func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrResourceARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			names.AttrPolicy: {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The JSON policy document.",
-			},
-			"policy_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Identifier for the resource policy returned by the service.",
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType: jsontypes.NormalizedType{},
+				Required:   true,
 			},
 		},
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta any) error {
-	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
+func (r *resourcePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	arn := d.Get(names.AttrResourceARN).(string)
-	policyRaw := d.Get(names.AttrPolicy).(string)
+	var plan resourcePolicyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	policy, err := structure.NormalizeJsonString(policyRaw)
+	var input bedrockagentcorecontrol.PutResourcePolicyInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("ResourcePolicy")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
-		return smarterr.NewError(err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+		return
+	}
+	if out == nil || out.Policy == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ResourceARN.String())
+		return
 	}
 
-	input := bedrockagentcorecontrol.PutResourcePolicyInput{
-		ResourceArn: aws.String(arn),
-		Policy:      aws.String(policy),
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	_, err = conn.PutResourcePolicy(context.Background(), &input)
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	// Use the resource ARN as the Terraform ID.
-	d.SetId(arn)
-
-	return resourcePolicyRead(d, meta)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta any) error {
-	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
+func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	id := d.Id()
-	if id == "" {
-		// fallback to resource_arn attribute
-		if v, ok := d.GetOk(names.AttrResourceARN); ok {
-			id = v.(string)
-		}
+	var state resourcePolicyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	input := bedrockagentcorecontrol.GetResourcePolicyInput{
-		ResourceArn: aws.String(id),
-	}
-
-	out, err := conn.GetResourcePolicy(context.Background(), &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		// resource missing -> remove from state
-		if !d.IsNewResource() {
-			d.SetId("")
-		}
-		return nil
+	out, err := findResourcePolicy(ctx, conn, state.ResourceARN.ValueString())
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
 	}
 	if err != nil {
-		return smarterr.NewError(err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
+		return
 	}
 
-	if out != nil {
-		if out.Policy != nil {
-			// normalize returned policy JSON
-			policy, err := structure.NormalizeJsonString(aws.ToString(out.Policy))
-			if err == nil {
-				d.Set(names.AttrPolicy, policy)
-			} else {
-				// fall back to raw value if normalization fails
-				d.Set(names.AttrPolicy, aws.ToString(out.Policy))
-			}
-		}
-		// Resource ARN is known from state (ID or attribute); ensure attribute is set.
-		if id != "" {
-			d.Set(names.AttrResourceARN, id)
-			d.SetId(id)
-		}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	return nil
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta any) error {
-	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
-
-	arn := d.Get(names.AttrResourceARN).(string)
-	policyRaw := d.Get(names.AttrPolicy).(string)
-
-	policy, err := structure.NormalizeJsonString(policyRaw)
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	input := bedrockagentcorecontrol.PutResourcePolicyInput{
-		ResourceArn: aws.String(arn),
-		Policy:      aws.String(policy),
-	}
-
-	_, err = conn.PutResourcePolicy(context.Background(), &input)
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	return resourcePolicyRead(d, meta)
+func (r *resourcePolicyResource) flatten(ctx context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, resourcePolicy, data)...)
+	return diags
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta any) error {
-	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
+func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	arn := d.Id()
-	if arn == "" {
-		arn = d.Get(names.AttrResourceARN).(string)
+	var plan, state resourcePolicyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input bedrockagentcorecontrol.PutResourcePolicyInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.PutResourcePolicy(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceARN.String())
+			return
+		}
+		if out == nil || out.Policy == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ResourceARN.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().BedrockAgentCoreClient(ctx)
+
+	var state resourcePolicyResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	input := bedrockagentcorecontrol.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(arn),
+		ResourceArn: state.ResourceARN.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteResourcePolicy(context.Background(), &input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
-	}
-
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 	if err != nil {
-		return smarterr.NewError(err)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceARN.String())
+		return
+	}
+}
+
+func findResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Client, resourceArn string) (*string, error) {
+	input := bedrockagentcorecontrol.GetResourcePolicyInput{
+		ResourceArn: aws.String(resourceArn),
 	}
 
-	return nil
+	out, err := conn.GetResourcePolicy(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
+			})
+		}
+
+		return nil, smarterr.NewError(err)
+	}
+
+	if out == nil || out.Policy == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+
+	return out.Policy, nil
+}
+
+type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
+	ResourceARN types.String   `tfsdk:"resource_arn"`
+	Policy      types.String   `tfsdk:"policy"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+}
+
+func sweepResourcePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	runtimeResourcePolicies, err := sweepResourcePoliciesForAgentRuntimes(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+	gatewayResourcePolicies, err := sweepResourcePoliciesForGateways(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+	runtimeEndpointResourcePolicies, err := sweepResourcePoliciesForAgentRuntimeEndpoints(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+	return append(append(runtimeResourcePolicies, gatewayResourcePolicies...), runtimeEndpointResourcePolicies...), nil
+}
+
+func sweepResourcePoliciesForAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var sweepResources []sweep.Sweepable
+
+	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+
+	pages := bedrockagentcorecontrol.NewListAgentRuntimesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.AgentRuntimes {
+			policy, err := findResourcePolicy(ctx, conn, *v.AgentRuntimeArn)
+			if err != nil {
+				if retry.NotFound(err) {
+					continue
+				}
+				return nil, smarterr.NewError(err)
+			}
+
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
+				sweepfw.NewAttribute("resource_arn", *v.AgentRuntimeArn),
+				sweepfw.NewAttribute("policy", *policy),
+			),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepResourcePoliciesForAgentRuntimeEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListAgentRuntimesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.AgentRuntimes {
+			agentRuntimeID := aws.ToString(v.AgentRuntimeId)
+			input := bedrockagentcorecontrol.ListAgentRuntimeEndpointsInput{
+				AgentRuntimeId: aws.String(agentRuntimeID),
+			}
+
+			pages := bedrockagentcorecontrol.NewListAgentRuntimeEndpointsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.RuntimeEndpoints {
+					policy, err := findResourcePolicy(ctx, conn, aws.ToString(v.AgentRuntimeEndpointArn))
+					if err != nil {
+						if retry.NotFound(err) {
+							continue
+						}
+						return nil, smarterr.NewError(err)
+					}
+					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
+						sweepfw.NewAttribute("resource_arn", aws.ToString(v.AgentRuntimeEndpointArn)),
+						sweepfw.NewAttribute("policy", *policy),
+					),
+					)
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepResourcePoliciesForGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListGatewaysInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListGatewaysPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Items {
+			gateway, err := findGatewayByID(ctx, conn, *v.GatewayId)
+			if err != nil {
+				return nil, smarterr.NewError(err)
+			}
+			policy, err := findResourcePolicy(ctx, conn, *gateway.GatewayArn)
+			if err != nil {
+				if retry.NotFound(err) {
+					continue
+				}
+				return nil, smarterr.NewError(err)
+			}
+
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
+				sweepfw.NewAttribute("resource_arn", *gateway.GatewayArn),
+				sweepfw.NewAttribute("policy", *policy),
+			),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
