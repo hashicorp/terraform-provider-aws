@@ -409,7 +409,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 		iamRolesList := out.CloudVmCluster.IamRoles
 
 		for _, element := range iamRolesList {
-			if *element.IamRoleArn == *roleARN {
+			if element.IamRoleArn == roleARN {
 				//we found the correct role
 				var iamRole iamRoleResourceInternal
 				iamRole.iamRoleArn = element.IamRoleArn
@@ -435,7 +435,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			return nil, err
 		}
 		for _, element := range out.CloudAutonomousVmCluster.IamRoles {
-			if *element.IamRoleArn == *roleARN {
+			if element.IamRoleArn == roleARN {
 				//We found a match
 				var iamRole iamRoleResourceInternal
 				iamRole.iamRoleArn = element.IamRoleArn
