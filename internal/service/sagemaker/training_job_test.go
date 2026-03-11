@@ -1486,7 +1486,7 @@ func testAccTrainingJobConfig_environmentAndHyperParameters(rName string) string
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = ["sts:AssumeRole"]
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
     principals {
       type        = "Service"
       identifiers = ["sagemaker.amazonaws.com"]
@@ -1560,7 +1560,7 @@ func testAccTrainingJobConfig_environmentAndHyperParametersUpdate(rName string) 
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = ["sts:AssumeRole"]
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
     principals {
       type        = "Service"
       identifiers = ["sagemaker.amazonaws.com"]
@@ -1772,6 +1772,31 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_inputData(rName string) string {
 	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject"
+    ]
+    resources = [
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.test.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3.json
+}
+
 resource "aws_s3_object" "input" {
   bucket  = aws_s3_bucket.test.id
   key     = "input/placeholder.csv"
@@ -1817,13 +1842,38 @@ resource "aws_sagemaker_training_job" "test" {
     max_runtime_in_seconds = 3600
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test, aws_s3_object.input]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test, aws_s3_object.input]
 }
 `, rName))
 }
 
 func testAccTrainingJobConfig_inputDataUpdate(rName string) string {
 	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject"
+    ]
+    resources = [
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.test.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3.json
+}
+
 resource "aws_s3_object" "input_v2" {
   bucket  = aws_s3_bucket.test.id
   key     = "input-v2/placeholder.csv"
@@ -1869,7 +1919,7 @@ resource "aws_sagemaker_training_job" "test" {
     max_runtime_in_seconds = 3600
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test, aws_s3_object.input_v2]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test, aws_s3_object.input_v2]
 }
 `, rName))
 }
@@ -1948,6 +1998,30 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_algorithmMetrics(rName, customImage string) string {
 	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role_policy" "ecr" {
+  name = "%[1]s-ecr"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -1976,13 +2050,37 @@ resource "aws_sagemaker_training_job" "test" {
     max_runtime_in_seconds = 3600
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.ecr]
 }
 `, rName, customImage))
 }
 
 func testAccTrainingJobConfig_algorithmMetricsUpdate(rName, customImage string) string {
 	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role_policy" "ecr" {
+  name = "%[1]s-ecr"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -2016,7 +2114,7 @@ resource "aws_sagemaker_training_job" "test" {
     max_runtime_in_seconds = 3600
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.ecr]
 }
 `, rName, customImage))
 }
