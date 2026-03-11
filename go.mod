@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.5
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.19
@@ -81,13 +81,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.6
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/connect v1.165.0
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.11
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.4
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.56.1
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.7
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.8
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.12
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.12
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.18
@@ -147,7 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.72.3
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.12
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.18
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.48.2
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.19
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.2
@@ -160,7 +160,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.2
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.12
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.5
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.8
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.11
