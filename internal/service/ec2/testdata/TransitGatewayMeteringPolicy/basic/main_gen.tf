@@ -7,8 +7,3 @@ resource "aws_ec2_transit_gateway_metering_policy" "test" {
 
 resource "aws_ec2_transit_gateway" "test" {
 }
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

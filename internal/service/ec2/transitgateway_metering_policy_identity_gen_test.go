@@ -37,7 +37,6 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 
 	var v awstypes.TransitGatewayMeteringPolicy
 	resourceName := "aws_ec2_transit_gateway_metering_policy.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -51,9 +50,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayMeteringPolicyExists(ctx, t, resourceName, &v),
 				),
@@ -70,10 +67,8 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:                      config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/basic/"),
+				ConfigVariables:                      config.Variables{},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "transit_gateway_metering_policy_id"),
 				ResourceName:                         resourceName,
@@ -84,10 +79,8 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/basic/"),
+				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -103,9 +96,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -124,7 +115,6 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_transit_gateway_metering_policy.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -139,8 +129,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -157,8 +146,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "transit_gateway_metering_policy_id"),
@@ -172,8 +160,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -191,8 +178,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayMeteringPolicy/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
