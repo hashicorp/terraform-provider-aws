@@ -235,7 +235,6 @@ func RegisterSweepers() {
 		"aws_db_subnet_group",
 		"aws_directory_service_directory",
 		"aws_dms_replication_subnet_group",
-		"aws_docdb_subnet_group",
 		"aws_ec2_client_vpn_endpoint",
 		"aws_ec2_instance_connect_endpoint",
 		"aws_ec2_transit_gateway_vpc_attachment",
@@ -394,6 +393,9 @@ func RegisterSweepers() {
 	})
 
 	awsv2.Register("aws_vpn_concentrator", sweepVPNConcentrators, "aws_vpn_connection")
+
+	awsv2.Register("aws_ec2_secondary_network", sweepSecondaryNetworks)
+	awsv2.Register("aws_ec2_secondary_subnet", sweepSecondarySubnets, "aws_ec2_secondary_network")
 
 	resource.AddTestSweepers("aws_vpn_connection", &resource.Sweeper{
 		Name: "aws_vpn_connection",
@@ -3262,6 +3264,50 @@ func sweepVPNConcentrators(ctx context.Context, client *conns.AWSClient) ([]swee
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newVPNConcentratorResource, client,
 				framework.NewAttribute("vpn_concentrator_id", vpnConcentratorID)))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSecondaryNetworks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, &ec2.DescribeSecondaryNetworksInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error listing EC2 Secondary Networks: %w", err)
+		}
+
+		for _, v := range page.SecondaryNetworks {
+			id := aws.ToString(v.SecondaryNetworkId)
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecondaryNetworkResource, client,
+				framework.NewAttribute(names.AttrID, id)))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepSecondarySubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, &ec2.DescribeSecondarySubnetsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error listing EC2 Secondary Subnets: %w", err)
+		}
+
+		for _, v := range page.SecondarySubnets {
+			id := aws.ToString(v.SecondarySubnetId)
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecondarySubnetResource, client,
+				framework.NewAttribute(names.AttrID, id)))
 		}
 	}
 

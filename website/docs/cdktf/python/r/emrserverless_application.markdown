@@ -101,6 +101,7 @@ The following arguments are required:
 * `auto_stop_configuration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
 * `image_configuration` – (Optional) The image configuration applied to all worker types.
 * `initial_capacity` – (Optional) The capacity to initialize when the application is created.
+* `job_level_cost_allocation_configuration` – (Optional) Configuration block for job-level cost allocation.
 * `maximum_capacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
 * `name` – (Required) The name of the application.
 * `network_configuration` – (Optional) The network configuration for customer VPC connectivity.
@@ -121,6 +122,10 @@ The following arguments are required:
 
 * `initial_capacity_config` - (Optional) The initial capacity configuration per worker.
 * `initial_capacity_type` - (Required) The worker type for an analytics framework. For Spark applications, the key can either be set to `Driver` or `Executor`. For Hive applications, it can be set to `HiveDriver` or `TezTask`.
+
+### job_level_cost_allocation_configuration Arguments
+
+* `enabled` - (Optional) Boolean indicating whether job-level cost allocation is enabled for the application. Defaults to `false`.
 
 ### maximum_capacity Arguments
 

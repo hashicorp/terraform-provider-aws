@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,16 +36,16 @@ func TestAccPinpointGCMChannel_basicAPIKey(t *testing.T) {
 
 	apiKey := os.Getenv("GCM_API_KEY")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGCMChannelConfig_basicAPIKey(apiKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					testAccCheckGCMChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
@@ -77,16 +76,16 @@ func TestAccPinpointGCMChannel_apiKeyAuthMethod(t *testing.T) {
 
 	apiKey := os.Getenv("GCM_API_KEY")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGCMChannelConfig_apiKeyAuthMethod(apiKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					testAccCheckGCMChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
@@ -117,16 +116,16 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 
 	serviceJsonFile := os.Getenv("GCM_SERVICE_JSON_FILE")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGCMChannelConfig_tokenAuthMethod(serviceJsonFile),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					testAccCheckGCMChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
 					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodToken),
 					resource.TestCheckNoResourceAttr(resourceName, "api_key"),
@@ -146,7 +145,7 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 	})
 }
 
-func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *awstypes.GCMChannelResponse) resource.TestCheckFunc {
+func testAccCheckGCMChannelExists(ctx context.Context, t *testing.T, n string, channel *awstypes.GCMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -157,7 +156,7 @@ func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *awstyp
 			return fmt.Errorf("No Pinpoint GCM Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindGCMChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
@@ -171,9 +170,9 @@ func testAccCheckGCMChannelExists(ctx context.Context, n string, channel *awstyp
 	}
 }
 
-func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGCMChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_gcm_channel" {

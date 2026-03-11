@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -51,15 +50,15 @@ func v5_86_0_ErrorCheck(t *testing.T, isV5_86_0 *bool) resource.ErrorCheckFunc {
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -77,7 +76,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(
 					testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -104,7 +103,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -143,7 +142,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_rule_NoFilterOrPrefix(
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	currTime := time.Now()
@@ -151,10 +150,10 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *te
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -172,7 +171,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *te
 					testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -216,17 +215,17 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_FilterWithPrefix(t *te
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreaterThan(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -244,7 +243,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreat
 					testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -271,7 +270,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreat
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -310,17 +309,17 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeGreat
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessThan(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -338,7 +337,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessT
 					testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -365,7 +364,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessT
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -404,17 +403,17 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeLessT
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -432,7 +431,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 					testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -466,7 +465,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -510,17 +509,17 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRangeAndPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -538,7 +537,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 					testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -572,7 +571,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -617,15 +616,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_ObjectSizeRange
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -643,7 +642,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *tes
 					testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -680,7 +679,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filter_And_Tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -726,15 +725,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_And_Tags(t *tes
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -752,7 +751,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.
 					testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -779,7 +778,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -818,15 +817,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_Filter_Tag(t *testing.
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrentVersions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -844,7 +843,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 					testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
@@ -869,7 +868,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -910,15 +909,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrentVersions_WithChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -936,7 +935,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 					testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
@@ -961,7 +960,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "all_storage_classes_128K"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1018,15 +1017,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_EmptyFilter_NonCurrent
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpiration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1044,7 +1043,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 					testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1071,7 +1070,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1110,15 +1109,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_nonCurrentVersionExpir
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMultipartUpload(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1136,7 +1135,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMul
 					testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1163,7 +1162,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMul
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1202,15 +1201,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_ruleAbortIncompleteMul
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireMarkerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1228,7 +1227,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireM
 					testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1255,7 +1254,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireM
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1294,15 +1293,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_expireM
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBlock(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1320,7 +1319,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 					testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1347,7 +1346,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1386,15 +1385,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RuleExpiration_emptyBl
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1412,7 +1411,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.
 					testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1439,7 +1438,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1478,7 +1477,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_RulePrefix(t *testing.
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	currTime := time.Now()
@@ -1486,10 +1485,10 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1507,7 +1506,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 					testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1538,7 +1537,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, awstypes.TransitionStorageClassStandardIa),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1581,15 +1580,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionDate(t *test
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClassOnly_intelligentTiering(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1607,7 +1606,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 					testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1638,7 +1637,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1681,15 +1680,15 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionStorageClass
 
 func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_intelligentTiering(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	var isV5_86_0 bool
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   v5_86_0_ErrorCheck(t, &isV5_86_0),
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: v5_86_0PreConfig(&isV5_86_0, true),
@@ -1707,7 +1706,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 					testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -1738,7 +1737,7 @@ func TestAccS3BucketLifecycleConfiguration_upgradeV5_86_0_TransitionZeroDays_int
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, awstypes.TransitionStorageClassIntelligentTiering),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),

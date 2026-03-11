@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package imagebuilder
 
 import (
@@ -13,8 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -267,7 +268,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImagePipelineInput{
-		ClientToken:                  aws.String(id.UniqueId()),
+		ClientToken:                  aws.String(sdkid.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -407,7 +408,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &imagebuilder.UpdateImagePipelineInput{
-			ClientToken:                  aws.String(id.UniqueId()),
+			ClientToken:                  aws.String(sdkid.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 			ImagePipelineArn:             aws.String(d.Id()),
 		}
@@ -498,9 +499,8 @@ func findImagePipelineByARN(ctx context.Context, conn *imagebuilder.Client, arn 
 	output, err := conn.GetImagePipeline(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -509,7 +509,7 @@ func findImagePipelineByARN(ctx context.Context, conn *imagebuilder.Client, arn 
 	}
 
 	if output == nil || output.ImagePipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ImagePipeline, nil

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package apigateway
 
 import (
@@ -324,7 +326,7 @@ func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Clie
 	output, ok := stage.MethodSettings[methodPath]
 
 	if !ok {
-		return nil, tfresource.NewEmptyResultError(methodPath)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output, nil

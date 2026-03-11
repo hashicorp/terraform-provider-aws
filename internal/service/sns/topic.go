@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sns
 
 import (
@@ -18,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
@@ -236,7 +237,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	name := topicName(d)
+	name := topicName(ctx, d)
 	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -313,25 +314,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	arn, err := arn.Parse(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	name := arn.Resource
-	d.Set(names.AttrName, name)
-	if d.Get("fifo_topic").(bool) {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
-	} else {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
-	}
-
-	return diags
+	return append(diags, resourceTopicFlatten(ctx, d, attributes)...)
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -373,7 +356,7 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+func resourceTopicCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
 	fifoTopicThroughputScope := diff.Get("fifo_throughput_scope").(string)
 	archivePolicy := diff.Get("archive_policy").(string)
@@ -381,7 +364,7 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 
 	if diff.Id() == "" {
 		// Create.
-		name := topicName(diff)
+		name := topicName(ctx, diff)
 		var re *regexp.Regexp
 
 		if fifoTopic {
@@ -466,12 +449,12 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 	return nil
 }
 
-func topicName(d sdkv2.ResourceDiffer) string {
+func topicName(ctx context.Context, d sdkv2.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_topic").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}
-	return create.NewNameGenerator(optFns...).Generate()
+	return create.NewNameGenerator(optFns...).Generate(ctx)
 }
 
 // findTopicAttributesWithValidAWSPrincipalsByARN returns topic attributes, ensuring that any Policy field
@@ -508,9 +491,8 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	output, err := conn.GetTopicAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -519,8 +501,39 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil
+}
+
+func parseTopicNameFromARN(input string) (string, error) {
+	arn, err := arn.Parse(input)
+	if err != nil {
+		return "", err
+	}
+
+	return arn.Resource, nil
+}
+
+func resourceTopicFlatten(_ context.Context, d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	err := topicAttributeMap.APIAttributesToResourceData(attributes, d)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	name, err := parseTopicNameFromARN(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set(names.AttrName, name)
+	if d.Get("fifo_topic").(bool) {
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
+	} else {
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
+	}
+
+	return diags
 }

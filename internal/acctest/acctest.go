@@ -46,7 +46,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -73,6 +73,7 @@ import (
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
@@ -110,8 +111,7 @@ const (
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
-const regionRegexp = `[a-z]{2}(-[a-z]+)+-\d{1,2}`
-const accountIDRegexp = `(aws|aws-managed|\d{12})`
+const accountIDRegexp = `(aws|aws-managed|partner-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
 //
@@ -444,7 +444,7 @@ func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, 
 
 // Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
 func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
-	return regexache.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
+	return regexache.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, sdkid.UniqueIDSuffixLength, suffix))
 }
 
 // CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
@@ -470,7 +470,7 @@ func CheckResourceAttrNameGeneratedWithPrefix(resourceName string, attributeName
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
 func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(id.UniqueIdPrefix, suffix))(s)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(sdkid.UniqueIdPrefix, suffix))(s)
 	}
 }
 
@@ -661,7 +661,7 @@ func CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeN
 		arnRegexp := arn.ARN{
 			AccountID: accountIDRegexp,
 			Partition: Partition(),
-			Region:    regionRegexp,
+			Region:    inttypes.CanonicalRegionPatternNoAnchors,
 			Resource:  arnResource,
 			Service:   arnService,
 		}.String()
@@ -1855,6 +1855,10 @@ func PreCheckSkipError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
+	// sts
+	if tfawserr.ErrCodeEquals(err, "OutboundWebIdentityFederationDisabledException") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if errs.IsA[*net.DNSError](err) {
 		return true
@@ -1999,7 +2003,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		issueCertInput := acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(caARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(id.UniqueId()),
+			IdempotencyToken:        aws.String(sdkid.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
@@ -2061,7 +2065,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		issueCertInput := acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCAARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(id.UniqueId()),
+			IdempotencyToken:        aws.String(sdkid.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
@@ -2114,7 +2118,7 @@ func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAu
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(ctx context.Context, t *testing.T, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2125,7 +2129,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 

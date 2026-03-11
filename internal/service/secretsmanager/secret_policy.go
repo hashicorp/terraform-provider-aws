@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package secretsmanager
 
 import (
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -177,7 +178,7 @@ func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if aws.ToString(output.ResourcePolicy) == "" {
-			return nil, &sdkretry.NotFoundError{}
+			return nil, &retry.NotFoundError{}
 		}
 
 		return output, nil
@@ -198,9 +199,8 @@ func findSecretPolicyByID(ctx context.Context, conn *secretsmanager.Client, id s
 	output, err := conn.GetResourcePolicy(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -209,7 +209,7 @@ func findSecretPolicyByID(ctx context.Context, conn *secretsmanager.Client, id s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

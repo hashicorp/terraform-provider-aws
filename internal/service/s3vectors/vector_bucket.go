@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3vectors
 
 import (
@@ -251,7 +253,7 @@ func findVectorBucket(ctx context.Context, conn *s3vectors.Client, input *s3vect
 	}
 
 	if output == nil || output.VectorBucket == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VectorBucket, nil

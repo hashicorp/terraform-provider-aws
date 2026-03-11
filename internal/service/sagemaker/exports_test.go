@@ -19,9 +19,12 @@ var (
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
+	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
+	ResourceModelCard                              = newModelCardResource
 	ResourceModelPackageGroup                      = resourceModelPackageGroup
 	ResourceModelPackageGroupPolicy                = resourceModelPackageGroupPolicy
 	ResourceMonitoringSchedule                     = resourceMonitoringSchedule
@@ -50,8 +53,12 @@ var (
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindLabelingJobByName                     = findLabelingJobByName
+	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
+	FindModelCardByName                       = findModelCardByName
+	FindModelCardExportJobByARN               = findModelCardExportJobByARN
 	FindModelPackageGroupByName               = findModelPackageGroupByName
 	FindModelPackageGroupPolicyByName         = findModelPackageGroupPolicyByName
 	FindMonitoringScheduleByName              = findMonitoringScheduleByName
@@ -68,6 +75,7 @@ var (
 
 	DecodeAppID                                    = decodeAppID
 	DecodeDeviceId                                 = decodeDeviceId
+	ImageVersionFromARN                            = imageVersionFromARN
 	PrebuiltECRImageCreatePath                     = prebuiltECRImageCreatePath
 	PrebuiltECRImageIDByRegion_factorMachines      = prebuiltECRImageIDByRegion_factorMachines
 	PrebuiltECRImageIDByRegion_XGBoost             = prebuiltECRImageIDByRegion_XGBoost

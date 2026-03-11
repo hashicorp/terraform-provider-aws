@@ -11,12 +11,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,22 +23,22 @@ import (
 func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "0"),
 				),
@@ -59,22 +57,22 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentBlueprintConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,22 +84,22 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, endpoints.UsEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", endpoints.UsEast1RegionID),
@@ -117,7 +115,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, endpoints.ApSoutheast2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", endpoints.ApSoutheast2RegionID),
@@ -130,22 +128,22 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 func TestAccDataZoneEnvironmentBlueprintConfiguration_manage_access_role_arn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_manage_access_role_arn(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "manage_access_role_arn"),
 				),
@@ -164,22 +162,22 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_manage_access_role_arn(t *
 func TestAccDataZoneEnvironmentBlueprintConfiguration_provisioning_role_arn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_provisioning_role_arn(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
 				),
@@ -198,22 +196,22 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_provisioning_role_arn(t *t
 func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", endpoints.UsWest2RegionID), "1"),
@@ -230,7 +228,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 			{
 				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "regional_parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", endpoints.UsWest2RegionID), "1"),
@@ -245,16 +243,16 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
-	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment_blueprint_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataZoneServiceID),
-		CheckDestroy: testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -265,7 +263,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *tes
 				},
 				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -287,7 +285,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -302,9 +300,9 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *tes
 	})
 }
 
-func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_environment_blueprint_configuration" {
@@ -328,14 +326,14 @@ func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context) r
 	}
 }
 
-func testAccCheckEnvironmentBlueprintConfigurationExists(ctx context.Context, n string, v *datazone.GetEnvironmentBlueprintConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentBlueprintConfigurationExists(ctx context.Context, t *testing.T, n string, v *datazone.GetEnvironmentBlueprintConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		output, err := tfdatazone.FindEnvironmentBlueprintConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_id"], rs.Primary.Attributes["environment_blueprint_id"])
 

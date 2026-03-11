@@ -35,7 +35,7 @@ func findTag(ctx context.Context, conn *organizations.Client, identifier, key st
 	}
 
 	if !listTags.KeyExists(key) {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return listTags.KeyValue(key), nil

@@ -1,12 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package eks
+package eks_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,13 +55,13 @@ func TestValidClusterName(t *testing.T) {
 			ErrCount: 2,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(101, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 101, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validClusterName(tc.Value, names.AttrClusterName)
+		_, errors := tfeks.ValidClusterName(tc.Value, names.AttrClusterName)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the EKS Cluster Name to trigger a validation error: %s, expected %d, got %d errors", tc.Value, tc.ErrCount, len(errors))

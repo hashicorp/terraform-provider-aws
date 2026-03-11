@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmonitor
 
 import (
@@ -21,8 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -92,7 +93,7 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateMonitor(ctx, input)
@@ -240,9 +241,8 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 	output, err := conn.GetMonitor(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -251,14 +251,14 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMonitor(conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -277,10 +277,10 @@ func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name str
 	const (
 		timeout = time.Minute * 10
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.MonitorStatePending),
 		Target:     enum.Slice(awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
-		Refresh:    statusMonitor(ctx, conn, name),
+		Refresh:    statusMonitor(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -298,10 +298,10 @@ func waitMonitorDeleted(ctx context.Context, conn *networkmonitor.Client, name s
 	const (
 		timeout = time.Minute * 10
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.MonitorStateDeleting, awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
 		Target:     []string{},
-		Refresh:    statusMonitor(ctx, conn, name),
+		Refresh:    statusMonitor(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

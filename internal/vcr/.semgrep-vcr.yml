@@ -62,6 +62,30 @@ rules:
       include:
         - "**/*_test.go"
 
+  - id: use-acctest-randstring
+    languages: [go]
+    message: "Use acctest.RandString instead of sdkacctest.RandString for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandString($X)
+    fix: |
+      acctest.RandString(t, $X)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randstringfromcharset
+    languages: [go]
+    message: "Use acctest.RandStringFromCharSet instead of sdkacctest.RandStringFromCharSet for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandStringFromCharSet($X, $Y)
+    fix: |
+      acctest.RandStringFromCharSet(t, $X, $Y)
+    paths:
+      include:
+        - "**/*_test.go"
+
   - id: use-acctest-providermeta
     languages: [go]
     message: "Use acctest.ProviderMeta instead of acctest.Provider.Meta for VCR-compatible acceptance testing"
@@ -230,18 +254,6 @@ rules:
       retry.NotFoundError {
         $...ARGS,
       }
-    paths:
-      include:
-        - "**/*.go"
-
-  - id: internal-retry-setlasterror
-    languages: [go]
-    message: "Use retry.SetLastError to replace the deprecated tfresource alias"
-    severity: WARNING
-    pattern: |
-      tfresource.SetLastError($ERR, $LASTERR)
-    fix: |
-      retry.SetLastError($ERR, $LASTERR)
     paths:
       include:
         - "**/*.go"

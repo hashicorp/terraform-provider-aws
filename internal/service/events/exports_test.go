@@ -27,6 +27,13 @@ var (
 	RuleEventPatternJSONDecoder = ruleEventPatternJSONDecoder
 	RuleCreateResourceID        = ruleCreateResourceID
 	RuleParseResourceID         = ruleParseResourceID
+	EventBusARNPattern          = eventBusARNPattern
+	PartnerEventBusPattern      = partnerEventBusPattern
 	TargetParseImportID         = targetParseImportID
 	TargetStateUpgradeV0        = targetStateUpgradeV0
+
+	ValidSourceName         = validSourceName
+	ValidCustomEventBusName = validCustomEventBusName
+	ValidBusNameOrARN       = validBusNameOrARN
+	ValidateRuleName        = validateRuleName
 )

@@ -5,7 +5,9 @@ package cleanrooms
 
 // Exports for use in tests only.
 var (
-	ResourceMembership = newMembershipResource
+	ResourceCollaboration   = resourceCollaboration
+	ResourceConfiguredTable = resourceConfiguredTable
+	ResourceMembership      = newMembershipResource
 
 	FindMembershipByID = findMembershipByID
 )

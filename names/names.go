@@ -127,6 +127,7 @@ const (
 	RedshiftServerlessEndpointID           = "redshift-serverless"
 	RekognitionEndpointID                  = "rekognition"
 	ResourceExplorer2EndpointID            = "resource-explorer-2"
+	ResourceGroupsTaggingAPIEndpointID     = "tagging"
 	RolesAnywhereEndpointID                = "rolesanywhere"
 	Route53DomainsEndpointID               = "route53domains"
 	Route53RecoveryControlConfigEndpointID = "route53-recovery-control-config"

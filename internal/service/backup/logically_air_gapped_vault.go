@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -25,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -232,14 +233,14 @@ func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.C
 	}
 
 	if output.VaultType != awstypes.VaultTypeLogicallyAirGappedBackupVault {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLogicallyAirGappedVault(conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -255,10 +256,10 @@ func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, nam
 }
 
 func waitLogicallyAirGappedVaultCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeBackupVaultOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VaultStateCreating),
 		Target:                    enum.Slice(awstypes.VaultStateAvailable),
-		Refresh:                   statusLogicallyAirGappedVault(ctx, conn, name),
+		Refresh:                   statusLogicallyAirGappedVault(conn, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

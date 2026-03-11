@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -229,16 +230,15 @@ func findEmailIdentityPolicyByTwoPartKey(ctx context.Context, conn *sesv2.Client
 		return aws.String(output), nil
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findEmailIdentityPolicies(ctx context.Context, conn *sesv2.Client, input *sesv2.GetEmailIdentityPoliciesInput) (map[string]string, error) {
 	output, err := conn.GetEmailIdentityPolicies(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -247,7 +247,7 @@ func findEmailIdentityPolicies(ctx context.Context, conn *sesv2.Client, input *s
 	}
 
 	if output == nil || output.Policies == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policies, nil

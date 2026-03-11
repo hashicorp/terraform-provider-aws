@@ -34,6 +34,13 @@ variable "region" {
   nullable    = false
 }
 {{ end }}
+{{- if .AlternateRegionTfVars }}
+variable "secondary_region" {
+  description = "Secondary region"
+  type        = string
+  nullable    = false
+}
+{{ end }}
 {{- if ne (len .ExternalProviders) 0 -}}
 terraform {
   required_providers {

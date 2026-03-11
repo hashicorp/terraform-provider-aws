@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,16 +41,16 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameContainerInstanceLongArnFormat)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -71,16 +70,16 @@ func testAccAccountSettingDefault_defaultLogDriverMode(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameDefaultLogDriverMode)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, "blocking"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "blocking"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -95,7 +94,7 @@ func testAccAccountSettingDefault_defaultLogDriverMode(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, "non-blocking"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "non-blocking"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -110,16 +109,16 @@ func testAccAccountSettingDefault_dualStackIPv6(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := "dualStackIPv6"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -139,16 +138,16 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameServiceLongArnFormat)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -168,16 +167,16 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameTaskLongArnFormat)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -197,16 +196,16 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameAwsvpcTrunking)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -226,16 +225,16 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameContainerInsights)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -255,16 +254,16 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 	resourceName := "aws_ecs_account_setting_default.test"
 	settingName := string(awstypes.SettingNameFargateTaskRetirementWaitPeriod)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
+					testAccCheckAccountSettingDefaultExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "fargateTaskRetirementWaitPeriod"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "14"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -279,14 +278,14 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 	})
 }
 
-func testAccCheckAccountSettingDefaultExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccountSettingDefaultExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		settingName := awstypes.SettingName(rs.Primary.Attributes[names.AttrName])
 		_, err := tfecs.FindEffectiveAccountSettingByName(ctx, conn, settingName)
@@ -295,9 +294,9 @@ func testAccCheckAccountSettingDefaultExists(ctx context.Context, n string) reso
 	}
 }
 
-func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccountSettingDefaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_account_setting_default" {

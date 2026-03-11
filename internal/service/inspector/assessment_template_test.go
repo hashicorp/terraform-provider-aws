@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,21 +22,21 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector", regexache.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDuration, "3600"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -60,21 +58,21 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector.ResourceAssessmentTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,21 +85,21 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -114,7 +112,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -123,7 +121,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -131,7 +129,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -143,24 +141,24 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	event1 := "ASSESSMENT_RUN_STARTED"
 	event1Updated := "ASSESSMENT_RUN_COMPLETED"
 	event2 := "ASSESSMENT_RUN_STATE_CHANGED"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1),
 				),
@@ -173,7 +171,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1Updated),
 				),
@@ -186,7 +184,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "2"),
 				),
 			},
@@ -199,9 +197,9 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	})
 }
 
-func testAccCheckAssessmentTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAssessmentTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InspectorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector_assessment_template" {
@@ -225,14 +223,14 @@ func testAccCheckAssessmentTemplateDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckAssessmentTemplateExists(ctx context.Context, n string, v *awstypes.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckAssessmentTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InspectorClient(ctx)
 
 		output, err := tfinspector.FindAssessmentTemplateByARN(ctx, conn, rs.Primary.ID)
 

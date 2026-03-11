@@ -34,19 +34,31 @@ var (
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
 	GetFunctionNameFromARN                       = getFunctionNameFromARN
 	GetQualifierFromAliasOrVersionARN            = getQualifierFromAliasOrVersionARN
+	LayerNameFromARN                             = layerNameFromARN
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
+	ParseLayerVersionARN                         = parseLayerVersionARN
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
 	InvocationParseResourceID                    = invocationParseResourceID
 
 	ValidFunctionName               = validFunctionName
+	FunctionNameValidator           = functionNameValidator
+	KafkaOrARNPattern               = kafkaOrARNPattern
+	FunctionRegexpPattern           = functionRegexp
 	ValidPermissionAction           = validPermissionAction
 	ValidPermissionEventSourceToken = validPermissionEventSourceToken
 	ValidQualifier                  = validQualifier
 	ValidPolicyStatementID          = validPolicyStatementID
+
+	BuildInput = buildInput
+
+	InvocationActionCreate = invocationActionCreate
+	InvocationActionDelete = invocationActionDelete
+	InvocationActionUpdate = invocationActionUpdate
 )
 
 type (
-	Policy          = policy
-	PolicyStatement = policyStatement
+	InvocationAction = invocationAction
+	Policy           = policy
+	PolicyStatement  = policyStatement
 )

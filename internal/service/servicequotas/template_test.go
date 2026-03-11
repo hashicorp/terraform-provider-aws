@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicequotas "github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
@@ -41,7 +40,7 @@ func testAccTemplate_basic(t *testing.T) {
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -50,12 +49,12 @@ func testAccTemplate_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
+					testAccCheckTemplateExists(ctx, t, resourceName, &template),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
@@ -77,7 +76,7 @@ func testAccTemplate_disappears(t *testing.T) {
 	var template awstypes.ServiceQuotaIncreaseRequestInTemplate
 	resourceName := "aws_servicequotas_template.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -86,12 +85,12 @@ func testAccTemplate_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_basic(lambdaConcurrentExecQuotaCode, lambdaServiceCode, lambdaConcurrentExecValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
+					testAccCheckTemplateExists(ctx, t, resourceName, &template),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -106,7 +105,7 @@ func testAccTemplate_value(t *testing.T) {
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -115,12 +114,12 @@ func testAccTemplate_value(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
+					testAccCheckTemplateExists(ctx, t, resourceName, &template),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
@@ -136,7 +135,7 @@ func testAccTemplate_value(t *testing.T) {
 			{
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValueUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
+					testAccCheckTemplateExists(ctx, t, resourceName, &template),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
@@ -154,7 +153,7 @@ func testAccTemplate_region(t *testing.T) {
 	resourceName := "aws_servicequotas_template.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -163,12 +162,12 @@ func testAccTemplate_region(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplateConfig_region(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
+					testAccCheckTemplateExists(ctx, t, resourceName, &template),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
@@ -185,9 +184,9 @@ func testAccTemplate_region(t *testing.T) {
 	})
 }
 
-func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicequotas_template" {
@@ -211,14 +210,14 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTemplateExists(ctx context.Context, n string, v *awstypes.ServiceQuotaIncreaseRequestInTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServiceQuotaIncreaseRequestInTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 		output, err := tfservicequotas.FindTemplateByThreePartKey(ctx, conn, rs.Primary.Attributes["aws_region"], rs.Primary.Attributes["quota_code"], rs.Primary.Attributes["service_code"])
 
@@ -233,7 +232,7 @@ func testAccCheckTemplateExists(ctx context.Context, n string, v *awstypes.Servi
 }
 
 func testAccPreCheckTemplate(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.ListServiceQuotaIncreaseRequestsInTemplateInput{}
 	_, err := conn.ListServiceQuotaIncreaseRequestsInTemplate(ctx, input)

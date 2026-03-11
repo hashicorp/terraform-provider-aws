@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -20,7 +22,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -246,7 +247,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 		rule, _ := findRuleMatch(ipPermission, rules)
 
 		if rule == nil {
-			return nil, &sdkretry.NotFoundError{}
+			return nil, &retry.NotFoundError{}
 		}
 
 		return rule, nil
@@ -300,7 +301,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		// Shouldn't reach here as we aren't called from resourceSecurityGroupRuleCreate.
-		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), &sdkretry.NotFoundError{})
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), &retry.NotFoundError{})
 	}
 
 	flattenIpPermission(d, &ipPermission)

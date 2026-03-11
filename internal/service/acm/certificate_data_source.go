@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package acm
 
 import (
@@ -130,7 +132,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			case err != nil:
 				return nil, err
 			case len(output) == 0:
-				return nil, tfresource.NewEmptyResultError(input)
+				return nil, tfresource.NewEmptyResultError()
 			default:
 				return output, nil
 			}

@@ -87,5 +87,6 @@ func Unquote(s []byte) ([]byte, error) {
 
 //go:nosplit
 func unsafeBytesToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
+	// Zero-copy conversion from []byte to string for performance.
+	return *(*string)(unsafe.Pointer(&b)) // nosemgrep: go.lang.security.audit.unsafe.use-of-unsafe-block -- Safe because the byte slice is not modified after conversion, only passed to read-only strconv functions.
 }

@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,10 +22,10 @@ func TestAccOpenSearchServerlessLifecyclePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var lifecyclepolicy types.LifecyclePolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -35,12 +33,12 @@ func TestAccOpenSearchServerlessLifecyclePolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName, &lifecyclepolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_version"),
@@ -60,10 +58,10 @@ func TestAccOpenSearchServerlessLifecyclePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var lifecyclepolicy types.LifecyclePolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -71,12 +69,12 @@ func TestAccOpenSearchServerlessLifecyclePolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName, &lifecyclepolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceLifecyclePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,10 +86,10 @@ func TestAccOpenSearchServerlessLifecyclePolicy_disappears(t *testing.T) {
 func TestAccOpenSearchServerlessLifecyclePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lifecyclepolicy types.LifecyclePolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_lifecycle_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -99,12 +97,12 @@ func TestAccOpenSearchServerlessLifecyclePolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName, &lifecyclepolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
@@ -112,7 +110,7 @@ func TestAccOpenSearchServerlessLifecyclePolicy_update(t *testing.T) {
 			{
 				Config: testAccLifecyclePolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName, &lifecyclepolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
@@ -121,9 +119,9 @@ func TestAccOpenSearchServerlessLifecyclePolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_lifecycle_policy" {
@@ -147,14 +145,14 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckLifecyclePolicyExists(ctx context.Context, n string, v *types.LifecyclePolicyDetail) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyExists(ctx context.Context, t *testing.T, n string, v *types.LifecyclePolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		output, err := tfopensearchserverless.FindLifecyclePolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
@@ -169,7 +167,7 @@ func testAccCheckLifecyclePolicyExists(ctx context.Context, n string, v *types.L
 }
 
 func testAccPreCheckLifecyclePolicy(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListLifecyclePoliciesInput{
 		Type: types.LifecyclePolicyTypeRetention,

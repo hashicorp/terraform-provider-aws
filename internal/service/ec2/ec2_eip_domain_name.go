@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -12,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -138,6 +141,13 @@ func (r *eipDomainNameResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
+	data.ID = fwflex.StringToFramework(ctx, output.AllocationId)
+	// The AWS API does not return the DomainName attribute.
+	// Set it from the PTRRecord value when it is missing (for example, during import).
+	if data.DomainName.IsNull() {
+		data.DomainName = fwflex.StringToFramework(ctx, output.PtrRecord)
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -209,6 +219,10 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 
 		return
 	}
+}
+
+func (r *eipDomainNameResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("allocation_id"), request, response)
 }
 
 type eipDomainNameResourceModel struct {

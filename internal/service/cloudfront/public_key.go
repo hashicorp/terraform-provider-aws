@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -13,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -83,7 +84,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &cloudfront.CreatePublicKeyInput{
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
@@ -94,7 +95,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(sdkid.UniqueId())
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -155,7 +156,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(sdkid.UniqueId())
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -201,9 +202,8 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	output, err := conn.GetPublicKey(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -212,7 +212,7 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	}
 
 	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -237,7 +237,7 @@ func validPublicKeyNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 128 - id.UniqueIDSuffixLength
+	prefixMaxLength := 128 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))

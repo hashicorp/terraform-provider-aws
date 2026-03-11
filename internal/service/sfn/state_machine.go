@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sfn
 
 import (
@@ -16,8 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -141,7 +142,7 @@ func resourceStateMachine() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 80-sdkid.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
@@ -208,7 +209,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
@@ -421,9 +422,8 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	output, err := conn.DescribeStateMachine(ctx, input)
 
 	if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -432,14 +432,14 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStateMachine(conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
 		if retry.NotFound(err) {
@@ -455,10 +455,10 @@ func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn s
 }
 
 func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateMachineStatusActive, awstypes.StateMachineStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
+		Refresh: statusStateMachine(conn, stateMachineArn),
 		Timeout: timeout,
 	}
 

@@ -139,7 +139,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
 | `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
 | `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
-| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `quick-fix-core`<sup>M</sup> | Quick fixes for core directories (non-internal/service) |  |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
@@ -166,6 +167,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `t`<sup>D</sup> | Run acceptance tests  (similar to `testacc`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `test`<sup>D</sup> | Run unit tests (auto-detects single service or full codebase, optimizes for macOS/CrowdStrike) |  |  | `GO_VER`, `K`, `PKG`, `TEST`, `TESTARGS`, `TEST_P`, `TEST_PARALLEL` |
 | `test-compile`<sup>D</sup> | Test package compilation |  |  | `GO_VER`, `K`, `PKG`, `PKG_NAME`, `TEST`, `TESTARGS` |
+| `test-naming` | Check test function naming conventions | ✔️ |  |  |
 | `test-shard`<sup>D</sup> | Run unit tests for a specific shard (CI only) |  |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS`, `TEST_P`, `TEST_PARALLEL` |
 | `testacc`<sup>D</sup> | Run acceptance tests |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-lint` | Acceptance Test Linting / terrafmt | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
@@ -175,6 +177,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `terraform-fmt` | Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files | ✔️ |  |  |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |

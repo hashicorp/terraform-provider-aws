@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ import (
 
 func testAccVoiceConnectorTermination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx),
+		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
+					testAccCheckVoiceConnectorTerminationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", "1"),
@@ -56,22 +54,22 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 
 func testAccVoiceConnectorTermination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx),
+		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
+					testAccCheckVoiceConnectorTerminationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorTermination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,28 +80,28 @@ func testAccVoiceConnectorTermination_disappears(t *testing.T) {
 
 func testAccVoiceConnectorTermination_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx),
+		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
+					testAccCheckVoiceConnectorTerminationExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorTerminationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
+					testAccCheckVoiceConnectorTerminationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_allow_list.*", "100.35.78.97/32"),
@@ -152,7 +150,7 @@ resource "aws_chime_voice_connector_termination" "test" {
 `, name)
 }
 
-func testAccCheckVoiceConnectorTerminationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorTerminationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -163,7 +161,7 @@ func testAccCheckVoiceConnectorTerminationExists(ctx context.Context, name strin
 			return fmt.Errorf("no Chime Voice Connector termination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChimeSDKVoiceClient(ctx)
 		input := &chimesdkvoice.GetVoiceConnectorTerminationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -181,13 +179,13 @@ func testAccCheckVoiceConnectorTerminationExists(ctx context.Context, name strin
 	}
 }
 
-func testAccCheckVoiceConnectorTerminationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorTerminationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chime_voice_connector_termination" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ChimeSDKVoiceClient(ctx)
 
 			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.Termination, error) {
 				return tfchime.FindVoiceConnectorTerminationByID(ctx, conn, rs.Primary.ID)

@@ -6,7 +6,6 @@ package emrcontainers_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -14,7 +13,7 @@ import (
 
 func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	dataSourceResourceName := "data.aws_emrcontainers_virtual_cluster.test"
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
@@ -24,7 +23,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
@@ -32,7 +31,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualClusterDataSourceConfig_basic(rName),

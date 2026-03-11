@@ -33,7 +33,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -91,7 +91,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -141,7 +141,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -184,7 +184,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -214,7 +214,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_null(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -227,7 +227,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -239,7 +239,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -282,7 +282,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_EmptyMap(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -295,7 +295,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -305,7 +305,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -338,7 +338,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_AddOnUpdate(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -351,7 +351,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -361,7 +361,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -384,7 +384,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -424,7 +424,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -437,7 +437,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -449,7 +449,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -492,7 +492,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -522,7 +522,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -535,7 +535,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -547,7 +547,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -579,7 +579,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -629,7 +629,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -669,7 +669,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -682,7 +682,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Replace(t *test
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -694,7 +694,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -725,7 +725,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -765,7 +765,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_EmptyTag_OnUpdate_Replace(t *test
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -778,7 +778,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -791,7 +791,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -837,7 +837,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -885,7 +885,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -927,7 +927,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -958,7 +958,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_providerOnly(t *testi
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -971,7 +971,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nonOverlapping(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -986,7 +986,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nonOverlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1042,7 +1042,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nonOverlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1097,7 +1097,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nonOverlapping(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1128,7 +1128,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nonOverlapping(t *tes
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1141,7 +1141,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_overlapping(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1156,7 +1156,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1211,7 +1211,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1270,7 +1270,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1314,7 +1314,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_overlapping(t *testin
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1327,7 +1327,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToProviderOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1339,7 +1339,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToProviderOnly(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1372,7 +1372,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToProviderOnly(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1410,7 +1410,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToProviderOnly(
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1423,7 +1423,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToResourceOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1436,7 +1436,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToResourceOnly(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1464,7 +1464,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToResourceOnly(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1505,7 +1505,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_updateToResourceOnly(
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1518,7 +1518,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyResourceTag(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1533,7 +1533,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyResourceTag(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1577,7 +1577,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyResourceTag(t *t
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1590,7 +1590,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyProviderOnlyTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1603,7 +1603,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyProviderOnlyTag(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1641,7 +1641,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_emptyProviderOnlyTag(
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1654,7 +1654,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullOverlappingResour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1669,7 +1669,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullOverlappingResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1716,7 +1716,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullOverlappingResour
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1729,7 +1729,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullNonOverlappingRes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1744,7 +1744,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullNonOverlappingRes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1793,7 +1793,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_DefaultTags_nullNonOverlappingRes
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1806,7 +1806,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnCreate(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1816,7 +1816,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnCreate(t *testing.T
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1854,7 +1854,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnCreate(t *testing.T
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1867,7 +1867,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Add(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1879,7 +1879,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1911,7 +1911,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Add(t *testi
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1957,7 +1957,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Add(t *testi
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -1970,7 +1970,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Replace(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1982,7 +1982,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2012,7 +2012,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Replace(t *t
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2050,7 +2050,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_ComputedTag_OnUpdate_Replace(t *t
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -2063,7 +2063,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2082,7 +2082,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2131,7 +2131,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2180,7 +2180,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2216,7 +2216,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccResilienceHubResiliencyPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resiliencehub.DescribeResiliencyPolicyOutput
@@ -2229,7 +2229,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_ResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2246,7 +2246,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2304,7 +2304,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2361,7 +2361,7 @@ func TestAccResilienceHubResiliencyPolicy_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &v),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

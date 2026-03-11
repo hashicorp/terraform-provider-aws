@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package acmpca
 
 import (
@@ -9,12 +11,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,9 +55,7 @@ func resourceCertificateAuthority() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 
@@ -257,6 +257,21 @@ func resourceCertificateAuthority() *schema.Resource {
 											return true
 										},
 									},
+									"custom_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 253),
+											validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*$`), "must match pattern [-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*"),
+										),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
+									},
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -354,7 +369,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	input := acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]any)),
 		CertificateAuthorityType:          types.CertificateAuthorityType(d.Get(names.AttrType).(string)),
-		IdempotencyToken:                  aws.String(id.UniqueId()),
+		IdempotencyToken:                  aws.String(sdkid.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]any)),
 		Tags:                              getTagsIn(ctx),
 	}
@@ -576,14 +591,14 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 	}
 
 	if output == nil || output.CertificateAuthority == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CertificateAuthority, nil
 }
 
-func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCertificateAuthority(conn *acmpca.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCertificateAuthorityByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -599,10 +614,10 @@ func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn st
 }
 
 func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, arn string, timeout time.Duration) (*types.CertificateAuthority, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateAuthorityStatusCreating),
 		Target:  enum.Slice(types.CertificateAuthorityStatusActive, types.CertificateAuthorityStatusPendingCertificate),
-		Refresh: statusCertificateAuthority(ctx, conn, arn),
+		Refresh: statusCertificateAuthority(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -610,7 +625,7 @@ func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, a
 
 	if output, ok := outputRaw.(*types.CertificateAuthority); ok {
 		if output.Status == types.CertificateAuthorityStatusFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err
@@ -707,6 +722,9 @@ func expandCrlConfiguration(l []any) *types.CrlConfiguration {
 		if v, ok := m["custom_cname"]; ok && v.(string) != "" {
 			config.CustomCname = aws.String(v.(string))
 		}
+		if v, ok := m["custom_path"]; ok && v.(string) != "" {
+			config.CustomPath = aws.String(v.(string))
+		}
 		if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
 			config.ExpirationInDays = aws.Int32(int32(v.(int)))
 		}
@@ -799,6 +817,7 @@ func flattenCrlConfiguration(config *types.CrlConfiguration) []any {
 
 	m := map[string]any{
 		"custom_cname":         aws.ToString(config.CustomCname),
+		"custom_path":          aws.ToString(config.CustomPath),
 		names.AttrEnabled:      aws.ToBool(config.Enabled),
 		"expiration_in_days":   int(aws.ToInt32(config.ExpirationInDays)),
 		names.AttrS3BucketName: aws.ToString(config.S3BucketName),

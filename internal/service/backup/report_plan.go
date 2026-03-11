@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -13,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +30,7 @@ import (
 // @SDKResource("aws_backup_report_plan", name="Report Plan")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup/types;awstypes;awstypes.ReportPlan")
-// @Testing(generator="randomReportPlanName()")
+// @Testing(generator="randomReportPlanName(t)")
 func resourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,
@@ -383,9 +384,8 @@ func findReportPlan(ctx context.Context, conn *backup.Client, input *backup.Desc
 	output, err := conn.DescribeReportPlan(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -394,14 +394,14 @@ func findReportPlan(ctx context.Context, conn *backup.Client, input *backup.Desc
 	}
 
 	if output == nil || output.ReportPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReportPlan, nil
 }
 
-func statusReportPlan(ctx context.Context, conn *backup.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReportPlan(conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReportPlanByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -424,11 +424,11 @@ const (
 )
 
 func waitReportPlanCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*awstypes.ReportPlan, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusCreateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,
-		Refresh: statusReportPlan(ctx, conn, name),
+		Refresh: statusReportPlan(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -441,11 +441,11 @@ func waitReportPlanCreated(ctx context.Context, conn *backup.Client, name string
 }
 
 func waitReportPlanUpdated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*awstypes.ReportPlan, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusUpdateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,
-		Refresh: statusReportPlan(ctx, conn, name),
+		Refresh: statusReportPlan(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -458,11 +458,11 @@ func waitReportPlanUpdated(ctx context.Context, conn *backup.Client, name string
 }
 
 func waitReportPlanDeleted(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*awstypes.ReportPlan, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusDeleteInProgress},
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusReportPlan(ctx, conn, name),
+		Refresh: statusReportPlan(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

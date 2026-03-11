@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_codebuild_start_build
 
-~> **Note:** `aws_codebuild_start_build` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Starts a CodeBuild project build. This action will initiate a build and wait for it to complete, providing progress updates during execution.
 
 For information about AWS CodeBuild, see the [AWS CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/). For specific information about starting builds, see the [StartBuild](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_StartBuild.html) page in the AWS CodeBuild API Reference.
@@ -80,6 +78,115 @@ action "aws_codebuild_start_build" "deploy" {
   }
 }
 ```
+
+### Building and Deploying Container Images
+
+```terraform
+resource "aws_codebuild_project" "container_build" {
+  name = "my-container-build"
+  # ... configuration to build and push to ECR ...
+}
+
+action "aws_codebuild_start_build" "container" {
+  config {
+    project_name = aws_codebuild_project.container_build.name
+    timeout      = 3600
+  }
+}
+
+resource "terraform_data" "build_trigger" {
+  input = filemd5("Dockerfile")
+
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_codebuild_start_build.container]
+    }
+  }
+}
+
+resource "aws_ecs_service" "app" {
+  # ... configuration ...
+  task_definition = aws_ecs_task_definition.app.arn
+
+  depends_on = [terraform_data.build_trigger]
+}
+
+resource "aws_ecs_task_definition" "app" {
+  container_definitions = jsonencode([{
+    image = "${aws_ecr_repository.app.repository_url}:latest"
+    # ... other config ...
+  }])
+}
+```
+
+## Dependency Management
+
+The `aws_codebuild_start_build` action is synchronous and waits for the CodeBuild build to complete before returning. However, when using `action_trigger` with lifecycle events, the timing of when the trigger resource is marked complete affects Terraform's dependency graph.
+
+### Using with `before_create` (Recommended for Build Artifacts)
+
+When dependent resources need artifacts produced by the build (e.g., S3 objects, ECR images), use `before_create` to ensure the action completes before the trigger resource is marked complete:
+
+```terraform
+resource "terraform_data" "build_trigger" {
+  input = filemd5("src/app.py") # Trigger on source changes
+
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_codebuild_start_build.example]
+    }
+  }
+}
+
+resource "aws_lambda_function" "app" {
+  s3_bucket = "my-bucket"
+  s3_key    = "artifact.zip" # Uploaded by CodeBuild
+
+  depends_on = [terraform_data.build_trigger]
+}
+```
+
+Execution order:
+
+1. Action runs and waits for build completion
+2. `terraform_data.build_trigger` is marked complete
+3. `aws_lambda_function.app` starts creating (artifact exists)
+
+### Using with `after_create`
+
+With `after_create`, the trigger resource completes before the action runs. This breaks dependency chains:
+
+```terraform
+resource "terraform_data" "build_trigger" {
+  lifecycle {
+    action_trigger {
+      events  = [after_create] # ⚠️ Resource completes first
+      actions = [action.aws_codebuild_start_build.example]
+    }
+  }
+}
+
+resource "aws_lambda_function" "app" {
+  depends_on = [terraform_data.build_trigger] # ⚠️ Doesn't wait for action
+}
+```
+
+Execution order:
+
+1. `terraform_data.build_trigger` is marked complete
+2. `aws_lambda_function.app` starts creating immediately
+3. Action runs asynchronously (may fail due to missing artifact)
+
+Use `after_create` only when dependent resources don't need to wait for the build to complete.
+
+### Key Differences
+
+| Event | Trigger Completes | Action Runs | Use Case |
+|-------|-------------------|-------------|----------|
+| `before_create` | After action completes | Before resource marked complete | Dependent resources need build artifacts |
+| `after_create` | Before action runs | After resource marked complete | Fire-and-forget builds, no dependencies |
 
 ## Argument Reference
 

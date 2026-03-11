@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kendra
 
 import (
@@ -17,8 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -185,7 +186,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateExperienceInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -346,10 +347,10 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ExperienceStatusCreating),
 		Target:                    enum.Slice(types.ExperienceStatusActive),
-		Refresh:                   statusExperience(ctx, conn, id, indexId),
+		Refresh:                   statusExperience(conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -358,7 +359,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeExperienceOutput); ok {
 		if out.Status == types.ExperienceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 	}
 
@@ -366,10 +367,10 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.ExperienceStatusActive),
-		Refresh:                   statusExperience(ctx, conn, id, indexId),
+		Refresh:                   statusExperience(conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -378,7 +379,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeExperienceOutput); ok {
 		if out.Status == types.ExperienceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 	}
 
@@ -386,25 +387,25 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusExperience(ctx, conn, id, indexId),
+		Refresh: statusExperience(conn, id, indexId),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeExperienceOutput); ok {
 		if out.Status == types.ExperienceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 	}
 
 	return err
 }
 
-func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExperience(conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -428,9 +429,8 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	var resourceNotFoundException *types.ResourceNotFoundException
 
 	if errors.As(err, &resourceNotFoundException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -439,7 +439,7 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

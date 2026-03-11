@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sagemaker
 
 import (
@@ -17,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1104,9 +1105,8 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	output, err := conn.DescribeUserProfile(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1115,14 +1115,14 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusUserProfile(conn *sagemaker.Client, domainID, userProfileName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
 		if retry.NotFound(err) {
@@ -1141,17 +1141,17 @@ func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domai
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusPending, awstypes.UserProfileStatusUpdating),
 		Target:  enum.Slice(awstypes.UserProfileStatusInService),
-		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
+		Refresh: statusUserProfile(conn, domainID, userProfileName),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -1163,17 +1163,17 @@ func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainI
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
+		Refresh: statusUserProfile(conn, domainID, userProfileName),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -1187,13 +1187,13 @@ func (userProfileImportID) Create(d *schema.ResourceData) string {
 	return createUserProfileID(d.Get("domain_id").(string), d.Get("user_profile_name").(string))
 }
 
-func (userProfileImportID) Parse(id string) (string, map[string]string, error) {
+func (userProfileImportID) Parse(id string) (string, map[string]any, error) {
 	domainID, userProfileName, err := parseUserProfileID(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"domain_id":         domainID,
 		"user_profile_name": userProfileName,
 	}

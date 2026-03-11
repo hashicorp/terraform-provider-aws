@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,7 +22,7 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	commonName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,7 +31,7 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
@@ -54,7 +53,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
 	commonName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -63,7 +62,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
@@ -72,7 +71,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_updateRootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, updatedResourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, updatedResourceName, &v),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(updatedResourceName, names.AttrCertificate, "aws_acmpca_certificate.updated", names.AttrCertificate),
 					resource.TestCheckResourceAttrPair(updatedResourceName, names.AttrCertificateChain, "aws_acmpca_certificate.updated", names.AttrCertificateChain),
@@ -88,7 +87,7 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	commonName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,7 +96,7 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_subordinateCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
@@ -112,14 +111,14 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, n string, v *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
+func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, t *testing.T, n string, v *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(ctx, conn, rs.Primary.ID)
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -211,9 +212,8 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	output, err := conn.GetServiceNetworkResourceAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -222,14 +222,14 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServiceNetworkResourceAssociation(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -245,10 +245,10 @@ func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclatti
 }
 
 func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive),
-		Refresh:                   statusServiceNetworkResourceAssociation(ctx, conn, id),
+		Refresh:                   statusServiceNetworkResourceAssociation(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -256,7 +256,7 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -265,17 +265,17 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 }
 
 func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive, awstypes.ServiceNetworkServiceAssociationStatusDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusServiceNetworkResourceAssociation(ctx, conn, id),
+		Refresh: statusServiceNetworkResourceAssociation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

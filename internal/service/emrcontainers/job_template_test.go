@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,21 +20,21 @@ import (
 func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.JobTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobTemplateExists(ctx, resourceName, &v),
+					testAccCheckJobTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_template_data.0.execution_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.#", "1"),
@@ -59,21 +57,21 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 func TestAccEMRContainersJobTemplate_configurationOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.JobTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_configurationOverrides(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobTemplateExists(ctx, resourceName, &v),
+					testAccCheckJobTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_template_data.0.execution_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.#", "1"),
@@ -106,21 +104,21 @@ func TestAccEMRContainersJobTemplate_configurationOverrides(t *testing.T) {
 func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.JobTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobTemplateExists(ctx, resourceName, &v),
+					testAccCheckJobTemplateExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemrcontainers.ResourceJobTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -132,21 +130,21 @@ func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.JobTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emrcontainers_job_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobTemplateExists(ctx, resourceName, &v),
+					testAccCheckJobTemplateExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -160,7 +158,7 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckJobTemplateExists(ctx context.Context, n string, v *awstypes.JobTemplate) resource.TestCheckFunc {
+func testAccCheckJobTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.JobTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -171,7 +169,7 @@ func testAccCheckJobTemplateExists(ctx context.Context, n string, v *awstypes.Jo
 			return fmt.Errorf("No EMR Containers Job Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRContainersClient(ctx)
 
 		output, err := tfemrcontainers.FindJobTemplateByID(ctx, conn, rs.Primary.ID)
 
@@ -185,9 +183,9 @@ func testAccCheckJobTemplateExists(ctx context.Context, n string, v *awstypes.Jo
 	}
 }
 
-func testAccCheckJobTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckJobTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRContainersClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrcontainers_job_template" {

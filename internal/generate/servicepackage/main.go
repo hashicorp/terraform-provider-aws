@@ -21,7 +21,9 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -199,6 +201,10 @@ func main() {
 	}
 }
 
+var (
+	v5_100_0 = version.Must(version.NewVersion("5.100.0"))
+)
+
 type arnFormatState uint
 
 const (
@@ -212,16 +218,18 @@ type ResourceDatum struct {
 	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
 	IsGlobal                          bool
 	regionOverrideEnabled             bool
+	RegionOverrideDeprecated          bool
+	ValidateRegionOverrideInPartition bool
 	TransparentTagging                bool
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
-	ValidateRegionOverrideInPartition bool
 	isARNFormatGlobal                 arnFormatState
 	wrappedImport                     common.TriBoolean
 	CustomImport                      bool
 	goImports                         []common.GoImport
 	HasIdentityFix                    bool
 	common.ResourceIdentity
+	tests.CommonArgs
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -331,6 +339,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		IsGlobal:                          false,
 		regionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
+		CommonArgs:                        tests.InitCommonArgs(),
 	}
 
 	annotations := make(map[string]bool)
@@ -378,6 +387,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.regionOverrideEnabled = enabled
+					}
+				}
+				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+					if deprecated, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideDeprecated = deprecated
 					}
 				}
 				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {
@@ -439,6 +455,34 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "IdentityFix":
 				d.HasIdentityFix = true
 
+			// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
+			// TODO: These fields should be moved out of `@Testing`
+			case "Testing":
+				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				}
+				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0NullValuesError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0RefreshError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
+
 			default:
 				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
@@ -451,6 +495,27 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	if d.HasResourceIdentity() {
 		if d.wrappedImport == common.TriBooleanUnset {
 			d.wrappedImport = common.TriBooleanTrue
+		}
+		if d.ImportIDHandler != "" {
+			if len(d.IdentityAttributes) < 2 {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: \"@ImportIDHandler\" should only be specified for Resource Identities with multiple attributes", v.packageName, v.functionName))
+			}
+		}
+		if d.HasV6_0NullValuesError {
+			d.PreIdentityVersion = v5_100_0
+		}
+		if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
+		}
+	} else {
+		if d.HasNoPreExistingResource {
+			v.errs = append(v.errs, fmt.Errorf("hasNoPreExistingResource specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+		if d.PreIdentityVersion != nil {
+			v.errs = append(v.errs, fmt.Errorf("preIdentityVersion specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+		if len(d.IdentityVersions) > 0 {
+			v.errs = append(v.errs, fmt.Errorf("IdentityVersions specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 		}
 	}
 
@@ -548,6 +613,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.frameworkDataSources[typeName] = d
 				}
 
+				if d.HasResourceIdentity() {
+					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
@@ -576,10 +645,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.frameworkResources[typeName] = d
 				}
 
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				}
-
 				if d.IdentityVersion > 0 {
 					v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
@@ -606,6 +671,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkDataSources[typeName] = d
+				}
+
+				if d.HasResourceIdentity() {
+					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				if d.HasV6_0NullValuesError {
@@ -678,9 +747,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkListResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
 				// Handled above.
-			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
+			case "ArnFormat", "IdAttrFormat", "Testing":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)

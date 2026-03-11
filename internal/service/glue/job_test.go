@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,19 +26,19 @@ import (
 func TestAccGlueJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -74,19 +72,19 @@ func TestAccGlueJob_basic(t *testing.T) {
 func TestAccGlueJob_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceJob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,19 +96,19 @@ func TestAccGlueJob_disappears(t *testing.T) {
 func TestAccGlueJob_basicStreaming(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_requiredStreaming(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -144,19 +142,19 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 func TestAccGlueJob_command(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_command(rName, "testscriptlocation1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation1"),
 				),
@@ -164,7 +162,7 @@ func TestAccGlueJob_command(t *testing.T) {
 			{
 				Config: testAccJobConfig_command(rName, "testscriptlocation2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation2"),
 				),
@@ -181,19 +179,19 @@ func TestAccGlueJob_command(t *testing.T) {
 func TestAccGlueJob_defaultArguments(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_defaultArguments(rName, "job-bookmark-disable", "python"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.--job-bookmark-option", "job-bookmark-disable"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.--job-language", "python"),
@@ -202,7 +200,7 @@ func TestAccGlueJob_defaultArguments(t *testing.T) {
 			{
 				Config: testAccJobConfig_defaultArguments(rName, "job-bookmark-enable", "scala"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.--job-bookmark-option", "job-bookmark-enable"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.--job-language", "scala"),
@@ -220,19 +218,19 @@ func TestAccGlueJob_defaultArguments(t *testing.T) {
 func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_nonOverridableArguments(rName, "job-bookmark-disable", "python"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-bookmark-option", "job-bookmark-disable"),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-language", "python"),
@@ -241,7 +239,7 @@ func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 			{
 				Config: testAccJobConfig_nonOverridableArguments(rName, "job-bookmark-enable", "scala"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-bookmark-option", "job-bookmark-enable"),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-language", "scala"),
@@ -259,26 +257,26 @@ func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 func TestAccGlueJob_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccJobConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
@@ -294,26 +292,26 @@ func TestAccGlueJob_description(t *testing.T) {
 func TestAccGlueJob_glueVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_versionMaxCapacity(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
 				Config: testAccJobConfig_versionMaxCapacity(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
 				),
 			},
@@ -325,7 +323,7 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 			{
 				Config: testAccJobConfig_versionNumberOfWorkers(rName, "2.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "2.0"),
 				),
 			},
@@ -336,26 +334,26 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 func TestAccGlueJob_executionClass(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_executionClass(rName, "FLEX"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "execution_class", "FLEX"),
 				),
 			},
 			{
 				Config: testAccJobConfig_executionClass(rName, "STANDARD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "execution_class", "STANDARD"),
 				),
 			},
@@ -371,14 +369,14 @@ func TestAccGlueJob_executionClass(t *testing.T) {
 func TestAccGlueJob_executionProperty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_executionProperty(rName, 0),
@@ -387,7 +385,7 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 			{
 				Config: testAccJobConfig_executionProperty(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.0.max_concurrent_runs", "1"),
 				),
@@ -395,7 +393,7 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 			{
 				Config: testAccJobConfig_executionProperty(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.0.max_concurrent_runs", "2"),
 				),
@@ -412,19 +410,19 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 func TestAccGlueJob_jobRunQueuingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_jobRunQueuingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "job_run_queuing_enabled", acctest.CtTrue),
 				),
@@ -437,7 +435,7 @@ func TestAccGlueJob_jobRunQueuingEnabled(t *testing.T) {
 			{
 				Config: testAccJobConfig_jobRunQueuingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "job_run_queuing_enabled", acctest.CtFalse),
 				),
@@ -449,20 +447,20 @@ func TestAccGlueJob_jobRunQueuingEnabled(t *testing.T) {
 func TestAccGlueJob_maintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 	maintenanceWindow := "Sun:23"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_maintenanceWindow(rName, maintenanceWindow),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "Sun:23"),
 				),
 			},
@@ -478,14 +476,14 @@ func TestAccGlueJob_maintenanceWindow(t *testing.T) {
 func TestAccGlueJob_maxRetries(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_maxRetries(rName, 11),
@@ -494,14 +492,14 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 			{
 				Config: testAccJobConfig_maxRetries(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "0"),
 				),
 			},
 			{
 				Config: testAccJobConfig_maxRetries(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "10"),
 				),
 			},
@@ -517,14 +515,14 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 func TestAccGlueJob_notificationProperty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccJobConfig_notificationProperty(rName, 0),
@@ -533,7 +531,7 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 			{
 				Config: testAccJobConfig_notificationProperty(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", "1"),
 				),
@@ -541,7 +539,7 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 			{
 				Config: testAccJobConfig_notificationProperty(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", "2"),
 				),
@@ -558,19 +556,19 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 func TestAccGlueJob_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -583,7 +581,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 			{
 				Config: testAccJobConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -592,7 +590,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 			{
 				Config: testAccJobConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -604,19 +602,19 @@ func TestAccGlueJob_tags(t *testing.T) {
 func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, "500"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -635,7 +633,7 @@ func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, "1500"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -649,7 +647,7 @@ func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, "0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -667,19 +665,19 @@ func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
 func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -698,7 +696,7 @@ func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, "500"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -712,7 +710,7 @@ func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, "1500"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -726,7 +724,7 @@ func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
 			{
 				Config: testAccJobConfig_streamingTimeout(rName, "0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -744,19 +742,19 @@ func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
 func TestAccGlueJob_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -775,7 +773,7 @@ func TestAccGlueJob_timeout(t *testing.T) {
 			{
 				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -793,26 +791,26 @@ func TestAccGlueJob_timeout(t *testing.T) {
 func TestAccGlueJob_security(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_securityConfiguration(rName, "default_encryption"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", "default_encryption"),
 				),
 			},
 			{
 				Config: testAccJobConfig_securityConfiguration(rName, "custom_encryption2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", "custom_encryption2"),
 				),
 			},
@@ -828,19 +826,19 @@ func TestAccGlueJob_security(t *testing.T) {
 func TestAccGlueJob_workerType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_workerType(rName, "Standard"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -854,7 +852,7 @@ func TestAccGlueJob_workerType(t *testing.T) {
 			{
 				Config: testAccJobConfig_workerType(rName, "G.1X"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -868,7 +866,7 @@ func TestAccGlueJob_workerType(t *testing.T) {
 			{
 				Config: testAccJobConfig_workerType(rName, "G.2X"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -882,7 +880,7 @@ func TestAccGlueJob_workerType(t *testing.T) {
 			{
 				Config: testAccJobConfig_workerType(rName, "G.4X"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -896,7 +894,7 @@ func TestAccGlueJob_workerType(t *testing.T) {
 			{
 				Config: testAccJobConfig_workerType(rName, "R.1X"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -919,19 +917,19 @@ func TestAccGlueJob_workerType(t *testing.T) {
 func TestAccGlueJob_pythonShell(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_pythonShell(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0.0625"),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
@@ -946,7 +944,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 			{
 				Config: testAccJobConfig_pythonShellVersion(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "2"),
@@ -961,7 +959,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 			{
 				Config: testAccJobConfig_pythonShellVersion(rName, "3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3"),
@@ -971,7 +969,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 			{
 				Config: testAccJobConfig_pythonShellVersion(rName, "3.9"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
@@ -985,19 +983,19 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 func TestAccGlueJob_rayJob(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_rayJob(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1020,19 +1018,19 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 func TestAccGlueJob_rayJobUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_rayJobWithDescription(rName, "Initial job"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1047,7 +1045,7 @@ func TestAccGlueJob_rayJobUpdate(t *testing.T) {
 			{
 				Config: testAccJobConfig_rayJobWithDescription(rName, "Updated job"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1066,19 +1064,19 @@ func TestAccGlueJob_rayJobUpdate(t *testing.T) {
 func TestAccGlueJob_maxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_maxCapacity(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "10"),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
@@ -1088,7 +1086,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 			{
 				Config: testAccJobConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "15"),
 				),
 			},
@@ -1104,20 +1102,20 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 func TestAccGlueJob_sourceControlDetails(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_sourceControlDetails(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.repository", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.provider", "GITHUB"),
@@ -1133,7 +1131,7 @@ func TestAccGlueJob_sourceControlDetails(t *testing.T) {
 			{
 				Config: testAccJobConfig_sourceControlDetails(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.repository", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.provider", "GITHUB"),
@@ -1148,20 +1146,20 @@ func TestAccGlueJob_sourceControlDetails(t *testing.T) {
 func TestAccGlueJob_jobMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
 	roleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		CheckDestroy:             testAccCheckJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobConfig_jobMode(rName, "NOTEBOOK"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
@@ -1184,7 +1182,7 @@ func TestAccGlueJob_jobMode(t *testing.T) {
 			{
 				Config: testAccJobConfig_jobMode(rName, "VISUAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
+					testAccCheckJobExists(ctx, t, resourceName, &job),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
@@ -1203,14 +1201,14 @@ func TestAccGlueJob_jobMode(t *testing.T) {
 	})
 }
 
-func testAccCheckJobExists(ctx context.Context, n string, v *awstypes.Job) resource.TestCheckFunc {
+func testAccCheckJobExists(ctx context.Context, t *testing.T, n string, v *awstypes.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		output, err := tfglue.FindJobByName(ctx, conn, rs.Primary.ID)
 
@@ -1224,14 +1222,14 @@ func testAccCheckJobExists(ctx context.Context, n string, v *awstypes.Job) resou
 	}
 }
 
-func testAccCheckJobDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckJobDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_job" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 			_, err := tfglue.FindJobByName(ctx, conn, rs.Primary.ID)
 

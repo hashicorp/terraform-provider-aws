@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package comprehend
 
 import (
@@ -20,7 +22,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -312,7 +314,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
 	if raw.IsNull() {
-		versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+		versionName = aws.String(create.Name(ctx, "", d.Get("version_name_prefix").(string)))
 	} else if v := raw.AsString(); v != "" {
 		versionName = aws.String(v)
 	}
@@ -379,7 +381,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		if d.HasChange("version_name") {
 			versionName = aws.String(d.Get("version_name").(string))
 		} else if v := d.Get("version_name_prefix").(string); v != "" {
-			versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+			versionName = aws.String(create.Name(ctx, "", d.Get("version_name_prefix").(string)))
 		}
 
 		diags := entityRecognizerPublishVersion(ctx, conn, d, versionName, create.ErrActionUpdating, d.Timeout(schema.TimeoutUpdate), awsClient)
@@ -502,7 +504,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		RecognizerName:     aws.String(d.Get(names.AttrName).(string)),
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -642,7 +644,7 @@ func findEntityRecognizer(ctx context.Context, conn *comprehend.Client, in *comp
 	}
 
 	if out == nil || out.EntityRecognizerProperties == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.EntityRecognizerProperties, nil
@@ -688,7 +690,7 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
 		if output.Status == types.ModelStatusInError {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 		return output, err
 	}

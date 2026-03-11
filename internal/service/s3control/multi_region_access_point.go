@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3control
 
 import (
@@ -17,7 +19,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -279,9 +280,8 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -290,7 +290,7 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 	}
 
 	if output == nil || output.AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccessPoint, nil
@@ -308,9 +308,8 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAsyncRequest) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -319,14 +318,14 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 	}
 
 	if output == nil || output.AsyncOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AsyncOperation, nil
 }
 
-func statusMultiRegionAccessPointRequest(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMultiRegionAccessPointRequest(conn *s3control.Client, accountID, requestTokenARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMultiRegionAccessPointOperationByTwoPartKey(ctx, conn, accountID, requestTokenARN)
 
 		if retry.NotFound(err) {
@@ -347,10 +346,10 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 		asyncOperationRequestStatusFailed    = "FAILED"
 		asyncOperationRequestStatusSucceeded = "SUCCEEDED"
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:     []string{asyncOperationRequestStatusSucceeded},
 		Timeout:    timeout,
-		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenARN),
+		Refresh:    statusMultiRegionAccessPointRequest(conn, accountID, requestTokenARN),
 		MinTimeout: 5 * time.Second,
 		Delay:      15 * time.Second,
 	}
@@ -359,7 +358,7 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 
 	if output, ok := outputRaw.(*types.AsyncOperation); ok {
 		if status, responseDetails := aws.ToString(output.RequestStatus), output.ResponseDetails; status == asyncOperationRequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
 		}
 
 		return output, err

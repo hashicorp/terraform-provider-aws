@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -11,11 +13,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,9 +31,10 @@ import (
 
 // @SDKResource("aws_s3_bucket_versioning", name="Bucket Versioning")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketVersioningCreate,
@@ -50,8 +52,8 @@ func resourceBucketVersioning() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"mfa": {
 				Type:     schema.TypeString,
@@ -67,7 +69,7 @@ func resourceBucketVersioning() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.MFADelete](),
+							ValidateDiagFunc: enum.Validate[awstypes.MFADelete](),
 						},
 						names.AttrStatus: {
 							Type:         schema.TypeString,
@@ -79,7 +81,7 @@ func resourceBucketVersioning() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
+		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// This CustomizeDiff acts as a plan-time validation to prevent MalformedXML errors
 				// when updating bucket versioning to "Disabled" on existing resources
@@ -91,10 +93,27 @@ func resourceBucketVersioning() *schema.Resource {
 				oldStatusRaw, newStatusRaw := diff.GetChange("versioning_configuration.0.status")
 				oldStatus, newStatus := oldStatusRaw.(string), newStatusRaw.(string)
 
-				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(types.BucketVersioningStatusEnabled) || oldStatus == string(types.BucketVersioningStatusSuspended)) {
+				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(awstypes.BucketVersioningStatusEnabled) || oldStatus == string(awstypes.BucketVersioningStatusSuspended)) {
 					return fmt.Errorf("versioning_configuration.status cannot be updated from '%s' to '%s'", oldStatus, newStatus)
 				}
 
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+				if d.HasChange(names.AttrExpectedBucketOwner) {
+					o, n := d.GetChange(names.AttrExpectedBucketOwner)
+					os, ns := o.(string), n.(string)
+					if os == ns {
+						return nil
+					}
+					if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+						return nil
+					}
+					return d.ForceNew(names.AttrExpectedBucketOwner)
+				}
 				return nil
 			},
 		),
@@ -118,7 +137,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 	// supported within the aws_s3_bucket resource of the 3.x version of the provider.
 	// Thus, we essentially bring existing bucket versioning into adoption.
 	if string(versioningConfiguration.Status) != bucketVersioningStatusDisabled {
-		input := &s3.PutBucketVersioningInput{
+		input := s3.PutBucketVersioningInput{
 			Bucket:                  aws.String(bucket),
 			VersioningConfiguration: versioningConfiguration,
 		}
@@ -131,7 +150,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.PutBucketVersioning(ctx, input)
+			return conn.PutBucketVersioning(ctx, &input)
 		}, errCodeNoSuchBucket)
 
 		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -179,11 +198,20 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting versioning_configuration: %s", err)
+
+	if err := resourceBucketVersioningFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func resourceBucketVersioningFlatten(_ context.Context, bucketVersioning *s3.GetBucketVersioningOutput, d *schema.ResourceData) error {
+	if err := d.Set("versioning_configuration", flattenVersioning(bucketVersioning)); err != nil {
+		return fmt.Errorf("setting versioning_configuration: %w", err)
+	}
+
+	return nil
 }
 
 func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -199,7 +227,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketVersioningInput{
+	input := s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]any)),
 	}
@@ -211,7 +239,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 		input.MFA = aws.String(v.(string))
 	}
 
-	_, err = conn.PutBucketVersioning(ctx, input)
+	_, err = conn.PutBucketVersioning(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Versioning (%s): %s", d.Id(), err)
@@ -238,19 +266,19 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketVersioningInput{
+	input := s3.PutBucketVersioningInput{
 		Bucket: aws.String(bucket),
-		VersioningConfiguration: &types.VersioningConfiguration{
+		VersioningConfiguration: &awstypes.VersioningConfiguration{
 			// Status must be provided thus to "remove" this resource,
 			// we suspend versioning
-			Status: types.BucketVersioningStatusSuspended,
+			Status: awstypes.BucketVersioningStatusSuspended,
 		},
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketVersioning(ctx, input)
+	_, err = conn.PutBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return diags
@@ -270,7 +298,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandBucketVersioningConfiguration(l []any) *types.VersioningConfiguration {
+func expandBucketVersioningConfiguration(l []any) *awstypes.VersioningConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -280,14 +308,14 @@ func expandBucketVersioningConfiguration(l []any) *types.VersioningConfiguration
 		return nil
 	}
 
-	result := &types.VersioningConfiguration{}
+	result := &awstypes.VersioningConfiguration{}
 
 	if v, ok := tfMap["mfa_delete"].(string); ok && v != "" {
-		result.MFADelete = types.MFADelete(v)
+		result.MFADelete = awstypes.MFADelete(v)
 	}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.BucketVersioningStatus(v)
+		result.Status = awstypes.BucketVersioningStatus(v)
 	}
 
 	return result
@@ -313,19 +341,18 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []any {
 }
 
 func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	input := &s3.GetBucketVersioningInput{
+	input := s3.GetBucketVersioningInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketVersioning(ctx, input)
+	output, err := conn.GetBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -334,14 +361,14 @@ func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expected
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBucketVersioning(conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
 
 		if retry.NotFound(err) {
@@ -361,10 +388,10 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 }
 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
-		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
+		Refresh:                   statusBucketVersioning(conn, bucket, expectedBucketOwner),
 		Timeout:                   bucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,
@@ -385,5 +412,5 @@ const (
 )
 
 func bucketVersioningStatus_Values() []string {
-	return tfslices.AppendUnique(enum.Values[types.BucketVersioningStatus](), bucketVersioningStatusDisabled)
+	return tfslices.AppendUnique(enum.Values[awstypes.BucketVersioningStatus](), bucketVersioningStatusDisabled)
 }

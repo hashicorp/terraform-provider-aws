@@ -11,11 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -99,16 +98,42 @@ func TestInvocationResourceIDCreation(t *testing.T) {
 	}
 }
 
+// TestBuildInputPanic verifies the fix for panic: assignment to entry in nil map
+// This happens when input is empty and lifecycle_scope is CRUD
+func TestBuildInputPanic(t *testing.T) {
+	t.Parallel()
+
+	// Create ResourceData with empty input and CRUD lifecycle scope
+	resourceSchema := tflambda.ResourceInvocation().Schema
+	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"function_name":   "test-function",
+		"input":           "", // Empty input causes getObjectFromJSONString to return nil
+		"lifecycle_scope": "CRUD",
+		"terraform_key":   "tf",
+	})
+	d.SetId("test-id")
+
+	// This should NOT panic after the fix
+	result, err := tflambda.BuildInput(d, tflambda.InvocationActionDelete)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Error("Expected result, but got nil")
+	}
+}
+
 func TestAccLambdaInvocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -136,10 +161,10 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 func TestAccLambdaInvocation_qualifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -164,10 +189,10 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 func TestAccLambdaInvocation_complex(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -186,11 +211,11 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 func TestAccLambdaInvocation_triggers(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	testData2 := "value4"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -222,14 +247,14 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
 
 	extraArgs := `lifecycle_scope = "CRUD"`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -258,7 +283,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ssmParamResourceName := "aws_ssm_parameter.result_key1"
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
@@ -268,7 +293,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 
 	extraArgs := `lifecycle_scope = "CRUD"`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -304,14 +329,14 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyUpdateInput(t *testing.T) 
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := `{"key1":"value1","key2":"value2"}`
 	inputJSON2 := `{"key1":"valueB","key2":"value2"}`
 	resultJSON2 := `{"key1":"valueB","key2":"value2"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -347,7 +372,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
@@ -358,7 +383,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 	crudLifecycle := `lifecycle_scope = "CRUD"`
 	extraArgs := dependsOnSSMPermissions + "\n" + crudLifecycle
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -380,7 +405,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCRUDDestroyResult(ctx, resourceName, ssmParameterName, destroyJSON),
+					testAccCheckCRUDDestroyResult(ctx, t, resourceName, ssmParameterName, destroyJSON),
 				),
 			},
 		},
@@ -391,7 +416,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ssmParameterName := fmt.Sprintf("/tf-test/CRUD/%s", rName)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
@@ -400,7 +425,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 
 	extraArgs := `lifecycle_scope = "CRUD"`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -434,7 +459,7 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := `{"key1":"value1","key2":"value2","custom_key":{"action":"create", "prev_input": null}}`
@@ -443,7 +468,7 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	crudLifecycle := `lifecycle_scope = "CRUD"`
 	extraArgs := terraformKey + "\n" + crudLifecycle
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -474,12 +499,12 @@ func TestAccLambdaInvocation_UpgradeState_Pre_v5_1_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: acctest.CheckDestroyNoop,
@@ -519,12 +544,12 @@ func TestAccLambdaInvocation_UpgradeState_v5_83_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
 		CheckDestroy: acctest.CheckDestroyNoop,
@@ -562,13 +587,13 @@ func TestAccLambdaInvocation_tenantID(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	tenantID := "test-tenant-123"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -599,13 +624,13 @@ func TestAccLambdaInvocation_tenantID(t *testing.T) {
 // Because a destroy implies the resource will be removed from the state we need another way to check
 // how the lambda was invoked. The JSON used to invoke the lambda is stored in an SSM Parameter.
 // We will read it out, compare with the expected result and clean up the SSM parameter.
-func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, expectedResult string) resource.TestCheckFunc {
+func testAccCheckCRUDDestroyResult(ctx context.Context, t *testing.T, name, ssmParameterName, expectedResult string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if ok {
 			return fmt.Errorf("Still found resource in state: %s", name)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 		res, err := conn.GetParameter(ctx, &ssm.GetParameterInput{
 			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),

@@ -104,8 +104,8 @@ provider "aws" {
 |App Runner|`apprunner`|`AWS_ENDPOINT_URL_APPRUNNER`|`apprunner`|
 |AppStream 2.0|`appstream`|`AWS_ENDPOINT_URL_APPSTREAM`|`appstream`|
 |AppSync|`appsync`|`AWS_ENDPOINT_URL_APPSYNC`|`appsync`|
-|Application Resilience Controller Region Switch|`arcregionswitch`|`AWS_ENDPOINT_URL_ARC_REGION_SWITCH`|`arc_region_switch`|
-|Application Recovery Controller Zonal Shift|`arczonalshift`|`AWS_ENDPOINT_URL_ARC_ZONAL_SHIFT`|`arc_zonal_shift`|
+|ARC (Application Recovery Controller) Region Switch|`arcregionswitch`|`AWS_ENDPOINT_URL_ARC_REGION_SWITCH`|`arc_region_switch`|
+|ARC (Application Recovery Controller) Zonal Shift|`arczonalshift`|`AWS_ENDPOINT_URL_ARC_ZONAL_SHIFT`|`arc_zonal_shift`|
 |Athena|`athena`|`AWS_ENDPOINT_URL_ATHENA`|`athena`|
 |Audit Manager|`auditmanager`|`AWS_ENDPOINT_URL_AUDITMANAGER`|`auditmanager`|
 |Auto Scaling|`autoscaling`|`AWS_ENDPOINT_URL_AUTO_SCALING`|`auto_scaling`|
@@ -244,6 +244,7 @@ provider "aws" {
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
+|Multi-party Approval|`mpa`|`AWS_ENDPOINT_URL_MPA`|`mpa`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |MWAA (Managed Workflows for Apache Airflow) Serverless|`mwaaserverless`|`AWS_ENDPOINT_URL_MWAA_SERVERLESS`|`mwaa_serverless`|
@@ -300,6 +301,7 @@ provider "aws" {
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
 |S3 Vectors|`s3vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3vectors`|
 |SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|Savings Plans|`savingsplans`|`AWS_ENDPOINT_URL_SAVINGSPLANS`|`savingsplans`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|

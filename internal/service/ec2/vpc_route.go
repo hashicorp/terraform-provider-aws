@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -523,7 +525,7 @@ func (routeImportID) Create(d *schema.ResourceData) string {
 	return routeCreateID(routeTableID, destination)
 }
 
-func (routeImportID) Parse(id string) (string, map[string]string, error) {
+func (routeImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, "_")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", id)
@@ -531,7 +533,7 @@ func (routeImportID) Parse(id string) (string, map[string]string, error) {
 
 	routeTableID := parts[0]
 	destination := parts[1]
-	result := map[string]string{
+	result := map[string]any{
 		"route_table_id": routeTableID,
 	}
 	if strings.Contains(destination, ":") {

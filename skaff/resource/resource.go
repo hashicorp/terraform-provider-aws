@@ -32,6 +32,7 @@ type TemplateData struct {
 	Resource             string
 	ResourceAWS          string
 	ResourceLower        string
+	ResourceLowerCamel   string
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
@@ -43,6 +44,7 @@ type TemplateData struct {
 	AWSServiceName       string
 	HumanResourceName    string
 	ProviderResourceName string
+	ARNNamespace         string
 }
 
 func Create(resName, snakeName string, comments, force, tags bool) error {
@@ -76,8 +78,9 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 
 	templateData := TemplateData{
 		Resource:             resName,
-		ResourceAWS:          capitalizeForAWS(resName),
+		ResourceAWS:          convert.ToAWSCapitalization(resName),
 		ResourceLower:        strings.ToLower(resName),
+		ResourceLowerCamel:   convert.ToLowercasePrefix(resName),
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
@@ -89,6 +92,7 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 		AWSServiceName:       service.FullHumanFriendly(),
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
+		ARNNamespace:         service.ARNNamespace(),
 	}
 
 	f := fmt.Sprintf("%s.go", snakeName)
@@ -147,9 +151,4 @@ func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateD
 	}
 
 	return nil
-}
-
-// AWS API structs use different capitalization than the provider standards
-func capitalizeForAWS(s string) string {
-	return strings.ReplaceAll(s, "VPC", "Vpc")
 }

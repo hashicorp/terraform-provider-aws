@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkfirewall
 
 import (
@@ -106,7 +108,7 @@ func (r *firewallTransitGatewayAttachmentAccepterResource) Read(ctx context.Cont
 	output, err := tfec2.FindTransitGatewayAttachmentByID(ctx, r.Meta().EC2Client(ctx), tgwAttachmentID)
 
 	if err == nil && output.State == ec2types.TransitGatewayAttachmentStateDeleted {
-		err = tfresource.NewEmptyResultError(tgwAttachmentID)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if retry.NotFound(err) {

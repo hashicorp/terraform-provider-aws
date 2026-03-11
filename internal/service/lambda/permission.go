@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lambda
 
 import (
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -29,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
+var functionRegexp = `^(arn:[\w-]+:lambda:)?(` + inttypes.CanonicalRegionPatternNoAnchors + `:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 // @SDKResource("aws_lambda_permission", name="Permission")
 // @IdentityAttribute("function_name")
@@ -128,7 +129,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
-	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
+	statementID := create.Name(ctx, d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
@@ -205,11 +206,16 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
+	return append(diags, resourcePermissionFlatten(ctx, d, meta.(*conns.AWSClient), statement, functionName)...)
+}
+
+func resourcePermissionFlatten(ctx context.Context, d *schema.ResourceData, awsClient *conns.AWSClient, statement *policyStatement, functionName string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	qualifier, _ := getQualifierFromAliasOrVersionARN(statement.Resource)
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
-	if strings.HasPrefix(functionName, "arn:"+meta.(*conns.AWSClient).Partition(ctx)+":lambda:") {
+	if strings.HasPrefix(functionName, "arn:"+awsClient.Partition(ctx)+":lambda:") {
 		// Strip qualifier off
 		trimmed := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmed)
@@ -301,9 +307,8 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	output, err := conn.GetPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -312,7 +317,7 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -345,9 +350,8 @@ func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, f
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{
-		LastRequest:  statementID,
-		LastResponse: policy,
+	return nil, &retry.NotFoundError{
+		Message: fmt.Sprintf("statement %s not found in policy", statementID),
 	}
 }
 
@@ -393,7 +397,7 @@ func (permissionImportID) Create(d *schema.ResourceData) string {
 	return d.Get("statement_id").(string)
 }
 
-func (permissionImportID) Parse(id string) (string, map[string]string, error) {
+func (permissionImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return id, nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", id)
@@ -401,7 +405,7 @@ func (permissionImportID) Parse(id string) (string, map[string]string, error) {
 
 	functionName := parts[0]
 	statementID := parts[1]
-	results := map[string]string{
+	results := map[string]any{
 		"function_name": functionName,
 		"statement_id":  statementID,
 	}

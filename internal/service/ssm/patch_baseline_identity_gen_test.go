@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMPatchBaseline_Identity_Basic(t *testing.T) {
+func TestAccSSMPatchBaseline_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ssm.GetPatchBaselineOutput
@@ -35,7 +35,7 @@ func TestAccSSMPatchBaseline_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSSMPatchBaseline_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &v),
+					testAccCheckPatchBaselineExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -107,7 +107,7 @@ func TestAccSSMPatchBaseline_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMPatchBaseline_Identity_RegionOverride(t *testing.T) {
+func TestAccSSMPatchBaseline_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_patch_baseline.test"
@@ -195,7 +195,7 @@ func TestAccSSMPatchBaseline_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMPatchBaseline_Identity_ExistingResource(t *testing.T) {
+func TestAccSSMPatchBaseline_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ssm.GetPatchBaselineOutput
@@ -208,7 +208,7 @@ func TestAccSSMPatchBaseline_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckPatchBaselineDestroy(ctx),
+		CheckDestroy: testAccCheckPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -217,7 +217,7 @@ func TestAccSSMPatchBaseline_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &v),
+					testAccCheckPatchBaselineExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -253,7 +253,7 @@ func TestAccSSMPatchBaseline_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMPatchBaseline_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSSMPatchBaseline_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ssm.GetPatchBaselineOutput
@@ -266,7 +266,7 @@ func TestAccSSMPatchBaseline_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckPatchBaselineDestroy(ctx),
+		CheckDestroy: testAccCheckPatchBaselineDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccSSMPatchBaseline_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &v),
+					testAccCheckPatchBaselineExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

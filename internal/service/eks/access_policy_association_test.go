@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,22 +24,22 @@ func TestAccEKSAccessPolicyAssociation_basic(t *testing.T) {
 	}
 
 	var associatedaccesspolicy types.AssociatedAccessPolicy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_policy_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
+					testAccCheckAccessPolicyAssociationExists(ctx, t, resourceName, &associatedaccesspolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "associated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
@@ -65,22 +63,22 @@ func TestAccEKSAccessPolicyAssociation_disappears(t *testing.T) {
 	}
 
 	var associatedaccesspolicy types.AssociatedAccessPolicy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_policy_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
+					testAccCheckAccessPolicyAssociationExists(ctx, t, resourceName, &associatedaccesspolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceAccessPolicyAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,23 +94,23 @@ func TestAccEKSAccessPolicyAssociation_Disappears_cluster(t *testing.T) {
 	}
 
 	var associatedaccesspolicy types.AssociatedAccessPolicy
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_policy_association.test"
 	clusterResourceName := "aws_eks_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
+					testAccCheckAccessPolicyAssociationExists(ctx, t, resourceName, &associatedaccesspolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -121,9 +119,9 @@ func TestAccEKSAccessPolicyAssociation_Disappears_cluster(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_access_policy_association" {
@@ -147,14 +145,14 @@ func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckAccessPolicyAssociationExists(ctx context.Context, n string, v *types.AssociatedAccessPolicy) resource.TestCheckFunc {
+func testAccCheckAccessPolicyAssociationExists(ctx context.Context, t *testing.T, n string, v *types.AssociatedAccessPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		output, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
 

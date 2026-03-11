@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package imagebuilder
 
 import (
@@ -12,8 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -137,7 +138,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateComponentInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -264,9 +265,8 @@ func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn stri
 	output, err := conn.GetComponent(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -275,7 +275,7 @@ func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn stri
 	}
 
 	if output == nil || output.Component == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Component, nil

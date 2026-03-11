@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 // WARNING: This code is DEPRECATED and will be removed in a future release!!
@@ -520,7 +522,7 @@ func (bucketObjectImportID) Create(d *schema.ResourceData) string {
 	return createBucketObjectImportID(d)
 }
 
-func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
+func (bucketObjectImportID) Parse(id string) (string, map[string]any, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")
@@ -528,7 +530,7 @@ func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) 
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrBucket: bucket,
 		names.AttrKey:    key,
 	}

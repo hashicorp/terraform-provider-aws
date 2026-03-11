@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package memorydb
 
 import (
@@ -12,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -63,7 +64,7 @@ func resourceACL() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateResourceNamePrefix(aclNameMaxLength - id.UniqueIDSuffixLength),
+				ValidateFunc:  validateResourceNamePrefix(aclNameMaxLength - sdkid.UniqueIDSuffixLength),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -83,7 +84,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateACLInput{
 		ACLName: aws.String(name),
 		Tags:    getTagsIn(ctx),
@@ -242,9 +243,8 @@ func findACLs(ctx context.Context, conn *memorydb.Client, input *memorydb.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ACLNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -258,8 +258,8 @@ func findACLs(ctx context.Context, conn *memorydb.Client, input *memorydb.Descri
 	return output, nil
 }
 
-func statusACL(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusACL(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findACLByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -278,10 +278,10 @@ func waitACLActive(ctx context.Context, conn *memorydb.Client, name string) (*aw
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{aclStatusCreating, aclStatusModifying},
 		Target:  []string{aclStatusActive},
-		Refresh: statusACL(ctx, conn, name),
+		Refresh: statusACL(conn, name),
 		Timeout: timeout,
 	}
 
@@ -298,10 +298,10 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.Client, name string) (*a
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{aclStatusDeleting},
 		Target:       []string{},
-		Refresh:      statusACL(ctx, conn, name),
+		Refresh:      statusACL(conn, name),
 		Timeout:      timeout,
 		Delay:        30 * time.Second,
 		PollInterval: 10 * time.Second,

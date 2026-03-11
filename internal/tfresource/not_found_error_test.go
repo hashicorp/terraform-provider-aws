@@ -11,13 +11,13 @@ import (
 
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
+func TestEmptyResultErrorAsSDKNotFoundError(t *testing.T) {
 	t.Parallel()
 
-	lastRequest := 123
-	err := NewEmptyResultError(lastRequest)
+	err := NewEmptyResultError()
 
 	var nfe *sdkretry.NotFoundError
 	ok := errors.As(err, &nfe)
@@ -28,8 +28,32 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 	if nfe.Message != "empty result" {
 		t.Errorf(`expected Message to be "empty result", got %q`, nfe.Message)
 	}
-	if nfe.LastRequest != lastRequest {
+	if nfe.LastRequest != nil {
 		t.Errorf("unexpected value for LastRequest")
+	}
+}
+
+func TestEmptyResultErrorAsRetryNotFoundError(t *testing.T) {
+	t.Parallel()
+
+	err := NewEmptyResultError()
+
+	var nfe *retry.NotFoundError
+	ok := errors.As(err, &nfe)
+
+	if !ok {
+		t.Fatal("expected errors.As() to return true")
+	}
+	if nfe.Message != "empty result" {
+		t.Errorf(`expected Message to be "empty result", got %q`, nfe.Message)
+	}
+}
+
+func TestEmptyResultErrorErrorsIs(t *testing.T) {
+	t.Parallel()
+
+	if !errors.Is(&emptyResultError{}, ErrEmptyResult) {
+		t.Error("Expected `errors.Is` to match EmptyResultError")
 	}
 }
 
@@ -51,7 +75,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		},
 		{
 			name: "EmptyResultError with LastRequest",
-			err: &EmptyResultError{
+			err: &emptyResultError{
 				LastRequest: 123,
 			},
 			expected: true,
@@ -67,7 +91,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		},
 		{
 			name: "wrapped EmptyResultError with LastRequest",
-			err: fmt.Errorf("test: %w", &EmptyResultError{
+			err: fmt.Errorf("test: %w", &emptyResultError{
 				LastRequest: 123,
 			}),
 			expected: true,
@@ -83,7 +107,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := &EmptyResultError{}
+			err := &emptyResultError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)
@@ -182,7 +206,7 @@ func TestAssertSingleValueResult(t *testing.T) {
 	}{
 		"empty slice": {
 			input:         []int{},
-			expectedError: NewEmptyResultError(nil),
+			expectedError: NewEmptyResultError(),
 		},
 		"single element": {
 			input:         []int{42},
@@ -232,7 +256,7 @@ func TestAssertSingleValueResultIterErr(t *testing.T) {
 	}{
 		"empty slice": {
 			input:         tfiter.Null2[int, error](),
-			expectedError: NewEmptyResultError(nil),
+			expectedError: NewEmptyResultError(),
 		},
 		"single element": {
 			input:         valuesWithErrors([]int{42}),

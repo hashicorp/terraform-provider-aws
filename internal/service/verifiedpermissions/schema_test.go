@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
@@ -30,7 +29,7 @@ func TestAccVerifiedPermissionsSchema_basic(t *testing.T) {
 	var schema verifiedpermissions.GetSchemaOutput
 	resourceName := "aws_verifiedpermissions_schema.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -38,12 +37,12 @@ func TestAccVerifiedPermissionsSchema_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic("NAMESPACE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					testAccCheckSchemaExists(ctx, t, resourceName, &schema),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "NAMESPACE"),
 				),
 			},
@@ -66,7 +65,7 @@ func TestAccVerifiedPermissionsSchema_update(t *testing.T) {
 	var schema verifiedpermissions.GetSchemaOutput
 	resourceName := "aws_verifiedpermissions_schema.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -74,19 +73,19 @@ func TestAccVerifiedPermissionsSchema_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic("NAMESPACE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					testAccCheckSchemaExists(ctx, t, resourceName, &schema),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "NAMESPACE"),
 				),
 			},
 			{
 				Config: testAccSchemaConfig_basic("CHANGED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					testAccCheckSchemaExists(ctx, t, resourceName, &schema),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "CHANGED"),
 				),
 			},
@@ -103,7 +102,7 @@ func TestAccVerifiedPermissionsSchema_disappears(t *testing.T) {
 	var schema verifiedpermissions.GetSchemaOutput
 	resourceName := "aws_verifiedpermissions_schema.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -111,12 +110,12 @@ func TestAccVerifiedPermissionsSchema_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic("NAMESPACE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					testAccCheckSchemaExists(ctx, t, resourceName, &schema),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourceSchema, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -139,14 +138,14 @@ func TestAccVerifiedPermissionsSchema_upgrade_V6_0_0(t *testing.T) {
 	var schema verifiedpermissions.GetSchemaOutput
 	resourceName := "aws_verifiedpermissions_schema.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
-		CheckDestroy: testAccCheckSchemaDestroy(ctx),
+		CheckDestroy: testAccCheckSchemaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -157,7 +156,7 @@ func TestAccVerifiedPermissionsSchema_upgrade_V6_0_0(t *testing.T) {
 				},
 				Config: testAccSchemaConfig_basic("NAMESPACE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					testAccCheckSchemaExists(ctx, t, resourceName, &schema),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "NAMESPACE"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.value"),
 				),
@@ -166,7 +165,7 @@ func TestAccVerifiedPermissionsSchema_upgrade_V6_0_0(t *testing.T) {
 				Config:                   testAccSchemaConfig_basic("NAMESPACE"),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					testAccCheckSchemaExists(ctx, t, resourceName, &schema),
 					resource.TestCheckTypeSetElemAttr(resourceName, "namespaces.*", "NAMESPACE"),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.value"),
@@ -181,9 +180,9 @@ func TestAccVerifiedPermissionsSchema_upgrade_V6_0_0(t *testing.T) {
 	})
 }
 
-func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSchemaDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedpermissions_schema" {
@@ -207,7 +206,7 @@ func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSchemaExists(ctx context.Context, name string, schema *verifiedpermissions.GetSchemaOutput) resource.TestCheckFunc {
+func testAccCheckSchemaExists(ctx context.Context, t *testing.T, name string, schema *verifiedpermissions.GetSchemaOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -218,7 +217,7 @@ func testAccCheckSchemaExists(ctx context.Context, name string, schema *verified
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNamePolicyStoreSchema, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 		resp, err := tfverifiedpermissions.FindSchemaByPolicyStoreID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

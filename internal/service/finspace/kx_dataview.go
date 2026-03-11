@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package finspace
 
 import (
@@ -15,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -174,7 +175,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(environmentID),
 		AutoUpdate:    d.Get("auto_update").(bool),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -266,7 +267,7 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("changeset_id"); ok && d.HasChange("changeset_id") && !d.Get("auto_update").(bool) {
@@ -296,7 +297,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 	})
 
 	if err != nil {
@@ -330,25 +331,24 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 		var nfe *types.ResourceNotFoundException
 
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil || out.DataviewName == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out, nil
 }
 
 func waitKxDataviewCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxDataviewOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxDataviewStatusCreating),
 		Target:                    enum.Slice(types.KxDataviewStatusActive),
-		Refresh:                   statusKxDataview(ctx, conn, id),
+		Refresh:                   statusKxDataview(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -362,10 +362,10 @@ func waitKxDataviewCreated(ctx context.Context, conn *finspace.Client, id string
 }
 
 func waitKxDataviewUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxDataviewOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxDataviewStatusUpdating),
 		Target:                    enum.Slice(types.KxDataviewStatusActive),
-		Refresh:                   statusKxDataview(ctx, conn, id),
+		Refresh:                   statusKxDataview(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -379,10 +379,10 @@ func waitKxDataviewUpdated(ctx context.Context, conn *finspace.Client, id string
 }
 
 func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxDataviewOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxDataviewStatusDeleting),
 		Target:  []string{},
-		Refresh: statusKxDataview(ctx, conn, id),
+		Refresh: statusKxDataview(conn, id),
 		Timeout: timeout,
 	}
 
@@ -394,8 +394,8 @@ func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string
 	return nil, err
 }
 
-func statusKxDataview(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKxDataview(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindKxDataviewById(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil

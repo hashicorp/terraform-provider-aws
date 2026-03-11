@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -176,9 +177,7 @@ func findDedicatedIPByTwoPartKey(ctx context.Context, conn *sesv2.Client, ip, de
 	}
 
 	if aws.ToString(output.PoolName) != destinationPoolName {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -188,9 +187,8 @@ func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDe
 	output, err := conn.GetDedicatedIp(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -199,7 +197,7 @@ func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDe
 	}
 
 	if output == nil || output.DedicatedIp == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DedicatedIp, nil

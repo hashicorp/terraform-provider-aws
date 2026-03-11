@@ -16,6 +16,11 @@ func (streamType) Values() []streamType {
 }
 
 const (
+	anycastIPListDeployed  = "Deployed"
+	anycastIPListDeploying = "Deploying"
+)
+
+const (
 	connectionFunctionStatusPublishing   = "PUBLISHING"
 	connectionFunctionStatusUnassociated = "UNASSOCIATED"
 	connectionFunctionStatusUnpublished  = "UNPUBLISHED"
@@ -24,6 +29,16 @@ const (
 const (
 	distributionStatusDeployed   = "Deployed"
 	distributionStatusInProgress = "InProgress"
+)
+
+const (
+	connectionGroupStatusDeployed   = "Deployed"
+	connectionGroupStatusInProgress = "InProgress"
+)
+
+const (
+	distributionTenantStatusDeployed   = "Deployed"
+	distributionTenantStatusInProgress = "InProgress"
 )
 
 const (

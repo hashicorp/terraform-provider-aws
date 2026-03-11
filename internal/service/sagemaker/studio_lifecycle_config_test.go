@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
+		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_app_type", "JupyterServer"),
@@ -54,19 +52,19 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
+		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -79,7 +77,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 			{
 				Config: testAccStudioLifecycleConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -88,7 +86,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 			{
 				Config: testAccStudioLifecycleConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -100,19 +98,19 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
+		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, t, resourceName, &config),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -121,9 +119,9 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_studio_lifecycle_config" {
@@ -147,7 +145,7 @@ func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, n string, config *sagemaker.DescribeStudioLifecycleConfigOutput) resource.TestCheckFunc {
+func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, t *testing.T, n string, config *sagemaker.DescribeStudioLifecycleConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -158,7 +156,7 @@ func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, n string, conf
 			return fmt.Errorf("No SageMaker AI Studio Lifecycle Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindStudioLifecycleConfigByName(ctx, conn, rs.Primary.ID)
 

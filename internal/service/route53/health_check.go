@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -14,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -129,7 +130,7 @@ func resourceHealthCheck() *schema.Resource {
 				// reference_name. This limits the length of the resource argument to 27.
 				//
 				// Example generated suffix: -terraform-20190122200019880700000001
-				ValidateFunc: validation.StringLenBetween(0, (64 - id.UniqueIDSuffixLength - 11)),
+				ValidateFunc: validation.StringLenBetween(0, (64 - sdkid.UniqueIDSuffixLength - 11)),
 			},
 			"regions": {
 				Type:     schema.TypeSet,
@@ -140,6 +141,7 @@ func resourceHealthCheck() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckRegion](),
 				},
 				Optional: true,
+				Computed: true,
 			},
 			"request_interval": {
 				Type:         schema.TypeInt,
@@ -276,7 +278,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Regions = flex.ExpandStringyValueSet[awstypes.HealthCheckRegion](v.(*schema.Set))
 	}
 
-	callerRef := id.UniqueId()
+	callerRef := sdkid.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
 	}
@@ -454,9 +456,8 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	output, err := conn.GetHealthCheck(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchHealthCheck](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -465,7 +466,7 @@ func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (
 	}
 
 	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HealthCheck, nil

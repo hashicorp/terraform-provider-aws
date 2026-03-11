@@ -31,25 +31,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLink,
+			Factory:  dataSourceLink,
 			TypeName: "aws_oam_link",
 			Name:     "Link",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceLinks,
+			Factory:  dataSourceLinks,
 			TypeName: "aws_oam_links",
 			Name:     "Links",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceSink,
+			Factory:  dataSourceSink,
 			TypeName: "aws_oam_sink",
 			Name:     "Sink",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceSinks,
+			Factory:  dataSourceSinks,
 			TypeName: "aws_oam_sinks",
 			Name:     "Sinks",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -60,25 +66,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceLink,
+			Factory:  resourceLink,
 			TypeName: "aws_oam_link",
 			Name:     "Link",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSink,
+			Factory:  resourceSink,
 			TypeName: "aws_oam_sink",
 			Name:     "Sink",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSinkPolicy,
+			Factory:  resourceSinkPolicy,
 			TypeName: "aws_oam_sink_policy",
 			Name:     "Sink Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

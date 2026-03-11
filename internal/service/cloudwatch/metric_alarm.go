@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudwatch
 
 import (
@@ -381,38 +383,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	d.Set("actions_enabled", alarm.ActionsEnabled)
-	d.Set("alarm_actions", alarm.AlarmActions)
-	d.Set("alarm_description", alarm.AlarmDescription)
-	d.Set("alarm_name", alarm.AlarmName)
-	d.Set(names.AttrARN, alarm.AlarmArn)
-	d.Set("comparison_operator", alarm.ComparisonOperator)
-	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
-	if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-	}
-	d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
-	d.Set("evaluation_periods", alarm.EvaluationPeriods)
-	d.Set("extended_statistic", alarm.ExtendedStatistic)
-	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
-	d.Set(names.AttrMetricName, alarm.MetricName)
-	if len(alarm.Metrics) > 0 {
-		if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
-			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-		}
-	}
-	d.Set(names.AttrNamespace, alarm.Namespace)
-	d.Set("ok_actions", alarm.OKActions)
-	d.Set("period", alarm.Period)
-	d.Set("statistic", alarm.Statistic)
-	d.Set("threshold", alarm.Threshold)
-	d.Set("threshold_metric_id", alarm.ThresholdMetricId)
-	if alarm.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("treat_missing_data", alarm.TreatMissingData)
-	} else {
-		d.Set("treat_missing_data", missingDataMissing)
-	}
-	d.Set(names.AttrUnit, alarm.Unit)
+	resourceMetricAlarmFlatten(ctx, d, alarm)
 
 	return diags
 }
@@ -468,7 +439,7 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))
@@ -710,4 +681,35 @@ func expandMetricAlarmDimensions(tfMap map[string]any) []types.Dimension {
 	}
 
 	return apiObjects
+}
+
+func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *types.MetricAlarm) {
+	d.Set("actions_enabled", alarm.ActionsEnabled)
+	d.Set("alarm_actions", alarm.AlarmActions)
+	d.Set("alarm_description", alarm.AlarmDescription)
+	d.Set("alarm_name", alarm.AlarmName)
+	d.Set(names.AttrARN, alarm.AlarmArn)
+	d.Set("comparison_operator", alarm.ComparisonOperator)
+	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
+	d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions))
+	d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
+	d.Set("evaluation_periods", alarm.EvaluationPeriods)
+	d.Set("extended_statistic", alarm.ExtendedStatistic)
+	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
+	d.Set(names.AttrMetricName, alarm.MetricName)
+	if len(alarm.Metrics) > 0 {
+		d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics))
+	}
+	d.Set(names.AttrNamespace, alarm.Namespace)
+	d.Set("ok_actions", alarm.OKActions)
+	d.Set("period", alarm.Period)
+	d.Set("statistic", alarm.Statistic)
+	d.Set("threshold", alarm.Threshold)
+	d.Set("threshold_metric_id", alarm.ThresholdMetricId)
+	if alarm.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("treat_missing_data", alarm.TreatMissingData)
+	} else {
+		d.Set("treat_missing_data", missingDataMissing)
+	}
+	d.Set(names.AttrUnit, alarm.Unit)
 }

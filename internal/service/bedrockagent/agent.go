@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagent
 
 import (
@@ -30,8 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -188,7 +189,7 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgent(ctx, &input)
@@ -548,9 +549,8 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	output, err := conn.GetAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -559,14 +559,14 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	}
 
 	if output == nil || output.Agent == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Agent, nil
 }
 
-func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgent(conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -582,17 +582,17 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkr
 }
 
 func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -601,17 +601,17 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -620,17 +620,17 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -639,17 +639,17 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 }
 
 func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusVersioning),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -658,17 +658,17 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),
 		Target:  []string{},
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}

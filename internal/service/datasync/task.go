@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datasync
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -483,9 +484,8 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	output, err := conn.DescribeTask(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -494,14 +494,14 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTask(ctx context.Context, conn *datasync.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTask(conn *datasync.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -517,10 +517,10 @@ func statusTask(ctx context.Context, conn *datasync.Client, arn string) sdkretry
 }
 
 func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TaskStatusCreating, awstypes.TaskStatusUnavailable),
 		Target:  enum.Slice(awstypes.TaskStatusAvailable, awstypes.TaskStatusRunning),
-		Refresh: statusTask(ctx, conn, arn),
+		Refresh: statusTask(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -528,7 +528,7 @@ func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, t
 
 	if output, ok := outputRaw.(*datasync.DescribeTaskOutput); ok {
 		if errorCode, errorDetail := aws.ToString(output.ErrorCode), aws.ToString(output.ErrorDetail); errorCode != "" && errorDetail != "" {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
 		}
 
 		return output, err

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ses
 
 import (
@@ -11,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -102,7 +103,7 @@ func findIdentityDKIMAttributesByIdentity(ctx context.Context, conn *ses.Client,
 		return &v, nil
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func findIdentityDKIMAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityDkimAttributesInput) (map[string]awstypes.IdentityDkimAttributes, error) {
@@ -113,7 +114,7 @@ func findIdentityDKIMAttributes(ctx context.Context, conn *ses.Client, input *se
 	}
 
 	if output == nil || output.DkimAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DkimAttributes, nil

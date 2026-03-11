@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,20 +21,20 @@ func testAccDomainName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName awstypes.DomainNameConfig
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	acmCertificateResourceName := "data.aws_acm_certificate.test"
 	resourceName := "aws_appsync_domain_name.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_basic(rName, appsyncCertDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, t, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 				),
@@ -54,26 +52,26 @@ func testAccDomainName_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName awstypes.DomainNameConfig
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	resourceName := "aws_appsync_domain_name.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_description(rName, appsyncCertDomain, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, t, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccDomainNameConfig_description(rName, appsyncCertDomain, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, t, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -90,19 +88,19 @@ func testAccDomainName_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainName awstypes.DomainNameConfig
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	resourceName := "aws_appsync_domain_name.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameConfig_basic(rName, appsyncCertDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, t, resourceName, &domainName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -111,9 +109,9 @@ func testAccDomainName_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainNameDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_domain_name" {
@@ -137,14 +135,14 @@ func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDomainNameExists(ctx context.Context, n string, v *awstypes.DomainNameConfig) resource.TestCheckFunc {
+func testAccCheckDomainNameExists(ctx context.Context, t *testing.T, n string, v *awstypes.DomainNameConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		output, err := tfappsync.FindDomainNameByID(ctx, conn, rs.Primary.ID)
 

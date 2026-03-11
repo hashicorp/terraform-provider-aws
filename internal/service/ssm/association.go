@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssm
 
 import (
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -407,9 +408,8 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	output, err := conn.DescribeAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.AssociationDoesNotExist](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -418,14 +418,14 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	}
 
 	if output == nil || output.AssociationDescription == nil || output.AssociationDescription.Overview == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AssociationDescription, nil
 }
 
-func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAssociation(conn *ssm.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -443,10 +443,10 @@ func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretr
 }
 
 func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.AssociationDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusNamePending),
 		Target:  enum.Slice(awstypes.AssociationStatusNameSuccess),
-		Refresh: statusAssociation(ctx, conn, id),
+		Refresh: statusAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -454,7 +454,7 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 
 	if output, ok := outputRaw.(*awstypes.AssociationDescription); ok {
 		if status := awstypes.AssociationStatusName(aws.ToString(output.Overview.Status)); status == awstypes.AssociationStatusNameFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
 		}
 
 		return output, err

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl_rule_group_association: Add support for `managed_rule_group_configs` within `managed_rule_group` and root-level `visibility_config` block for CloudWatch metrics configuration
+```

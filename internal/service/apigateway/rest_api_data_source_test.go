@@ -6,7 +6,6 @@ package apigateway_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -14,10 +13,10 @@ import (
 
 func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,10 +43,10 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,10 +74,10 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_ipAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

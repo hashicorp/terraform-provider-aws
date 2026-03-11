@@ -19,13 +19,13 @@ Version 6.0.0 of the Terraform AWS Provider adds `region` to most resources maki
 - [How `region` works](#how-region-works)
 - [Migrating from multiple provider configurations](#migrating-from-multiple-provider-configurations)
 - [Before and after examples using `region`](#before-and-after-examples-using-region)
-- [Non–region-aware resources](#nonregion-aware-resources)
+- [Non-region-aware resources](#non-region-aware-resources)
 
 <!-- /TOC -->
 
 ## What's new
 
-As of v6.0.0, most existing resources, data sources, and ephemeral resources are now [Region-aware](#nonregion-aware-resources), meaning they support a new top-level `region`. This allows you to manage a resource in a Region different from the one specified in the provider configuration without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
+As of v6.0.0, most existing resources, data sources, and ephemeral resources are now Region-aware, meaning they support a new top-level `region` argument. This allows you to manage a resource in a Region different from the one specified in the provider configuration without requiring multiple provider blocks. See [How `region` works](#how-region-works) for details.
 
 For example, if your provider is configured for `us-east-1`, you can now manage a VPC in `us-west-2` without defining an additional provider block:
 
@@ -44,7 +44,7 @@ You can still define the Region at the provider level using any of the existing 
 
 ## Can I use `region` in every resource?
 
-No. While most resources are now Region-aware, there are exceptions. These include a few resources that already had a `region` and resources that are inherently global. See [Non–region-aware resources](#nonregion-aware-resources).
+No. While most resources are now Region-aware, there are exceptions. These include a few resources that already had a `region` and resources that are inherently global. See [Non-region-aware resources](#non-region-aware-resources).
 
 ## Why make this change
 
@@ -54,7 +54,11 @@ See the [examples](#before-and-after-examples-using-region) below for a comparis
 
 ## How `region` works
 
-The new top-level `region` is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html). **Changing the value of `region` will force resource replacement.**
+The new top-level `region` argument is [_Optional_ and _Computed_](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/attributes/string#configurability), and defaults to the Region specified in the provider configuration. Its value is validated to ensure it belongs to the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html).
+
+**Changing the value of `region` will force resource replacement.**
+
+**Removing `region` does not force resource replacement. The prior value of `region` stored in Terraform state will be used.**
 
 To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in a specific Region, append `@<region>` to the [import ID](https://developer.hashicorp.com/terraform/language/import#import-id)—for example:
 
@@ -496,9 +500,9 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 </p>
 </details>
 
-## Non–region-aware resources {#nonregion-aware-resources}
+## Non-region-aware resources
 
-This section lists resources that are not Region-aware—meaning `region` has not been added to them.
+This section lists resources that are not Region-aware, meaning `region` has not been added to them.
 
 Some resources, such as [IAM and STS](https://docs.aws.amazon.com/IAM/latest/UserGuide/programming.html#IAMEndpoints), are [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html) and exist in all Regions within a partition.
 
@@ -524,6 +528,7 @@ The following regional resources and data sources had a top-level `region` prior
 All resources for the following services are considered _global_:
 
 * Account Management (`aws_account_*`)
+* ARC Region Switch (`aws_arcregionswitch_*`)
 * Billing (`aws_billing_*`)
 * Billing and Cost Management Data Exports (`aws_bcmdataexports_*`)
 * Budgets (`aws_budgets_*`)
@@ -533,11 +538,13 @@ All resources for the following services are considered _global_:
 * Cost and Usage Report (`aws_cur_*`)
 * Global Accelerator (`aws_globalaccelerator_*`)
 * IAM (`aws_iam_*`, `aws_rolesanywhere_*` and `aws_caller_identity`)
+* Invoicing (`aws_invoicing_*`)
 * Network Manager (`aws_networkmanager_*`)
 * Organizations (`aws_organizations_*`)
 * Price List (`aws_pricing_*`)
 * Route 53 (`aws_route53_*` and `aws_route53domains_*`)
 * Route 53 ARC (`aws_route53recoverycontrolconfig_*` and `aws_route53recoveryreadiness_*`)
+* Savings Plans (`aws_savingsplans_*`)
 * Shield Advanced (`aws_shield_*`)
 * User Notifications (`aws_notifications_*`)
 * User Notifications Contacts (`aws_notificationscontacts_*`)
@@ -554,10 +561,8 @@ Some regional services have a subset of resources that are global:
 | CloudTrail | Resource | `aws_cloudtrail_organization_delegated_admin_account` |
 | Direct Connect | Resource | `aws_dx_gateway` |
 | Direct Connect | Data Source | `aws_dx_gateway` |
-| EC2 | Resource | `aws_ec2_image_block_public_access` |
 | Firewall Manager | Resource | `aws_fms_admin_account` |
 | IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
-| QuickSight | Resource | `aws_quicksight_account_settings` |
 | Resource Access Manager | Resource | `aws_ram_sharing_with_organization` |
 | S3 | Data Source | `aws_canonical_user_id` |
 | S3 | Resource | `aws_s3_account_public_access_block` |

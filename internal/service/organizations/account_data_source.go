@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package organizations
 
 import (
@@ -18,8 +20,7 @@ import (
 
 // @SDKDataSource("aws_organizations_account", name="Account")
 // @Tags(identifierAttribute="account_id")
-// @IdentityAttribute("account_id")
-// @Testing(tagsTest=false, identityTest=false)
+// @Testing(tagsTest=false)
 func dataSourceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountRead,
@@ -72,6 +73,7 @@ func dataSourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AWS Organizations Account (%s): %s", d.Id(), err)
 	}
+
 	d.SetId(aws.ToString(account.Id))
 
 	parentAccountID, err := findParentAccountID(ctx, conn, d.Id())

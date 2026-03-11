@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccConnectInstance_IdentitySerial(t *testing.T) {
+func testAccConnectInstance_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccConnectInstance_Identity_Basic,
-		"ExistingResource":          testAccConnectInstance_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccConnectInstance_Identity_RegionOverride,
+		acctest.CtBasic:             testAccConnectInstance_Identity_basic,
+		"ExistingResource":          testAccConnectInstance_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccConnectInstance_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccConnectInstance_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccConnectInstance_Identity_Basic(t *testing.T) {
+func testAccConnectInstance_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance
@@ -48,7 +48,7 @@ func testAccConnectInstance_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccConnectInstance_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -120,7 +120,7 @@ func testAccConnectInstance_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccConnectInstance_Identity_RegionOverride(t *testing.T) {
+func testAccConnectInstance_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_connect_instance.test"
@@ -208,7 +208,7 @@ func testAccConnectInstance_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
+func testAccConnectInstance_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance
@@ -221,7 +221,7 @@ func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConnectServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -230,7 +230,7 @@ func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func testAccConnectInstance_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccConnectInstance_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccConnectInstance_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Instance
@@ -279,7 +279,7 @@ func testAccConnectInstance_Identity_ExistingResource_NoRefresh_NoChange(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConnectServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -293,7 +293,7 @@ func testAccConnectInstance_Identity_ExistingResource_NoRefresh_NoChange(t *test
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

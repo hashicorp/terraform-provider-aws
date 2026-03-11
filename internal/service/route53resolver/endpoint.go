@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53resolver
 
 import (
@@ -15,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -147,7 +148,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	input := &route53resolver.CreateResolverEndpointInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        awstypes.ResolverEndpointDirection(d.Get("direction").(string)),
 		IpAddresses:      expandEndpointIPAddresses(d.Get(names.AttrIPAddress).(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
@@ -346,9 +347,8 @@ func findResolverEndpointByID(ctx context.Context, conn *route53resolver.Client,
 	output, err := conn.GetResolverEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -357,7 +357,7 @@ func findResolverEndpointByID(ctx context.Context, conn *route53resolver.Client,
 	}
 
 	if output == nil || output.ResolverEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverEndpoint, nil
@@ -383,8 +383,8 @@ func findResolverEndpointIPAddressesByID(ctx context.Context, conn *route53resol
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpoint(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverEndpointByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -400,10 +400,10 @@ func statusEndpoint(ctx context.Context, conn *route53resolver.Client, id string
 }
 
 func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusCreating),
 		Target:     enum.Slice(awstypes.ResolverEndpointStatusOperational),
-		Refresh:    statusEndpoint(ctx, conn, id),
+		Refresh:    statusEndpoint(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -412,7 +412,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -421,10 +421,10 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id s
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusUpdating),
 		Target:     enum.Slice(awstypes.ResolverEndpointStatusOperational),
-		Refresh:    statusEndpoint(ctx, conn, id),
+		Refresh:    statusEndpoint(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -433,7 +433,7 @@ func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -442,10 +442,10 @@ func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id s
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusEndpoint(ctx, conn, id),
+		Refresh:    statusEndpoint(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -454,7 +454,7 @@ func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package servicediscovery
 
 import (
@@ -12,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -71,7 +72,7 @@ func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(sdkid.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -227,9 +228,8 @@ func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id st
 	output, err := conn.GetNamespace(ctx, input)
 
 	if errs.IsA[*awstypes.NamespaceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -238,7 +238,7 @@ func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id st
 	}
 
 	if output == nil || output.Namespace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Namespace, nil

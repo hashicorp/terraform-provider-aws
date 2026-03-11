@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package mq
 
 import (
@@ -20,8 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -401,7 +402,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	input := &mq.CreateBrokerInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
+		CreatorRequestId:        aws.String(sdkid.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
 		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -700,9 +701,8 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	output, err := conn.DescribeBroker(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -711,14 +711,14 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBrokerState(conn *mq.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -734,11 +734,11 @@ func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateCreationInProgress, types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -750,7 +750,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.BrokerStateCreationFailed,
 			types.BrokerStateDeletionInProgress,
@@ -759,7 +759,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 		),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -771,11 +771,11 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 

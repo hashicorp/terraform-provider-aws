@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmanager
 
 import (
@@ -217,7 +219,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 
 	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), id))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id); err != nil && !retry.NotFound(err) {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", id), err.Error())
 		return
 	} else {
@@ -359,7 +361,7 @@ func findDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanage
 	}
 
 	if output == nil || output.DirectConnectGatewayAttachment == nil || output.DirectConnectGatewayAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DirectConnectGatewayAttachment, nil
@@ -393,7 +395,7 @@ func waitDirectConnectGatewayAttachmentCreated(ctx context.Context, conn *networ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -412,7 +414,7 @@ func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -434,7 +436,7 @@ func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -453,7 +455,7 @@ func waitDirectConnectGatewayAttachmentAvailable(ctx context.Context, conn *netw
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -472,7 +474,7 @@ func waitDirectConnectGatewayAttachmentRejected(ctx context.Context, conn *netwo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}

@@ -4,63 +4,43 @@
 package scheduler
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_scheduler_schedule_group", &resource.Sweeper{
-		Name: "aws_scheduler_schedule_group",
-		F:    sweepScheduleGroups,
-		Dependencies: []string{
-			"aws_scheduler_schedule",
-		},
-	})
-
-	resource.AddTestSweepers("aws_scheduler_schedule", &resource.Sweeper{
-		Name: "aws_scheduler_schedule",
-		F:    sweepSchedules,
-	})
+	awsv2.Register("aws_scheduler_schedule", sweepSchedules)
+	awsv2.Register("aws_scheduler_schedule_group", sweepScheduleGroups, "aws_scheduler_schedule")
 }
 
-func sweepScheduleGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-
+func sweepScheduleGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SchedulerClient(ctx)
+	var input scheduler.ListScheduleGroupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	paginator := scheduler.NewListScheduleGroupsPaginator(conn, &scheduler.ListScheduleGroupsInput{})
+	pages := scheduler.NewListScheduleGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Schedule Group sweep for %s: %s", region, err)
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("listing Schedule Groups for %s: %w", region, err)
+			return nil, err
 		}
 
-		for _, it := range page.ScheduleGroups {
-			name := aws.ToString(it.Name)
+		for _, v := range page.ScheduleGroups {
+			name := aws.ToString(v.Name)
 
 			if name == "default" {
-				// Can't delete the default schedule group.
+				log.Printf("[INFO] Skipping EventBridge Scheduler Schedule Group %s", name)
 				continue
 			}
 
-			r := ResourceScheduleGroup()
+			r := resourceScheduleGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -68,51 +48,30 @@ func sweepScheduleGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("sweeping Schedule Group for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepSchedules(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-
+func sweepSchedules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SchedulerClient(ctx)
+	var input scheduler.ListSchedulesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	paginator := scheduler.NewListSchedulesPaginator(conn, &scheduler.ListSchedulesInput{})
+	pages := scheduler.NewListSchedulesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Schedule sweep for %s: %s", region, err)
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("listing Schedules for %s: %w", region, err)
+			return nil, err
 		}
 
-		for _, it := range page.Schedules {
-			groupName := aws.ToString(it.GroupName)
-			scheduleName := aws.ToString(it.Name)
-
+		for _, v := range page.Schedules {
 			r := resourceSchedule()
 			d := r.Data(nil)
-			d.SetId(fmt.Sprintf("%s/%s", groupName, scheduleName))
+			d.SetId(scheduleCreateResourceID(aws.ToString(v.GroupName), aws.ToString(v.Name)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("sweeping Schedule for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

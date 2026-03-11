@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
@@ -23,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -763,7 +764,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var requiresRebootDbInstance bool
 
 	// See discussion of IDs at the top of file - this is NOT d.Id()
-	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
+	identifier := create.Name(ctx, d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
 
@@ -1210,7 +1211,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
 			switch engine {
-			case InstanceEngineMySQL, InstanceEnginePostgres, InstanceEngineMariaDB:
+			case instanceEngineMySQL, instanceEnginePostgres, instanceEngineMariaDB:
 				// skip
 			default:
 				input.DBName = aws.String(v.(string))
@@ -2753,11 +2754,11 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 	}
 
 	switch allocatedStorage, engine := d.Get(names.AttrAllocatedStorage).(int), d.Get(names.AttrEngine).(string); engine {
-	case InstanceEngineDB2Advanced, InstanceEngineDB2Standard:
+	case instanceEngineDB2Advanced, instanceEngineDB2Standard:
 		return allocatedStorage < 100
-	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
+	case instanceEngineMariaDB, instanceEngineMySQL, instanceEnginePostgres:
 		return allocatedStorage < 400
-	case InstanceEngineOracleEnterprise, InstanceEngineOracleEnterpriseCDB, InstanceEngineOracleStandard2, InstanceEngineOracleStandard2CDB:
+	case instanceEngineOracleEnterprise, instanceEngineOracleEnterpriseCDB, instanceEngineOracleStandard2, instanceEngineOracleStandard2CDB:
 		return allocatedStorage < 200
 	}
 
@@ -2857,9 +2858,8 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -3029,9 +3029,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.BlueGreenDeploymentIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -3055,9 +3053,8 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -3138,7 +3135,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
 		if status := aws.ToString(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
 		}
 
 		return output, err
@@ -3175,9 +3172,9 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id st
 
 func dbInstanceValidBlueGreenEngines() []string {
 	return []string{
-		InstanceEngineMariaDB,
-		InstanceEngineMySQL,
-		InstanceEnginePostgres,
+		instanceEngineMariaDB,
+		instanceEngineMySQL,
+		instanceEnginePostgres,
 	}
 }
 

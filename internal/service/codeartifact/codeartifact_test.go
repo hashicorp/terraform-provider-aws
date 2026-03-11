@@ -24,7 +24,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			acctest.CtDisappears:            testAccDomain_disappears,
 			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
 			"tags":                          testAccDomain_tags,
-			"Identity":                      testAccCodeArtifactDomain_IdentitySerial,
+			"Identity":                      testAccCodeArtifactDomain_identitySerial,
 		},
 		"DomainPermissionsPolicy": {
 			acctest.CtBasic:      testAccDomainPermissionsPolicy_basic,
@@ -32,7 +32,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner":              testAccDomainPermissionsPolicy_owner,
 			"disappearsDomain":   testAccDomainPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent":   testAccDomainPermissionsPolicy_ignoreEquivalent,
-			"Identity":           testAccCodeArtifactDomainPermissionsPolicy_IdentitySerial,
+			"Identity":           testAccCodeArtifactDomainPermissionsPolicy_identitySerial,
 		},
 		"Repository": {
 			acctest.CtBasic:      testAccRepository_basic,
@@ -42,7 +42,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner":              testAccRepository_owner,
 			"tags":               testAccRepository_tags,
 			"upstreams":          testAccRepository_upstreams,
-			"Identity":           testAccCodeArtifactRepository_IdentitySerial,
+			"Identity":           testAccCodeArtifactRepository_identitySerial,
 		},
 		"RepositoryEndpointDataSource": {
 			acctest.CtBasic: testAccRepositoryEndpointDataSource_basic,
@@ -54,7 +54,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner":              testAccRepositoryPermissionsPolicy_owner,
 			"disappearsDomain":   testAccRepositoryPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent":   testAccRepositoryPermissionsPolicy_ignoreEquivalent,
-			"Identity":           testAccCodeArtifactRepositoryPermissionsPolicy_IdentitySerial,
+			"Identity":           testAccCodeArtifactRepositoryPermissionsPolicy_identitySerial,
 		},
 	}
 

@@ -52,7 +52,7 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
 
   origin {
     domain_name = "example.com"
-    origin_id   = "example-origin"
+    id          = "example-origin"
 
     custom_origin_config {
       http_port              = 80
@@ -67,8 +67,10 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id        = aws_cloudfront_cache_policy.example.id
 
-    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods  = ["GET", "HEAD"]
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
 
   restrictions {
@@ -80,6 +82,18 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
   viewer_certificate {
     acm_certificate_arn = aws_acm_certificate.example.arn
     ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
   }
 
   tags = {
@@ -217,8 +231,8 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 
 * `error_caching_min_ttl` - (Optional) Minimum amount of time that you want CloudFront to cache the HTTP status code specified in ErrorCode.
 * `error_code` - (Required) HTTP status code for which you want to specify a custom error page and/or a caching duration.
-* `response_code` - (Optional) HTTP status code that you want CloudFront to return to the viewer along with the custom error page.
-* `response_page_path` - (Optional) Path to the custom error page that you want CloudFront to return to a viewer when your origin returns the HTTP status code specified by ErrorCode.
+* `response_code` - (Optional) HTTP status code that you want CloudFront to return to the viewer along with the custom error page. Both `response_code` and `response_page_path` must be specified or both must be omitted.
+* `response_page_path` - (Optional) Path to the custom error page that you want CloudFront to return to a viewer when your origin returns the HTTP status code specified by ErrorCode. Both `response_code` and `response_page_path` must be specified or both must be omitted.
 
 ### Tenant Config
 

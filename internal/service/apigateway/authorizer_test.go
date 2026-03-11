@@ -11,11 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,21 +22,21 @@ import (
 func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetAuthorizerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	roleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/authorizers/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
@@ -58,7 +56,7 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_lambdaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_modified"),
@@ -74,14 +72,14 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 
 func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_cognito(rName),
@@ -112,15 +110,15 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16613
 func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 	iamRoleResourceName := "aws_iam_role.lambda"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_cognitoCredentials(rName),
@@ -143,16 +141,16 @@ func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 
 func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
 	roleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_lambda(rName),
@@ -193,19 +191,19 @@ func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 func TestAccAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetAuthorizerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 				),
 			},
@@ -218,21 +216,21 @@ func TestAccAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_lambdaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(360)),
 				),
 			},
 			{
 				Config: testAccAuthorizerConfig_lambdaNoCache(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(0)),
 				),
 			},
 			{
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 				),
 			},
@@ -242,13 +240,13 @@ func TestAccAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 
 func TestAccAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationDefaultToken(rName),
@@ -269,19 +267,19 @@ func TestAccAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetAuthorizerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_lambdaNoCache(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
 				),
 			},
@@ -298,19 +296,19 @@ func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 func TestAccAPIGatewayAuthorizer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetAuthorizerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_authorizer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -319,14 +317,14 @@ func TestAccAPIGatewayAuthorizer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthorizerExists(ctx context.Context, n string, v *apigateway.GetAuthorizerOutput) resource.TestCheckFunc {
+func testAccCheckAuthorizerExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetAuthorizerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindAuthorizerByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
 
@@ -340,9 +338,9 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *apigateway.G
 	}
 }
 
-func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAuthorizerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_authorizer" {

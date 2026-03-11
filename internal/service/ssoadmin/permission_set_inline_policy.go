@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssoadmin
 
 import (
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -176,9 +177,8 @@ func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadm
 	output, err := conn.GetInlinePolicyForPermissionSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -187,7 +187,7 @@ func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadm
 	}
 
 	if output == nil || aws.ToString(output.InlinePolicy) == "" {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.InlinePolicy), nil

@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,22 +20,22 @@ import (
 
 func testAccCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
@@ -58,17 +56,17 @@ func testAccCluster_basic(t *testing.T) {
 
 func testAccCluster_networkType(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_networkType(rName, string(awstypes.NetworkTypeDualstack)),
@@ -78,7 +76,7 @@ func testAccCluster_networkType(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
@@ -99,7 +97,7 @@ func testAccCluster_networkType(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
@@ -118,22 +116,22 @@ func testAccCluster_networkType(t *testing.T) {
 
 func testAccCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
@@ -151,7 +149,7 @@ func testAccCluster_tags(t *testing.T) {
 			{
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
@@ -163,7 +161,7 @@ func testAccCluster_tags(t *testing.T) {
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
@@ -177,22 +175,22 @@ func testAccCluster_tags(t *testing.T) {
 
 func testAccCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
+					testAccCheckClusterExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoverycontrolconfig.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -201,9 +199,9 @@ func testAccCluster_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53RecoveryControlConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoverycontrolconfig_cluster" {
@@ -227,14 +225,14 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53RecoveryControlConfigClient(ctx)
 
 		_, err := tfroute53recoverycontrolconfig.FindClusterByARN(ctx, conn, rs.Primary.ID)
 

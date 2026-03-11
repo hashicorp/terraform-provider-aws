@@ -149,7 +149,7 @@ func TestExpandSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 		})
 	}
 }
@@ -221,7 +221,7 @@ func TestFlattenSpecialTypes(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
 		})
 	}
 }
@@ -311,5 +311,5 @@ func TestFlattenJSONInterfaceToStringTypable(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }

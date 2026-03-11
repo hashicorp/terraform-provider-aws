@@ -12,11 +12,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,19 +23,19 @@ import (
 func TestAccWAFIPSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
 						names.AttrType:  "IPV4",
@@ -58,19 +56,19 @@ func TestAccWAFIPSet_basic(t *testing.T) {
 func TestAccWAFIPSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,20 +80,20 @@ func TestAccWAFIPSet_disappears(t *testing.T) {
 func TestAccWAFIPSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uName := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	uName := acctest.RandomWithPrefix(t, "tf-acc-test-updated")
 	resourceName := "aws_waf_ipset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &before),
+					testAccCheckIPSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
 						names.AttrType:  "IPV4",
@@ -111,7 +109,7 @@ func TestAccWAFIPSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_changeName(uName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &after),
+					testAccCheckIPSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, uName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
 						names.AttrType:  "IPV4",
@@ -126,19 +124,19 @@ func TestAccWAFIPSet_changeNameForceNew(t *testing.T) {
 func TestAccWAFIPSet_changeDescriptors(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &before),
+					testAccCheckIPSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
@@ -155,7 +153,7 @@ func TestAccWAFIPSet_changeDescriptors(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_changeDescriptors(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &after),
+					testAccCheckIPSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
@@ -171,19 +169,19 @@ func TestAccWAFIPSet_changeDescriptors(t *testing.T) {
 func TestAccWAFIPSet_noDescriptors(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipset awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_noDescriptors(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &ipset),
+					testAccCheckIPSetExists(ctx, t, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "0"),
 				),
@@ -200,7 +198,7 @@ func TestAccWAFIPSet_noDescriptors(t *testing.T) {
 func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipset awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
 
 	incrementIP := func(ip net.IP) {
@@ -222,16 +220,16 @@ func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptors {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_ipSetDescriptors(rName, strings.Join(ipSetDescriptors, "\n")),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &ipset),
+					testAccCheckIPSetExists(ctx, t, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "2048"),
 				),
 			},
@@ -247,19 +245,19 @@ func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 func TestAccWAFIPSet_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.IPSet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_ipV6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -271,14 +269,14 @@ func TestAccWAFIPSet_ipv6(t *testing.T) {
 	})
 }
 
-func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_waf_ipset" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 			_, err := tfwaf.FindIPSetByID(ctx, conn, rs.Primary.ID)
 
@@ -297,14 +295,14 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) resource.TestCheckFunc {
+func testAccCheckIPSetExists(ctx context.Context, t *testing.T, n string, v *awstypes.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 		output, err := tfwaf.FindIPSetByID(ctx, conn, rs.Primary.ID)
 

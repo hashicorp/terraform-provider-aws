@@ -5,29 +5,33 @@ package ssoadmin
 
 // Exports for use in tests only.
 var (
-	ResourceAccountAssignment                  = resourceAccountAssignment
-	ResourceApplication                        = newApplicationResource
-	ResourceApplicationAssignment              = newApplicationAssignmentResource
-	ResourceApplicationAssignmentConfiguration = newApplicationAssignmentConfigurationResource
-	ResourceApplicationAccessScope             = newApplicationAccessScopeResource
-	ResourceCustomerManagedPolicyAttachment    = resourceCustomerManagedPolicyAttachment
-	ResourceInstanceAccessControlAttributes    = resourceInstanceAccessControlAttributes
-	ResourceManagedPolicyAttachment            = resourceManagedPolicyAttachment
-	ResourcePermissionsBoundaryAttachment      = resourcePermissionsBoundaryAttachment
-	ResourcePermissionSet                      = resourcePermissionSet
-	ResourcePermissionSetInlinePolicy          = resourcePermissionSetInlinePolicy
-	ResourceTrustedTokenIssuer                 = newTrustedTokenIssuerResource
+	ResourceAccountAssignment                         = resourceAccountAssignment
+	ResourceApplication                               = newApplicationResource
+	ResourceApplicationAccessScope                    = newApplicationAccessScopeResource
+	ResourceApplicationAssignment                     = newApplicationAssignmentResource
+	ResourceApplicationAssignmentConfiguration        = newApplicationAssignmentConfigurationResource
+	ResourceCustomerManagedPolicyAttachment           = resourceCustomerManagedPolicyAttachment
+	ResourceCustomerManagedPolicyAttachmentsExclusive = newCustomerManagedPolicyAttachmentsExclusiveResource
+	ResourceInstanceAccessControlAttributes           = resourceInstanceAccessControlAttributes
+	ResourceManagedPolicyAttachment                   = resourceManagedPolicyAttachment
+	ResourceManagedPolicyAttachmentsExclusive         = newManagedPolicyAttachmentsExclusiveResource
+	ResourcePermissionsBoundaryAttachment             = resourcePermissionsBoundaryAttachment
+	ResourcePermissionSet                             = resourcePermissionSet
+	ResourcePermissionSetInlinePolicy                 = resourcePermissionSetInlinePolicy
+	ResourceTrustedTokenIssuer                        = newTrustedTokenIssuerResource
 
-	FindAccountAssignmentByFivePartKey          = findAccountAssignmentByFivePartKey
-	FindApplicationByID                         = findApplicationByID
-	FindApplicationAssignmentByID               = findApplicationAssignmentByID
-	FindApplicationAssignmentConfigurationByID  = findApplicationAssignmentConfigurationByID
-	FindApplicationAccessScopeByID              = findApplicationAccessScopeByID
-	FindCustomerManagedPolicyByFourPartKey      = findCustomerManagedPolicyByFourPartKey
-	FindInstanceAttributeControlAttributesByARN = findInstanceAttributeControlAttributesByARN
-	FindManagedPolicyByThreePartKey             = findManagedPolicyByThreePartKey
-	FindPermissionsBoundaryByTwoPartKey         = findPermissionsBoundaryByTwoPartKey
-	FindPermissionSetByTwoPartKey               = findPermissionSetByTwoPartKey
-	FindPermissionSetInlinePolicyByTwoPartKey   = findPermissionSetInlinePolicyByTwoPartKey
-	FindTrustedTokenIssuerByARN                 = findTrustedTokenIssuerByARN
+	FindAccountAssignmentByFivePartKey               = findAccountAssignmentByFivePartKey
+	FindApplicationAccessScopeByID                   = findApplicationAccessScopeByID
+	FindApplicationAssignmentByID                    = findApplicationAssignmentByID
+	FindApplicationAssignmentConfigurationByID       = findApplicationAssignmentConfigurationByID
+	FindApplicationByID                              = findApplicationByID
+	FindCustomerManagedPolicyAttachmentsByTwoPartKey = findCustomerManagedPolicyAttachmentsByTwoPartKey
+	FindCustomerManagedPolicyByFourPartKey           = findCustomerManagedPolicyByFourPartKey
+	FindInstanceAttributeControlAttributesByARN      = findInstanceAttributeControlAttributesByARN
+	FindManagedPolicyAttachmentsByTwoPartKey         = findManagedPolicyAttachmentsByTwoPartKey
+	FindManagedPolicyByThreePartKey                  = findManagedPolicyByThreePartKey
+	FindPermissionsBoundaryByTwoPartKey              = findPermissionsBoundaryByTwoPartKey
+	FindPermissionSetByTwoPartKey                    = findPermissionSetByTwoPartKey
+	FindPermissionSetInlinePolicyByTwoPartKey        = findPermissionSetInlinePolicyByTwoPartKey
+	FindTrustedTokenIssuerByARN                      = findTrustedTokenIssuerByARN
 )

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package observabilityadmin
 
 import (
@@ -24,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -41,6 +42,7 @@ import (
 
 // @FrameworkResource("aws_observabilityadmin_centralization_rule_for_organization", name="Centralization Rule For Organization")
 // @Tags(identifierAttribute="rule_arn")
+// @Testing(tagsTest=false)
 func newCentralizationRuleForOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &centralizationRuleForOrganizationResource{}
 
@@ -127,6 +129,23 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 																Optional: true,
 																Validators: []validator.String{
 																	fwvalidators.AWSRegion(),
+																},
+															},
+														},
+													},
+												},
+												"log_group_name_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"log_group_name_pattern": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 512),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`(?:[\._\-/#A-Za-z0-9]+|\$\{[A-Za-z]+(?:\.[A-Za-z]+){1,2}\})+`), ""),
 																},
 															},
 														},
@@ -374,9 +393,8 @@ func findCentralizationRuleForOrganization(ctx context.Context, conn *observabil
 	output, err := conn.GetCentralizationRuleForOrganization(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -385,7 +403,7 @@ func findCentralizationRuleForOrganization(ctx context.Context, conn *observabil
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -418,7 +436,7 @@ func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *obs
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		tfresource.SetLastError(err, errors.New(string(out.FailureReason)))
+		retry.SetLastError(err, errors.New(string(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -454,6 +472,7 @@ type centralizationRuleSourceModel struct {
 
 type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
+	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
 }
 
@@ -465,6 +484,10 @@ type sourceLogsConfigurationModel struct {
 type logsBackupConfigurationModel struct {
 	KMSKeyARN fwtypes.ARN  `tfsdk:"kms_key_arn"`
 	Region    types.String `tfsdk:"region"`
+}
+
+type logGroupNameConfigurationModel struct {
+	LogGroupNamePattern types.String `tfsdk:"log_group_name_pattern"`
 }
 
 type logsEncryptionConfigurationModel struct {

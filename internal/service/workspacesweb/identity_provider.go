@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package workspacesweb
 
 import (
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -270,9 +271,8 @@ func findIdentityProviderByARN(ctx context.Context, conn *workspacesweb.Client, 
 	output, err := conn.GetIdentityProvider(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -281,7 +281,7 @@ func findIdentityProviderByARN(ctx context.Context, conn *workspacesweb.Client, 
 	}
 
 	if output == nil || output.IdentityProvider == nil {
-		return nil, "", tfresource.NewEmptyResultError(input)
+		return nil, "", tfresource.NewEmptyResultError()
 	}
 
 	portalARN, err := portalARNFromIdentityProviderARN(arn)

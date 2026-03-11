@@ -33,7 +33,7 @@ func TestAccQuickSightAnalysis_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccQuickSightAnalysis_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -89,7 +89,7 @@ func TestAccQuickSightAnalysis_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -137,7 +137,7 @@ func TestAccQuickSightAnalysis_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -178,7 +178,7 @@ func TestAccQuickSightAnalysis_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -206,7 +206,7 @@ func TestAccQuickSightAnalysis_tags(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_null(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_null(t *testing.T) {
 	t.Skip("Resource Analysis does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -221,7 +221,7 @@ func TestAccQuickSightAnalysis_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ func TestAccQuickSightAnalysis_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -279,7 +279,7 @@ func TestAccQuickSightAnalysis_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_EmptyMap(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -292,7 +292,7 @@ func TestAccQuickSightAnalysis_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -302,7 +302,7 @@ func TestAccQuickSightAnalysis_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -346,7 +346,7 @@ func TestAccQuickSightAnalysis_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_AddOnUpdate(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -359,7 +359,7 @@ func TestAccQuickSightAnalysis_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -369,7 +369,7 @@ func TestAccQuickSightAnalysis_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -393,7 +393,7 @@ func TestAccQuickSightAnalysis_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -431,7 +431,7 @@ func TestAccQuickSightAnalysis_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource Analysis does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -446,7 +446,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -458,7 +458,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -498,7 +498,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -526,7 +526,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource Analysis does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -541,7 +541,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -553,7 +553,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -585,7 +585,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -631,7 +631,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -669,7 +669,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource Analysis does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -684,7 +684,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -696,7 +696,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -727,7 +727,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -764,7 +764,7 @@ func TestAccQuickSightAnalysis_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -777,7 +777,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -790,7 +790,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -834,7 +834,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -880,7 +880,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -920,7 +920,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -949,7 +949,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -962,7 +962,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -977,7 +977,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1031,7 +1031,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1084,7 +1084,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1113,7 +1113,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -1126,7 +1126,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1141,7 +1141,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1194,7 +1194,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1251,7 +1251,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1293,7 +1293,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -1306,7 +1306,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToProviderOnly(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1318,7 +1318,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToProviderOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1351,7 +1351,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToProviderOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1387,7 +1387,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToProviderOnly(t *testing.
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -1400,7 +1400,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToResourceOnly(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1413,7 +1413,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToResourceOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1441,7 +1441,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToResourceOnly(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1480,7 +1480,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_updateToResourceOnly(t *testing.
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource Analysis does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1495,7 +1495,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1510,7 +1510,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1551,7 +1551,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource Analysis does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1566,7 +1566,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1579,7 +1579,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1614,7 +1614,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	t.Skip("Resource Analysis does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -1629,7 +1629,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nullOverlappingResourceTag(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1644,7 +1644,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nullOverlappingResourceTag(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1682,7 +1682,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nullOverlappingResourceTag(t *te
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	t.Skip("Resource Analysis does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -1697,7 +1697,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1712,7 +1712,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1750,7 +1750,7 @@ func TestAccQuickSightAnalysis_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -1763,7 +1763,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1773,7 +1773,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1809,7 +1809,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -1822,7 +1822,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1834,7 +1834,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1866,7 +1866,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1910,7 +1910,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -1923,7 +1923,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1935,7 +1935,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1965,7 +1965,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2001,7 +2001,7 @@ func TestAccQuickSightAnalysis_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -2014,7 +2014,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2033,7 +2033,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2082,7 +2082,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2131,7 +2131,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2167,7 +2167,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) 
 	})
 }
 
-func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccQuickSightAnalysis_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Analysis
@@ -2180,7 +2180,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.QuickSightServiceID),
-		CheckDestroy: testAccCheckAnalysisDestroy(ctx),
+		CheckDestroy: testAccCheckAnalysisDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2197,7 +2197,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2260,7 +2260,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2323,7 +2323,7 @@ func TestAccQuickSightAnalysis_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnalysisExists(ctx, resourceName, &v),
+					testAccCheckAnalysisExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

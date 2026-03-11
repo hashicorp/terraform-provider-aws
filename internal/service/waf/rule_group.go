@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package waf
 
 import (
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -225,9 +226,8 @@ func findRuleGroupByID(ctx context.Context, conn *waf.Client, id string) (*awsty
 	output, err := conn.GetRuleGroup(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -236,7 +236,7 @@ func findRuleGroupByID(ctx context.Context, conn *waf.Client, id string) (*awsty
 	}
 
 	if output == nil || output.RuleGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RuleGroup, nil

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package m2
 
 import (
@@ -30,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -460,9 +461,8 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	output, err := conn.GetEnvironment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -471,14 +471,14 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *m2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *m2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -494,17 +494,17 @@ func statusEnvironment(ctx context.Context, conn *m2.Client, id string) sdkretry
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentLifecycleCreating),
 		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh: statusEnvironment(ctx, conn, id),
+		Refresh: statusEnvironment(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -513,17 +513,17 @@ func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentLifecycleUpdating),
 		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh: statusEnvironment(ctx, conn, id),
+		Refresh: statusEnvironment(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -532,10 +532,10 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
 		Target:     []string{},
-		Refresh:    statusEnvironment(ctx, conn, id),
+		Refresh:    statusEnvironment(conn, id),
 		Timeout:    timeout,
 		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -544,7 +544,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

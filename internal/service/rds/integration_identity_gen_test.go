@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRDSIntegration_Identity_Basic(t *testing.T) {
+func TestAccRDSIntegration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Integration
@@ -35,7 +35,7 @@ func TestAccRDSIntegration_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccRDSIntegration_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -108,7 +108,7 @@ func TestAccRDSIntegration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSIntegration_Identity_RegionOverride(t *testing.T) {
+func TestAccRDSIntegration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_rds_integration.test"
@@ -228,7 +228,7 @@ func TestAccRDSIntegration_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccRDSIntegration_Identity_ExistingResource(t *testing.T) {
+func TestAccRDSIntegration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Integration
@@ -241,7 +241,7 @@ func TestAccRDSIntegration_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.RDSServiceID),
-		CheckDestroy: testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy: testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -250,7 +250,7 @@ func TestAccRDSIntegration_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -264,7 +264,7 @@ func TestAccRDSIntegration_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -308,7 +308,7 @@ func TestAccRDSIntegration_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccRDSIntegration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccRDSIntegration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Integration
@@ -321,7 +321,7 @@ func TestAccRDSIntegration_Identity_ExistingResource_NoRefresh_NoChange(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.RDSServiceID),
-		CheckDestroy: testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy: testAccCheckIntegrationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -335,7 +335,7 @@ func TestAccRDSIntegration_Identity_ExistingResource_NoRefresh_NoChange(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

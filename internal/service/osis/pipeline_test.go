@@ -11,12 +11,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	"github.com/aws/aws-sdk-go-v2/service/osis/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfosis "github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,10 +23,10 @@ import (
 func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -36,12 +34,12 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
@@ -68,10 +66,10 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -79,12 +77,12 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipeline, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,10 +94,10 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -107,12 +105,12 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_bufferOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.0.persistent_buffer_enabled", acctest.CtTrue),
@@ -126,7 +124,7 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 			{
 				Config: testAccPipelineConfig_bufferOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.0.persistent_buffer_enabled", acctest.CtFalse),
@@ -139,10 +137,10 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -150,12 +148,12 @@ func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_at_rest_options.0.kms_key_arn"),
@@ -173,10 +171,10 @@ func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -184,12 +182,12 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_logPublishing(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.0.is_logging_enabled", acctest.CtTrue),
@@ -209,10 +207,10 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -220,12 +218,12 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -248,10 +246,10 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -259,12 +257,12 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -272,7 +270,7 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 			{
 				Config: testAccPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -281,7 +279,7 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 			{
 				Config: testAccPipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -293,10 +291,10 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
@@ -304,12 +302,12 @@ func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_pipelineRole(rName, "test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
@@ -332,7 +330,7 @@ func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 			{
 				Config: testAccPipelineConfig_pipelineRole(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
@@ -354,17 +352,17 @@ func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
 	resourceName := "aws_osis_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
-		CheckDestroy: testAccCheckPipelineDestroy(ctx),
+		CheckDestroy: testAccCheckPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -375,7 +373,7 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 				},
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -399,9 +397,9 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 	})
 }
 
-func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPipelineDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_osis_pipeline" {
@@ -425,14 +423,14 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPipelineExists(ctx context.Context, n string, v *types.Pipeline) resource.TestCheckFunc {
+func testAccCheckPipelineExists(ctx context.Context, t *testing.T, n string, v *types.Pipeline) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 		output, err := tfosis.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
@@ -447,7 +445,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *types.Pipeline
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OpenSearchIngestionClient(ctx)
 
 	input := &osis.ListPipelinesInput{}
 	_, err := conn.ListPipelines(ctx, input)

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudsearch
 
 import (
@@ -159,7 +161,7 @@ func findAccessPolicyByName(ctx context.Context, conn *cloudsearch.Client, name 
 	accessPolicy := aws.ToString(output.Options)
 
 	if accessPolicy == "" {
-		return "", tfresource.NewEmptyResultError(name)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return accessPolicy, nil
@@ -183,7 +185,7 @@ func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Clien
 	}
 
 	if output == nil || output.AccessPolicies == nil || output.AccessPolicies.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccessPolicies, nil

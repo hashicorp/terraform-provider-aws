@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package transcribe
 
 import (
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -195,10 +196,10 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
-		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
+		Refresh:                   statusMedicalVocabulary(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -214,10 +215,10 @@ func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
-		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
+		Refresh:                   statusMedicalVocabulary(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -233,10 +234,10 @@ func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
-		Refresh: statusMedicalVocabulary(ctx, conn, id),
+		Refresh: statusMedicalVocabulary(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -249,8 +250,8 @@ func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, 
 	return nil, err
 }
 
-func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMedicalVocabulary(conn *transcribe.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindMedicalVocabularyByName(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -273,9 +274,8 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -284,7 +284,7 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

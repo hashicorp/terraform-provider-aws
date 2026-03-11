@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kinesisvideo
 
 import (
@@ -237,7 +239,7 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 	}
 
 	if output == nil || output.StreamInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StreamInfo, nil

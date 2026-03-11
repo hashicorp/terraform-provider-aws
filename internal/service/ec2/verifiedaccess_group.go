@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -12,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -104,7 +106,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
-		ClientToken:              aws.String(id.UniqueId()),
+		ClientToken:              aws.String(sdkid.UniqueId()),
 		TagSpecifications:        getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
@@ -183,7 +185,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll, "sse_configuration") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
-			ClientToken:           aws.String(id.UniqueId()),
+			ClientToken:           aws.String(sdkid.UniqueId()),
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
@@ -241,7 +243,7 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessGroupInput{
-		ClientToken:           aws.String(id.UniqueId()),
+		ClientToken:           aws.String(sdkid.UniqueId()),
 		VerifiedAccessGroupId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessGroup(ctx, &input)

@@ -32,6 +32,10 @@ service "appstream" {
   parallelism = 10
 }
 
+service "arcregionswitch" {
+  parallelism = 10
+}
+
 service "autoscaling" {
   vpc_lock = true
 }
@@ -248,12 +252,17 @@ service "qldb" {
   skip = true
 }
 
+service "ram" {
+  parallelism = 10 # Max Permissions
+}
+
 service "rds" {
   vpc_lock = true
 }
 
 service "redshift" {
-  vpc_lock = true
+  vpc_lock    = true
+  parallelism = 10 # Max Snapshot Copy Grants
 }
 
 service "resiliencehub" {
@@ -266,6 +275,10 @@ service "route53" {
 
 service "route53resolver" {
   vpc_lock = true
+}
+
+service "glacier" {
+  skip = true
 }
 
 service "sagemaker" {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_subnet: Fix `expected ipv6_netmask_length to be one of [44 48 52 56 60], got 64` validation error
+```

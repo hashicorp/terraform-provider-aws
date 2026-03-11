@@ -12,11 +12,9 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
@@ -27,18 +25,18 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, t, resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "secret"),
@@ -62,18 +60,18 @@ func TestAccIAMAccessKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccessKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,18 +84,18 @@ func TestAccIAMAccessKey_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_encrypted(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, t, resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					testDecryptSecretKeyAndTest(resourceName, testPrivKey1),
 					resource.TestCheckNoResourceAttr(resourceName, "secret"),
@@ -121,18 +119,18 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
 				),
 			},
@@ -145,14 +143,14 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 			{
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeActive)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeActive)),
 				),
 			},
 			{
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
 				),
 			},
@@ -160,9 +158,9 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_access_key" {
@@ -186,14 +184,14 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAccessKeyExists(ctx context.Context, n string, v *awstypes.AccessKeyMetadata) resource.TestCheckFunc {
+func testAccCheckAccessKeyExists(ctx context.Context, t *testing.T, n string, v *awstypes.AccessKeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		output, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 

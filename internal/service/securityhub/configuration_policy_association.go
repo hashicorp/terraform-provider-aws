@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package securityhub
 
 import (
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -149,9 +150,8 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	output, err := conn.GetConfigurationPolicyAssociation(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -160,14 +160,14 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConfigurationPolicyAssociation(conn *securityhub.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigurationPolicyAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -183,10 +183,10 @@ func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub
 }
 
 func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *securityhub.Client, id string, timeout time.Duration) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationPolicyAssociationStatusPending),
 		Target:  enum.Slice(types.ConfigurationPolicyAssociationStatusSuccess),
-		Refresh: statusConfigurationPolicyAssociation(ctx, conn, id),
+		Refresh: statusConfigurationPolicyAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -200,7 +200,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 	}
 
 	if output, ok := outputRaw.(*securityhub.GetConfigurationPolicyAssociationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
 
 		return output, err
 	}

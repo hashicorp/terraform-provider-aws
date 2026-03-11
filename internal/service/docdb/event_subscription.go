@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package docdb
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -106,7 +107,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
@@ -293,9 +294,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *docdb.Client, name s
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -319,9 +318,9 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastRequest: input,
-				LastError:   err,
+			return nil, &retry.NotFoundError{
+
+				LastError: err,
 			}
 		}
 
@@ -339,8 +338,8 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEventSubscription(conn *docdb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -356,10 +355,10 @@ func statusEventSubscription(ctx context.Context, conn *docdb.Client, name strin
 }
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -375,10 +374,10 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.Client, name 
 }
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -394,10 +393,10 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.Client, name 
 }
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, name),
+		Refresh:    statusEventSubscription(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

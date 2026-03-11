@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
@@ -17,7 +16,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_partition.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -26,7 +25,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 				Config: testAccPartitionDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "partition", func(value string) error {
-						expected := acctest.Provider.Meta().(*conns.AWSClient).Partition(ctx)
+						expected := acctest.ProviderMeta(ctx, t).Partition(ctx)
 						if value != expected {
 							return fmt.Errorf("Incorrect Partition: expected %q, got %q", expected, value)
 						}
@@ -34,7 +33,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 						return nil
 					}),
 					resource.TestCheckResourceAttrWith(dataSourceName, "dns_suffix", func(value string) error {
-						expected := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix(ctx)
+						expected := acctest.ProviderMeta(ctx, t).DNSSuffix(ctx)
 						if value != expected {
 							return fmt.Errorf("Incorrect DNS Suffix: expected %q, got %q", expected, value)
 						}

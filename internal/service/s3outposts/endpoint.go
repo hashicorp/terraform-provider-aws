@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3outposts
 
 import (
@@ -224,7 +226,7 @@ func findEndpointByARN(ctx context.Context, conn *s3outposts.Client, arn string)
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outposts.ListEndpointsInput) ([]awstypes.Endpoint, error) {

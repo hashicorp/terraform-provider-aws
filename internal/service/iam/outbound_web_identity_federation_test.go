@@ -27,7 +27,9 @@ func TestAccIAMOutboundWebIdentityFederation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccOutboundWebIdentityFederation_basic,
 		acctest.CtDisappears: testAccOutboundWebIdentityFederation_disappears,
-		"Identity":           testAccIAMOutboundWebIdentityFederation_IdentitySerial,
+		"Identity":           testAccIAMOutboundWebIdentityFederation_identitySerial,
+		// Data source
+		"dataSource": testAccIAMOutboundWebIdentityFederationDataSource_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

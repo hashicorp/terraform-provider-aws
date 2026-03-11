@@ -13,11 +13,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,10 +29,10 @@ func TestAccInspector2Filter_basic(t *testing.T) {
 	account_id_1 := "111222333444"
 	reason_1 := "TestReason_1"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -42,12 +40,12 @@ func TestAccInspector2Filter_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -84,10 +82,10 @@ func TestAccInspector2Filter_update(t *testing.T) {
 	account_id_2 := "444333222111"
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -95,12 +93,12 @@ func TestAccInspector2Filter_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -123,7 +121,7 @@ func TestAccInspector2Filter_update(t *testing.T) {
 			{
 				Config: testAccFilterConfig_basic(rName, action_2, description_2, reason_2, comparison_2, account_id_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -160,10 +158,10 @@ func TestAccInspector2Filter_stringFilters(t *testing.T) {
 	value_2 := "TestValue_2"
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -171,12 +169,12 @@ func TestAccInspector2Filter_stringFilters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_stringFilters(rName, action_1, description_1, reason_1, comparison_1, value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -209,7 +207,7 @@ func TestAccInspector2Filter_stringFilters(t *testing.T) {
 			{
 				Config: testAccFilterConfig_stringFilters(rName, action_2, description_2, reason_2, comparison_2, value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -256,10 +254,10 @@ func TestAccInspector2Filter_numberFilters(t *testing.T) {
 	upper_inclusive_value_2 := "101"
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -267,12 +265,12 @@ func TestAccInspector2Filter_numberFilters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_numberFilters(rName, action_1, description_1, reason_1, lower_inclusive_value_1, upper_inclusive_value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -300,7 +298,7 @@ func TestAccInspector2Filter_numberFilters(t *testing.T) {
 			{
 				Config: testAccFilterConfig_numberFilters(rName, action_2, description_2, reason_2, lower_inclusive_value_2, upper_inclusive_value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -342,10 +340,10 @@ func TestAccInspector2Filter_dateFilters(t *testing.T) {
 	end_inclusive_value_2 := time.Now().In(time.UTC).Add(10 * time.Minute).Format(time.RFC3339)
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -353,12 +351,12 @@ func TestAccInspector2Filter_dateFilters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_dateFilters(rName, action_1, description_1, reason_1, start_inclusive_value_1, end_inclusive_value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -386,7 +384,7 @@ func TestAccInspector2Filter_dateFilters(t *testing.T) {
 			{
 				Config: testAccFilterConfig_dateFilters(rName, action_2, description_2, reason_2, start_inclusive_value_2, end_inclusive_value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -429,10 +427,10 @@ func TestAccInspector2Filter_mapFilters(t *testing.T) {
 	value_2 := "some_value_2"
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -440,12 +438,12 @@ func TestAccInspector2Filter_mapFilters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_mapFilters(rName, action_1, description_1, reason_1, comparison, key_1, value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -469,7 +467,7 @@ func TestAccInspector2Filter_mapFilters(t *testing.T) {
 			{
 				Config: testAccFilterConfig_mapFilters(rName, action_2, description_2, reason_2, comparison, key_2, value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -507,10 +505,10 @@ func TestAccInspector2Filter_portRangeFilters(t *testing.T) {
 	end_inclusive_value_2 := 200
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -518,12 +516,12 @@ func TestAccInspector2Filter_portRangeFilters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_portRangeFilters(rName, action_1, description_1, reason_1, begin_inclusive_value_1, end_inclusive_value_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -544,7 +542,7 @@ func TestAccInspector2Filter_portRangeFilters(t *testing.T) {
 			{
 				Config: testAccFilterConfig_portRangeFilters(rName, action_2, description_2, reason_2, begin_inclusive_value_2, end_inclusive_value_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -576,10 +574,10 @@ func TestAccInspector2Filter_packageFilters(t *testing.T) {
 	description_2 := "TestDescription_2"
 	reason_2 := "TestReason_2"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -587,12 +585,12 @@ func TestAccInspector2Filter_packageFilters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_packageFilter_1(rName, action_1, description_1, reason_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
@@ -659,7 +657,7 @@ func TestAccInspector2Filter_packageFilters(t *testing.T) {
 			{
 				Config: testAccFilterConfig_packageFilter_2(rName, action_2, description_2, reason_2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
@@ -736,10 +734,10 @@ func TestAccInspector2Filter_disappears(t *testing.T) {
 	account_id_1 := "111222333444"
 	reason_1 := "TestReason_1"
 	var filter awstypes.Filter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_inspector2_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -747,12 +745,12 @@ func TestAccInspector2Filter_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_basic(rName, action_1, description_1, reason_1, comparison_1, account_id_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &filter),
+					testAccCheckFilterExists(ctx, t, resourceName, &filter),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfinspector2.ResourceFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -761,9 +759,9 @@ func TestAccInspector2Filter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFilterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_filter" {
@@ -787,14 +785,14 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFilterExists(ctx context.Context, n string, v *awstypes.Filter) resource.TestCheckFunc {
+func testAccCheckFilterExists(ctx context.Context, t *testing.T, n string, v *awstypes.Filter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		output, err := tfinspector2.FindFilterByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -820,7 +818,7 @@ func testAccFilterImportStateIDFunc(resourceName string) resource.ImportStateIdF
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 	input := &inspector2.ListFiltersInput{}
 

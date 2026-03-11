@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package servicecatalog
 
 import (
@@ -12,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +28,9 @@ import (
 
 // @SDKResource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog;servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog;servicecatalog.DescribePortfolioOutput")
+// @Testing(generator="randomPortfolioName(t)")
+// @Testing(skipEmptyTags=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Portfolio")
 func resourcePortfolio() *schema.Resource {
 	return &schema.Resource{
@@ -85,7 +88,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta a
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(acceptLanguageEnglish),
 		DisplayName:      aws.String(name),
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(sdkid.UniqueId()),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -206,9 +209,8 @@ func findPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id stri
 	output, err := conn.DescribePortfolio(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -217,7 +219,7 @@ func findPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

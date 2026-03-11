@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,18 +28,18 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 
 	resourceName := "aws_efs_replication_configuration.test"
 	fsResourceName := "aws_efs_file_system.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
@@ -64,21 +63,21 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_efs_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceReplicationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,10 +95,10 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 	resourceName := "aws_efs_replication_configuration.test"
 	fsResourceName := "aws_efs_file_system.test"
 	kmsKeyResourceName := "aws_kms_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var providers []*schema.Provider
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -111,7 +110,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 			{
 				Config: testAccReplicationConfigurationConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.availability_zone_name", "data.aws_availability_zones.available", "names.0"),
@@ -137,10 +136,10 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 
 	resourceName := "aws_efs_replication_configuration.test"
 	destinationFsResourceName := "aws_efs_file_system.destination"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var providers []*schema.Provider
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -152,7 +151,7 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 			{
 				Config: testAccReplicationConfigurationConfig_existingDestination(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, names.AttrID),
@@ -163,14 +162,14 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckReplicationConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
 
 		_, err := tfefs.FindReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -178,7 +177,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 	}
 }
 
-func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReplicationConfigurationDestroy(ctx context.Context, _ *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckReplicationConfigurationDestroyWithProvider(ctx)(s, acctest.Provider)
 	}

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package xray
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -110,14 +111,14 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	}
 
 	if output == nil || output.EncryptionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfig, nil
 }
 
-func statusEncryptionConfig(ctx context.Context, conn *xray.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEncryptionConfig(conn *xray.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -136,10 +137,10 @@ func waitEncryptionConfigAvailable(ctx context.Context, conn *xray.Client) (*typ
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EncryptionStatusUpdating),
 		Target:  enum.Slice(types.EncryptionStatusActive),
-		Refresh: statusEncryptionConfig(ctx, conn),
+		Refresh: statusEncryptionConfig(conn),
 		Timeout: timeout,
 	}
 

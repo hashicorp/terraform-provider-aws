@@ -7,6 +7,8 @@ package route53resolver
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -188,6 +190,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newRuleAssociationResourceAsListResource,
+			TypeName: "aws_route53_resolver_rule_association",
+			Name:     "Rule Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

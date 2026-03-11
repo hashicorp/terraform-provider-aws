@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -11,8 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -105,7 +106,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 
 	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
-		CallerReference: aws.String(id.UniqueId()),
+		CallerReference: aws.String(sdkid.UniqueId()),
 		Name:            aws.String(name),
 	}
 
@@ -227,9 +228,8 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	output, err := conn.GetFieldLevelEncryptionProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -238,7 +238,7 @@ func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	}
 
 	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

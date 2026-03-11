@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDeviceFarmDevicePool_Identity_Basic(t *testing.T) {
+func TestAccDeviceFarmDevicePool_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DevicePool
@@ -39,7 +39,7 @@ func TestAccDeviceFarmDevicePool_Identity_Basic(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx),
+		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccDeviceFarmDevicePool_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevicePoolExists(ctx, resourceName, &v),
+					testAccCheckDevicePoolExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -112,7 +112,7 @@ func TestAccDeviceFarmDevicePool_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmDevicePool_Identity_ExistingResource(t *testing.T) {
+func TestAccDeviceFarmDevicePool_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DevicePool
@@ -128,7 +128,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckDevicePoolDestroy(ctx),
+		CheckDestroy: testAccCheckDevicePoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -137,7 +137,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevicePoolExists(ctx, resourceName, &v),
+					testAccCheckDevicePoolExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -151,7 +151,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevicePoolExists(ctx, resourceName, &v),
+					testAccCheckDevicePoolExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -194,7 +194,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmDevicePool_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDeviceFarmDevicePool_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DevicePool
@@ -210,7 +210,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource_NoRefresh_NoChange(t 
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckDevicePoolDestroy(ctx),
+		CheckDestroy: testAccCheckDevicePoolDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -224,7 +224,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource_NoRefresh_NoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevicePoolExists(ctx, resourceName, &v),
+					testAccCheckDevicePoolExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -239,7 +239,7 @@ func TestAccDeviceFarmDevicePool_Identity_ExistingResource_NoRefresh_NoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevicePoolExists(ctx, resourceName, &v),
+					testAccCheckDevicePoolExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

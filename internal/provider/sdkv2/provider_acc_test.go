@@ -1102,7 +1102,7 @@ func testAccProviderConfig_overridesUseFipsEndpointFlagForAppConfig(rName string
 provider "aws" {
   use_fips_endpoint = true
   endpoints {
-	appconfig = %[1]q
+    appconfig = %[1]q
   }
 }
 

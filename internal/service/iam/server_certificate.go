@@ -1,11 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for backward compatibility with provider v3.0.0 state normalization, not cryptographic security
 	"encoding/hex"
 	"log"
 	"strings"
@@ -15,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,7 +84,7 @@ func resourceServerCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
 			},
 			names.AttrPath: {
 				Type:     schema.TypeString,
@@ -112,7 +113,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	sslCertName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
@@ -214,7 +215,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			oldName, newName := d.GetChange(names.AttrName)
 
 			// Handle both a name change and a switch to using a name prefix
-			newSSLCertName := create.Name(newName.(string), d.Get(names.AttrNamePrefix).(string))
+			newSSLCertName := create.Name(ctx, newName.(string), d.Get(names.AttrNamePrefix).(string))
 
 			input.ServerCertificateName = aws.String(oldName.(string))
 			input.NewServerCertificateName = aws.String(newSSLCertName)
@@ -222,7 +223,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			oldName := d.Get(names.AttrName).(string)
 
 			// Handle only a name prefix change using an empty string as name (as it hasn't been changed)
-			newSSLCertName := create.Name("", d.Get(names.AttrNamePrefix).(string))
+			newSSLCertName := create.Name(ctx, "", d.Get(names.AttrNamePrefix).(string))
 
 			input.ServerCertificateName = aws.String(oldName)
 			input.NewServerCertificateName = aws.String(newSSLCertName)
@@ -293,9 +294,8 @@ func findServerCertificate(ctx context.Context, conn *iam.Client, input *iam.Get
 	output, err := conn.GetServerCertificate(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -304,7 +304,7 @@ func findServerCertificate(ctx context.Context, conn *iam.Client, input *iam.Get
 	}
 
 	if output == nil || output.ServerCertificate == nil || output.ServerCertificate.ServerCertificateMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServerCertificate, nil
@@ -325,7 +325,7 @@ func normalizeCert(cert any) string {
 		return ""
 	}
 
-	cleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(rawCert))))
+	cleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(rawCert)))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- SHA1 used for backward compatibility with provider v3.0.0 state normalization, not cryptographic security
 	return hex.EncodeToString(cleanVal[:])
 }
 

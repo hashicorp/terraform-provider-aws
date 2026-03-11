@@ -6,7 +6,6 @@ package dms_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,20 +14,20 @@ import (
 func TestAccDMSReplicationInstanceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	replicationInstanceClass := "dms.c4.large"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_instance.test"
 	dataSourceName := "data.aws_dms_replication_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceDataSourceConfig_basic(rName, replicationInstanceClass),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, dataSourceName),
+					testAccCheckReplicationInstanceExists(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_arn", resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_id", resourceName, "replication_instance_id"),

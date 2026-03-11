@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package logs
 
 import (
@@ -8,6 +10,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,6 +24,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_resource_policy", name="Resource Policy")
@@ -32,8 +36,14 @@ func resourceResourcePolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("policy_name", d.Id())
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if arn.IsARN(d.Id()) {
+					d.Set(names.AttrResourceARN, d.Id())
+					d.Set("policy_scope", awstypes.PolicyScopeResource)
+				} else {
+					d.Set("policy_name", d.Id())
+					d.Set("policy_scope", awstypes.PolicyScopeAccount)
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -42,8 +52,30 @@ func resourceResourcePolicy() *schema.Resource {
 			"policy_document": sdkv2.IAMPolicyDocumentSchemaRequired(),
 			"policy_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					names.AttrResourceARN,
+				},
+				ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
+			},
+			"policy_scope": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrResourceARN: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+				ConflictsWith: []string{
+					"policy_name",
+				},
+				ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
+			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -61,9 +93,21 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get("policy_name").(string)
 	input := &cloudwatchlogs.PutResourcePolicyInput{
 		PolicyDocument: aws.String(policy),
-		PolicyName:     aws.String(name),
 	}
 
+	if v, ok := d.GetOk("policy_name"); ok {
+		input.PolicyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrResourceARN); ok {
+		input.ResourceArn = aws.String(v.(string))
+	}
+
+	if !d.IsNewResource() {
+		if v, ok := d.GetOk("revision_id"); ok {
+			input.ExpectedRevisionId = aws.String(v.(string))
+		}
+	}
 	_, err = conn.PutResourcePolicy(ctx, input)
 
 	if err != nil {
@@ -71,7 +115,15 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.IsNewResource() {
-		d.SetId(name)
+		// For account-scoped policies, use the policy name as the ID.
+		// For resource-scoped policies, use the resource ARN as the ID.
+		if input.PolicyName != nil {
+			d.SetId(name)
+			d.Set("policy_scope", awstypes.PolicyScopeAccount)
+		} else if input.ResourceArn != nil {
+			d.SetId(aws.ToString(input.ResourceArn))
+			d.Set("policy_scope", awstypes.PolicyScopeResource)
+		}
 	}
 
 	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
@@ -81,7 +133,13 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	resourcePolicy, err := findResourcePolicyByName(ctx, conn, d.Id())
+	var resourcePolicy *awstypes.ResourcePolicy
+	var err error
+	if v, ok := d.GetOk("policy_scope"); ok && v.(string) == string(awstypes.PolicyScopeResource) {
+		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, d.Id())
+	} else {
+		resourcePolicy, err = findResourcePolicyByName(ctx, conn, d.Id())
+	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Resource Policy (%s) not found, removing from state", d.Id())
@@ -104,6 +162,9 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("policy_document", policyToSet)
+	d.Set("policy_scope", resourcePolicy.PolicyScope)
+	d.Set(names.AttrResourceARN, resourcePolicy.ResourceArn)
+	d.Set("revision_id", resourcePolicy.RevisionId)
 
 	return diags
 }
@@ -112,10 +173,21 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicy(ctx, &cloudwatchlogs.DeleteResourcePolicyInput{
-		PolicyName: aws.String(d.Id()),
-	})
+	input := cloudwatchlogs.DeleteResourcePolicyInput{}
+	if v, ok := d.GetOk("policy_scope"); ok && v.(string) == string(awstypes.PolicyScopeResource) {
+		log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy by ARN: %s", d.Id())
+		revisionID := d.Get("revision_id").(string)
+		if revisionID == "" {
+			return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Resource Policy (%s): missing required revision_id", d.Id())
+		}
+		input.ResourceArn = aws.String(d.Id())
+		input.ExpectedRevisionId = aws.String(revisionID)
+	} else {
+		log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy by Name: %s", d.Id())
+		input.PolicyName = aws.String(d.Id())
+	}
+
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -139,7 +211,28 @@ func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, 
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, err
+}
+
+func findResourcePolicyByResourceARN(ctx context.Context, conn *cloudwatchlogs.Client, arn string) (*awstypes.ResourcePolicy, error) {
+	input := cloudwatchlogs.DescribeResourcePoliciesInput{
+		ResourceArn: aws.String(arn),
+		PolicyScope: awstypes.PolicyScopeResource,
+	}
+
+	output, err := findResourcePolicy(ctx, conn, &input, func(v *awstypes.ResourcePolicy) bool {
+		return aws.ToString(v.ResourceArn) == arn
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.PolicyDocument == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

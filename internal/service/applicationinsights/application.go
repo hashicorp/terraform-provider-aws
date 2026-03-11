@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package applicationinsights
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -220,9 +221,8 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	output, err := conn.DescribeApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -231,14 +231,14 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	}
 
 	if output == nil || output.ApplicationInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationInfo, nil
 }
 
-func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *applicationinsights.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -257,10 +257,10 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Clien
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -277,10 +277,10 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Cl
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 

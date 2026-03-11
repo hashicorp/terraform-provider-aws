@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sqs
 
 import (
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -224,7 +225,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	name := queueName(d)
+	name := queueName(ctx, d)
 	input := &sqs.CreateQueueInput{
 		QueueName: aws.String(name),
 		Tags:      getTagsIn(ctx),
@@ -377,14 +378,14 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+func resourceQueueCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 	sqsManagedSSEEnabled := diff.Get("sqs_managed_sse_enabled").(bool)
 
 	if diff.Id() == "" {
 		// Create.
-		name := queueName(diff)
+		name := queueName(ctx, diff)
 		var re *regexp.Regexp
 
 		if fifoQueue {
@@ -419,12 +420,12 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d sdkv2.ResourceDiffer) string {
+func queueName(ctx context.Context, d sdkv2.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
-	return create.NewNameGenerator(optFns...).Generate()
+	return create.NewNameGenerator(optFns...).Generate(ctx)
 }
 
 // queueNameFromURL returns the SQS queue name from the specified URL.
@@ -476,16 +477,15 @@ func findQueueAttributeByTwoPartKey(ctx context.Context, conn *sqs.Client, url s
 		return &v, nil
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQueueAttributesInput) (map[types.QueueAttributeName]string, error) {
 	output, err := conn.GetQueueAttributes(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -494,7 +494,7 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfmaps.ApplyToAllKeys(output.Attributes, func(v string) types.QueueAttributeName {
@@ -518,8 +518,8 @@ const (
 	queueAttributeStateEqual    = "equal"
 )
 
-func statusQueueState(ctx context.Context, conn *sqs.Client, url string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQueueState(conn *sqs.Client, url string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findQueueAttributesByURL(ctx, conn, url)
 
 		if retry.NotFound(err) {
@@ -534,8 +534,8 @@ func statusQueueState(ctx context.Context, conn *sqs.Client, url string) sdkretr
 	}
 }
 
-func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQueueAttributeState(conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		attributesMatch := func(got map[types.QueueAttributeName]string) string {
 			for k, e := range expected {
 				g, ok := got[k]
@@ -604,10 +604,10 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 }
 
 func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
-		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
+		Refresh:                   statusQueueAttributeState(conn, url, expected),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
@@ -620,10 +620,10 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 }
 
 func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
-		Refresh:                   statusQueueState(ctx, conn, url),
+		Refresh:                   statusQueueState(conn, url),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering

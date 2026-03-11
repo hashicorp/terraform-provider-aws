@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,19 +26,19 @@ import (
 func TestAccEKSCapability_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var capability awstypes.Capability
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapabilityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -71,19 +69,19 @@ func TestAccEKSCapability_basic(t *testing.T) {
 func TestAccEKSCapability_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var capability awstypes.Capability
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapabilityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfeks.ResourceCapability, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,19 +101,19 @@ func TestAccEKSCapability_disappears(t *testing.T) {
 func TestAccEKSCapability_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var capability awstypes.Capability
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapabilityConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -138,7 +136,7 @@ func TestAccEKSCapability_tags(t *testing.T) {
 			{
 				Config: testAccCapabilityConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -155,7 +153,7 @@ func TestAccEKSCapability_tags(t *testing.T) {
 			{
 				Config: testAccCapabilityConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -175,10 +173,10 @@ func TestAccEKSCapability_tags(t *testing.T) {
 func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var capability awstypes.Capability
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -186,12 +184,12 @@ func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapabilityConfig_argoCDBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -213,12 +211,12 @@ func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	ctx := acctest.Context(t)
 	var capability awstypes.Capability
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 	userID := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	groupID := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_ID")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -226,12 +224,12 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapabilityConfig_argoCDRBAC1(rName, userID, groupID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -249,7 +247,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 			{
 				Config: testAccCapabilityConfig_argoCDRBAC2(rName, userID, groupID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -261,14 +259,14 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	})
 }
 
-func testAccCheckCapabilityExists(ctx context.Context, n string, v *awstypes.Capability) resource.TestCheckFunc {
+func testAccCheckCapabilityExists(ctx context.Context, t *testing.T, n string, v *awstypes.Capability) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		output, err := tfeks.FindCapabilityByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["capability_name"])
 
@@ -282,9 +280,9 @@ func testAccCheckCapabilityExists(ctx context.Context, n string, v *awstypes.Cap
 	}
 }
 
-func testAccCheckCapabilityDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCapabilityDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_capability" {

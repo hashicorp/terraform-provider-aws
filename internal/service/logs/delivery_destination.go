@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package logs
 
 import (
@@ -286,7 +288,7 @@ func findDeliveryDestination(ctx context.Context, conn *cloudwatchlogs.Client, i
 	}
 
 	if output == nil || output.DeliveryDestination == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryDestination, nil

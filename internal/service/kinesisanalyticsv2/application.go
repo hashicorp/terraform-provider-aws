@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kinesisanalyticsv2
 
 import (
@@ -18,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1594,9 +1595,8 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	output, err := conn.DescribeApplication(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1605,14 +1605,14 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationDetail, nil
 }
 
-func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *kinesisanalyticsv2.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationDetailByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1628,10 +1628,10 @@ func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, nam
 }
 
 func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1645,10 +1645,10 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client
 }
 
 func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusForceStopping, awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1662,10 +1662,10 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client
 }
 
 func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1679,10 +1679,10 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client
 }
 
 func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1708,9 +1708,8 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	output, err := conn.DescribeApplicationOperation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1719,14 +1718,14 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	}
 
 	if output == nil || output.ApplicationOperationInfoDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationOperationInfoDetails, nil
 }
 
-func statusApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplicationOperation(conn *kinesisanalyticsv2.Client, applicationName, operationID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationOperationByTwoPartKey(ctx, conn, applicationName, operationID)
 
 		if retry.NotFound(err) {
@@ -1742,10 +1741,10 @@ func statusApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Cl
 }
 
 func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string, timeout time.Duration) (*awstypes.ApplicationOperationInfoDetails, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OperationStatusInProgress),
 		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
-		Refresh: statusApplicationOperation(ctx, conn, applicationName, operationID),
+		Refresh: statusApplicationOperation(conn, applicationName, operationID),
 		Timeout: timeout,
 	}
 
@@ -1753,7 +1752,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 	if output, ok := outputRaw.(*awstypes.ApplicationOperationInfoDetails); ok {
 		if failureDetails := output.OperationFailureDetails; failureDetails != nil && failureDetails.ErrorInfo != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
 		}
 
 		return output, err
