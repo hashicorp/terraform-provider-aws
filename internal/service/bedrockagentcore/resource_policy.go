@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -53,7 +52,6 @@ const (
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -232,9 +230,8 @@ func findResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
-	ResourceARN types.String   `tfsdk:"resource_arn"`
-	Policy      types.String   `tfsdk:"policy"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	ResourceARN types.String `tfsdk:"resource_arn"`
+	Policy      types.String `tfsdk:"policy"`
 }
 
 func sweepResourcePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
