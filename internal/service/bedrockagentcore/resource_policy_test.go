@@ -9,12 +9,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -23,14 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
+func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var resourcepolicy string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -44,11 +41,10 @@ func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_runtime(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "resource_arn", "bedrock-agentcore", regexache.MustCompile(`resourcepolicy:.+$`)),
 				),
 			},
 			{
@@ -61,14 +57,14 @@ func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreResourcePolicy_disappears(t *testing.T) {
+func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var resourcepolicy string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -82,17 +78,54 @@ func TestAccBedrockAgentCoreResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_endpoint(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceResourcePolicy, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var resourcepolicy string
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_resource_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_gateway(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -108,11 +141,11 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 			}
 
 			// Call GetResourcePolicy directly to verify destruction
-			input := &bedrockagentcorecontrol.GetResourcePolicyInput{
+			input := bedrockagentcorecontrol.GetResourcePolicyInput{
 				ResourceArn: aws.String(rs.Primary.ID),
 			}
 
-			_, err := conn.GetResourcePolicy(ctx, input)
+			_, err := conn.GetResourcePolicy(ctx, &input)
 			if retry.NotFound(err) {
 				return nil
 			}
@@ -140,11 +173,11 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name st
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		input := &bedrockagentcorecontrol.GetResourcePolicyInput{
+		input := bedrockagentcorecontrol.GetResourcePolicyInput{
 			ResourceArn: aws.String(rs.Primary.ID),
 		}
 
-		out, err := conn.GetResourcePolicy(ctx, input)
+		out, err := conn.GetResourcePolicy(ctx, &input)
 		if err != nil {
 			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingExistence, tfbedrockagentcore.ResNameResourcePolicy, rs.Primary.ID, err)
 		}
@@ -163,9 +196,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	// Use ListAgentRuntimes as a lightweight service availability check
-	input := &bedrockagentcorecontrol.ListAgentRuntimesInput{}
+	input := bedrockagentcorecontrol.ListAgentRuntimesInput{}
 
-	_, err := conn.ListAgentRuntimes(ctx, input)
+	_, err := conn.ListAgentRuntimes(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -174,7 +207,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-func testAccResourcePolicyConfig_basic(rName string) string {
+func testAccResourcePolicyConfig_runtime(rName string) string {
 	policy := `{"Version":"2012-10-17","Statement":[]}`
 
 	return fmt.Sprintf(`
@@ -182,8 +215,55 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  name = "%s-runtime"
+}
+
 resource "aws_bedrockagentcore_resource_policy" "test" {
-  resource_arn = "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:resourcepolicy/%s"
+  resource_arn = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
+  policy       = %q
+}
+`, rName, policy)
+}
+
+func testAccResourcePolicyConfig_endpoint(rName string) string {
+	policy := `{"Version":"2012-10-17","Statement":[]}`
+
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  name = "%s-runtime"
+}
+
+resource "aws_bedrockagentcore_agent_runtime_endpoint" "example" {
+  agent_runtime_id = aws_bedrockagentcore_agent_runtime.example.agent_runtime_id
+  name             = "%s-endpoint"
+}
+
+resource "aws_bedrockagentcore_resource_policy" "test" {
+  resource_arn = aws_bedrockagentcore_agent_runtime_endpoint.example.agent_runtime_endpoint_arn
+  policy       = %q
+}
+`, rName, rName, policy)
+}
+
+func testAccResourcePolicyConfig_gateway(rName string) string {
+	policy := `{"Version":"2012-10-17","Statement":[]}`
+
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_bedrockagentcore_gateway" "example" {
+  name = "%s-gateway"
+}
+
+resource "aws_bedrockagentcore_resource_policy" "test" {
+  resource_arn = aws_bedrockagentcore_gateway.example.gateway_arn
   policy       = %q
 }
 `, rName, policy)

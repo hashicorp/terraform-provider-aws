@@ -116,7 +116,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 
 	out, err := findResourcePolicy(ctx, conn, state.ResourceARN.ValueString())
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -236,15 +236,15 @@ type resourcePolicyResourceModel struct {
 func sweepResourcePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	runtimeResourcePolicies, err := sweepResourcePoliciesForAgentRuntimes(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	gatewayResourcePolicies, err := sweepResourcePoliciesForGateways(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	runtimeEndpointResourcePolicies, err := sweepResourcePoliciesForAgentRuntimeEndpoints(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	return append(append(runtimeResourcePolicies, gatewayResourcePolicies...), runtimeEndpointResourcePolicies...), nil
 }
@@ -272,8 +272,8 @@ func sweepResourcePoliciesForAgentRuntimes(ctx context.Context, client *conns.AW
 			}
 
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
-				sweepfw.NewAttribute("resource_arn", *v.AgentRuntimeArn),
-				sweepfw.NewAttribute("policy", *policy),
+				sweepfw.NewAttribute(names.AttrResourceARN, *v.AgentRuntimeArn),
+				sweepfw.NewAttribute(names.AttrPolicy, *policy),
 			),
 			)
 		}
@@ -316,8 +316,8 @@ func sweepResourcePoliciesForAgentRuntimeEndpoints(ctx context.Context, client *
 						return nil, smarterr.NewError(err)
 					}
 					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
-						sweepfw.NewAttribute("resource_arn", aws.ToString(v.AgentRuntimeEndpointArn)),
-						sweepfw.NewAttribute("policy", *policy),
+						sweepfw.NewAttribute(names.AttrResourceARN, aws.ToString(v.AgentRuntimeEndpointArn)),
+						sweepfw.NewAttribute(names.AttrPolicy, *policy),
 					),
 					)
 				}
@@ -354,8 +354,8 @@ func sweepResourcePoliciesForGateways(ctx context.Context, client *conns.AWSClie
 			}
 
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourcePolicyResource, client,
-				sweepfw.NewAttribute("resource_arn", *gateway.GatewayArn),
-				sweepfw.NewAttribute("policy", *policy),
+				sweepfw.NewAttribute(names.AttrResourceARN, *gateway.GatewayArn),
+				sweepfw.NewAttribute(names.AttrPolicy, *policy),
 			),
 			)
 		}
