@@ -10,7 +10,7 @@ description: |-
 
 Manages an individual rule within a WAFv2 Web ACL. This resource creates proper Terraform dependencies for safe deletion of referenced resources like IP sets, solving the `WAFAssociatedItemException` error that occurs when deleting IP sets that are still referenced by Web ACL rules.
 
-~> **NOTE:** When using this resource, you must add `lifecycle { ignore_changes = [rule] }` to your `aws_wafv2_web_acl` resource to prevent conflicts.
+~> **NOTE:** When using this resource, you must add `lifecycle { ignore_changes = [rule] }` to your `aws_wafv2_web_acl` resource to prevent conflicts. See the [`aws_wafv2_web_acl` documentation](/docs/providers/aws/r/wafv2_web_acl.html) for a full description of the limitations of inline rules that this resource addresses.
 
 ## Example Usage
 
@@ -582,12 +582,77 @@ One of the following override action blocks must be specified when using managed
 Exactly one of the following field to match blocks must be specified:
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
-* `body` - (Optional) Inspect the request body as plain text.
+* `body` - (Optional) Inspect the request body as plain text. See [Body](#body) below.
+* `cookies` - (Optional) Inspect the request cookies. See [Cookies](#cookies) below.
+* `header_order` - (Optional) Inspect a string containing the list of the request's header names, ordered as they appear in the web request. See [Header Order](#header-order) below.
+* `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below.
+* `ja3_fingerprint` - (Optional) Match against the request's JA3 fingerprint (CloudFront and ALB only). See [JA3 Fingerprint](#ja3-fingerprint) below.
+* `ja4_fingerprint` - (Optional) Match against the request's JA4 fingerprint (CloudFront and ALB only). See [JA4 Fingerprint](#ja4-fingerprint) below.
+* `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) below.
 * `method` - (Optional) Inspect the HTTP method.
 * `query_string` - (Optional) Inspect the query string.
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below.
+* `uri_fragment` - (Optional) Inspect fragments of the request URI. See [URI Fragment](#uri-fragment) below.
 * `uri_path` - (Optional) Inspect the request URI path.
+
+#### Body
+
+* `oversize_handling` - (Optional) How to handle requests with a body larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`. Defaults to `CONTINUE`.
+
+#### Cookies
+
+* `match_pattern` - (Required) Cookies to inspect. See [Cookies Match Pattern](#cookies-match-pattern) below.
+* `match_scope` - (Required) Parts of the cookies to inspect. Valid values: `ALL`, `KEY`, `VALUE`.
+* `oversize_handling` - (Required) How to handle requests with cookies larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
+
+##### Cookies Match Pattern
+
+Exactly one of the following must be specified:
+
+* `all` - (Optional) Inspect all cookies.
+* `included_cookies` - (Optional) List of cookie names to inspect.
+* `excluded_cookies` - (Optional) List of cookie names to exclude from inspection.
+
+#### Header Order
+
+* `oversize_handling` - (Required) How to handle requests with headers larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
+
+#### Headers
+
+* `match_pattern` - (Required) Headers to inspect. See [Headers Match Pattern](#headers-match-pattern) below.
+* `match_scope` - (Required) Parts of the headers to inspect. Valid values: `ALL`, `KEY`, `VALUE`.
+* `oversize_handling` - (Required) How to handle requests with headers larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
+
+##### Headers Match Pattern
+
+Exactly one of the following must be specified:
+
+* `all` - (Optional) Inspect all headers.
+* `included_headers` - (Optional) List of header names to inspect.
+* `excluded_headers` - (Optional) List of header names to exclude from inspection.
+
+#### JA3 Fingerprint
+
+* `fallback_behavior` - (Required) Action to take if WAF cannot calculate the fingerprint. Valid values: `MATCH`, `NO_MATCH`.
+
+#### JA4 Fingerprint
+
+* `fallback_behavior` - (Required) Action to take if WAF cannot calculate the fingerprint. Valid values: `MATCH`, `NO_MATCH`.
+
+#### JSON Body
+
+* `match_pattern` - (Required) JSON content to inspect. See [JSON Body Match Pattern](#json-body-match-pattern) below.
+* `match_scope` - (Required) Parts of the JSON to inspect. Valid values: `ALL`, `KEY`, `VALUE`.
+* `invalid_fallback_behavior` - (Optional) How to handle requests with invalid JSON body. Valid values: `EVALUATE_AS_STRING`, `MATCH`, `NO_MATCH`.
+* `oversize_handling` - (Optional) How to handle requests with a body larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`. Defaults to `CONTINUE`.
+
+##### JSON Body Match Pattern
+
+Exactly one of the following must be specified:
+
+* `all` - (Optional) Inspect all JSON content.
+* `included_paths` - (Optional) List of JSON pointer expressions to inspect (e.g., `/foo/bar`).
 
 #### Single Header
 
@@ -596,6 +661,10 @@ Exactly one of the following field to match blocks must be specified:
 #### Single Query Argument
 
 * `name` - (Required) Name of the query argument to inspect.
+
+#### URI Fragment
+
+* `fallback_behavior` - (Optional) How to handle requests with a URI fragment that is too large to inspect. Valid values: `MATCH`, `NO_MATCH`.
 
 ### Text Transformation
 

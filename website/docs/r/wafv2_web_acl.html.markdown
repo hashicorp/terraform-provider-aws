@@ -10,9 +10,9 @@ description: |-
 
 Creates a WAFv2 Web ACL resource.
 
-~> **Note** In `field_to_match` blocks, _e.g._, in `byte_match_statement`, the `body` block includes an optional argument `oversize_handling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversize_handling` argument as **required** as soon as possible.
+~> **Note:** Inline `rule` blocks in this resource have several known limitations. Consider using [`aws_wafv2_web_acl_rule`](/docs/providers/aws/r/wafv2_web_acl_rule.html) to manage rules as separate resources instead: **Deletion ordering errors:** When removing a rule that references an IP set or rule group, AWS requires the rule to be detached before the referenced resource is deleted. Terraform's dependency graph cannot model this correctly for inline rules, resulting in `WAFAssociatedItemException` errors. **Spurious diffs:** AWS returns rules in an unpredictable order, which can cause Terraform to detect changes even when the configuration has not changed. **Coupled updates:** Modifying one inline rule may cause all rules to be updated in a single API call, which can be disruptive. **Ordering issues:** Explicit control over rule evaluation order is difficult to maintain with inline rules.
 
-!> **Warning:** If you use the `aws_wafv2_web_acl_rule_group_association` resource to associate rule groups with this Web ACL, you must add `lifecycle { ignore_changes = [rule] }` to this resource to prevent configuration drift. The association resource modifies the Web ACL's rules outside of this resource's direct management.
+!> **Warning:** If you use the `aws_wafv2_web_acl_rule` or `aws_wafv2_web_acl_rule_group_association` resources with this Web ACL, you must add `lifecycle { ignore_changes = [rule] }` to this resource to prevent configuration drift. Those resources manage the Web ACL's rules outside of this resource's direct management.
 
 ## Example Usage
 
