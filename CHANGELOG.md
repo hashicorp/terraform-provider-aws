@@ -1,5 +1,10 @@
 ## 6.37.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_workmail_organization` ([#46692](https://github.com/hashicorp/terraform-provider-aws/issues/46692))
+* **New Resource:** `aws_workmail_organization` ([#46692](https://github.com/hashicorp/terraform-provider-aws/issues/46692))
+
 ## 6.36.0 (March 11, 2026)
 
 NOTES:
