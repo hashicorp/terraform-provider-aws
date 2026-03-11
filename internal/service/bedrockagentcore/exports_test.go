@@ -13,6 +13,7 @@ var (
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayTarget            = newGatewayTargetResource
 	ResourceMemory                   = newMemoryResource
+	ResourceResourcePolicy           = newResourcePolicyResource
 	ResourceMemoryStrategy           = newResourceMemoryStrategy
 	ResourceOAuth2CredentialProvider = newOAuth2CredentialProviderResource
 	ResourceTokenVaultCMK            = newTokenVaultCMKResource
