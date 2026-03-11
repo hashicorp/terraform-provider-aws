@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_wafv2_web_acl_rule
 ```
+
+```release-note:new-list-resource
+aws_wafv2_web_acl_rule
+```

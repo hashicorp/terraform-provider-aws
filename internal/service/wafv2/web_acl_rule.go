@@ -352,7 +352,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 
 	// Flatten the created rule to get computed values
 	var state webACLRuleModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, createdRule, &state)...)
+	resp.Diagnostics.Append(r.flattenWebACLRule(ctx, createdRule, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -410,7 +410,7 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Flatten the rule back to state
-	resp.Diagnostics.Append(flex.Flatten(ctx, foundRule, &state)...)
+	resp.Diagnostics.Append(r.flattenWebACLRule(ctx, foundRule, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -2236,3 +2236,7 @@ type webACLRuleTextTransformModel struct {
 }
 
 // Expand/Flatten helpers
+
+func (r *resourceWebACLRule) flattenWebACLRule(ctx context.Context, rule *awstypes.Rule, data *webACLRuleModel) diag.Diagnostics {
+	return flex.Flatten(ctx, rule, data)
+}
