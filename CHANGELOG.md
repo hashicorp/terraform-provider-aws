@@ -1,4 +1,4 @@
-## 6.36.0 (Unreleased)
+## 6.36.0 (March 11, 2026)
 
 NOTES:
 
