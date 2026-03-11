@@ -21,6 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	trainingJobNovaModelARNEnvVar = "SAGEMAKER_TRAINING_JOB_NOVA_MODEL_ARN"
+	trainingJobCustomImageEnvVar  = "SAGEMAKER_TRAINING_JOB_CUSTOM_IMAGE"
+)
+
 func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -49,30 +54,8 @@ func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.training_input_mode", "File"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.training_image", "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.enable_sagemaker_metrics_time_series", "false"),
-					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.s3_output_path", fmt.Sprintf("s3://%s/output/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "resource_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_config.0.instance_type", "ml.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "resource_config.0.instance_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_config.0.volume_size_in_gb", "30"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
-				),
-			},
-			{
-				Config: testAccTrainingJobConfig_basicUpdate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.training_input_mode", "File"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.training_image", "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.enable_sagemaker_metrics_time_series", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "algorithm_specification.0.training_image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.enable_sagemaker_metrics_time_series", "true"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.s3_output_path", fmt.Sprintf("s3://%s/output/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "resource_config.#", "1"),
@@ -181,6 +164,7 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 
 	var trainingjob sagemaker.DescribeTrainingJobOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_training_job.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -204,14 +188,14 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrainingJobConfig_debugUpdate(rName),
+				Config: testAccTrainingJobConfig_debugUpdate(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.0.s3_output_path", fmt.Sprintf("s3://%s/debug-updated/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.0.s3_output_path", fmt.Sprintf("s3://%s/debug-updated/", rNameUpdated)),
 					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.0.s3_output_path", fmt.Sprintf("s3://%s/debug-rules-updated/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.0.s3_output_path", fmt.Sprintf("s3://%s/debug-rules-updated/", rNameUpdated)),
 				),
 			},
 			{
@@ -231,6 +215,7 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 
 	var trainingjob sagemaker.DescribeTrainingJobOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_training_job.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -254,10 +239,10 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrainingJobConfig_profilerUpdated(rName),
+				Config: testAccTrainingJobConfig_profilerUpdated(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "1000"),
@@ -529,7 +514,9 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 
 	var trainingjob sagemaker.DescribeTrainingJobOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_training_job.test"
+	customImage := acctest.SkipIfEnvVarNotSet(t, trainingJobCustomImageEnvVar)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -541,24 +528,25 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrainingJobConfig_algorithmMetrics(rName),
+				Config: testAccTrainingJobConfig_algorithmMetrics(rName, customImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.name", "validation:accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.regex", "validation: accuracy = ([0-9\\.]+)"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.name", "train:loss"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.regex", "loss: ([0-9\\.]+)"),
 				),
 			},
 			{
-				Config: testAccTrainingJobConfig_algorithmMetricsUpdate(rName),
+				Config: testAccTrainingJobConfig_algorithmMetricsUpdate(rNameUpdated, customImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.name", "validation:accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.1.name", "train:loss"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.1.regex", "train: loss = ([0-9\\.]+)"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.name", "train:loss"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.regex", "loss: ([0-9\\.]+)"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.1.name", "validation:accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.1.regex", "accuracy: ([0-9\\.]+)"),
 				),
 			},
 			{
@@ -810,6 +798,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_training_job.test"
+	novaModelARN := acctest.SkipIfEnvVarNotSet(t, trainingJobNovaModelARNEnvVar)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -821,7 +810,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrainingJobConfig_mlflow(rName),
+				Config: testAccTrainingJobConfig_mlflow(rName, novaModelARN),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
@@ -832,7 +821,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrainingJobConfig_mlflowUpdate(rNameUpdated),
+				Config: testAccTrainingJobConfig_mlflowUpdate(rNameUpdated, novaModelARN),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
@@ -859,6 +848,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 
 	var trainingjob sagemaker.DescribeTrainingJobOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_training_job.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -877,6 +867,15 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.0.enable_remote_debug", "false"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_remoteDebugUpdate(rNameUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.0.enable_remote_debug", "true"),
 				),
 			},
 			{
@@ -1011,49 +1010,60 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+func testAccTrainingJobConfig_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "linear-learner"
+  image_tag       = "1"
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
-    training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_input_mode                  = "File"
+    training_image                       = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    enable_sagemaker_metrics_time_series = true
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1062,87 +1072,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
-}
-
-func testAccTrainingJobConfig_basicUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
-resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
-
-  enable_inter_container_traffic_encryption = false
-
-  algorithm_specification {
-    training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
-  }
-
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
-
-  resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
-  }
-
-  stopping_condition {
-    max_runtime_in_seconds = 3600
-  }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_vpc(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1157,27 +1091,23 @@ resource "aws_security_group" "test" {
   name   = %[1]q
 }
 
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1191,31 +1121,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_vpcUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1235,27 +1145,23 @@ resource "aws_security_group" "test" {
   name   = %[1]q
 }
 
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1269,31 +1175,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_debug(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
@@ -1319,9 +1205,8 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.s3.json
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
+data "aws_sagemaker_prebuilt_ecr_image" "debugger" {
+  repository_name = "sagemaker-debugger-rules"
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1330,7 +1215,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -1338,9 +1223,9 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-    instance_type      = "ml.m5.large"
-    instance_count     = 1
-    volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1348,49 +1233,27 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   debug_hook_config {
-    local_path = "/opt/ml/output/tensors"
+    local_path     = "/opt/ml/output/tensors"
     s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug/"
   }
 
   debug_rule_configurations {
-    instance_type         = "ml.m4.xlarge"
-    local_path           = "/opt/ml/processing/test1"
+    local_path              = "/opt/ml/processing/test1"
     rule_configuration_name = "LossNotDecreasing"
-    rule_evaluator_image  = "503895931503.dkr.ecr.us-west-2.amazonaws.com/sagemaker-debugger-rules:latest"
+    rule_evaluator_image    = data.aws_sagemaker_prebuilt_ecr_image.debugger.registry_path
     rule_parameters = {
       "rule_to_invoke" = "LossNotDecreasing"
     }
-    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-rules/"
-    volume_size_in_gb = 10
+    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/debug-rules/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_debugUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
@@ -1416,9 +1279,8 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.s3.json
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
+data "aws_sagemaker_prebuilt_ecr_image" "debugger" {
+  repository_name = "sagemaker-debugger-rules"
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1427,7 +1289,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -1435,9 +1297,9 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-    instance_type      = "ml.m5.large"
-    instance_count     = 1
-    volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1445,49 +1307,27 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   debug_hook_config {
-    local_path = "/opt/ml/output/tensors"
+    local_path     = "/opt/ml/output/tensors"
     s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-updated/"
   }
 
   debug_rule_configurations {
-    instance_type         = "ml.m4.xlarge"
-    local_path           = "/opt/ml/processing/test1"
+    local_path              = "/opt/ml/processing/test1"
     rule_configuration_name = "LossNotDecreasing"
-    rule_evaluator_image  = "503895931503.dkr.ecr.us-west-2.amazonaws.com/sagemaker-debugger-rules:latest"
+    rule_evaluator_image    = data.aws_sagemaker_prebuilt_ecr_image.debugger.registry_path
     rule_parameters = {
       "rule_to_invoke" = "LossNotDecreasing"
     }
-    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-rules-updated/"
-    volume_size_in_gb = 10
+    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/debug-rules-updated/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_profiler(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
@@ -1513,9 +1353,8 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.s3.json
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-  force_destroy = true
+data "aws_sagemaker_prebuilt_ecr_image" "debugger" {
+  repository_name = "sagemaker-debugger-rules"
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1524,17 +1363,17 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1542,7 +1381,7 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   profiler_config {
-    disable_profiler = false
+    disable_profiler                   = false
     profiling_interval_in_milliseconds = 500
     profiling_parameters = {
       "profile_cpu" = "true"
@@ -1551,44 +1390,22 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   profiler_rule_configurations {
-    instance_type         = "ml.m4.xlarge"
-    local_path           = "/opt/ml/processing/test"
+    local_path              = "/opt/ml/processing/test"
     rule_configuration_name = "ProfilerReport"
-    rule_evaluator_image  = "503895931503.dkr.ecr.us-west-2.amazonaws.com/sagemaker-debugger-rules:latest"
+    rule_evaluator_image    = data.aws_sagemaker_prebuilt_ecr_image.debugger.registry_path
     rule_parameters = {
       "rule_to_invoke" = "ProfilerReport"
     }
-    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
-    volume_size_in_gb = 10
+    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_profilerUpdated(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
@@ -1614,9 +1431,8 @@ resource "aws_iam_role_policy" "test" {
   policy = data.aws_iam_policy_document.s3.json
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-  force_destroy = true
+data "aws_sagemaker_prebuilt_ecr_image" "debugger" {
+  repository_name = "sagemaker-debugger-rules"
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1625,7 +1441,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -1633,9 +1449,9 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-    instance_type      = "ml.m5.large"
-    instance_count     = 1
-    volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1643,7 +1459,7 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   profiler_config {
-    disable_profiler = false
+    disable_profiler                   = false
     profiling_interval_in_milliseconds = 1000
     profiling_parameters = {
       "profile_cpu" = "false"
@@ -1652,20 +1468,18 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   profiler_rule_configurations {
-    instance_type         = "ml.m4.xlarge"
-    local_path           = "/opt/ml/processing/test"
+    local_path              = "/opt/ml/processing/test"
     rule_configuration_name = "ProfilerReport"
-    rule_evaluator_image  = "503895931503.dkr.ecr.us-west-2.amazonaws.com/sagemaker-debugger-rules:latest"
+    rule_evaluator_image    = data.aws_sagemaker_prebuilt_ecr_image.debugger.registry_path
     rule_parameters = {
       "rule_to_invoke" = "ProfilerReport"
     }
-    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
-    volume_size_in_gb = 10
+    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_environmentAndHyperParameters(rName string) string {
@@ -1817,38 +1631,14 @@ resource "aws_sagemaker_training_job" "test" {
 }
 
 func testAccTrainingJobConfig_checkpoint(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   checkpoint_config {
@@ -1856,14 +1646,14 @@ resource "aws_sagemaker_training_job" "test" {
     s3_uri     = "s3://${aws_s3_bucket.test.bucket}/checkpoints/"
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1872,42 +1662,18 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_checkpointUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   checkpoint_config {
@@ -1915,14 +1681,14 @@ resource "aws_sagemaker_training_job" "test" {
     s3_uri     = "s3://${aws_s3_bucket.test.bucket}/checkpoints-v2/"
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1931,52 +1697,28 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_tensorBoard(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -1990,52 +1732,28 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_tensorBoardUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -2049,36 +1767,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_inputData(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_object" "input" {
   bucket  = aws_s3_bucket.test.id
   key     = "input/placeholder.csv"
@@ -2091,7 +1784,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   input_data_config {
@@ -2126,36 +1819,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_s3_object.input]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_inputDataUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_object" "input_v2" {
   bucket  = aws_s3_bucket.test.id
   key     = "input-v2/placeholder.csv"
@@ -2168,7 +1836,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   input_data_config {
@@ -2203,35 +1871,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_s3_object.input_v2]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_outputData(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "KMS key for SageMaker training job"
 }
@@ -2242,7 +1886,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -2252,9 +1896,9 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -2263,35 +1907,11 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_outputDataUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "KMS key for SageMaker training job"
 }
@@ -2302,7 +1922,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -2312,9 +1932,9 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -2323,121 +1943,33 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
-func testAccTrainingJobConfig_algorithmMetrics(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
+func testAccTrainingJobConfig_algorithmMetrics(rName, customImage string) string {
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
-
-    metric_definitions {
-      name  = "validation:accuracy"
-      regex = "validation: accuracy = ([0-9\\.]+)"
-    }
-  }
-
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
-
-  resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
-  }
-
-  stopping_condition {
-    max_runtime_in_seconds = 3600
-  }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-`, rName)
-}
-
-func testAccTrainingJobConfig_algorithmMetricsUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
-resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
-
-  algorithm_specification {
-    training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
-
-    metric_definitions {
-      name  = "validation:accuracy"
-      regex = "validation: accuracy = ([0-9\\.]+)"
-    }
+    training_image      = %[2]q
 
     metric_definitions {
       name  = "train:loss"
-      regex = "train: loss = ([0-9\\.]+)"
+      regex = "loss: ([0-9\\.]+)"
     }
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
@@ -2446,52 +1978,68 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName, customImage))
 }
 
-func testAccTrainingJobConfig_retryStrategy(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
+func testAccTrainingJobConfig_algorithmMetricsUpdate(rName, customImage string) string {
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = %[2]q
+
+    metric_definitions {
+      name  = "train:loss"
+      regex = "loss: ([0-9\\.]+)"
+    }
+
+    metric_definitions {
+      name  = "validation:accuracy"
+      regex = "accuracy: ([0-9\\.]+)"
+    }
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 3600
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, customImage))
+}
+
+func testAccTrainingJobConfig_retryStrategy(rName string) string {
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+  }
+
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
+
+  resource_config {
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   retry_strategy {
@@ -2504,52 +2052,28 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_retryStrategyUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   retry_strategy {
@@ -2562,7 +2086,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_serverless(rName string) string {
@@ -2783,38 +2307,14 @@ resource "aws_sagemaker_training_job" "test" {
 }
 
 func testAccTrainingJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -2837,42 +2337,18 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccTrainingJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -2896,42 +2372,18 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccTrainingJobConfig_infraCheck(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -2954,42 +2406,18 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_infraCheckUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -3012,10 +2440,10 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
-func testAccTrainingJobConfig_mlflow(rName string) string {
+func testAccTrainingJobConfig_mlflow(rName, novaModelARN string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
@@ -3035,20 +2463,6 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_iam_role_policy" "hub_access" {
-  name = "%[1]s-hub"
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["sagemaker:DescribeHubContent"]
-      Resource = ["*"]
-    }]
-  })
 }
 
 resource "aws_iam_role_policy" "s3" {
@@ -3115,7 +2529,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   serverless_job_config {
     accept_eula             = true
-    base_model_arn          = "arn:aws:sagemaker:us-west-2:aws:hub-content/SageMakerPublicHub/Model/protopia-llama-3-1-8b-instruct/1.0.2"
+    base_model_arn          = %[2]q
     job_type                = "FineTuning"
     customization_technique = "SFT"
   }
@@ -3130,12 +2544,12 @@ resource "aws_sagemaker_training_job" "test" {
     mlflow_run_name        = %[1]q
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.hub_access, aws_iam_role_policy.s3, aws_s3_object.training]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.s3, aws_s3_object.training]
 }
-`, rName)
+`, rName, novaModelARN)
 }
 
-func testAccTrainingJobConfig_mlflowUpdate(rName string) string {
+func testAccTrainingJobConfig_mlflowUpdate(rName, novaModelARN string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
@@ -3155,20 +2569,6 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_iam_role_policy" "hub_access" {
-  name = "%[1]s-hub"
-  role = aws_iam_role.test.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["sagemaker:DescribeHubContent"]
-      Resource = ["*"]
-    }]
-  })
 }
 
 resource "aws_iam_role_policy" "s3" {
@@ -3235,7 +2635,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   serverless_job_config {
     accept_eula             = true
-    base_model_arn          = "arn:aws:sagemaker:us-west-2:aws:hub-content/SageMakerPublicHub/Model/protopia-llama-3-1-8b-instruct/1.0.2"
+    base_model_arn          = %[2]q
     job_type                = "FineTuning"
     customization_technique = "SFT"
   }
@@ -3250,44 +2650,20 @@ resource "aws_sagemaker_training_job" "test" {
     mlflow_run_name        = %[1]q
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.hub_access, aws_iam_role_policy.s3, aws_s3_object.training]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.s3, aws_s3_object.training]
 }
-`, rName)
+`, rName, novaModelARN)
 }
 
 func testAccTrainingJobConfig_remoteDebug(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -3310,42 +2686,18 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_remoteDebugUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -3363,47 +2715,23 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   remote_debug_config {
-    enable_remote_debug = false
+    enable_remote_debug = true
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_sessionChaining(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -3426,42 +2754,18 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccTrainingJobConfig_sessionChainingUpdate(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -3484,5 +2788,5 @@ resource "aws_sagemaker_training_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
