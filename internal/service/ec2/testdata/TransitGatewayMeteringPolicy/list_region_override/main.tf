@@ -9,7 +9,7 @@ resource "aws_ec2_transit_gateway_metering_policy" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  count = var.resource_count
+  count  = var.resource_count
   region = var.region
 }
 
