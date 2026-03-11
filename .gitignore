@@ -22,6 +22,7 @@
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
 bin/
 changelog.tmp
+coverage.out
 dist/
 example.tf
 log.txt
