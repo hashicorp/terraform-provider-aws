@@ -5,7 +5,8 @@ resource "aws_ec2_transit_gateway_metering_policy" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+}
 variable "rName" {
   description = "Name for resource"
   type        = string

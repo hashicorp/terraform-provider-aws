@@ -74,10 +74,12 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "transit_gateway_metering_policy_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
 			},
 
 			// Step 3: Import block with Import ID
@@ -86,9 +88,10 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "transit_gateway_metering_policy_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_metering_policy_id"), knownvalue.NotNull()),
@@ -157,11 +160,12 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "transit_gateway_metering_policy_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
 			},
 
 			// Step 3: Import block with Import ID
@@ -174,7 +178,7 @@ func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "transit_gateway_metering_policy_id"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_metering_policy_id"), knownvalue.NotNull()),

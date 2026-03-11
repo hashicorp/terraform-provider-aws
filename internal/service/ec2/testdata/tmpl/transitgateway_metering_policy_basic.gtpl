@@ -5,4 +5,6 @@ resource "aws_ec2_transit_gateway_metering_policy" "test" {
 {{- template "tags" . }}
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+{{- template "region" }}
+}
