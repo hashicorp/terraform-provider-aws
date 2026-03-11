@@ -198,6 +198,11 @@ func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, d
 				LastError: err,
 			})
 		}
+		if errs.IsA[*awstypes.OrganizationStateException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError: err,
+			})
+		}
 
 		return nil, smarterr.NewError(err)
 	}

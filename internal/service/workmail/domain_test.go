@@ -21,9 +21,6 @@ import (
 
 func TestAccWorkMailDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_domain.test"
@@ -51,9 +48,11 @@ func TestAccWorkMailDomain_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccDomainImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "organization_id",
 			},
 		},
 	})
@@ -61,9 +60,6 @@ func TestAccWorkMailDomain_basic(t *testing.T) {
 
 func TestAccWorkMailDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_domain.test"
@@ -93,6 +89,17 @@ func TestAccWorkMailDomain_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccDomainImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["organization_id"], rs.Primary.Attributes[names.AttrDomainName]), nil
+	}
 }
 
 func testAccCheckDomainDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
