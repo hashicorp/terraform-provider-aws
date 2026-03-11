@@ -63,6 +63,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newBrowserProfileResource,
+			TypeName: "aws_bedrockagentcore_browser_profile",
+			Name:     "Browser Profile",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "profile_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newCodeInterpreterResource,
 			TypeName: "aws_bedrockagentcore_code_interpreter",
 			Name:     "Code Interpreter",
