@@ -5,3 +5,7 @@ aws_ec2_transit_gateway_metering_policy
 ```release-note:new-resource
 aws_ec2_transit_gateway_metering_policy_entry
 ```
+
+```release-note:new-list-resource
+aws_ec2_transit_gateway_metering_policy
+```

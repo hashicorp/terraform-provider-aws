@@ -367,6 +367,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
+			Factory:  newTransitGatewayMeteringPolicyResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy",
+			Name:     "Transit Gateway Metering Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "transit_gateway_metering_policy_id",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("transit_gateway_metering_policy_id"),
+		},
+		{
 			Factory:  newSecurityGroupEgressRuleResourceAsListResource,
 			TypeName: "aws_vpc_security_group_egress_rule",
 			Name:     "Security Group Egress Rule",

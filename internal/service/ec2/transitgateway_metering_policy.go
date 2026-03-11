@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -143,9 +144,10 @@ func (r *transitGatewayMeteringPolicyResource) Read(ctx context.Context, request
 		return
 	}
 
-	data.ARN = fwflex.StringValueToFramework(ctx, transitGatewayMeteringPolicyARN(ctx, c, id))
-	data.MiddleboxAttachmentIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, policy.MiddleboxAttachmentIds)
-	data.TransitGatewayID = fwflex.StringToFramework(ctx, policy.TransitGatewayId)
+	response.Diagnostics.Append(r.flatten(ctx, c, policy, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	setTagsOut(ctx, policy.Tags)
 
@@ -222,6 +224,16 @@ func (r *transitGatewayMeteringPolicyResource) Delete(ctx context.Context, reque
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Transit Gateway Metering Policy (%s) delete", id), err.Error())
 		return
 	}
+}
+
+func (r *transitGatewayMeteringPolicyResource) flatten(ctx context.Context, c *conns.AWSClient, policy *awstypes.TransitGatewayMeteringPolicy, data *transitGatewayMeteringPolicyResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	id := aws.ToString(policy.TransitGatewayMeteringPolicyId)
+	data.ARN = fwflex.StringValueToFramework(ctx, transitGatewayMeteringPolicyARN(ctx, c, id))
+	data.MiddleboxAttachmentIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, policy.MiddleboxAttachmentIds)
+	data.TransitGatewayID = fwflex.StringToFramework(ctx, policy.TransitGatewayId)
+	data.TransitGatewayMeteringPolicyID = fwflex.StringValueToFramework(ctx, id)
+	return diags
 }
 
 type transitGatewayMeteringPolicyResourceModel struct {

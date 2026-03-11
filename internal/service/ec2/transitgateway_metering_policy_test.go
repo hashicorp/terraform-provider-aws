@@ -229,7 +229,7 @@ func testAccTransitGatewayMeteringPolicy_middleboxAttachments(t *testing.T, sema
 	})
 }
 
-func testAccTransitGatewayMeteringPolicy_identity(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayMeteringPolicy_identity(t *testing.T, _ tfsync.Semaphore) {
 	testAccTransitGatewayTransitGatewayMeteringPolicy_identitySerial(t)
 }
 
