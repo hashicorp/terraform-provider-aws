@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -144,7 +143,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 		return
 	}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	out, err = waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
+	_, err = waitAssociateDisassociateIAMRoleCreated(ctx, conn, input.ResourceArn, input.IamRoleArn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
@@ -422,7 +421,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			}
 		}
 		err = errors.New("no IAM role found for the vm cluster : " + *resourceARN)
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}
@@ -448,7 +447,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			}
 		}
 		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + *resourceARN)
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}
@@ -458,7 +457,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 
 type resourceAssociateDisassociateIAMRoleResourceModel struct {
 	framework.WithRegionModel
-	CompositeARN   fwtypes.ListNestedObjectValueOf[resourceCompositeARNModel] `tfsdk:"composite_arn" noflatten:"true" noexpand:"true"`
+	CompositeARN   fwtypes.ListNestedObjectValueOf[resourceCompositeARNModel] `tfsdk:"composite_arn" noexpand:"true" noflatten:"true"`
 	AWSIntegration types.String                                               `tfsdk:"aws_integration"`
 	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                 `tfsdk:"status"`
 	StatusReason   types.String                                               `tfsdk:"status_reason"`
