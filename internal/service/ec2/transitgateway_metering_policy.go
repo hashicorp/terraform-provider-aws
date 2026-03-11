@@ -226,7 +226,7 @@ func (r *transitGatewayMeteringPolicyResource) Delete(ctx context.Context, reque
 	}
 }
 
-func (r *transitGatewayMeteringPolicyResource) flatten(ctx context.Context, c *conns.AWSClient, policy *awstypes.TransitGatewayMeteringPolicy, data *transitGatewayMeteringPolicyResourceModel) diag.Diagnostics {
+func (r *transitGatewayMeteringPolicyResource) flatten(ctx context.Context, c *conns.AWSClient, policy *awstypes.TransitGatewayMeteringPolicy, data *transitGatewayMeteringPolicyResourceModel) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 	id := aws.ToString(policy.TransitGatewayMeteringPolicyId)
 	data.ARN = fwflex.StringValueToFramework(ctx, transitGatewayMeteringPolicyARN(ctx, c, id))
