@@ -319,7 +319,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_forward(rName, domainName),
+				Config: testAccRuleConfig_forwardMultiProtocol(rName, domainName, "Do53"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -370,6 +370,46 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 						names.AttrProtocol: "Do53",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRule_forwardAPIDefaults(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule awstypes.ResolverRule
+	resourceName := "aws_route53_resolver_rule.test"
+	epResourceName := "aws_route53_resolver_endpoint.test.0"
+	domainName := acctest.RandomDomainName()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_forward(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, t, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip": "192.0.2.6",
+					}),
+					// Verify that port and protocol are set by the API (computed), not by provider defaults.
+					resource.TestCheckResourceAttrSet(resourceName, "target_ip.0.port"),
+					resource.TestCheckResourceAttrSet(resourceName, "target_ip.0.protocol"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
