@@ -145,7 +145,7 @@ func discoverResources(files map[string]*ast.File, dir string) []resourceInfo {
 	for filename, file := range files {
 		for _, cg := range file.Comments {
 			text := cg.Text()
-			for _, line := range strings.Split(text, "\n") {
+			for line := range strings.SplitSeq(text, "\n") {
 				line = strings.TrimSpace(line)
 				if m := sdkResourceRe.FindStringSubmatch(line); m != nil {
 					resources = append(resources, resourceInfo{
