@@ -44,14 +44,14 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_runtime(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -81,14 +81,14 @@ func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_endpoint(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -118,14 +118,14 @@ func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_gateway(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
