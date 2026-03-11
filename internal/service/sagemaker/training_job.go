@@ -1486,6 +1486,9 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied to hub content") {
 			return true, err
 		}
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied for repository") {
+			return true, err
+		}
 		return false, err
 	})
 	if err != nil {
