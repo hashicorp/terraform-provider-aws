@@ -6,7 +6,6 @@ package ec2_test
 import (
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -15,19 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2TransitGatewayMeteringPolicy_List_basic(t *testing.T) {
+func testAccTransitGatewayMeteringPolicy_List_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_ec2_transit_gateway_metering_policy.test[0]"
 	resourceName2 := "aws_ec2_transit_gateway_metering_policy.test[1]"
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -36,6 +33,7 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_basic(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
@@ -51,10 +49,10 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARN),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARN),
 				},
 			},
 
@@ -67,11 +65,11 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ec2_transit_gateway_metering_policy.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact("-0")),
+					querycheck.ExpectResourceDisplayName("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), checkTransitGatewayMeteringPolicyARN),
 					tfquerycheck.ExpectNoResourceObject("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_ec2_transit_gateway_metering_policy.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact("-1")),
+					querycheck.ExpectResourceDisplayName("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), checkTransitGatewayMeteringPolicyARN),
 					tfquerycheck.ExpectNoResourceObject("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -79,11 +77,9 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2TransitGatewayMeteringPolicy_List_includeResource(t *testing.T) {
+func testAccTransitGatewayMeteringPolicy_List_includeResource(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_ec2_transit_gateway_metering_policy.test[0]"
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -91,6 +87,7 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_includeResource(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
@@ -109,7 +106,7 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARN),
 				},
 			},
 
@@ -125,9 +122,9 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ec2_transit_gateway_metering_policy.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact("-0")),
+					querycheck.ExpectResourceDisplayName("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), checkTransitGatewayMeteringPolicyARN),
 					querycheck.ExpectResourceKnownValues("aws_ec2_transit_gateway_metering_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARN),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
@@ -142,12 +139,10 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccEC2TransitGatewayMeteringPolicy_List_regionOverride(t *testing.T) {
+func testAccTransitGatewayMeteringPolicy_List_regionOverride(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_ec2_transit_gateway_metering_policy.test[0]"
 	resourceName2 := "aws_ec2_transit_gateway_metering_policy.test[1]"
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -156,6 +151,7 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_regionOverride(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(ctx, t)
@@ -173,10 +169,10 @@ func TestAccEC2TransitGatewayMeteringPolicy_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARNAlternateRegion),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARNAlternateRegion),
 				},
 			},
 

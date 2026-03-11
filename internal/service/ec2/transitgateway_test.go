@@ -118,6 +118,9 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"tags":                 testAccTransitGatewayMeteringPolicy_tags,
 			"middleboxAttachments": testAccTransitGatewayMeteringPolicy_middleboxAttachments,
 			"Identity":             testAccTransitGatewayMeteringPolicy_identity,
+			"ListBasic":            testAccTransitGatewayMeteringPolicy_List_basic,
+			"ListIncludeResource":  testAccTransitGatewayMeteringPolicy_List_includeResource,
+			"ListRegionOverride":   testAccTransitGatewayMeteringPolicy_List_regionOverride,
 		},
 		"MeteringPolicyEntry": {
 			acctest.CtBasic:      testAccTransitGatewayMeteringPolicyEntry_basic,

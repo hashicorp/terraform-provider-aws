@@ -17,17 +17,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	checkTransitGatewayMeteringPolicyARN                = tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))
+	checkTransitGatewayMeteringPolicyARNAlternateRegion = tfknownvalue.RegionalARNAlternateRegionRegexp("ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`))
+)
+
 func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayMeteringPolicy
 	resourceName := "aws_ec2_transit_gateway_metering_policy.test"
-	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -44,8 +49,6 @@ func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Se
 				Config: testAccTransitGatewayMeteringPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayMeteringPolicyExists(ctx, t, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -53,7 +56,7 @@ func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Se
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkTransitGatewayMeteringPolicyARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_metering_policy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
@@ -92,6 +95,14 @@ func testAccTransitGatewayMeteringPolicy_disappears(t *testing.T, semaphore tfsy
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayMeteringPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

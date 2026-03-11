@@ -6,10 +6,12 @@ resource "aws_ec2_transit_gateway_metering_policy" "test" {
 
   tags = var.resource_tags
 
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  transit_gateway_id = aws_ec2_transit_gateway.test[count.index].id
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  count = var.resource_count
+}
 
 variable "resource_count" {
   description = "Number of resources to create"
