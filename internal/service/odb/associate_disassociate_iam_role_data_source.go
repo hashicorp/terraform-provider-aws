@@ -50,7 +50,7 @@ func (d *dataSourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req
 				CustomType: fwtypes.StringEnumType[odbtypes.IamRoleStatus](),
 				Computed:   true,
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -66,10 +66,10 @@ func (d *dataSourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req
 				Description: "Combination of resource ARN and IAM role ARN is mandatory",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"iam_role_arn": schema.StringAttribute{
+						names.AttrIAMRoleARN: schema.StringAttribute{
 							Required: true,
 						},
-						"resource_arn": schema.StringAttribute{
+						names.AttrResourceARN: schema.StringAttribute{
 							Required: true,
 						},
 					},

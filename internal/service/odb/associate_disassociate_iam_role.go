@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +67,7 @@ func (r *resourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req r
 				CustomType: fwtypes.StringEnumType[odbtypes.IamRoleStatus](),
 				Computed:   true,
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -88,13 +88,13 @@ func (r *resourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req r
 				Description: "Combination of resource ARN and IAM role ARN is mandatory",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"iam_role_arn": schema.StringAttribute{
+						names.AttrIAMRoleARN: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"resource_arn": schema.StringAttribute{
+						names.AttrResourceARN: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -187,7 +187,7 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 	}
 
 	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -379,7 +379,7 @@ func waitAssociateDisassociateIAMRoleDeleted(ctx context.Context, conn *odb.Clie
 func statusAssociateDisassociateIAMRole(ctx context.Context, conn *odb.Client, resourceARN *string, roleARN *string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, resourceARN, roleARN)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

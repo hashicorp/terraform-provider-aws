@@ -6,7 +6,7 @@ package odb_test
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"testing"
 
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,8 +31,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var associatedisassociateiamrole odbtypes.IamRole
-	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var associateDisassociateIAMRole odbtypes.IamRole
 	resourceName := "aws_odb_associate_disassociate_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +46,7 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 			{
 				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associatedisassociateiamrole),
+					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
 				),
 			},
 			{
@@ -67,7 +65,6 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 	}
 
 	var iamRole odbtypes.IamRole
-	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_odb_associate_disassociate_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -116,7 +113,7 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 			}
 
 			_, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, &resourceARN, &iamRoleARN)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -130,38 +127,35 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name string, associatedisassociateiamrole *odbtypes.IamRole) resource.TestCheckFunc {
+func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name string, associateDisassociateIAMRole *odbtypes.IamRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, name, errors.New("not found"))
 		}
 
-		comboID := rs.Primary.Attributes["iam_role_resource_combined_arn"]
-		fmt.Println(comboID)
+		resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+		if !ok || resourceARN == "" {
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("resource ARN not found in state"))
+		}
+
+		iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+		if !ok || iamRoleARN == "" {
+			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
+		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
-		resp, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, nil, nil)
+		resp, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, &resourceARN, &iamRoleARN)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, err)
 		}
 
-		*associatedisassociateiamrole = *resp
+		*associateDisassociateIAMRole = *resp
 
 		return nil
 	}
 }
-
-/*func testAccCheckAssociateDisassociateIAMRoleNotRecreated(before, after *odb.DescribeAssociateDisassociateIAMRoleResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.AssociateDisassociateIAMRoleId), aws.ToString(after.AssociateDisassociateIAMRoleId); before != after {
-			return create.Error(names.ODB, create.ErrActionCheckingNotRecreated, tfodb.ResNameAssociateDisassociateIAMRole, aws.ToString(before.AssociateDisassociateIAMRoleId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}*/
 
 func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster() string {
 	return `
