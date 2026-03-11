@@ -189,13 +189,16 @@ func testAccCheckResourcePolicyNotRecreated(before, after *string) resource.Test
 }
 
 func testAccResourcePolicyConfig_basic(rName string) string {
-	arn := fmt.Sprintf("arn:aws:bedrock-agentcore:us-east-1:123456789012:resourcepolicy/%s", rName)
 	policy := `{"Version":"2012-10-17","Statement":[]}`
 
 	return fmt.Sprintf(`
-	resource "aws_bedrockagentcore_resource_policy" "test" {
-	  resource_arn = %q
-	  policy       = %q
-	}
-	`, arn, policy)
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_bedrockagentcore_resource_policy" "test" {
+	resource_arn = "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:resourcepolicy/%s"
+	policy       = %q
+}
+`, rName, policy)
 }
