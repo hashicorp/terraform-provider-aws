@@ -174,20 +174,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-
-func testAccCheckResourcePolicyNotRecreated(before, after *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before == nil || after == nil {
-			return nil
-		}
-		if *before != *after {
-			return create.Error(names.BedrockAgentCore, create.ErrActionCheckingNotRecreated, tfbedrockagentcore.ResNameResourcePolicy, *before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccResourcePolicyConfig_basic(rName string) string {
 	policy := `{"Version":"2012-10-17","Statement":[]}`
 
