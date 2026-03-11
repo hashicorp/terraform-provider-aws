@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_key_pair: Fix import drift by persisting and normalizing `public_key`
+```
