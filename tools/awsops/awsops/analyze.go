@@ -7,6 +7,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -46,13 +47,11 @@ func Analyze(serviceDir string) (map[string]ResourceOps, error) {
 	}
 
 	for _, dir := range serviceDirs {
-		pkgResults, err := analyzePackage(dir)
+		svcResults, err := analyzePackage(dir)
 		if err != nil {
 			return nil, fmt.Errorf("analyzing %s: %w", dir, err)
 		}
-		for k, v := range pkgResults {
-			results[k] = v
-		}
+		maps.Copy(results, svcResults)
 	}
 
 	return results, nil
