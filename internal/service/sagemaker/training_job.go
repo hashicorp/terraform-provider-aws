@@ -1583,7 +1583,7 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 	stateAlgoSpec := state.AlgorithmSpecification
 	stateStoppingCondition := state.StoppingCondition
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1596,13 +1596,20 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 	if !state.ServerlessJobConfig.IsNull() && stateStoppingCondition.IsNull() {
 		state.StoppingCondition = stateStoppingCondition
 	}
-	state.ID = state.TrainingJobName
-	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *resourceTrainingJob) flatten(ctx context.Context, trainingJob *sagemaker.DescribeTrainingJobOutput, model *resourceTrainingJobModel) (diags diag.Diagnostics) {
+	diags.Append(flex.Flatten(ctx, trainingJob, model)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	model.ID = model.TrainingJobName
+	diags.Append(normalizeOutputDataConfigKMSKeyID(ctx, model)...)
+
+	return diags
 }
 
 func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
