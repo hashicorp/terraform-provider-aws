@@ -74,6 +74,7 @@ resource "aws_bedrockagentcore_resource_policy" "example" {
 ### Identity Schema
 
 #### Required
+
 * `resource_arn` - ARN of the resource to which the Resource Policy is attached.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Resource Policy using the `resource_arn`. For example:
