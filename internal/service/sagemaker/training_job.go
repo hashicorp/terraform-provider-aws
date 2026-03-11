@@ -497,10 +497,12 @@ func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 				},
 				"volume_size_in_gb": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.AtLeast(0),
 					},
 					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 						int64planmodifier.RequiresReplace(),
 					},
 				},
@@ -1024,8 +1026,12 @@ func profilerRuleConfigurationsBlock(ctx context.Context) schema.Block {
 				},
 				"volume_size_in_gb": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 					},
 				},
 			},
