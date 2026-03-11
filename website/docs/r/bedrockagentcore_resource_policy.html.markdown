@@ -54,6 +54,10 @@ The following arguments are required:
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the resource for which to create or update the resource policy.
 * `policy` - (Required) Resource policy definition
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
