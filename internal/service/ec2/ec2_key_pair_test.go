@@ -44,14 +44,19 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPublicKey, func(v string) error {
+						if !tfec2.OpenSSHPublicKeysEqual(v, publicKey) {
+							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
+						}
+
+						return nil
+					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -83,10 +88,9 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccKeyPairConfig_tags2(rName, publicKey, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -134,10 +138,9 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -168,10 +171,48 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2KeyPair_importPublicKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var keyPair awstypes.KeyPairInfo
+	resourceName := "aws_key_pair.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPairConfig_basic(rName, publicKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyPairExists(ctx, t, resourceName, &keyPair),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPublicKey, func(v string) error {
+						if !tfec2.OpenSSHPublicKeysEqual(v, publicKey) {
+							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
+						}
+
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
