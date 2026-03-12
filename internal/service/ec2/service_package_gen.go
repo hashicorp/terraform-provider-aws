@@ -171,6 +171,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newTransitGatewayMeteringPolicyResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy",
+			Name:     "Transit Gateway Metering Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "transit_gateway_metering_policy_id",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("transit_gateway_metering_policy_id"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTransitGatewayMeteringPolicyEntryResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy_entry",
+			Name:     "Transit Gateway Metering Policy Entry",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newEIPDomainNameResource,
 			TypeName: "aws_eip_domain_name",
 			Name:     "EIP Domain Name",
@@ -346,6 +365,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newTransitGatewayMeteringPolicyResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy",
+			Name:     "Transit Gateway Metering Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "transit_gateway_metering_policy_id",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("transit_gateway_metering_policy_id"),
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResourceAsListResource,
