@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -168,6 +169,8 @@ func (r *topicResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	importing := state.TopicARN.IsNull()
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,7 +186,33 @@ func (r *topicResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.ConfigsActual = v
 
 	if !state.Configs.IsNull() {
-	} else {
+		var serverConfigs map[string]any
+		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, state.ConfigsActual), &serverConfigs); err != nil {
+			resp.Diagnostics.AddError("JSON decoding server configs", err.Error())
+			return
+		}
+		var clientConfigs map[string]any
+		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, state.Configs), &clientConfigs); err != nil {
+			resp.Diagnostics.AddError("JSON decoding client configs", err.Error())
+			return
+		}
+
+		for k := range clientConfigs {
+			if v, ok := serverConfigs[k]; ok {
+				clientConfigs[k] = v
+			} else {
+				delete(clientConfigs, k)
+			}
+		}
+
+		v, err := tfjson.EncodeToString(clientConfigs)
+		if err != nil {
+			resp.Diagnostics.AddError("JSON encoding client configs", err.Error())
+			return
+		}
+
+		state.Configs = jsontypes.NewNormalizedValue(v)
+	} else if importing {
 		state.Configs = jsontypes.Normalized{StringValue: state.ConfigsActual}
 	}
 
@@ -407,7 +436,7 @@ type topicResourceModel struct {
 	framework.WithRegionModel
 	ClusterARN        fwtypes.ARN          `tfsdk:"cluster_arn"`
 	Configs           jsontypes.Normalized `tfsdk:"configs" autoflex:"-"`
-	ConfigsActual     types.String         `tfsdk:"configs_actual"`
+	ConfigsActual     types.String         `tfsdk:"configs_actual" autoflex:"-"`
 	PartitionCount    types.Int64          `tfsdk:"partition_count"`
 	ReplicationFactor types.Int64          `tfsdk:"replication_factor"`
 	Timeouts          timeouts.Value       `tfsdk:"timeouts"`

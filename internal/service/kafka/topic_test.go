@@ -228,7 +228,6 @@ resource "aws_msk_topic" "test" {
   partition_count    = %[3]d
   replication_factor = %[4]d
 }
-
 `, rName, clusterName, partitionCount, replicationFactor))
 }
 
