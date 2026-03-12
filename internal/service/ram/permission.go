@@ -40,6 +40,9 @@ import (
 // @Tags(identifierAttribute="arn", resourceType="Permission")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="policy_template")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceSharePermissionDetail")
 func newPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &permissionResource{}
 

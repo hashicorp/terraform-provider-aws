@@ -1,4 +1,11 @@
-## 6.36.0 (Unreleased)
+## 6.37.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_workmail_organization` ([#46692](https://github.com/hashicorp/terraform-provider-aws/issues/46692))
+* **New Resource:** `aws_workmail_organization` ([#46692](https://github.com/hashicorp/terraform-provider-aws/issues/46692))
+
+## 6.36.0 (March 11, 2026)
 
 NOTES:
 
@@ -12,15 +19,26 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* listresource/aws_s3_bucket: No longer returns values for deprecated parameters ([#46852](https://github.com/hashicorp/terraform-provider-aws/issues/46852))
+* resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_config.custom_jwt_authorizer.allowed_scopes` argument ([#46828](https://github.com/hashicorp/terraform-provider-aws/issues/46828))
 * resource/aws_cloudwatch_log_resource_policy: Add `resource_arn` argument and `policy_scope` and `revision_id` attributes. `policy_name` is now optional ([#46813](https://github.com/hashicorp/terraform-provider-aws/issues/46813))
+* resource/aws_glue_catalog_table: Add `open_table_format_input.iceberg_input.iceberg_table_input` argument ([#46843](https://github.com/hashicorp/terraform-provider-aws/issues/46843))
+* resource/aws_glue_catalog_table: Add `view_definition` argument ([#46843](https://github.com/hashicorp/terraform-provider-aws/issues/46843))
+* resource/aws_glue_catalog_table: Change `open_table_format_input.iceberg_input.metadata_operation` and `open_table_format_input.iceberg_input.version` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#46843](https://github.com/hashicorp/terraform-provider-aws/issues/46843))
+* resource/aws_glue_catalog_table: Change `parameters`, `storage_descriptor`, and `table_type` to Optional and Computed ([#46843](https://github.com/hashicorp/terraform-provider-aws/issues/46843))
 * resource/aws_guardduty_ipset: Add `ip_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add `arn` and `destination_id` attributes ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add tagging support ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_threatintelset: Add `threat_intel_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
+* resource/aws_observabilityadmin_centralization_rule_for_organization: Add `rule.destination.destination_logs_configuration.log_group_name_configuration` block ([#46811](https://github.com/hashicorp/terraform-provider-aws/issues/46811))
 
 BUG FIXES:
 
+* data-source/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors ([#46843](https://github.com/hashicorp/terraform-provider-aws/issues/46843))
+* list-resource/aws_iam_role_policy_attachment: Prevent infinite loop when IAM Role deleted during list ([#46763](https://github.com/hashicorp/terraform-provider-aws/issues/46763))
+* listresource/aws_s3_bucket: No longer appears to hang when buckets are deleted concurrently with listing ([#46852](https://github.com/hashicorp/terraform-provider-aws/issues/46852))
 * resource/aws_appconfig_deployment_strategy: Fix panic due to "interface conversion: interface {} is float64, not float32" when updating `growth_factor` ([#46810](https://github.com/hashicorp/terraform-provider-aws/issues/46810))
+* resource/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors ([#46843](https://github.com/hashicorp/terraform-provider-aws/issues/46843))
 * resource/aws_vpc_endpoint: Allow in-place update of `private_dns_enabled` when `vpc_endpoint_type` is `Interface` ([#46800](https://github.com/hashicorp/terraform-provider-aws/issues/46800))
 * resource/aws_vpc_endpoint: Set new computed value for `network_interface_ids` attribute when changing `subnet_configuration` or `subnet_ids` ([#46800](https://github.com/hashicorp/terraform-provider-aws/issues/46800))
 * resource/aws_vpn_concentrator: Retry `VpnConcentratorLimitExceeded: The maximum number of mutating objects has been reached` errors on Create ([#46823](https://github.com/hashicorp/terraform-provider-aws/issues/46823))
