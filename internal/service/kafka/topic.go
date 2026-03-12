@@ -415,7 +415,7 @@ func findTopic(ctx context.Context, conn *kafka.Client, input *kafka.DescribeTop
 	return output, nil
 }
 
-func flattenTopicConfigsActual(ctx context.Context, configs *string) (types.String, diag.Diagnostics) {
+func flattenTopicConfigsActual(ctx context.Context, configs *string) (types.String, diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	// Configs is base64encoded in the AWS API
