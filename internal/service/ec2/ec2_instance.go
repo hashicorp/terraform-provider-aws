@@ -1997,7 +1997,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			// together when modifying CPU options, so always send both when either changes.
 			// Both attributes are Optional+Computed, so even if only one is in the
 			// configuration, the other will be populated from state (read back from AWS).
-			if d.HasChange("cpu_options.0.core_count") || d.HasChange("cpu_options.0.threads_per_core") {
+			if d.HasChanges("cpu_options.0.core_count", "cpu_options.0.threads_per_core") {
 				input.CoreCount = aws.Int32(int32(tfMap["core_count"].(int)))
 				input.ThreadsPerCore = aws.Int32(int32(tfMap["threads_per_core"].(int)))
 			}
