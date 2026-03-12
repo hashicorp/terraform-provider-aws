@@ -823,6 +823,39 @@ type protocolConfigurationModel struct {
 	ServerProtocol fwtypes.StringEnum[awstypes.ServerProtocol] `tfsdk:"server_protocol"`
 }
 
+var (
+	_ fwflex.Expander  = protocolConfigurationModel{}
+	_ fwflex.Flattener = &protocolConfigurationModel{}
+)
+
+func (m *protocolConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case *awstypes.ProtocolConfiguration:
+		if t != nil {
+			m.ServerProtocol = fwtypes.StringEnumValue(t.ServerProtocol)
+		}
+	case awstypes.ProtocolConfiguration:
+		m.ServerProtocol = fwtypes.StringEnumValue(t.ServerProtocol)
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("protocol configuration flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m protocolConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if !m.ServerProtocol.IsNull() && !m.ServerProtocol.IsUnknown() {
+		return &awstypes.ProtocolConfiguration{
+			ServerProtocol: m.ServerProtocol.ValueEnum(),
+		}, diags
+	}
+	return nil, diags
+}
+
 type requestHeaderConfigurationModel struct {
 	RequestHeaderAllowlist fwtypes.SetOfString `tfsdk:"request_header_allowlist"`
 }
