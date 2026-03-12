@@ -39,6 +39,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  dataSourceJobTemplate,
+			TypeName: "aws_media_convert_job_template",
+			Name:     "Job Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
 }
 
@@ -52,6 +60,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  resourceJobTemplate,
+			TypeName: "aws_media_convert_job_template",
+			Name:     "Job Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
