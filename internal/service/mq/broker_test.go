@@ -346,10 +346,6 @@ func TestNormalizeEngineVersion(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.17.6" // before changing, check b/c must be valid on GovCloud
-	// testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion = "3.11.20" // before changing, check b/c must be valid on GovCloud
-
 	testAccActiveVersionNormalized5_18 = "5.18"
 	testAccRabbitVersionNormalized3_13 = "3.13"
 	testAccNoAutoMinorVersionUpgrade   = "false"
