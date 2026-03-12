@@ -19,7 +19,7 @@ func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
 	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

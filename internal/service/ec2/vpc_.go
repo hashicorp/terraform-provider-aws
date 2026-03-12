@@ -527,7 +527,9 @@ func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, 
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
@@ -546,7 +548,9 @@ func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v 
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
@@ -565,7 +569,9 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 

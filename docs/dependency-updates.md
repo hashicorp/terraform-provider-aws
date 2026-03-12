@@ -7,7 +7,7 @@ Generally, dependency updates are handled by maintainers.
 
 ## Changelog Entries for Dependency Updates
 
-**Inlcude a changelog entry for dependency updates that address:**
+**Include a changelog entry for dependency updates that address:**
 
 1. Security vulnerabilities
 2. Significant changes (e.g., AWS SDK authentication changes)
