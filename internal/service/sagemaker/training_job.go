@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"regexp"
 	"time"
 
@@ -35,13 +34,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -56,7 +55,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("training_job_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeTrainingJobOutput")
-// @Testing(importIgnore="algorithm_specification.0.metric_definitions")
+// @Testing(importIgnore="algorithm_specification.0.metric_definitions;serverless_job_config.0.base_model_arn")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(importStateIdAttribute="training_job_name")
 // @Testing(hasNoPreExistingResource=true)
@@ -199,9 +198,16 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 			listvalidator.SizeBetween(1, 1),
 		},
 		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("algorithm_name"),
+					path.MatchRelative().AtName("training_image"),
+				),
+			},
 			Attributes: map[string]schema.Attribute{
 				"algorithm_name": schema.StringAttribute{
-					Optional: true,
+					Optional:            true,
+					MarkdownDescription: "Name or ARN of a SageMaker algorithm resource. Exactly one of `algorithm_name` or `training_image` must be set.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 170),
 						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*\/)?([a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)?`), "must be a valid algorithm name or ARN"),
@@ -233,15 +239,17 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 					},
 				},
 				"enable_sagemaker_metrics_time_series": schema.BoolAttribute{
-					Optional: true,
-					Computed: true,
+					Optional:            true,
+					Computed:            true,
+					MarkdownDescription: "Whether SageMaker AI should publish time-series metrics. SageMaker enables this automatically for built-in algorithms, supported prebuilt images, and jobs with explicit `metric_definitions`.",
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.UseStateForUnknown(),
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
 				"training_image": schema.StringAttribute{
-					Optional: true,
+					Optional:            true,
+					MarkdownDescription: "Registry path of the training image. Exactly one of `algorithm_name` or `training_image` must be set. Use `metric_definitions` only when you need to extract custom metrics from your own training container logs.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 255),
 					},
@@ -259,7 +267,8 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 			},
 			Blocks: map[string]schema.Block{
 				"metric_definitions": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobMetricDefinitionModel](ctx),
+					CustomType:          fwtypes.NewListNestedObjectTypeOf[trainingJobMetricDefinitionModel](ctx),
+					MarkdownDescription: "Metric definitions used to extract custom metrics from training container logs. SageMaker may still return built-in metric definitions for built-in algorithms or supported prebuilt images even when this block is omitted.",
 					Validators: []validator.List{
 						listvalidator.SizeBetween(0, 40),
 					},
@@ -268,7 +277,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 							"name": schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
-									stringvalidator.LengthBetween(0, 255),
+									stringvalidator.LengthBetween(1, 255),
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
@@ -277,7 +286,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 							"regex": schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
-									stringvalidator.LengthBetween(0, 500),
+									stringvalidator.LengthBetween(1, 500),
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
@@ -1265,7 +1274,8 @@ func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 					},
 				},
 				"base_model_arn": schema.StringAttribute{
-					Required: true,
+					Required:            true,
+					MarkdownDescription: "Base model ARN in SageMaker Public Hub. SageMaker always selects the latest version of the provided model.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
 						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid SageMaker Public Hub model ARN (hub-content)"),
@@ -1504,27 +1514,6 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	planAlgoSpec := plan.AlgorithmSpecification
-	planStoppingCondition := plan.StoppingCondition
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if planStoppingCondition.IsNull() {
-		plan.StoppingCondition = planStoppingCondition
-	}
-	plan.ID = plan.TrainingJobName
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	waitOut, err := waitTrainingJobCreated(ctx, conn, plan.TrainingJobName.ValueString(), createTimeout)
@@ -1533,20 +1522,15 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, waitOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
+	normalizeAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if planStoppingCondition.IsNull() {
-		plan.StoppingCondition = planStoppingCondition
-	}
-	plan.ID = plan.TrainingJobName
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -1575,267 +1559,53 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	stateAlgoSpec := state.AlgorithmSpecification
-	stateStoppingCondition := state.StoppingCondition
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	restoreAlgoSpecMetricDefinitions(ctx, stateAlgoSpec, &state.AlgorithmSpecification, &resp.Diagnostics)
+	normalizeAlgoSpecMetricDefinitions(ctx, stateAlgoSpec, &state.AlgorithmSpecification, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if !state.ServerlessJobConfig.IsNull() && stateStoppingCondition.IsNull() {
-		state.StoppingCondition = stateStoppingCondition
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceTrainingJob) flatten(ctx context.Context, trainingJob *sagemaker.DescribeTrainingJobOutput, model *resourceTrainingJobModel) (diags diag.Diagnostics) {
-	diags.Append(flex.Flatten(ctx, trainingJob, model)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	model.ID = model.TrainingJobName
-	diags.Append(normalizeTrainingJobOptionalListFields(ctx, model)...)
-
-	return diags
-}
-
-func normalizeTrainingJobOptionalListFields(ctx context.Context, model *resourceTrainingJobModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !model.AlgorithmSpecification.IsNull() && !model.AlgorithmSpecification.IsUnknown() {
-		algorithmSpecifications, d := model.AlgorithmSpecification.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		changed := false
-		for i := range algorithmSpecifications {
-			changed = normalizeListOfString(ctx, &algorithmSpecifications[i].ContainerArguments) || changed
-			changed = normalizeListOfString(ctx, &algorithmSpecifications[i].ContainerEntrypoint) || changed
-		}
-
-		if changed {
-			model.AlgorithmSpecification = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, algorithmSpecifications)
-		}
-	}
-
-	if !model.InputDataConfig.IsNull() && !model.InputDataConfig.IsUnknown() {
-		inputDataConfigs, d := model.InputDataConfig.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		changedInputData := false
-		for i := range inputDataConfigs {
-			if inputDataConfigs[i].DataSource.IsNull() || inputDataConfigs[i].DataSource.IsUnknown() {
-				continue
-			}
-
-			dataSources, d := inputDataConfigs[i].DataSource.ToSlice(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			changedDataSource := false
-			for j := range dataSources {
-				if dataSources[j].S3DataSource.IsNull() || dataSources[j].S3DataSource.IsUnknown() {
-					continue
-				}
-
-				s3DataSources, d := dataSources[j].S3DataSource.ToSlice(ctx)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				changedS3DataSource := false
-				for k := range s3DataSources {
-					changedS3DataSource = normalizeListOfString(ctx, &s3DataSources[k].AttributeNames) || changedS3DataSource
-					changedS3DataSource = normalizeListOfString(ctx, &s3DataSources[k].InstanceGroupNames) || changedS3DataSource
-				}
-
-				if changedS3DataSource {
-					dataSources[j].S3DataSource = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, s3DataSources)
-					changedDataSource = true
-				}
-			}
-
-			if changedDataSource {
-				inputDataConfigs[i].DataSource = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, dataSources)
-				changedInputData = true
-			}
-		}
-
-		if changedInputData {
-			model.InputDataConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, inputDataConfigs)
-		}
-	}
-
-	if !model.VPCConfig.IsNull() && !model.VPCConfig.IsUnknown() {
-		vpcConfigs, d := model.VPCConfig.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		changed := false
-		for i := range vpcConfigs {
-			changed = normalizeListOfString(ctx, &vpcConfigs[i].SecurityGroupIDs) || changed
-			changed = normalizeListOfString(ctx, &vpcConfigs[i].Subnets) || changed
-		}
-
-		if changed {
-			model.VPCConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, vpcConfigs)
-		}
-	}
-
-	return diags
-}
-
-func normalizeListOfString(ctx context.Context, value *fwtypes.ListOfString) bool {
-	if !reflect.ValueOf(*value).IsZero() {
-		return false
-	}
-
-	*value = fwtypes.NewListValueOfNull[basetypes.StringValue](ctx)
-
-	return true
-}
-
 func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
-	conn := r.Meta().SageMakerClient(ctx)
 
 	var plan, state resourceTrainingJobModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.ResourceConfig.Equal(state.ResourceConfig) ||
-		!plan.RemoteDebugConfig.Equal(state.RemoteDebugConfig) ||
-		!plan.ProfilerConfig.Equal(state.ProfilerConfig) ||
-		!plan.ProfilerRuleConfigurations.Equal(state.ProfilerRuleConfigurations) {
-		input := &sagemaker.UpdateTrainingJobInput{
-			TrainingJobName: plan.TrainingJobName.ValueStringPointer(),
-		}
+	conn := r.Meta().SageMakerClient(ctx)
 
-		pc, d := plan.ProfilerConfig.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if pc != nil {
-			input.ProfilerConfig = &awstypes.ProfilerConfigForUpdate{
-				DisableProfiler:                 pc.DisableProfiler.ValueBoolPointer(),
-				ProfilingIntervalInMilliseconds: pc.ProfilingIntervalInMilliseconds.ValueInt64Pointer(),
-				S3OutputPath:                    pc.S3OutputPath.ValueStringPointer(),
-			}
-			if !pc.ProfilingParameters.IsNull() && !pc.ProfilingParameters.IsUnknown() {
-				params := make(map[string]string)
-				resp.Diagnostics.Append(pc.ProfilingParameters.ElementsAs(ctx, &params, false)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-				input.ProfilerConfig.ProfilingParameters = params
-			}
-		}
-
-		prcs, d := plan.ProfilerRuleConfigurations.ToSlice(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if len(prcs) > 0 {
-			rules := make([]awstypes.ProfilerRuleConfiguration, 0, len(prcs))
-			for _, prc := range prcs {
-				rule := awstypes.ProfilerRuleConfiguration{
-					RuleConfigurationName: prc.RuleConfigurationName.ValueStringPointer(),
-					RuleEvaluatorImage:    prc.RuleEvaluatorImage.ValueStringPointer(),
-					LocalPath:             prc.LocalPath.ValueStringPointer(),
-					S3OutputPath:          prc.S3OutputPath.ValueStringPointer(),
-				}
-				if !prc.InstanceType.IsNull() && !prc.InstanceType.IsUnknown() {
-					rule.InstanceType = awstypes.ProcessingInstanceType(prc.InstanceType.ValueString())
-				}
-				if !prc.VolumeSizeInGB.IsNull() && !prc.VolumeSizeInGB.IsUnknown() {
-					rule.VolumeSizeInGB = aws.Int32(int32(prc.VolumeSizeInGB.ValueInt64()))
-				}
-				if !prc.RuleParameters.IsNull() && !prc.RuleParameters.IsUnknown() {
-					params := make(map[string]string)
-					resp.Diagnostics.Append(prc.RuleParameters.ElementsAs(ctx, &params, false)...)
-					if resp.Diagnostics.HasError() {
-						return
-					}
-					rule.RuleParameters = params
-				}
-				rules = append(rules, rule)
-			}
-			input.ProfilerRuleConfigurations = rules
-		}
-
-		// RemoteDebugConfig
-		rdc, d := plan.RemoteDebugConfig.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if rdc != nil && !rdc.EnableRemoteDebug.IsNull() && !rdc.EnableRemoteDebug.IsUnknown() {
-			input.RemoteDebugConfig = &awstypes.RemoteDebugConfigForUpdate{
-				EnableRemoteDebug: rdc.EnableRemoteDebug.ValueBoolPointer(),
-			}
-		}
-
-		// ResourceConfig (warm pool keep-alive)
-		resCfg, d := plan.ResourceConfig.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		if resCfg != nil && !resCfg.KeepAlivePeriodInSeconds.IsNull() && !resCfg.KeepAlivePeriodInSeconds.IsUnknown() {
-			input.ResourceConfig = &awstypes.ResourceConfigForUpdate{
-				KeepAlivePeriodInSeconds: aws.Int32(int32(resCfg.KeepAlivePeriodInSeconds.ValueInt64())),
-			}
-		}
-
-		if _, err := conn.UpdateTrainingJob(ctx, input); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.ValueString())
-			return
-		}
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitTrainingJobUpdated(ctx, conn, plan.TrainingJobName.ValueString(), updateTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.ValueString())
-			return
-		}
-
-		planAlgoSpec := plan.AlgorithmSpecification
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		plan.ID = plan.TrainingJobName
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d, smerr.ID, plan.TrainingJobName)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	plan.ID = plan.TrainingJobName
+	if diff.HasChanges() {
+		var input sagemaker.UpdateTrainingJobInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input), smerr.ID, plan.TrainingJobName)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateTrainingJob(ctx, &input)
+
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName)
+			return
+		}
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -1899,7 +1669,7 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		if !resp.Diagnostics.HasError() && len(mpConfigs) > 0 {
 			groupARN := mpConfigs[0].ModelPackageGroupARN.ValueString()
 			if groupARN != "" {
-				if err := deleteTrainingJobModelPackages(ctx, conn, groupARN); err != nil {
+				if err := deleteModelPackages(ctx, conn, groupARN); err != nil {
 					resp.Diagnostics.AddWarning(
 						"Error cleaning up Model Packages",
 						fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up model packages in group %s: %s", state.TrainingJobName.ValueString(), groupARN, err),
@@ -1908,6 +1678,17 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 			}
 		}
 	}
+}
+
+func (r *resourceTrainingJob) flatten(ctx context.Context, trainingJob *sagemaker.DescribeTrainingJobOutput, model *resourceTrainingJobModel) (diags diag.Diagnostics) {
+	diags.Append(flex.Flatten(ctx, trainingJob, model)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	model.ID = model.TrainingJobName
+
+	return diags
 }
 
 func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, securityGroupIDs, subnetIDs []string, timeout time.Duration) error {
@@ -1938,14 +1719,14 @@ func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, security
 	return nil
 }
 
-func deleteTrainingJobModelPackages(ctx context.Context, conn *sagemaker.Client, groupARN string) error {
+func deleteModelPackages(ctx context.Context, conn *sagemaker.Client, groupNameOrARN string) error {
 	pages := sagemaker.NewListModelPackagesPaginator(conn, &sagemaker.ListModelPackagesInput{
-		ModelPackageGroupName: aws.String(groupARN),
+		ModelPackageGroupName: aws.String(groupNameOrARN),
 	})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("listing SageMaker AI Model Packages for group (%s): %w", groupARN, err)
+			return fmt.Errorf("listing SageMaker AI Model Packages for group (%s): %w", groupNameOrARN, err)
 		}
 		for _, mp := range page.ModelPackageSummaryList {
 			if _, err := conn.DeleteModelPackage(ctx, &sagemaker.DeleteModelPackageInput{
@@ -1960,7 +1741,9 @@ func deleteTrainingJobModelPackages(ctx context.Context, conn *sagemaker.Client,
 	return nil
 }
 
-func restoreAlgoSpecMetricDefinitions(
+// SageMaker injects metric definitions for some built-in algorithms and supported
+// prebuilt images. This fixes unexpected new value errors during apply
+func normalizeAlgoSpecMetricDefinitions(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel],
 	target *fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel],
@@ -1969,13 +1752,14 @@ func restoreAlgoSpecMetricDefinitions(
 	if saved.IsUnknown() {
 		return
 	}
+
 	flatSpecs, d := target.ToSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() || len(flatSpecs) == 0 {
 		return
 	}
+
 	if saved.IsNull() || len(saved.Elements()) == 0 {
-		// Fresh import or no prior state: clear API-injected metric_definitions.
 		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[trainingJobMetricDefinitionModel](ctx)
 	} else {
 		savedSpecs, d := saved.ToSlice(ctx)
@@ -1985,6 +1769,7 @@ func restoreAlgoSpecMetricDefinitions(
 		}
 		flatSpecs[0].MetricDefinitions = savedSpecs[0].MetricDefinitions
 	}
+
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
 }
 
@@ -2107,7 +1892,7 @@ type resourceTrainingJobModel struct {
 	RoleARN                               fwtypes.ARN                                                              `tfsdk:"role_arn"`
 	ServerlessJobConfig                   fwtypes.ListNestedObjectValueOf[trainingJobServerlessJobConfigModel]     `tfsdk:"serverless_job_config"`
 	SessionChainingConfig                 fwtypes.ListNestedObjectValueOf[trainingJobSessionChainingConfigModel]   `tfsdk:"session_chaining_config"`
-	StoppingCondition                     fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel]       `tfsdk:"stopping_condition"`
+	StoppingCondition                     fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel]       `tfsdk:"stopping_condition" autoflex:",omitempty"`
 	TensorBoardOutputConfig               fwtypes.ListNestedObjectValueOf[trainingJobTensorBoardOutputConfigModel] `tfsdk:"tensor_board_output_config"`
 	Timeouts                              timeouts.Value                                                           `tfsdk:"timeouts"`
 	TrainingJobName                       types.String                                                             `tfsdk:"training_job_name"`
