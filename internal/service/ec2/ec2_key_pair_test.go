@@ -179,7 +179,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccEC2KeyPair_importPublicKey(t *testing.T) {
+func TestAccEC2KeyPair_publicKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyPair awstypes.KeyPairInfo
 	resourceName := "aws_key_pair.test"
