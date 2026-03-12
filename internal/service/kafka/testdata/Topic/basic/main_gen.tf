@@ -26,16 +26,16 @@ resource "aws_msk_cluster" "test" {
   }
 }
 
-# acctest.ConfigVPCWithSubnets(rName, 1)
+# acctest.ConfigVPCWithSubnets(rName, 3)
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-# acctest.ConfigSubnets(rName, 1)
+# acctest.ConfigSubnets(rName, 3)
 
 resource "aws_subnet" "test" {
-  count = 1
+  count = 3
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]

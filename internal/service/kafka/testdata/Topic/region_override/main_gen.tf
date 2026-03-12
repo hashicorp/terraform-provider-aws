@@ -11,6 +11,8 @@ resource "aws_msk_topic" "test" {
 }
 
 resource "aws_msk_cluster" "test" {
+  region = var.region
+
   cluster_name           = var.rName
   kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
@@ -28,7 +30,7 @@ resource "aws_msk_cluster" "test" {
   }
 }
 
-# acctest.ConfigVPCWithSubnets(rName, 1)
+# acctest.ConfigVPCWithSubnets(rName, 3)
 
 resource "aws_vpc" "test" {
   region = var.region
@@ -36,12 +38,12 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-# acctest.ConfigSubnets(rName, 1)
+# acctest.ConfigSubnets(rName, 3)
 
 resource "aws_subnet" "test" {
   region = var.region
 
-  count = 1
+  count = 3
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -67,6 +69,8 @@ locals {
 }
 
 resource "aws_security_group" "test" {
+  region = var.region
+
   vpc_id = aws_vpc.test.id
 }
 variable "rName" {

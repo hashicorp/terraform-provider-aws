@@ -7,6 +7,7 @@ resource "aws_msk_topic" "test" {
 }
 
 resource "aws_msk_cluster" "test" {
+{{- template "region" }}
   cluster_name           = var.rName
   kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
@@ -24,8 +25,9 @@ resource "aws_msk_cluster" "test" {
   }
 }
 
-{{ template "acctest.ConfigVPCWithSubnets" 1 }}
+{{ template "acctest.ConfigVPCWithSubnets" 3 }}
 
 resource "aws_security_group" "test" {
+{{- template "region" }}
   vpc_id = aws_vpc.test.id
 }
