@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagentcore_resource_policy
+```
+
+```release-note:enhancement
+resource/aws_example_thing: Add `allowed_scopes` attribute to JWT authorizer configuration
+```
