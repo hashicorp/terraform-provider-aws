@@ -1520,10 +1520,6 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		plan.StoppingCondition = planStoppingCondition
 	}
 	plan.ID = plan.TrainingJobName
-	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 	if resp.Diagnostics.HasError() {
@@ -1551,10 +1547,6 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		plan.StoppingCondition = planStoppingCondition
 	}
 	plan.ID = plan.TrainingJobName
-	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -1610,7 +1602,6 @@ func (r *resourceTrainingJob) flatten(ctx context.Context, trainingJob *sagemake
 
 	model.ID = model.TrainingJobName
 	diags.Append(normalizeTrainingJobOptionalListFields(ctx, model)...)
-	diags.Append(normalizeOutputDataConfigKMSKeyID(ctx, model)...)
 
 	return diags
 }
@@ -1842,10 +1833,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 		plan.ID = plan.TrainingJobName
-		smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
 	}
 
 	plan.ID = plan.TrainingJobName
@@ -1999,28 +1986,6 @@ func restoreAlgoSpecMetricDefinitions(
 		flatSpecs[0].MetricDefinitions = savedSpecs[0].MetricDefinitions
 	}
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
-}
-
-func normalizeOutputDataConfigKMSKeyID(ctx context.Context, model *resourceTrainingJobModel) diag.Diagnostics {
-	if model.OutputDataConfig.IsNull() || model.OutputDataConfig.IsUnknown() {
-		return nil
-	}
-
-	var outputDataConfig []trainingJobOutputDataConfigModel
-	diags := model.OutputDataConfig.ElementsAs(ctx, &outputDataConfig, false)
-	if diags.HasError() {
-		return diags
-	}
-
-	for i := range outputDataConfig {
-		if !outputDataConfig[i].KMSKeyID.IsNull() && !outputDataConfig[i].KMSKeyID.IsUnknown() && outputDataConfig[i].KMSKeyID.ValueString() == "" {
-			outputDataConfig[i].KMSKeyID = types.StringNull()
-		}
-	}
-
-	model.OutputDataConfig, diags = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, outputDataConfig)
-
-	return diags
 }
 
 func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
@@ -2220,7 +2185,7 @@ type trainingJobShuffleConfigModel struct {
 
 type trainingJobOutputDataConfigModel struct {
 	CompressionType fwtypes.StringEnum[awstypes.OutputCompressionType] `tfsdk:"compression_type"`
-	KMSKeyID        types.String                                       `tfsdk:"kms_key_id"`
+	KMSKeyID        types.String                                       `tfsdk:"kms_key_id" autoflex:",omitempty"`
 	S3OutputPath    types.String                                       `tfsdk:"s3_output_path"`
 }
 
