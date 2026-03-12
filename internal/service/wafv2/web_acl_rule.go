@@ -601,7 +601,6 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 // and WAFOptimisticLockException. On optimistic lock conflict it re-fetches the Web ACL
 // and calls rebuildRules to reconstruct the rule list from the latest state before retrying.
 func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2.UpdateWebACLInput, timeout time.Duration, rebuildRules func(*wafv2.GetWebACLOutput) []awstypes.Rule) error {
-
 	_, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateWebACL(ctx, input)
