@@ -31,8 +31,9 @@ The implementation type can be identified by inspecting the tags in the resource
 - `internal/service/<service-name>/<resource-name>_list.go` - List Resource implementation
 - `internal/service/<service-name>/<resource-name>_list_test.go` - List Resource acceptance tests
 - `website/docs/list-resources/<service-name>_<resource-name>.html.markdown` - List Resource documentation
-- `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/main.tf` - Basic List Resource acceptance test configuration
-- `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/query.tfquery.hcl` - Query for using list resource
+- `internal/service/<service-name>/testdata/<Resource-Name>/[list_basic|list_includeResource|list_regionOverride]` - List acceptance test configuration directories. Each contains:
+    - `main.tf` - Resource acceptance test configuration
+    - `query.tfquery.hcl` - Query for using list resource
 
 ### SDK resources
 
