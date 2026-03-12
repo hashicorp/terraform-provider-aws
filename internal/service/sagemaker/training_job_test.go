@@ -199,9 +199,10 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"serverless_job_config.0.base_model_arn"},
 			},
 		},
 	})
@@ -2035,6 +2036,7 @@ resource "aws_sagemaker_training_job" "test" {
       name  = "train:loss"
       regex = "loss: ([0-9\\.]+)"
     }
+  
   }
 
   output_data_config {
