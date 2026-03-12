@@ -311,7 +311,16 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	if err = updateWebACLWithRetry(ctx, conn, updateInput); err != nil {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput, func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
+		// Re-append our rule to the latest rule list (which may have grown since we fetched).
+		for _, r := range latest.WebACL.Rules {
+			if aws.ToString(r.Name) == plan.Name.ValueString() {
+				// Already present (shouldn't happen, but be safe).
+				return latest.WebACL.Rules
+			}
+		}
+		return append(latest.WebACL.Rules, newRule)
+	}); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
 			err.Error(),
@@ -478,7 +487,17 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	if err = updateWebACLWithRetry(ctx, conn, updateInput); err != nil {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput, func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
+		var rules []awstypes.Rule
+		for _, r := range latest.WebACL.Rules {
+			if aws.ToString(r.Name) == state.Name.ValueString() {
+				rules = append(rules, updatedRule)
+			} else {
+				rules = append(rules, r)
+			}
+		}
+		return rules
+	}); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRule, plan.Name.String(), err),
 			err.Error(),
@@ -553,7 +572,15 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	if err = updateWebACLWithRetry(ctx, conn, updateInput); err != nil {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput, func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
+		var rules []awstypes.Rule
+		for _, r := range latest.WebACL.Rules {
+			if aws.ToString(r.Name) != state.Name.ValueString() {
+				rules = append(rules, r)
+			}
+		}
+		return rules
+	}); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRule, state.Name.String(), err),
 			err.Error(),
@@ -562,28 +589,34 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-// updateWebACLWithRetry calls UpdateWebACL, retrying on WAFUnavailableEntityException.
-// On WAFOptimisticLockException it refreshes the lock token and retries once.
-func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2.UpdateWebACLInput) error {
+// updateWebACLWithRetry calls UpdateWebACL, retrying on WAFUnavailableEntityException
+// and WAFOptimisticLockException. On optimistic lock conflict it re-fetches the Web ACL
+// and calls rebuildRules to reconstruct the rule list from the latest state before retrying.
+func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2.UpdateWebACLInput, rebuildRules func(*wafv2.GetWebACLOutput) []awstypes.Rule) error {
 	const timeout = 5 * time.Minute
 
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.UpdateWebACL(ctx, input)
-	})
-
-	if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
-		output, getErr := findWebACLByThreePartKey(ctx, conn,
-			aws.ToString(input.Id), aws.ToString(input.Name), string(input.Scope))
-		if getErr != nil {
-			return getErr
-		}
-		if newToken := aws.ToString(output.LockToken); newToken != aws.ToString(input.LockToken) {
-			input.LockToken = aws.String(newToken)
-			_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
-				return conn.UpdateWebACL(ctx, input)
-			})
-		}
-	}
+	_, err := tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return conn.UpdateWebACL(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*awstypes.WAFUnavailableEntityException](err) {
+				return true, err
+			} else if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
+				output, getErr := findWebACLByThreePartKey(ctx, conn,
+					aws.ToString(input.Id), aws.ToString(input.Name), string(input.Scope))
+				if getErr != nil {
+					return false, getErr
+				}
+				input.LockToken = output.LockToken
+				if rebuildRules != nil {
+					input.Rules = rebuildRules(output)
+				}
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	return err
 }

@@ -6,6 +6,7 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -569,6 +570,90 @@ func TestAccWAFV2WebACLRule_notStatement(t *testing.T) {
 					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.not_statement.0.statement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.not_statement.0.statement.0.geo_match_statement.0.country_codes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_fieldToMatch(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_fieldToMatch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					// json_body
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope", "VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#", "1"),
+					// headers
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.0.match_scope", "KEY"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#", "2"),
+					// cookies
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.byte_match_statement.0.field_to_match.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.byte_match_statement.0.field_to_match.0.cookies.0.match_scope", "ALL"),
+					// single_header
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.3.byte_match_statement.0.field_to_match.0.single_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.3.byte_match_statement.0.field_to_match.0.single_header.0.name", "user-agent"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_multipleRules(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName0 := "aws_wafv2_web_acl_rule.test0"
+	resourceName1 := "aws_wafv2_web_acl_rule.test1"
+	resourceName2 := "aws_wafv2_web_acl_rule.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create 3 rules on the same Web ACL
+			{
+				Config: testAccWebACLRuleConfig_multiple(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName0),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName1),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName2),
+					resource.TestCheckResourceAttr(resourceName0, names.AttrPriority, "0"),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPriority, "2"),
+				),
+			},
+			// Step 2: Update priority of one rule — others must be unaffected
+			{
+				Config: testAccWebACLRuleConfig_multipleUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName0),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName1),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName2),
+					resource.TestCheckResourceAttr(resourceName0, names.AttrPriority, "10"),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPriority, "2"),
+				),
+			},
+			// Step 3: Remove one rule — others must survive
+			{
+				Config: testAccWebACLRuleConfig_multiple(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName0),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName1),
 				),
 			},
 		},
@@ -1715,41 +1800,6 @@ resource "aws_wafv2_web_acl_rule" "test" {
 `, rName)
 }
 
-func TestAccWAFV2WebACLRule_fieldToMatch(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_web_acl_rule.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebACLRuleConfig_fieldToMatch(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLRuleExists(ctx, t, resourceName),
-					// json_body
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope", "VALUE"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#", "1"),
-					// headers
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.0.match_scope", "KEY"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#", "2"),
-					// cookies
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.byte_match_statement.0.field_to_match.0.cookies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.byte_match_statement.0.field_to_match.0.cookies.0.match_scope", "ALL"),
-					// single_header
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.3.byte_match_statement.0.field_to_match.0.single_header.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.3.byte_match_statement.0.field_to_match.0.single_header.0.name", "user-agent"),
-				),
-			},
-		},
-	})
-}
-
 func testAccWebACLRuleConfig_fieldToMatch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -1877,6 +1927,145 @@ resource "aws_wafv2_web_acl_rule" "test" {
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_multiple(rName string, count int) string {
+	var rules strings.Builder
+	for i := range count {
+		fmt.Fprintf(&rules, `
+resource "aws_wafv2_web_acl_rule" "test%[1]d" {
+  name        = "%[2]s-%[1]d"
+  priority    = %[1]d
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[2]s-%[1]d"
+    sampled_requests_enabled   = false
+  }
+}
+  `, i, rName)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName) + rules.String()
+}
+
+func testAccWebACLRuleConfig_multipleUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test0" {
+  name        = "%[1]s-0"
+  priority    = 10
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-0"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test1" {
+  name        = "%[1]s-1"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-1"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test2" {
+  name        = "%[1]s-2"
+  priority    = 2
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-2"
     sampled_requests_enabled   = false
   }
 }
