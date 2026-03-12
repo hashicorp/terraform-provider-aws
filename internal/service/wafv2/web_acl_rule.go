@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -373,7 +373,7 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -497,7 +497,7 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {
