@@ -67,6 +67,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCluster,
 			TypeName: "aws_msk_cluster",
 			Name:     "Cluster",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
