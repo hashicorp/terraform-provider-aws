@@ -114,7 +114,7 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 	// Additional fields.
 	input.IfMatch = etag
 	// Manually set Value to avoid JSON encoding by AutoFlEx.
-	input.Value = aws.String(data.Value.ValueString())
+	input.Value = data.Value.ValueStringPointer()
 
 	output, err := conn.PutKey(ctx, input)
 
@@ -208,7 +208,7 @@ func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest
 		// Additional fields.
 		input.IfMatch = etag
 		// Manually set Value to avoid JSON encoding by AutoFlEx.
-		input.Value = aws.String(new.Value.ValueString())
+		input.Value = new.Value.ValueStringPointer()
 
 		output, err := conn.PutKey(ctx, input)
 
