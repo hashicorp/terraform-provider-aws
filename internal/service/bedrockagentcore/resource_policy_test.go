@@ -247,7 +247,7 @@ data "aws_iam_policy_document" "resource_policy" {
       identifiers = ["*"]
     }
     resources = [
-        aws_bedrockagentcore_agent_runtime_endpoint.test.agent_runtime_arn
+      aws_bedrockagentcore_agent_runtime_endpoint.test.agent_runtime_arn
     ]
   }
 }
@@ -271,7 +271,7 @@ data "aws_iam_policy_document" "resource_policy" {
       identifiers = ["*"]
     }
     resources = [
-        aws_bedrockagentcore_gateway.test.gateway_arn
+      aws_bedrockagentcore_gateway.test.gateway_arn
     ]
   }
 }
