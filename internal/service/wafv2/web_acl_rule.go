@@ -377,6 +377,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	// Preserve fields from plan that aren't in the Rule
 	state.WebACLARN = plan.WebACLARN
 	state.WithRegionModel = plan.WithRegionModel
+	state.Timeouts = plan.Timeouts
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
@@ -652,17 +653,17 @@ func (webACLRuleImportID) Parse(id string) (string, map[string]any, error) {
 
 type webACLRuleModel struct {
 	framework.WithRegionModel
-	Name             types.String                                                     `tfsdk:"name"`
-	Priority         types.Int32                                                      `tfsdk:"priority"`
-	Timeouts         timeouts.Value                                                   `tfsdk:"timeouts"`
-	WebACLARN        types.String                                                     `tfsdk:"web_acl_arn"`
 	Action           fwtypes.ListNestedObjectValueOf[webACLRuleActionModel]           `tfsdk:"action"`
 	CaptchaConfig    fwtypes.ListNestedObjectValueOf[webACLRuleImmunityTimeModel]     `tfsdk:"captcha_config"`
 	ChallengeConfig  fwtypes.ListNestedObjectValueOf[webACLRuleImmunityTimeModel]     `tfsdk:"challenge_config"`
+	Name             types.String                                                     `tfsdk:"name"`
 	OverrideAction   fwtypes.ListNestedObjectValueOf[webACLRuleOverrideActionModel]   `tfsdk:"override_action"`
+	Priority         types.Int32                                                      `tfsdk:"priority"`
 	RuleLabel        fwtypes.ListNestedObjectValueOf[webACLRuleLabelModel]            `tfsdk:"rule_label"`
 	Statement        fwtypes.ListNestedObjectValueOf[webACLRuleStatementModel]        `tfsdk:"statement"`
+	Timeouts         timeouts.Value                                                   `tfsdk:"timeouts"`
 	VisibilityConfig fwtypes.ListNestedObjectValueOf[webACLRuleVisibilityConfigModel] `tfsdk:"visibility_config"`
+	WebACLARN        types.String                                                     `tfsdk:"web_acl_arn"`
 }
 
 func (m webACLRuleModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
