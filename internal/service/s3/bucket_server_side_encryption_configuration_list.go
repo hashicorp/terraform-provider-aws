@@ -11,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -23,61 +25,29 @@ import (
 
 // @SDKListResource("aws_s3_bucket_server_side_encryption_configuration")
 func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResourceBucketServerSideEncryptionConfiguration{}
-	l.SetResourceSchema(resourceBucketServerSideEncryptionConfiguration())
-	return &l
+	return newListResourceBaseBucketPropertySDK(
+		resourceBucketServerSideEncryptionConfiguration(),
+		newBucketServerSideEncryptionConfigurationListHandler,
+	)
 }
 
-var _ list.ListResource = &listResourceBucketServerSideEncryptionConfiguration{}
+var _ bucketPropertyListHandlerSDK = bucketServerSideEncryptionConfigurationListHandler{}
 
-type listResourceBucketServerSideEncryptionConfiguration struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *listResourceBucketServerSideEncryptionConfiguration) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listBucketServerSideEncryptionConfigurationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	tflog.Info(ctx, "Listing S3 Bucket Server Side Encryption Configuration")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		tflog.Info(ctx, "Listing General Purpose Buckets")
-		gpConn := l.Meta().S3Client(ctx)
-		gpInput := s3.ListBucketsInput{
-			BucketRegion: aws.String(l.Meta().Region(ctx)),
-			MaxBuckets:   aws.Int32(int32(request.Limit)),
-		}
-		var count int64
-		for result := range l.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
-			count++
-			if !yield(result) {
-				return
-			}
-		}
-
-		limit := request.Limit - count
-		if limit <= 0 {
-			tflog.Info(ctx, "Limit reached, skipping Directory Buckets")
-		}
-
-		tflog.Info(ctx, "Listing Directory Buckets")
-		dirConn := l.Meta().S3ExpressClient(ctx)
-		dirInput := s3.ListDirectoryBucketsInput{
-			MaxDirectoryBuckets: aws.Int32(int32(limit)),
-		}
-		for result := range l.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
-			if !yield(result) {
-				return
-			}
-		}
+func newBucketServerSideEncryptionConfigurationListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+	return bucketServerSideEncryptionConfigurationListHandler{
+		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
 	}
 }
 
-func (l *listResourceBucketServerSideEncryptionConfiguration) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
+type bucketServerSideEncryptionConfigurationListHandler struct {
+	baseBucketPropertyListHandlerSDK
+}
+
+func (l bucketServerSideEncryptionConfigurationListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {
+	return parseQuery[listBucketServerSideEncryptionConfigurationModel](ctx, config)
+}
+
+func (l bucketServerSideEncryptionConfigurationListHandler) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {

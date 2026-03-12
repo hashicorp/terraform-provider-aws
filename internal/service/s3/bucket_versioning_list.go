@@ -11,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -23,62 +25,29 @@ import (
 
 // @SDKListResource("aws_s3_bucket_versioning")
 func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
-	l := bucketVersioningListResource{}
-	l.SetResourceSchema(resourceBucketVersioning())
-	return &l
+	return newListResourceBaseBucketPropertySDK(
+		resourceBucketVersioning(),
+		newBucketVersioningListHandler,
+	)
 }
 
-var _ list.ListResource = &bucketVersioningListResource{}
+var _ bucketPropertyListHandlerSDK = bucketVersioningListHandler{}
 
-type bucketVersioningListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *bucketVersioningListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listBucketVersioningModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	tflog.Info(ctx, "Listing Resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		tflog.Info(ctx, "Listing General Purpose Buckets")
-		gpConn := l.Meta().S3Client(ctx)
-		gpInput := s3.ListBucketsInput{
-			BucketRegion: aws.String(l.Meta().Region(ctx)),
-			MaxBuckets:   aws.Int32(int32(request.Limit)),
-		}
-		var count int64
-		for result := range l.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
-			count++
-			if !yield(result) {
-				return
-			}
-		}
-
-		limit := request.Limit - count
-		if limit <= 0 {
-			tflog.Info(ctx, "Limit reached, skipping Directory Buckets")
-		}
-
-		tflog.Info(ctx, "Listing Directory Buckets")
-		dirConn := l.Meta().S3ExpressClient(ctx)
-		dirInput := s3.ListDirectoryBucketsInput{
-			MaxDirectoryBuckets: aws.Int32(int32(limit)),
-		}
-		for result := range l.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
-			if !yield(result) {
-				return
-			}
-		}
+func newBucketVersioningListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+	return bucketVersioningListHandler{
+		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
 	}
 }
 
-func (l *bucketVersioningListResource) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
+type bucketVersioningListHandler struct {
+	baseBucketPropertyListHandlerSDK
+}
+
+func (l bucketVersioningListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {
+	return parseQuery[listBucketVersioningModel](ctx, config)
+}
+
+func (l bucketVersioningListHandler) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
