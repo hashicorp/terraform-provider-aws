@@ -1886,13 +1886,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name             = %[1]q
-  engine_type             = "ActiveMQ"
-  engine_version          = %[2]q
-  host_instance_type      = "mq.t3.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  authentication_strategy    = "simple"
+  storage_type               = "efs"
   auto_minor_version_upgrade = %[3]s
 
   logs {
@@ -1950,13 +1950,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  storage_type       = "ebs"
-  host_instance_type = "mq.m5.large"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  storage_type               = "ebs"
+  host_instance_type         = "mq.m5.large"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   logs {
     general = true
@@ -2184,12 +2184,12 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   encryption_options {
     kms_key_id        = aws_kms_key.test.arn
@@ -2219,12 +2219,12 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   encryption_options {
     use_aws_owned_key = %[4]t
@@ -2289,13 +2289,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   user {
     username = "first"
@@ -2316,13 +2316,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   user {
     console_access = true
@@ -2349,13 +2349,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   user {
     username = "second"
@@ -2377,13 +2377,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[5]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[5]s
 
   user {
     username = "Test"
@@ -2408,13 +2408,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[7]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[7]s
 
   user {
     username = "Test"
@@ -2448,13 +2448,13 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id, aws_security_group.test2.id]
-	auto_minor_version_upgrade = %[3]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id, aws_security_group.test2.id]
+  auto_minor_version_upgrade = %[3]s
 
   logs {
     general = true
@@ -2487,13 +2487,13 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test2.id]
-	auto_minor_version_upgrade = %[3]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test2.id]
+  auto_minor_version_upgrade = %[3]s
 
   logs {
     general = true
@@ -2518,12 +2518,12 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   user {
     username = "Test"
@@ -2583,12 +2583,12 @@ resource "aws_mq_configuration" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   configuration {
     id       = aws_mq_configuration.test.id
@@ -2606,12 +2606,12 @@ resource "aws_mq_broker" "test" {
 func testAccBrokerConfig_rabbitLogs(rName, version, autoMinorVersionUpgrade string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   logs {
     general = true
@@ -2636,12 +2636,12 @@ resource "aws_security_group" "test" {
 func testAccBrokerConfig_rabbitAuditLog(rName, version, autoMinorVersionUpgrade string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.t3.micro"
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
 
   logs {
     general = true
@@ -2675,14 +2675,14 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  engine_type        = "RabbitMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.m5.large"
-  security_groups    = [aws_security_group.test.id]
-  storage_type       = "ebs"
-  deployment_mode    = "CLUSTER_MULTI_AZ"
-	auto_minor_version_upgrade = %[3]s
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m5.large"
+  security_groups            = [aws_security_group.test.id]
+  storage_type               = "ebs"
+  deployment_mode            = "CLUSTER_MULTI_AZ"
+  auto_minor_version_upgrade = %[3]s
 
   user {
     username = "Test"
@@ -2802,13 +2802,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = %[1]q
-  apply_immediately  = true
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = %[3]q
-  security_groups    = [aws_security_group.test.id]
-	auto_minor_version_upgrade = %[4]s
+  broker_name                = %[1]q
+  apply_immediately          = true
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = %[3]q
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[4]s
 
   logs {
     general = true
@@ -2841,14 +2841,14 @@ resource "aws_security_group" "primary" {
 resource "aws_mq_broker" "primary" {
   provider = awsalternate
 
-  apply_immediately  = true
-  broker_name        = "%[1]s-primary"
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.m5.large"
-  security_groups    = [aws_security_group.primary.id]
-  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
-	auto_minor_version_upgrade = %[4]s
+  apply_immediately          = true
+  broker_name                = "%[1]s-primary"
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m5.large"
+  security_groups            = [aws_security_group.primary.id]
+  deployment_mode            = "ACTIVE_STANDBY_MULTI_AZ"
+  auto_minor_version_upgrade = %[4]s
 
   logs {
     general = true
@@ -2874,14 +2874,14 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = %[2]q
-  host_instance_type = "mq.m5.large"
-  security_groups    = [aws_security_group.test.id]
-  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
-	auto_minor_version_upgrade = %[4]s
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.m5.large"
+  security_groups            = [aws_security_group.test.id]
+  deployment_mode            = "ACTIVE_STANDBY_MULTI_AZ"
+  auto_minor_version_upgrade = %[4]s
 
   data_replication_mode               = %[3]q
   data_replication_primary_broker_arn = aws_mq_broker.primary.arn
