@@ -402,7 +402,7 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
 func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
