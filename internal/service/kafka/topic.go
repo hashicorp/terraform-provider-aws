@@ -7,8 +7,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -46,6 +44,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 func newTopicResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &topicResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -423,14 +422,18 @@ var (
 type topicImportID struct{}
 
 func (topicImportID) Parse(id string) (string, map[string]any, error) {
-	name, clusterARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <topic name>"+intflex.ResourceIdSeparator+"<cluster ARN>", id)
+	const (
+		topicIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(id, topicIDParts, true)
+
+	if err != nil {
+		return "", nil, err
 	}
 
 	result := map[string]any{
-		names.AttrName: name,
-		"cluster_arn":  clusterARN,
+		"cluster_arn":  parts[0],
+		names.AttrName: parts[1],
 	}
 
 	return id, result, nil

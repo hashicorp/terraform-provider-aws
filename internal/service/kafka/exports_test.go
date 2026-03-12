@@ -12,6 +12,7 @@ var (
 	ResourceSCRAMSecretAssociation       = resourceSCRAMSecretAssociation
 	ResourceSingleSCRAMSecretAssociation = newSingleSCRAMSecretAssociationResource
 	ResourceServerlessCluster            = resourceServerlessCluster
+	ResourceTopic                        = newTopicResource
 	ResourceVPCConnection                = resourceVPCConnection
 
 	FindClusterByARN                             = findClusterByARN

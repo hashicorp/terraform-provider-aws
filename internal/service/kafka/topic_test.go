@@ -11,8 +11,13 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +25,6 @@ import (
 
 func TestAccKafkaTopic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var topic kafka.DescribeTopicOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -39,14 +43,21 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 				Config: testAccTopicConfig_basic(rName, clusterName, 2, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
-					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configs_actual"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrName, "cluster_arn"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 			},
@@ -54,9 +65,48 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 				Config: testAccTopicConfig_basic(rName, clusterName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
-					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccKafkaTopic_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var topic kafka.DescribeTopicOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_topic.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_basic(rName, clusterName, 2, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &topic),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkafka.ResourceTopic, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -64,7 +114,6 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 
 func TestAccKafkaTopic_configs(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var topic kafka.DescribeTopicOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -83,33 +132,42 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 				Config: testAccTopicConfig_configs(rName, clusterName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
-					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
 				ImportStateVerifyIgnore:              []string{"configs"},
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrName, "cluster_arn"),
 			},
 			{
 				Config: testAccTopicConfig_configsUpdate(rName, clusterName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
-					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccTopicConfig_basic(rName, clusterName, 2, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
-					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
