@@ -327,7 +327,7 @@ func resourceBroker() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Set:      resourceUserHash,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// AWS currently does not support updating the RabbitMQ users beyond resource creation.

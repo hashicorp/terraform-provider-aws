@@ -1415,6 +1415,43 @@ func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_RabbitMQ_configNoUserBlock(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitNoUserBlock(rName, testAccRabbitVersion, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "user.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+		},
+	})
+}
+
 func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1588,10 +1625,10 @@ func TestAccMQBroker_ldap(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_ldap(rName, testAccBrokerVersionNewer, "anyusername"),
+				Config: testAccBrokerConfig_ldapNoUserBlock(rName, testAccBrokerVersionNewer, "anyusername", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.#", "2"),
@@ -1606,6 +1643,29 @@ func TestAccMQBroker_ldap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_role_name", "user.role.name"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_matching", "user.search.matching"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_subtree", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "user.#", "0"),
+				),
+			},
+			{
+				Config: testAccBrokerConfig_ldapUserBlock(rName, testAccBrokerVersionNewer, "anyusername", acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.0", "my.ldap.server-1.com"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.1", "my.ldap.server-2.com"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_base", "role.base"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_name", "role.name"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_matching", "role.search.matching"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_subtree", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.service_account_username", "anyusername"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_base", "user.base"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_role_name", "user.role.name"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_matching", "user.search.matching"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_subtree", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 				),
 			},
 		},
@@ -2176,6 +2236,42 @@ resource "aws_mq_broker" "test" {
 `, rName, version, useAwsOwnedKey)
 }
 
+func testAccBrokerConfig_rabbitNoUserBlock(rName, version, autoMinorVersionUpgrade string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_configuration" "test" {
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = %[2]q
+  data           = <<DATA
+	auth_backends.1 = oauth2
+
+	DATA
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately          = true
+  broker_name                = %[1]q
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[3]s
+  configuration {
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
+  }
+}
+`, rName, version, autoMinorVersionUpgrade)
+}
+
 func testAccBrokerConfig_updateUsers1(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -2589,7 +2685,7 @@ data "aws_vpc" "default" {
 `, rName, version)
 }
 
-func testAccBrokerConfig_ldap(rName, version, ldapUsername string) string {
+func testAccBrokerConfig_ldapNoUserBlock(rName, version, ldapUsername, autoMinorVersionUpgrade string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -2600,13 +2696,56 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately       = true
-  authentication_strategy = "ldap"
-  broker_name             = %[1]q
-  engine_type             = "ActiveMQ"
-  engine_version          = %[2]q
-  host_instance_type      = "mq.t3.micro"
-  security_groups         = [aws_security_group.test.id]
+  apply_immediately          = true
+  authentication_strategy    = "ldap"
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[4]s
+
+
+  logs {
+    general = true
+  }
+
+  ldap_server_metadata {
+    hosts                    = ["my.ldap.server-1.com", "my.ldap.server-2.com"]
+    role_base                = "role.base"
+    role_name                = "role.name"
+    role_search_matching     = "role.search.matching"
+    role_search_subtree      = true
+    service_account_password = "supersecret"
+    service_account_username = %[3]q
+    user_base                = "user.base"
+    user_role_name           = "user.role.name"
+    user_search_matching     = "user.search.matching"
+    user_search_subtree      = true
+  }
+}
+`, rName, version, ldapUsername, autoMinorVersionUpgrade)
+}
+
+func testAccBrokerConfig_ldapUserBlock(rName, version, ldapUsername, autoMinorVersionUpgrade string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately          = true
+  authentication_strategy    = "ldap"
+  broker_name                = %[1]q
+  engine_type                = "ActiveMQ"
+  engine_version             = %[2]q
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.test.id]
+  auto_minor_version_upgrade = %[4]s
 
   logs {
     general = true
@@ -2631,7 +2770,7 @@ resource "aws_mq_broker" "test" {
     user_search_subtree      = true
   }
 }
-`, rName, version, ldapUsername)
+`, rName, version, ldapUsername, autoMinorVersionUpgrade)
 }
 
 func testAccBrokerConfig_instanceType(rName, version, instanceType string) string {
