@@ -31,7 +31,9 @@ type {{ template "ListResourceStructName" . }} struct {
 			
 			rd := l.ResourceData()
 			rd.SetId(arn)
+			{{ if .IncludeComments -}}
 			// TIP: -- 6. Populate additional attributes needed for Resource Identity
+			{{- end }}
 			rd.Set(names.AttrName, name)
 
 			if request.IncludeResource {
