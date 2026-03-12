@@ -28,14 +28,6 @@ This resource supports the following arguments:
 * `domain_name` - (Required) Mail domain name to register. Changing this forces a new resource.
 * `organization_id` - (Required) Identifier of the WorkMail organization. Changing this forces a new resource.
 
-### `records`
-
-Each `records` block exports the following:
-
-* `hostname` - DNS record hostname.
-* `type` - DNS record type (e.g. `CNAME`, `MX`, `TXT`).
-* `value` - DNS record value.
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -46,6 +38,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `is_test_domain` - Whether this is the auto-provisioned test domain.
 * `ownership_verification_status` - Domain ownership verification status. Values: `PENDING`, `VERIFIED`, `FAILED`.
 * `records` - List of DNS records required for domain verification. See [`records`](#records) below.
+
+### `records`
+
+Each `records` block exports the following:
+
+* `hostname` - DNS record hostname.
+* `type` - DNS record type (e.g. `CNAME`, `MX`, `TXT`).
+* `value` - DNS record value.
 
 ## Import
 

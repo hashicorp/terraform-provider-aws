@@ -19,9 +19,6 @@ import (
 
 func TestAccWorkMailDefaultDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_default_domain.test"

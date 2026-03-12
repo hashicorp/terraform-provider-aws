@@ -10,21 +10,20 @@ description: |-
 
 Manages the default mail domain for an AWS WorkMail organization.
 
-~> On destroy, the default domain is reset to the auto-provisioned test domain. If the organization or test domain no longer exists, the resource is simply removed from state.
+~> **NOTE:** This does not register a domain for workmail. This resource requires a verified domain name to be used as default domain for workmail organization.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_workmail_domain" "example" {
-  organization_id = aws_workmail_organization.example.id
-  domain_name     = "example.com"
+resource "aws_workmail_organization" "example" {
+  organization_alias = "example-org"
 }
 
 resource "aws_workmail_default_domain" "example" {
   organization_id = aws_workmail_organization.example.id
-  domain_name     = aws_workmail_domain.example.domain_name
+  domain_name     = aws_workmail_organization.example.default_mail_domain
 }
 ```
 
