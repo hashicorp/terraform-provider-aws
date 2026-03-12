@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -34,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -1607,9 +1609,116 @@ func (r *resourceTrainingJob) flatten(ctx context.Context, trainingJob *sagemake
 	}
 
 	model.ID = model.TrainingJobName
+	diags.Append(normalizeTrainingJobOptionalListFields(ctx, model)...)
 	diags.Append(normalizeOutputDataConfigKMSKeyID(ctx, model)...)
 
 	return diags
+}
+
+func normalizeTrainingJobOptionalListFields(ctx context.Context, model *resourceTrainingJobModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if !model.AlgorithmSpecification.IsNull() && !model.AlgorithmSpecification.IsUnknown() {
+		algorithmSpecifications, d := model.AlgorithmSpecification.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		changed := false
+		for i := range algorithmSpecifications {
+			changed = normalizeListOfString(ctx, &algorithmSpecifications[i].ContainerArguments) || changed
+			changed = normalizeListOfString(ctx, &algorithmSpecifications[i].ContainerEntrypoint) || changed
+		}
+
+		if changed {
+			model.AlgorithmSpecification = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, algorithmSpecifications)
+		}
+	}
+
+	if !model.InputDataConfig.IsNull() && !model.InputDataConfig.IsUnknown() {
+		inputDataConfigs, d := model.InputDataConfig.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		changedInputData := false
+		for i := range inputDataConfigs {
+			if inputDataConfigs[i].DataSource.IsNull() || inputDataConfigs[i].DataSource.IsUnknown() {
+				continue
+			}
+
+			dataSources, d := inputDataConfigs[i].DataSource.ToSlice(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			changedDataSource := false
+			for j := range dataSources {
+				if dataSources[j].S3DataSource.IsNull() || dataSources[j].S3DataSource.IsUnknown() {
+					continue
+				}
+
+				s3DataSources, d := dataSources[j].S3DataSource.ToSlice(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				changedS3DataSource := false
+				for k := range s3DataSources {
+					changedS3DataSource = normalizeListOfString(ctx, &s3DataSources[k].AttributeNames) || changedS3DataSource
+					changedS3DataSource = normalizeListOfString(ctx, &s3DataSources[k].InstanceGroupNames) || changedS3DataSource
+				}
+
+				if changedS3DataSource {
+					dataSources[j].S3DataSource = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, s3DataSources)
+					changedDataSource = true
+				}
+			}
+
+			if changedDataSource {
+				inputDataConfigs[i].DataSource = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, dataSources)
+				changedInputData = true
+			}
+		}
+
+		if changedInputData {
+			model.InputDataConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, inputDataConfigs)
+		}
+	}
+
+	if !model.VPCConfig.IsNull() && !model.VPCConfig.IsUnknown() {
+		vpcConfigs, d := model.VPCConfig.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		changed := false
+		for i := range vpcConfigs {
+			changed = normalizeListOfString(ctx, &vpcConfigs[i].SecurityGroupIDs) || changed
+			changed = normalizeListOfString(ctx, &vpcConfigs[i].Subnets) || changed
+		}
+
+		if changed {
+			model.VPCConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, vpcConfigs)
+		}
+	}
+
+	return diags
+}
+
+func normalizeListOfString(ctx context.Context, value *fwtypes.ListOfString) bool {
+	if !reflect.ValueOf(*value).IsZero() {
+		return false
+	}
+
+	*value = fwtypes.NewListValueOfNull[basetypes.StringValue](ctx)
+
+	return true
 }
 
 func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
