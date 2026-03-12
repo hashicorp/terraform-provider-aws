@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,6 +70,54 @@ func TestAccWAFV2WebACLRule_List_basic(t *testing.T) {
 						"web_acl_arn":       webACLARN.Value(),
 						names.AttrName:      name2.Value(),
 					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_List_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_wafv2_web_acl_rule.test0"
+	resourceName2 := "aws_wafv2_web_acl_rule.test1"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/WebACLRule/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					identity2.GetIdentity(resourceName2),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/WebACLRule/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_wafv2_web_acl_rule.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_wafv2_web_acl_rule.test", identity2.Checks()),
 				},
 			},
 		},
