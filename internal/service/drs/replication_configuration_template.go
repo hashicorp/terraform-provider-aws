@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package drs
 
@@ -18,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -194,7 +196,7 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 
 	output, err := findReplicationConfigurationTemplateByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -322,8 +324,7 @@ func findReplicationConfigurationTemplates(ctx context.Context, conn *drs.Client
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -349,11 +350,11 @@ const (
 	replicationConfigurationTemplateAvailable = "AVAILABLE"
 )
 
-func statusReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationConfigurationTemplate(conn *drs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationConfigurationTemplateByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -368,7 +369,7 @@ func waitReplicationConfigurationTemplateAvailable(ctx context.Context, conn *dr
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{replicationConfigurationTemplateAvailable},
-		Refresh:    statusReplicationConfigurationTemplate(ctx, conn, id),
+		Refresh:    statusReplicationConfigurationTemplate(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -387,7 +388,7 @@ func waitReplicationConfigurationTemplateDeleted(ctx context.Context, conn *drs.
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationConfigurationTemplateAvailable},
 		Target:     []string{},
-		Refresh:    statusReplicationConfigurationTemplate(ctx, conn, id),
+		Refresh:    statusReplicationConfigurationTemplate(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

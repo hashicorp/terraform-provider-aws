@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -65,6 +65,7 @@ func RegisterSweepers() {
 			"aws_config_configuration_aggregator",
 			"aws_config_configuration_recorder",
 			"aws_datasync_location",
+			"aws_datazone_domain",
 			"aws_dax_cluster",
 			"aws_db_instance",
 			"aws_db_option_group",

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -14,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -284,7 +286,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := servicecatalog.ProvisionProductInput{
-		ProvisionToken:         aws.String(id.UniqueId()),
+		ProvisionToken:         aws.String(sdkid.UniqueId()),
 		ProvisionedProductName: aws.String(name),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -377,7 +379,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	outputDPP, err := findProvisionedProductByTwoPartKey(ctx, conn, d.Id(), acceptLanguage)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -420,7 +422,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	}
 	outputDR, err := findRecordByTwoPartKey(ctx, conn, recordIdToUse, acceptLanguage)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), recordIdToUse)
 		return diags
 	}
@@ -460,7 +462,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 	input := servicecatalog.UpdateProvisionedProductInput{
 		ProvisionedProductId: aws.String(d.Id()),
-		UpdateToken:          aws.String(id.UniqueId()),
+		UpdateToken:          aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -550,7 +552,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := servicecatalog.TerminateProvisionedProductInput{
-		TerminateToken:       aws.String(id.UniqueId()),
+		TerminateToken:       aws.String(sdkid.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
@@ -619,8 +621,7 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -629,7 +630,7 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 	}
 
 	if output == nil || output.ProvisionedProductDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -654,8 +655,7 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -681,17 +681,17 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 	}
 
 	if output == nil || output.RecordDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProvisionedProduct(conn *servicecatalog.Client, id, acceptLanguage string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProvisionedProductByTwoPartKey(ctx, conn, id, acceptLanguage)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -707,7 +707,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
 		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
-		Refresh:                   statusProvisionedProduct(ctx, conn, id, acceptLanguage),
+		Refresh:                   statusProvisionedProduct(conn, id, acceptLanguage),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
 		NotFoundChecks:            notFoundChecks,
@@ -743,7 +743,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 			awstypes.ProvisionedProductStatusUnderChange,
 		),
 		Target:  []string{},
-		Refresh: statusProvisionedProduct(ctx, conn, id, acceptLanguage),
+		Refresh: statusProvisionedProduct(conn, id, acceptLanguage),
 		Timeout: timeout,
 	}
 

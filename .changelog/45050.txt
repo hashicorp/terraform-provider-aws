@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_apprunner_service: Prevents error when upgrading from provider pre-v6.0 without refreshing
+```

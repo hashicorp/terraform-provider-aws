@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -185,7 +187,7 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 
 	configRule, err := findOrganizationManagedRuleByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -304,7 +306,7 @@ func findOrganizationManagedRuleByName(ctx context.Context, conn *configservice.
 	}
 
 	if output.OrganizationManagedRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -337,15 +339,13 @@ func findOrganizationConfigRules(ctx context.Context, conn *configservice.Client
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -372,8 +372,7 @@ func findOrganizationConfigRuleStatusByName(ctx context.Context, conn *configser
 
 	if status := output.OrganizationRuleStatus; status == types.OrganizationRuleStatusDeleteSuccessful {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -404,8 +403,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -439,8 +437,7 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -454,11 +451,11 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 	return output, nil
 }
 
-func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOrganizationConfigRule(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOrganizationConfigRuleStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -474,7 +471,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationRuleStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationRuleStatusCreateSuccessful),
-		Refresh:        statusOrganizationConfigRule(ctx, conn, name),
+		Refresh:        statusOrganizationConfigRule(conn, name),
 		Timeout:        timeout,
 		Delay:          30 * time.Second,
 		NotFoundChecks: 10,
@@ -483,7 +480,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -495,7 +492,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationRuleStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationRuleStatusUpdateSuccessful),
-		Refresh: statusOrganizationConfigRule(ctx, conn, name),
+		Refresh: statusOrganizationConfigRule(conn, name),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -503,7 +500,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -515,7 +512,7 @@ func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
 		Target:                    []string{},
-		Refresh:                   statusOrganizationConfigRule(ctx, conn, name),
+		Refresh:                   statusOrganizationConfigRule(conn, name),
 		Timeout:                   timeout,
 		Delay:                     10 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -524,7 +521,7 @@ func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func validName(v any, k string) (ws []string, errors []error) {
@@ -85,7 +85,7 @@ func validTargetGroupName(v any, k string) (ws []string, errors []error) {
 
 func validTargetGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
-	prefixMaxLength := 32 - id.UniqueIDSuffixLength
+	prefixMaxLength := 32 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters", k, prefixMaxLength))

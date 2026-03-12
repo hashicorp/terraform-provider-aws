@@ -1,12 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -22,9 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,6 +74,10 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(3000), // CloudFront limit
+					listvalidator.ValueStringsAre(
+						stringvalidator.LengthAtLeast(1),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^(/.*|\*)$`), "must start with '/' or be '*'"),
+					),
 				},
 			},
 			"caller_reference": schema.StringAttribute{
@@ -103,44 +111,17 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	// Get AWS client
 	conn := a.Meta().CloudFrontClient(ctx)
 
-	distributionID := config.DistributionID.ValueString()
-
-	// Convert paths list to string slice
-	var paths []string
-	resp.Diagnostics.Append(config.Paths.ElementsAs(ctx, &paths, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Validate paths
-	for _, path := range paths {
-		if path == "" {
-			resp.Diagnostics.AddError(
-				"Invalid Path",
-				"Path cannot be empty",
-			)
-			return
-		}
-		if !regexache.MustCompile(`^(/.*|\*)$`).MatchString(path) {
-			resp.Diagnostics.AddError(
-				"Invalid Path Format",
-				fmt.Sprintf("Path '%s' must start with '/' or be '*' for all files", path),
-			)
-			return
-		}
-	}
+	distributionID := fwflex.StringValueFromFramework(ctx, config.DistributionID)
+	paths := fwflex.ExpandFrameworkStringValueList(ctx, config.Paths)
 
 	// Set caller reference if not provided
 	callerReference := config.CallerReference.ValueString()
 	if callerReference == "" {
-		callerReference = id.UniqueId()
+		callerReference = sdkid.UniqueId()
 	}
 
 	// Set default timeout if not provided
-	timeout := 900 * time.Second
-	if !config.Timeout.IsNull() {
-		timeout = time.Duration(config.Timeout.ValueInt64()) * time.Second
-	}
+	timeout := fwactions.TimeoutOr(config.Timeout, 900*time.Second)
 
 	tflog.Info(ctx, "Starting CloudFront cache invalidation action", map[string]any{
 		"distribution_id":  distributionID,
@@ -150,20 +131,19 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	})
 
 	// Send initial progress update
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Starting cache invalidation for CloudFront distribution %s...", distributionID),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting cache invalidation for CloudFront distribution %s...", distributionID)
 
 	// Check if distribution exists first
 	_, err := findDistributionByID(ctx, conn, distributionID)
+	if retry.NotFound(err) {
+		resp.Diagnostics.AddError(
+			"Distribution Not Found",
+			fmt.Sprintf("CloudFront distribution %s was not found", distributionID),
+		)
+		return
+	}
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "NoSuchDistribution") {
-			resp.Diagnostics.AddError(
-				"Distribution Not Found",
-				fmt.Sprintf("CloudFront distribution %s was not found", distributionID),
-			)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Failed to Describe Distribution",
 			fmt.Sprintf("Could not describe CloudFront distribution %s: %s", distributionID, err),
@@ -172,11 +152,9 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	}
 
 	// Create invalidation request
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Creating invalidation request for %d path(s)...", len(paths)),
-	})
+	cb(ctx, "Creating invalidation request for %d path(s)...", len(paths))
 
-	invalidationInput := &cloudfront.CreateInvalidationInput{
+	input := cloudfront.CreateInvalidationInput{
 		DistributionId: aws.String(distributionID),
 		InvalidationBatch: &awstypes.InvalidationBatch{
 			CallerReference: aws.String(callerReference),
@@ -187,7 +165,7 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 		},
 	}
 
-	output, err := conn.CreateInvalidation(ctx, invalidationInput)
+	output, err := conn.CreateInvalidation(ctx, &input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "TooManyInvalidationsInProgress") {
 			resp.Diagnostics.AddError(
@@ -211,90 +189,62 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	}
 
 	invalidationID := aws.ToString(output.Invalidation.Id)
+	cb(ctx, "Invalidation %s created, waiting for completion...", invalidationID)
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Invalidation %s created, waiting for completion...", invalidationID),
+	// Wait for invalidation to complete with periodic progress updates using actionwait
+	// Use fixed interval since CloudFront invalidations have predictable timing and
+	// don't benefit from exponential backoff - status changes are infrequent and consistent
+	_, err = actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[struct{}], error) {
+		input := cloudfront.GetInvalidationInput{
+			DistributionId: aws.String(distributionID),
+			Id:             aws.String(invalidationID),
+		}
+		output, gerr := conn.GetInvalidation(ctx, &input)
+		if gerr != nil {
+			return actionwait.FetchResult[struct{}]{}, fmt.Errorf("getting invalidation status: %w", gerr)
+		}
+		status := aws.ToString(output.Invalidation.Status)
+		return actionwait.FetchResult[struct{}]{Status: actionwait.Status(status)}, nil
+	}, actionwait.Options[struct{}]{
+		Timeout:          timeout,
+		Interval:         actionwait.FixedInterval(actionwait.DefaultPollInterval),
+		ProgressInterval: 60 * time.Second,
+		SuccessStates:    []actionwait.Status{"Completed"},
+		TransitionalStates: []actionwait.Status{
+			"InProgress",
+		},
+		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
+			cb(ctx, "Invalidation %s is currently '%s', continuing to wait for completion...", invalidationID, fr.Status)
+		},
 	})
-
-	// Wait for invalidation to complete with periodic progress updates
-	err = a.waitForInvalidationComplete(ctx, conn, distributionID, invalidationID, timeout, resp)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Timeout Waiting for Invalidation to Complete",
-			fmt.Sprintf("CloudFront invalidation %s did not complete within %s: %s", invalidationID, timeout, err),
-		)
+		var timeoutErr *actionwait.TimeoutError
+		var unexpectedErr *actionwait.UnexpectedStateError
+		if errors.As(err, &timeoutErr) {
+			resp.Diagnostics.AddError(
+				"Timeout Waiting for Invalidation to Complete",
+				fmt.Sprintf("CloudFront invalidation %s did not complete within %s: %s", invalidationID, timeout, err),
+			)
+		} else if errors.As(err, &unexpectedErr) {
+			resp.Diagnostics.AddError(
+				"Invalid Invalidation State",
+				fmt.Sprintf("CloudFront invalidation %s entered unexpected state: %s", invalidationID, err),
+			)
+		} else {
+			resp.Diagnostics.AddError(
+				"Failed While Waiting for Invalidation",
+				fmt.Sprintf("Error waiting for CloudFront invalidation %s: %s", invalidationID, err),
+			)
+		}
 		return
 	}
 
 	// Final success message
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("CloudFront cache invalidation %s completed successfully for distribution %s", invalidationID, distributionID),
-	})
+	cb(ctx, "CloudFront cache invalidation %s completed successfully for distribution %s", invalidationID, distributionID)
 
 	tflog.Info(ctx, "CloudFront invalidate cache action completed successfully", map[string]any{
 		"distribution_id": distributionID,
 		"invalidation_id": invalidationID,
 		"paths":           paths,
 	})
-}
-
-// waitForInvalidationComplete waits for an invalidation to complete with progress updates
-func (a *createInvalidationAction) waitForInvalidationComplete(ctx context.Context, conn *cloudfront.Client, distributionID, invalidationID string, timeout time.Duration, resp *action.InvokeResponse) error {
-	const (
-		pollInterval     = 30 * time.Second
-		progressInterval = 60 * time.Second
-	)
-
-	deadline := time.Now().Add(timeout)
-	lastProgressUpdate := time.Now()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		// Check if we've exceeded the timeout
-		if time.Now().After(deadline) {
-			return fmt.Errorf("timeout after %s", timeout)
-		}
-
-		// Get current invalidation status
-		input := &cloudfront.GetInvalidationInput{
-			DistributionId: aws.String(distributionID),
-			Id:             aws.String(invalidationID),
-		}
-
-		output, err := conn.GetInvalidation(ctx, input)
-		if err != nil {
-			return fmt.Errorf("getting invalidation status: %w", err)
-		}
-
-		currentStatus := aws.ToString(output.Invalidation.Status)
-
-		// Send progress update every 60 seconds
-		if time.Since(lastProgressUpdate) >= progressInterval {
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: fmt.Sprintf("Invalidation %s is currently '%s', continuing to wait for completion...", invalidationID, currentStatus),
-			})
-			lastProgressUpdate = time.Now()
-		}
-
-		// Check if we've reached completion
-		if aws.ToString(output.Invalidation.Status) == "Completed" {
-			return nil
-		}
-
-		// Check if we're in an unexpected state
-		validStatuses := []string{
-			"InProgress",
-		}
-		if !slices.Contains(validStatuses, currentStatus) && currentStatus != "Completed" {
-			return fmt.Errorf("invalidation entered unexpected status: %s", currentStatus)
-		}
-
-		// Wait before next poll
-		time.Sleep(pollInterval)
-	}
 }

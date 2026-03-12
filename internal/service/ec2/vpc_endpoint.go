@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -17,17 +19,20 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -98,6 +103,24 @@ func resourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"private_dns_preference": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{"ALL_DOMAINS", "VERIFIED_DOMAINS_ONLY", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", "SPECIFIED_DOMAINS_ONLY"}, false),
+						},
+						"private_dns_specified_domains": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							MinItems: 1,
+							MaxItems: 10,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -105,6 +128,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			"network_interface_ids": {
@@ -216,6 +240,22 @@ func resourceVPCEndpoint() *schema.Resource {
 			},
 		},
 
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() != "" && diff.HasChange("private_dns_enabled") {
+					if v := awstypes.VpcEndpointType(diff.Get("vpc_endpoint_type").(string)); v != awstypes.VpcEndpointTypeInterface {
+						if err := diff.ForceNew("private_dns_enabled"); err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+			customdiff.ComputedIf("network_interface_ids", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("subnet_configuration") || diff.HasChange(names.AttrSubnetIDs)
+			}),
+		),
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -231,7 +271,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
@@ -241,7 +281,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 		// that support both gateway and interface endpoints, i.e. S3.
-		if isAmazonS3VPCEndpoint(serviceName) {
+		if isAmazonS3VPCEndpoint(serviceName) && d.Get("vpc_endpoint_type").(string) == string(awstypes.VpcEndpointTypeInterface) {
 			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]any)[0].(map[string]any))
 		} else {
 			input.DnsOptions = expandDNSOptionsSpecification(v.([]any)[0].(map[string]any))
@@ -342,7 +382,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	vpce, err := findVPCEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -388,7 +428,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 		serviceName := aws.ToString(vpce.ServiceName)
 
 		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				d.Set("cidr_blocks", nil)
 			} else {
 				return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
@@ -453,7 +493,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 				tfMap := v.([]any)[0].(map[string]any)
 				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 				// that support both gateway and interface endpoints, i.e. S3.
-				if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
+				if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) && d.Get("vpc_endpoint_type").(string) == string(awstypes.VpcEndpointTypeInterface) {
 					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 				} else {
 					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
@@ -475,7 +515,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 					tfMap := v.([]any)[0].(map[string]any)
 					// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 					// that support both gateway and interface endpoints, i.e. S3.
-					if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
+					if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) && d.Get("vpc_endpoint_type").(string) == string(awstypes.VpcEndpointTypeInterface) {
 						input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 					} else {
 						input.DnsOptions = expandDNSOptionsSpecification(tfMap)
@@ -607,7 +647,7 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 }
 
 func isAmazonS3VPCEndpoint(serviceName string) bool {
-	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9]{1,2})\\.s3", serviceName)
+	ok, _ := regexp.MatchString(`^com\.amazonaws\.`+inttypes.CanonicalRegionPatternNoAnchors+`\.s3$`, serviceName)
 	return ok
 }
 
@@ -620,6 +660,14 @@ func expandDNSOptionsSpecification(tfMap map[string]any) *awstypes.DnsOptionsSpe
 
 	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
 		apiObject.DnsRecordIpType = awstypes.DnsRecordIpType(v)
+	}
+
+	if v, ok := tfMap["private_dns_preference"].(string); ok && v != "" {
+		apiObject.PrivateDnsPreference = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_dns_specified_domains"].(*schema.Set); ok {
+		apiObject.PrivateDnsSpecifiedDomains = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
@@ -734,6 +782,14 @@ func flattenDNSOptions(apiObject *awstypes.DnsOptions) map[string]any {
 
 	if v := apiObject.PrivateDnsOnlyForInboundResolverEndpoint; v != nil {
 		tfMap["private_dns_only_for_inbound_resolver_endpoint"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.PrivateDnsPreference; v != nil {
+		tfMap["private_dns_preference"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PrivateDnsSpecifiedDomains; v != nil {
+		tfMap["private_dns_specified_domains"] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap

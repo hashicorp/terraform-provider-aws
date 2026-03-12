@@ -92,8 +92,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the pipeline.
-* `arn` - Amazon Resource Name (ARN) of the pipeline.
+* `id` - Unique identifier for the Exadata infrastructure.
+* `arn` - Amazon Resource Name (ARN) of the Exadata infrastructure.
 * `activated_storage_count` - The number of storage servers requested for the Exadata infrastructure.
 * `additional_storage_count` - The number of storage servers requested for the Exadata infrastructure.
 * `available_storage_size_in_gbs` - The amount of available storage, in gigabytes (GB), for the Exadata infrastructure.

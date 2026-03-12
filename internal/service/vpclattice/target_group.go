@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -241,7 +243,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	out, err := findTargetGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Lattice Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -341,8 +343,7 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -351,17 +352,17 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTargetGroup(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTargetGroupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -377,7 +378,7 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetGroupStatusCreateInProgress),
 		Target:                    enum.Slice(types.TargetGroupStatusActive),
-		Refresh:                   statusTargetGroup(ctx, conn, id),
+		Refresh:                   statusTargetGroup(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -386,7 +387,7 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 
 	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
 		if output.Status == types.TargetGroupStatusCreateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -399,7 +400,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetGroupStatusDeleteInProgress, types.TargetGroupStatusActive),
 		Target:  []string{},
-		Refresh: statusTargetGroup(ctx, conn, id),
+		Refresh: statusTargetGroup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -407,7 +408,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 
 	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
 		if output.Status == types.TargetGroupStatusDeleteFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

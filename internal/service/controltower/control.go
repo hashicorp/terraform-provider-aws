@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package controltower
 
@@ -15,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -169,7 +171,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		output, err = findEnabledControlByARN(ctx, conn, aws.ToString(out.Arn))
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ControlTower Control %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -351,8 +353,7 @@ func findEnabledControls(ctx context.Context, conn *controltower.Client, input *
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -379,8 +380,7 @@ func findEnabledControlByARN(ctx context.Context, conn *controltower.Client, arn
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -389,7 +389,7 @@ func findEnabledControlByARN(ctx context.Context, conn *controltower.Client, arn
 	}
 
 	if output == nil || output.EnabledControlDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EnabledControlDetails, nil
@@ -403,8 +403,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -413,17 +412,17 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	}
 
 	if output == nil || output.ControlOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusControlOperation(conn *controltower.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -439,14 +438,14 @@ func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ControlOperationStatusInProgress),
 		Target:  enum.Slice(types.ControlOperationStatusSucceeded),
-		Refresh: statusControlOperation(ctx, conn, id),
+		Refresh: statusControlOperation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*controltower.GetControlOperationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
 
 		return output.ControlOperation, err
 	}

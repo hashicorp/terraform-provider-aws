@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -487,7 +489,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	service, err := findServiceByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -551,7 +553,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := &apprunner.UpdateServiceInput{
 			ServiceArn: aws.String(d.Id()),
 		}
@@ -629,8 +631,7 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -639,24 +640,23 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	}
 
 	if output == nil || output.Service == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Service.Status; status == types.ServiceStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output.Service, nil
 }
 
-func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusService(conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -675,7 +675,7 @@ func waitServiceCreated(ctx context.Context, conn *apprunner.Client, arn string)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
 		Target:  enum.Slice(types.ServiceStatusRunning),
-		Refresh: statusService(ctx, conn, arn),
+		Refresh: statusService(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -695,7 +695,7 @@ func waitServiceUpdated(ctx context.Context, conn *apprunner.Client, arn string)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
 		Target:  enum.Slice(types.ServiceStatusRunning),
-		Refresh: statusService(ctx, conn, arn),
+		Refresh: statusService(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -715,7 +715,7 @@ func waitServiceDeleted(ctx context.Context, conn *apprunner.Client, arn string)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusRunning, types.ServiceStatusOperationInProgress),
 		Target:  []string{},
-		Refresh: statusService(ctx, conn, arn),
+		Refresh: statusService(conn, arn),
 		Timeout: timeout,
 	}
 

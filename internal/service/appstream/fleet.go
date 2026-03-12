@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appstream
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,9 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -329,7 +331,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppStream Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -590,8 +592,7 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -602,11 +603,11 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *appstream.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *appstream.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -625,14 +626,14 @@ func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStarting),
 		Target:  enum.Slice(awstypes.FleetStateRunning),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}
@@ -647,14 +648,14 @@ func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStopping),
 		Target:  enum.Slice(awstypes.FleetStateStopped),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}
@@ -699,7 +700,7 @@ func expandComputeCapacity(tfList []any) *awstypes.ComputeCapacity {
 		apiObject.DesiredSessions = aws.Int32(int32(v.(int)))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 
@@ -762,7 +763,7 @@ func expandDomainJoinInfo(tfList []any) *awstypes.DomainJoinInfo {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 
@@ -808,7 +809,7 @@ func expandVPCConfig(tfList []any) *awstypes.VpcConfig {
 		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if itypes.IsZero(apiObject) {
+	if inttypes.IsZero(apiObject) {
 		return nil
 	}
 

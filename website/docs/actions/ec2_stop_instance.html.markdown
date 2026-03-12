@@ -90,4 +90,5 @@ This action supports the following arguments:
 
 * `instance_id` - (Required) ID of the EC2 instance to stop. Must be a valid EC2 instance ID (e.g., i-1234567890abcdef0).
 * `force` - (Optional) Forces the instance to stop. The instance does not have an opportunity to flush file system caches or file system metadata. If you use this option, you must perform file system check and repair procedures. This option is not recommended for Windows instances. Default: `false`.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `timeout` - (Optional) Timeout in seconds to wait for the instance to stop. Must be between 30 and 3600 seconds. Default: `600`.

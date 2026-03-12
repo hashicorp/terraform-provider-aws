@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_sfn_start_execution
 
-~> **Note:** `aws_sfn_start_execution` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Starts a Step Functions state machine execution with the specified input data. This action allows for imperative execution of state machines with full control over execution parameters.
 
 For information about AWS Step Functions, see the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/). For specific information about starting executions, see the [StartExecution](https://docs.aws.amazon.com/step-functions/latest/apireference/API_StartExecution.html) page in the AWS Step Functions API Reference.
@@ -233,5 +231,6 @@ This action supports the following arguments:
 
 * `input` - (Optional) JSON input data for the execution. Must be valid JSON. Defaults to `{}` if not specified. The input size limit is 256 KB.
 * `name` - (Optional) Name of the execution. Must be unique within the account/region/state machine for 90 days. If not provided, Step Functions automatically generates a UUID. Names must not contain whitespace, brackets, wildcards, or special characters.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `state_machine_arn` - (Required) ARN of the state machine to execute. Can be an unqualified ARN, version-qualified ARN (e.g., `arn:aws:states:region:account:stateMachine:name:version`), or alias-qualified ARN (e.g., `arn:aws:states:region:account:stateMachine:name:alias`).
 * `trace_header` - (Optional) AWS X-Ray trace header for distributed tracing. Used to correlate execution traces across services.

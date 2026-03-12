@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fis_test
@@ -10,32 +10,30 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFISExperimentTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.name", "test-action-1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.description", ""),
@@ -73,21 +71,21 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 
 func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffis.ResourceExperimentTemplate(), resourceName),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffis.ResourceExperimentTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,20 +95,20 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 
 func TestAccFISExperimentTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -139,7 +137,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "Artic Lake", "test-action-2", "Lane 8", "aws:ec2:stop-instances", "Instances", "to-stop-1", "aws:ec2:instance", "ALL", "env2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Artic Lake"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.name", "test-action-2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.description", "Lane 8"),
@@ -167,20 +165,20 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 
 func TestAccFISExperimentTemplate_spot(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_actionParameter(rName, "Send Spot Instance Interruptions", "Send-Spot-Instance-Interruptions", "Send Spot Instance Interruptions", "aws:ec2:send-spot-instance-interruptions", "SpotInstances", "send-spot-instance-interruptions-target", "durationBeforeInterruption", "PT2M", "aws:ec2:spot-instance", "PERCENT(25)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Send Spot Instance Interruptions"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -217,20 +215,20 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_eks(rName, "kubernetes custom resource creation", "k8s-pod-delete", "k8s pod delete", "aws:eks:inject-kubernetes-custom-resource", "Cluster", "kubernetes-custom-resource-creation-target", "kubernetesApiVersion", "litmuschaos.io/v1alpha1", "kubernetesKind", "ChaosEngine", "kubernetesNamespace", "observability", "kubernetesSpec", "{\"engineState\":\"active\",\"appinfo\":{\"appns\":\"observability\",\"applabel\":\"app=nginx\",\"appkind\":\"deployment\"},\"chaosServiceAccount\":\"pod-delete-sa\",\"experiments\":[{\"name\":\"pod-delete\",\"spec\":{\"components\":{\"env\":[{\"name\":\"TOTAL_CHAOS_DURATION\",\"value\":\"60\"},{\"name\":\"CHAOS_INTERVAL\",\"value\":\"60\"},{\"name\":\"PODS_AFFECTED_PERC\",\"value\":\"30\"}]},\"probe\":[]}}],\"annotationCheck\":\"false\"}", "maxDuration", "PT2M", "aws:eks:cluster", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "kubernetes custom resource creation"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -273,20 +271,20 @@ func TestAccFISExperimentTemplate_managedResource(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_managedResource_loadbalancer(rName, "nlb custom resource creation", "nlb-zonal-shift", "nlb zonal shift", "aws:arc:start-zonal-autoshift", "ManagedResources", "target_0", names.AttrDuration, "PT1M", "aws:arc:zonal-shift-managed-resource", "ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "nlb custom resource creation"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -321,20 +319,20 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_ebsVolume(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -369,20 +367,20 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -417,21 +415,21 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 
 func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Cloudwatch Logging
 			{
 				Config: testAccExperimentTemplateConfig_logConfigCloudWatch(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "log_configuration.0.cloudwatch_logs_configuration.0.log_group_arn", "logs", fmt.Sprintf("log-group:%s:*", rName)),
 				),
@@ -440,14 +438,14 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 				),
 			},
 			// S3 Logging
 			{
 				Config: testAccExperimentTemplateConfig_logConfigS3(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.prefix", ""),
@@ -456,7 +454,7 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 			{
 				Config: testAccExperimentTemplateConfig_logConfigS3Prefix(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.prefix", "test"),
@@ -468,20 +466,20 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 
 func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_ExperimentOptions(rName, "skip"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.account_targeting", "single-account"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.empty_target_resolution_mode", "skip"),
@@ -490,7 +488,7 @@ func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 			{
 				Config: testAccExperimentTemplateConfig_ExperimentOptions(rName, "fail"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.empty_target_resolution_mode", "fail"),
 				),
@@ -504,14 +502,14 @@ func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 	})
 }
 
-func testAccExperimentTemplateExists(ctx context.Context, n string, v *awstypes.ExperimentTemplate) resource.TestCheckFunc {
+func testAccExperimentTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.ExperimentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 
 		output, err := tffis.FindExperimentTemplateByID(ctx, conn, rs.Primary.ID)
 
@@ -525,9 +523,9 @@ func testAccExperimentTemplateExists(ctx context.Context, n string, v *awstypes.
 	}
 }
 
-func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckExperimentTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fis_experiment_template" {
 				continue
@@ -535,7 +533,7 @@ func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tffis.FindExperimentTemplateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -552,20 +550,20 @@ func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestChe
 
 func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf awstypes.ExperimentTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_reportConfiguration(rName, "An experiment template for testing report configuration", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.data_sources.0.cloudwatch_dashboard.#", "1"),
@@ -582,7 +580,7 @@ func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -590,11 +588,57 @@ func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
 			{
 				Config: testAccExperimentTemplateConfig_reportConfiguration_s3Config_only(rName, "An experiment template for testing report configuration", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "experiment_report_configuration.0.outputs.0.s3_configuration.0.prefix", "fis-test-reports"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFISExperimentTemplate_lambdaFunctions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf awstypes.ExperimentTemplate
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_lambda_functions(rName, "Lambda function invocation error", "func-invoke-error", "Lambda function invocation error", "aws:lambda:invocation-error", "Functions", "function-target-1", names.AttrDuration, "PT5M", "aws:lambda:function", "ALL", "Name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Lambda function invocation error"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "func-invoke-error"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "Lambda function invocation error"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:lambda:invocation-error"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", names.AttrDuration),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "PT5M"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Functions"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "function-target-1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "function-target-1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:lambda:function"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 				),
 			},
 		},
@@ -1592,4 +1636,80 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_lambda_functions(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK string) string {
+	return acctest.ConfigCompose(testAccExperimentTemplateConfig_baseEBSVolume(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+          "lambda.${data.aws_partition.current.dns_suffix}"
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  function_name = %[1]q
+  role          = aws_iam_role.test_fis.arn
+  handler       = "exports.example"
+  runtime       = "nodejs20.x"
+  filename      = "test-fixtures/lambdatest.zip"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+
+    parameter {
+      key   = %[8]q
+      value = %[9]q
+    }
+
+    parameter {
+      key   = "preventExecution"
+      value = true
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[10]q
+    selection_mode = %[11]q
+
+    resource_arns = [aws_lambda_function.test.arn]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK))
 }

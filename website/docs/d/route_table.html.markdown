@@ -55,6 +55,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` – The ID of the route table.
 * `arn` - ARN of the route table.
 * `associations` - List of associations with attributes detailed below.
 * `owner_id` - ID of the AWS account that owns the route table.

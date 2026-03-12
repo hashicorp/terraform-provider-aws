@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_transfer_web_app
+```
+
+```release-note:new-resource
+aws_transfer_web_app_customization
+```

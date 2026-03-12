@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"iter"
 	"maps"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"net/http"
 	"os"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,11 +39,14 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
+	randomnessSource          rand.Source // For VCR deterministic randomness.
 	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
+	s3OriginalRegion          string // Original region for S3-compatible storage
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+	tagPolicyConfig           *tftags.TagPolicyConfig
 	terraformVersion          string // From provider configuration.
 }
 
@@ -81,6 +86,10 @@ func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 	return c.ignoreTagsConfig
 }
 
+func (c *AWSClient) TagPolicyConfig(context.Context) *tftags.TagPolicyConfig {
+	return c.tagPolicyConfig
+}
+
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
 }
@@ -93,6 +102,18 @@ func (c *AWSClient) AccountID(context.Context) string {
 // Partition returns the ID of the configured AWS partition.
 func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
+}
+
+// RandomnessSource returns the VCR randomness source if set.
+func (c *AWSClient) RandomnessSource() rand.Source {
+	return c.randomnessSource
+}
+
+// SetRandomnessSource sets the VCR randomness source.
+//
+// This should only be called during provider configuration for VCR testing.
+func (c *AWSClient) SetRandomnessSource(source rand.Source) {
+	c.randomnessSource = source
 }
 
 // Region returns the ID of the effective AWS Region.
@@ -347,6 +368,9 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 			c.s3USEast1RegionalEndpoint = NormalizeS3USEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT"))
 		}
 		m["s3_us_east_1_regional_endpoint"] = c.s3USEast1RegionalEndpoint
+		if c.s3OriginalRegion != "" {
+			m["s3_original_region"] = c.s3OriginalRegion
+		}
 	case names.STS:
 		m["sts_region"] = c.stsRegion
 	}
@@ -372,7 +396,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 				if client, ok := raw.(T); ok {
 					return client, nil
 				} else {
-					var zero T
+					zero := inttypes.Zero[T]()
 					return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
 				}
 			}
@@ -381,24 +405,21 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 
 	sp := c.ServicePackage(ctx, servicePackageName)
 	if sp == nil {
-		var zero T
-		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
+		return inttypes.Zero[T](), fmt.Errorf("unknown service package: %s", servicePackageName)
 	}
 
 	v, ok := sp.(interface {
 		NewClient(context.Context, map[string]any) (T, error)
 	})
 	if !ok {
-		var zero T
-		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
+		return inttypes.Zero[T](), fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
 	config := c.apiClientConfig(ctx, servicePackageName)
 	maps.Copy(config, extra) // Extras overwrite per-service defaults.
 	client, err := v.NewClient(ctx, config)
 	if err != nil {
-		var zero T
-		return zero, err
+		return inttypes.Zero[T](), err
 	}
 
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.

@@ -43,10 +43,13 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN for this account.
+* `arn` - ARN for this account.
 * `govcloud_id` - ID for a GovCloud account created with the account.
-* `id` - The AWS account id
-* `status` - The status of the account in the organization.
+* `id` - AWS account ID.
+* `joined_method` - Method by which the account joined the organization.
+* `joined_timestamp` - Date the account became a part of the organization.
+* `state` - State of the account in the organization.
+* `status` - (**Deprecated** use `state` instead) Status of the account in the organization.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

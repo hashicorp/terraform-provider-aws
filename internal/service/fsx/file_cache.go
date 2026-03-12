@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -14,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -297,7 +299,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateFileCacheInput{
-		ClientRequestToken:   aws.String(id.UniqueId()),
+		ClientRequestToken:   aws.String(sdkid.UniqueId()),
 		FileCacheType:        awstypes.FileCacheType(d.Get("file_cache_type").(string)),
 		FileCacheTypeVersion: aws.String(d.Get("file_cache_type_version").(string)),
 		StorageCapacity:      aws.Int32(int32(d.Get("storage_capacity").(int))),
@@ -346,7 +348,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	filecache, err := findFileCacheByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx FileCache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -394,7 +396,7 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileCacheInput{
-			ClientRequestToken:  aws.String(id.UniqueId()),
+			ClientRequestToken:  aws.String(sdkid.UniqueId()),
 			FileCacheId:         aws.String(d.Id()),
 			LustreConfiguration: &awstypes.UpdateFileCacheLustreConfiguration{},
 		}
@@ -423,7 +425,7 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 	log.Printf("[INFO] Deleting FSx FileCache: %s", d.Id())
 	_, err := conn.DeleteFileCache(ctx, &fsx.DeleteFileCacheInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		FileCacheId:        aws.String(d.Id()),
 	})
 
@@ -469,8 +471,7 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 
 		if errs.IsA[*awstypes.FileCacheNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -488,11 +489,11 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 	return output, nil
 }
 
-func statusFileCache(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFileCache(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileCacheByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -508,7 +509,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
-		Refresh: statusFileCache(ctx, conn, id),
+		Refresh: statusFileCache(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -517,7 +518,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -529,7 +530,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
-		Refresh: statusFileCache(ctx, conn, id),
+		Refresh: statusFileCache(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -538,7 +539,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -551,7 +552,7 @@ func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleAvailable, awstypes.FileCacheLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusFileCache(ctx, conn, id),
+		Refresh: statusFileCache(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -560,7 +561,7 @@ func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

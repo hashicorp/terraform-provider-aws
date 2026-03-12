@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AI Agents
 
 The `AI Agent Guides` section on the navbar serves as an index of documents which can be provided to AI agents as context to solve specific tasks.

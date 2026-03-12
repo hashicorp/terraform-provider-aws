@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package internetmonitor
 
@@ -14,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -149,7 +151,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	name := d.Get("monitor_name").(string)
 	input := &internetmonitor.CreateMonitorInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		MonitorName: aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
@@ -189,7 +191,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any
 	if v, ok := d.GetOk(names.AttrStatus); ok {
 		if v := types.MonitorConfigState(v.(string)); v != types.MonitorConfigStateActive {
 			input := &internetmonitor.UpdateMonitorInput{
-				ClientToken: aws.String(id.UniqueId()),
+				ClientToken: aws.String(sdkid.UniqueId()),
 				MonitorName: aws.String(d.Id()),
 				Status:      v,
 			}
@@ -249,7 +251,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &internetmonitor.UpdateMonitorInput{
-			ClientToken: aws.String(id.UniqueId()),
+			ClientToken: aws.String(sdkid.UniqueId()),
 			MonitorName: aws.String(d.Id()),
 		}
 
@@ -304,7 +306,7 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).InternetMonitorClient(ctx)
 
 	input := &internetmonitor.UpdateMonitorInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		MonitorName: aws.String(d.Id()),
 		Status:      types.MonitorConfigStateInactive,
 	}
@@ -360,7 +362,7 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -370,7 +372,7 @@ func statusMonitor(conn *internetmonitor.Client, name string) retry.StateRefresh
 	return func(ctx context.Context) (any, string, error) {
 		monitor, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

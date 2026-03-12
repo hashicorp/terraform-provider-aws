@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -182,6 +182,43 @@ provider "aws" {
 `, key1)
 }
 
+// ConfigTagPolicyCompliance enables tag policy enforcement with the provided severity
+func ConfigTagPolicyCompliance(severity string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+}
+`, severity)
+}
+
+// ConfigTagPolicyComplianceAndDefaultTags1 enables tag policy enforcement with the
+// provided severity and a default tag
+func ConfigTagPolicyComplianceAndDefaultTags1(severity, key1, value1 string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+
+  default_tags {
+    tags = {
+      %[2]s = %[3]q
+    }
+  }
+}
+`, severity, key1, value1)
+}
+
+func ConfigSkipCredentialsValidationAndRequestingAccountID() string {
+	//lintignore:AT004
+	return `
+provider "aws" {
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+}
+`
+}
+
 func ConfigWithEchoProvider(ephemeralResourceData string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -268,6 +305,17 @@ provider "aws" {
 `, tag1, value1, tag2, value2))
 }
 
+func ConfigAssumeRole() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  assume_role {
+    role_arn = %[1]q
+  }
+}
+`, os.Getenv(envvar.AccAssumeRoleARN))
+}
+
 func ConfigAssumeRolePolicy(policy string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -278,6 +326,20 @@ provider "aws" {
   }
 }
 `, os.Getenv(envvar.AccAssumeRoleARN), policy)
+}
+
+// ConfigProviderMeta returns a terraform block with provider_meta configured
+func ConfigProviderMeta() string {
+	return `
+terraform {
+  provider_meta "aws" {
+    user_agent = [
+      "test-module/0.0.1 (test comment)",
+      "github.com/hashicorp/terraform-provider-aws/v0.0.0-acctest",
+    ]
+  }
+}
+`
 }
 
 const testAccProviderConfigBase = `
@@ -579,7 +641,7 @@ resource "aws_security_group" "sg_for_lambda" {
 
 func ConfigVPCWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -588,19 +650,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, subnetCount),
+`, rName),
 	)
 }
 
@@ -629,7 +679,7 @@ resource "aws_subnet" "test" {
 
 func ConfigVPCWithSubnetsEnableDNSHostnames(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -639,7 +689,31 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
+`, rName),
+	)
+}
 
+func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigSubnetsIPv6(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName),
+	)
+}
+
+func ConfigSubnets(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_subnet" "test" {
   count = %[2]d
 
@@ -655,20 +729,10 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
+func ConfigSubnetsIPv6(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_subnet" "test" {
   count = %[2]d
 
@@ -688,234 +752,70 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model string) string {
-	return ConfigCompose(
-		ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2), //nolint:mnd // 2 subnets required
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
+func ConfigBedrockAgentKnowledgeBaseS3VectorsBase(rName string) string {
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "assume_role_bedrock" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "bedrock" {
+  statement {
+    effect    = "Allow"
+    actions   = ["bedrock:InvokeModel"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:ListBucket", "s3:GetObject"]
+    resources = ["*"]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3vectors:GetIndex",
+      "s3vectors:QueryVectors",
+      "s3vectors:PutVectors",
+      "s3vectors:GetVectors",
+      "s3vectors:DeleteVectors"
+    ]
+    resources = ["*"]
+  }
+}
 
 resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_bedrock.json
   name               = %[1]q
-  path               = "/service-role/"
-  assume_role_policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		"Service": "bedrock.amazonaws.com"
-		},
-		"Effect": "Allow"
-	}]
-}
-POLICY
 }
 
-# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
 resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
   role   = aws_iam_role.test.name
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:ListFoundationModels",
-        "bedrock:ListCustomModels"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:InvokeModel"
-      ],
-      "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
-      ]
-    }
-  ]
-}
-POLICY
+  policy = data.aws_iam_policy_document.bedrock.json
 }
 
-resource "aws_iam_role_policy_attachment" "rds_data_full_access" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/AmazonRDSDataFullAccess"
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = %[1]q
+  force_destroy      = true
 }
 
-resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
+resource "aws_s3vectors_index" "test" {
+  index_name         = %[1]q
+  vector_bucket_name = aws_s3vectors_vector_bucket.test.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 256
+  distance_metric = "euclidean"
 }
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
-  master_username             = "test"
-  manage_master_user_password = true
-  enable_http_endpoint        = true
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
-  db_subnet_group_name        = aws_db_subnet_group.test.name
-
-  serverlessv2_scaling_configuration {
-    max_capacity = 1.0
-    min_capacity = 0.5
-  }
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier  = aws_rds_cluster.test.id
-  instance_class      = "db.serverless"
-  engine              = aws_rds_cluster.test.engine
-  engine_version      = aws_rds_cluster.test.engine_version
-  publicly_accessible = true
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_rds_cluster.test.master_user_secret[0].secret_arn
-  version_stage = "AWSCURRENT"
-  depends_on    = [aws_rds_cluster.test]
-}
-
-resource "null_resource" "db_setup" {
-  depends_on = [aws_rds_cluster_instance.test, aws_rds_cluster.test, data.aws_secretsmanager_secret_version.test]
-
-  provisioner "local-exec" {
-    command = <<EOT
-      sleep 60
-      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.region} --query SecretString --output text | jq -r '."password"')
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (to_tsvector('simple', chunks));"
-    EOT
-  }
-}
-`, rName, model))
-}
-
-func ConfigBedrockAgentKnowledgeBaseRDSUpdateBase(rName, model string) string {
-	return ConfigCompose(
-		ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), //nolint:mnd
-		fmt.Sprintf(`
-resource "aws_iam_role" "test_update" {
-  name               = "%[1]s-update"
-  path               = "/service-role/"
-  assume_role_policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		"Service": "bedrock.amazonaws.com"
-		},
-		"Effect": "Allow"
-	}]
-}
-POLICY
-}
-
-# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
-resource "aws_iam_role_policy" "test_update" {
-  name   = "%[1]s-update"
-  role   = aws_iam_role.test_update.name
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:ListFoundationModels",
-        "bedrock:ListCustomModels"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:InvokeModel"
-      ],
-      "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy_attachment" "rds_data_full_access_update" {
-  role       = aws_iam_role.test_update.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/AmazonRDSDataFullAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
-  role       = aws_iam_role.test_update.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
-}
-`, rName, model))
+`, rName)
 }
 
 // ConfigRandomPassword returns the configuration for an ephemeral resource that

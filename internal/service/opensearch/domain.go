@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -19,7 +21,6 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -87,6 +89,7 @@ func resourceDomain() *schema.Resource {
 				}
 				return !slices.Contains(resp.CompatibleVersions[0].TargetVersions, newVersion)
 			}),
+			validateJWTOptionsVersion,
 			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
 				if o.(bool) && !n.(bool) {
@@ -145,6 +148,38 @@ func resourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"jwt_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									names.AttrPublicKey: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										DiffSuppressFunc: suppressPublicKeyDiff,
+									},
+									"roles_key": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+									"subject_key": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(1, 64),
+									},
+								},
+							},
+						},
 						"master_user_options": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -195,6 +230,21 @@ func resourceDomain() *schema.Resource {
 							},
 						},
 						"s3_vectors_engine": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"serverless_vector_acceleration": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -564,6 +614,40 @@ func resourceDomain() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"identity_center_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled_api_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"identity_center_instance_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateFunc:     verify.ValidARN,
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+						"roles_key": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RolesKeyIdCOption](),
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+						"subject_key": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SubjectKeyIdCOption](),
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+					},
+				},
+			},
 			names.AttrIPAddressType: {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -718,6 +802,14 @@ func resourceDomain() *schema.Resource {
 			},
 		},
 	}
+}
+
+func suppressDiffIfIdentityCenterOptionsDisabled(_, _, _ string, d *schema.ResourceData) bool {
+	// `!ok` means the attribute is not set, or the attribute is set to false
+	if _, ok := d.GetOk("identity_center_options.0.enabled_api_access"); !ok {
+		return true
+	}
+	return false
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -906,6 +998,27 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
+	if v, ok := d.GetOk("identity_center_options"); ok {
+		input := opensearch.UpdateDomainConfigInput{
+			IdentityCenterOptions: expandIdentityCenterOptions(v.([]any)),
+			DomainName:            aws.String(name),
+		}
+
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateDomainConfig(ctx, &input)
+			},
+			domainErrorRetryable,
+		)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
+		}
+
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
@@ -916,7 +1029,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrDomainName).(string)
 	ds, err := findDomainByName(ctx, conn, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -953,6 +1066,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if v := ds.AdvancedSecurityOptions; v != nil && aws.ToBool(v.Enabled) {
 		advSecOpts := flattenAdvancedSecurityOptions(v)
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
+
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
@@ -989,6 +1103,11 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	if ds.IdentityCenterOptions != nil {
+		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting identity_center_options: %s", err)
+		}
+	}
 	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 	// Remove any disabled log types that aren't in state.
 	var inStateLogTypes []string
@@ -1090,6 +1209,18 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
+
+			// When jwt_options block is removed from config, explicitly disable JWT authentication
+			if input.AdvancedSecurityOptions.JWTOptions == nil {
+				if oldRaw, _ := d.GetChange("advanced_security_options"); len(oldRaw.([]any)) > 0 && oldRaw.([]any)[0] != nil {
+					oldMap := oldRaw.([]any)[0].(map[string]any)
+					if oldJwt, ok := oldMap["jwt_options"].([]any); ok && len(oldJwt) > 0 && oldJwt[0] != nil {
+						input.AdvancedSecurityOptions.JWTOptions = &awstypes.JWTOptionsInput{
+							Enabled: aws.Bool(false),
+						}
+					}
+				}
+			}
 		}
 
 		if d.HasChange("aiml_options") {
@@ -1154,6 +1285,15 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 				s := options[0].(map[string]any)
 				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+			}
+		}
+
+		if d.HasChange("identity_center_options") {
+			if v, ok := d.GetOk("identity_center_options"); ok && len(v.([]any)) > 0 {
+				input.IdentityCenterOptions = expandIdentityCenterOptions(d.Get("identity_center_options").([]any))
+			} else {
+				// Identity Center Options is disabled when empty object is provided.
+				input.IdentityCenterOptions = &awstypes.IdentityCenterOptionsInput{}
 			}
 		}
 
@@ -1290,8 +1430,7 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1300,7 +1439,7 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil
@@ -1324,11 +1463,46 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	return false
 }
 
+// validateJWTOptionsVersion validates that JWT options are only used with OpenSearch 2.11 or later.
+func validateJWTOptionsVersion(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if v, ok := d.GetOk("advanced_security_options"); ok {
+		options := v.([]any)
+		if len(options) > 0 && options[0] != nil {
+			m := options[0].(map[string]any)
+			if jwtOptions, ok := m["jwt_options"].([]any); ok && len(jwtOptions) > 0 && jwtOptions[0] != nil {
+				jwtMap := jwtOptions[0].(map[string]any)
+				if enabled, ok := jwtMap[names.AttrEnabled].(bool); ok && enabled {
+					engineVersion := d.Get(names.AttrEngineVersion).(string)
+					if engineType, version, err := parseEngineVersion(engineVersion); err == nil {
+						switch engineType {
+						case string(awstypes.EngineTypeElasticsearch):
+							return fmt.Errorf("jwt_options is not supported with Elasticsearch. Use OpenSearch 2.11 or later")
+						case string(awstypes.EngineTypeOpenSearch):
+							if semver.LessThan(version, "2.11") {
+								return fmt.Errorf("jwt_options requires OpenSearch 2.11 or later, got %s", engineVersion)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) bool {
 	// The OpenSearch API accepts a short KMS key id but always returns the ARN of the key.
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.
 	return strings.Contains(old, new)
+}
+
+func suppressPublicKeyDiff(k, old, new string, d *schema.ResourceData) bool {
+	// AWS returns the public key without newlines, but users may provide it with newlines.
+	// Normalize both values by removing newlines before comparison.
+	oldNormalized := strings.ReplaceAll(old, "\n", "")
+	newNormalized := strings.ReplaceAll(new, "\n", "")
+	return oldNormalized == newNormalized
 }
 
 func getDashboardEndpoint(endpoint string) string {

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # ExampleCompany::ExampleService::ExampleResource
 
 An example resource schema demonstrating some basic constructs and validation rules.

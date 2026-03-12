@@ -44,10 +44,12 @@ The following arguments are optional:
 * `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
 * `engine_version` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `final_snapshot_name` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
+* `ip_discovery` - (Optional) Mechanism that the cluster uses to discover IP addresses. Valid values are `ipv4` and `ipv6`. Defaults to `ipv4`. To specify `ipv6`, `network_type` must be `ipv6` or `dual_stack`.
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenance_window` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
 * `name` - (Optional, Forces new resource) Name of the cluster. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `network_type` - (Optional, Force new resource) IP address type for the cluster. Valid values are `ipv4`, `ipv6` and `dual_stack`. Defaults to `ipv4`.
 * `num_replicas_per_shard` - (Optional) The number of replicas to apply to each shard, up to a maximum of 5. Defaults to `1` (i.e. 2 nodes per shard).
 * `num_shards` - (Optional) The number of shards in the cluster. Defaults to `1`.
 * `multi_region_cluster_name` - (Optional) The multi region cluster identifier specified on `aws_memorydb_multi_region_cluster`.

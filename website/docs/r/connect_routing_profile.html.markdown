@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_connect_routing_profile
 
 Provides an Amazon Connect Routing Profile resource. For more information see
-[Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
+[Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html).
 
 ## Example Usage
 
@@ -23,6 +23,17 @@ resource "aws_connect_routing_profile" "example" {
   media_concurrencies {
     channel     = "VOICE"
     concurrency = 1
+    cross_channel_behavior {
+      behavior_type = "ROUTE_ANY_CHANNEL"
+    }
+  }
+
+  media_concurrencies {
+    channel     = "CHAT"
+    concurrency = 3
+    cross_channel_behavior {
+      behavior_type = "ROUTE_CURRENT_CHANNEL_ONLY"
+    }
   }
 
   queue_configs {
@@ -52,12 +63,23 @@ This resource supports the following arguments:
 * `tags` - (Optional) Tags to apply to the Routing Profile. If configured with a provider
 [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-A `media_concurrencies` block supports the following arguments:
+### `media_concurrencies` Argument Reference
+
+The `media_concurrencies` block supports the following arguments:
 
 * `channel` - (Required) Specifies the channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
-* `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
+* `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of `1`. Maximum value of `1`. Valid Range for `CHAT`: Minimum value of `1`. Maximum value of `10`. Valid Range for `TASK`: Minimum value of `1`. Maximum value of `10`.
+* `cross_channel_behavior` - (Optional) Defines the cross-channel routing behavior for each traffic type. **Out-of-band changes are only detected when this argument is explicitly configured in your Terraform configuration.** Documented below.
 
-A `queue_configs` block supports the following arguments:
+#### `cross_channel_behavior` Argument Reference
+
+The `cross_channel_behavior` block supports the following arguments:
+
+* `behavior_type` - (Required) Specifies the cross-channel behavior for routing contacts across multiple channels. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY` and `ROUTE_ANY_CHANNEL`. `ROUTE_CURRENT_CHANNEL_ONLY` restricts agents to receive contacts only from the channel they are currently handling. `ROUTE_ANY_CHANNEL` allows agents to receive contacts from any channel regardless of what they are currently handling.
+
+### `queue_configs` Argument Reference
+
+The `queue_configs` block supports the following arguments:
 
 * `channel` - (Required) Specifies the channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
 * `delay` - (Required) Specifies the delay, in seconds, that a contact should be in the queue before they are routed to an available agent
@@ -68,13 +90,15 @@ A `queue_configs` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Routing Profile.
-* `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
+* `arn` - Amazon Resource Name (ARN) of the Routing Profile.
+* `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
 * `queue_configs` - In addition to the arguments used in the `queue_configs` argument block, there are additional attributes exported within the `queue_configs` block. These additional attributes are documented below.
-* `routing_profile_id` - The identifier for the Routing Profile.
+* `routing_profile_id` - Identifier for the Routing Profile.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-A `queue_configs` block supports the following attributes in addition to the arguments defined earlier:
+### `queue_configs` Attribute Reference
+
+The `queue_configs` block includes the following attributes in addition to the arguments defined earlier:
 
 * `queue_arn` - ARN for the queue.
 * `queue_name` - Name for the queue.

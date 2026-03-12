@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -18,9 +17,9 @@ func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T, semaphore tf
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_table.test"
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -28,7 +27,7 @@ func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T, semaphore tf
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTableDataSourceConfig_filter(rName),
@@ -48,9 +47,9 @@ func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T, semaphore tfsync
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_table.test"
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -58,7 +57,7 @@ func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T, semaphore tfsync
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTableDataSourceConfig_id(rName),

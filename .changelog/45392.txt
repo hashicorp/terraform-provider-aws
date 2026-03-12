@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_backup_plan: Support malware scanning by adding `rule.scan_action` and `scan_setting` configuration blocks
+```
+
+```release-note:enhancement
+data-source/aws_backup_plan: Add `rule.scan_action` and `scan_setting` attributes
+```

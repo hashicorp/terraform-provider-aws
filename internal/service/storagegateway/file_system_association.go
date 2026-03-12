@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package storagegateway
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -117,7 +119,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 
 	gatewayARN := d.Get("gateway_arn").(string)
 	input := &storagegateway.AssociateFileSystemInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get(names.AttrPassword).(string)),
@@ -154,7 +156,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 	filesystem, err := findFileSystemAssociationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway File System Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -254,8 +256,7 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 
 	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -264,17 +265,17 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FileSystemAssociationInfoList, nil
 }
 
-func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFileSystemAssociation(conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemAssociationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -290,7 +291,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating},
 		Target:  []string{fileSystemAssociationStatusAvailable},
-		Refresh: statusFileSystemAssociation(ctx, conn, fileSystemArn),
+		Refresh: statusFileSystemAssociation(conn, fileSystemArn),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -298,7 +299,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
 
 		return output, err
 	}
@@ -310,7 +311,7 @@ func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting},
 		Target:         []string{},
-		Refresh:        statusFileSystemAssociation(ctx, conn, fileSystemArn),
+		Refresh:        statusFileSystemAssociation(conn, fileSystemArn),
 		Timeout:        timeout,
 		Delay:          5 * time.Second,
 		NotFoundChecks: 1,
@@ -319,7 +320,7 @@ func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
 
 		return output, err
 	}

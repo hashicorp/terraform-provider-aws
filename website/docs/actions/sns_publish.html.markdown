@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_sns_publish
 
-~> **Note:** `aws_sns_publish` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Publishes a message to an Amazon SNS topic. This action allows for imperative message publishing with full control over message attributes and structure.
 
 For information about Amazon SNS, see the [Amazon SNS Developer Guide](https://docs.aws.amazon.com/sns/latest/dg/). For specific information about publishing messages, see the [Publish](https://docs.aws.amazon.com/sns/latest/api/API_Publish.html) page in the Amazon SNS API Reference.
@@ -138,6 +136,7 @@ This action supports the following arguments:
 * `message` - (Required) Message to publish. For JSON message structure, this should be a JSON object with protocol-specific messages. Maximum size is 256 KB.
 * `message_attributes` - (Optional) Message attributes to include with the message. Each attribute consists of a name, data type, and value. Up to 10 attributes are allowed. [See below.](#message-attributes)
 * `message_structure` - (Optional) Set to `json` if you want to send different messages for each protocol. If not specified, the message will be sent as-is to all protocols.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subject` - (Optional) Optional subject for the message. Only used for email and email-json protocols. Maximum length is 100 characters.
 * `topic_arn` - (Required) ARN of the SNS topic to publish the message to.
 

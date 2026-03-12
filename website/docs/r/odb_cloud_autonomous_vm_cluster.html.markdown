@@ -18,9 +18,9 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 
 ```terraform
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
-  cloud_exadata_infrastructure_id       = "<exadata_infra_id>" # refer your exadata infra id
-  odb_network_id                        = "<odb_net_id>"       # refer_your_odb_net_id
-  display_name                          = "Ofake-avmc-my_avmc"
+  cloud_exadata_infrastructure_id       = "<aws_odb_cloud_exadata_infrastructure_id>"
+  odb_network_id                        = "<aws_odb_network_id>"
+  display_name                          = "my_autonomous_vm_cluster"
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
   total_container_databases             = 1
@@ -40,9 +40,9 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_all_params" {
   description                           = "my first avmc"
   time_zone                             = "UTC"
-  cloud_exadata_infrastructure_id       = "<aws_odb_cloud_exadata_infrastructure.test.id>"
-  odb_network_id                        = "<aws_odb_network.test.id>"
-  display_name                          = "Ofake_my avmc"
+  cloud_exadata_infrastructure_id       = "<aws_odb_cloud_exadata_infrastructure_id>"
+  odb_network_id                        = "<aws_odb_network_id>"
+  display_name                          = "my_autonomous_vm_cluster"
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
   total_container_databases             = 1
@@ -71,13 +71,11 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_all_params" {
 
 The following arguments are required:
 
-* `cloud_exadata_infrastructure_id` - (Required) Exadata infrastructure id. Changing this will force terraform to create new resource.
 * `autonomous_data_storage_size_in_tbs` - (Required) The data storage size allocated for Autonomous Databases in the Autonomous VM cluster, in TB. Changing this will force terraform to create new resource.
 * `cpu_core_count_per_node` - (Required) The number of CPU cores enabled per node in the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `db_servers` - (Required) The database servers in the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `display_name` - (Required) The display name of the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `memory_per_oracle_compute_unit_in_gbs` - (Required) The amount of memory allocated per Oracle Compute Unit, in GB. Changing this will force terraform to create new resource.
-* `odb_network_id` - (Required) The unique identifier of the ODB network associated with this Autonomous VM Cluster. Changing this will force terraform to create new resource.
 * `scan_listener_port_non_tls` - (Required) The SCAN listener port for non-TLS (TCP) protocol. The default is 1521. Changing this will force terraform to create new resource.
 * `scan_listener_port_tls` - (Required) The SCAN listener port for TLS (TCP) protocol. The default is 2484. Changing this will force terraform to create new resource.
 * `total_container_databases` - (Required) The total number of Autonomous Container Databases that can be created with the allocated local storage. Changing this will force terraform to create new resource.
@@ -85,6 +83,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure id. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
+* `cloud_exadata_infrastructure_arn` - (Optional) Exadata infrastructure ARN. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
+* `odb_network_id` - (Optional) Unique identifier of the ODB network associated with this Autonomous VM Cluster. Changing this will force Terraform to create a new resource. Changing this will create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
+* `odb_network_arn` - (Optional) ARN of the ODB network associated with this Autonomous VM Cluster. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
 * `description` - (Optional) The description of the Autonomous VM cluster.
 * `is_mtls_enabled_vm_cluster` - (Optional) Indicates whether mutual TLS (mTLS) authentication is enabled for the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `license_model` - (Optional) The license model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE. Changing this will force terraform to create new resource.
@@ -105,6 +107,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Unique identifier of autonomous vm cluster.
 * `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - The progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `available_autonomous_data_storage_size_in_tbs` - The available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.

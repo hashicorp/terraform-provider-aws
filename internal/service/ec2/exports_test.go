@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceAllowedImagesSettings                         = newAllowedImagesSettingsResource
 	ResourceAMICopy                                       = resourceAMICopy
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
@@ -69,6 +70,8 @@ var (
 	ResourceRoute                                         = resourceRoute
 	ResourceRouteTable                                    = resourceRouteTable
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
+	ResourceSecondaryNetwork                              = newSecondaryNetworkResource
+	ResourceSecondarySubnet                               = newSecondarySubnetResource
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
@@ -93,6 +96,8 @@ var (
 	ResourceTransitGatewayMulticastGroupSource            = resourceTransitGatewayMulticastGroupSource
 	ResourceTransitGatewayPeeringAttachment               = resourceTransitGatewayPeeringAttachment
 	ResourceTransitGatewayPeeringAttachmentAccepter       = resourceTransitGatewayPeeringAttachmentAccepter
+	ResourceTransitGatewayMeteringPolicy                  = newTransitGatewayMeteringPolicyResource
+	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
@@ -106,6 +111,7 @@ var (
 	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
+	ResourceVPCEncryptionControl                          = newResourceVPCEncryptionControl
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
 	ResourceVPCEndpointPolicy                             = resourceVPCEndpointPolicy
 	ResourceVPCEndpointRouteTableAssociation              = resourceVPCEndpointRouteTableAssociation
@@ -120,6 +126,7 @@ var (
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
+	ResourceVPNConcentrator                               = newVPNConcentratorResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -140,6 +147,7 @@ var (
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
+	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
@@ -206,10 +214,14 @@ var (
 	FindRouteServerPropagationByTwoPartKey                      = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                               = findRouteTableAssociationByID
 	FindRouteTableByID                                          = findRouteTableByID
+	FindSecondaryNetworkByID                                    = findSecondaryNetworkByID
+	FindSecondarySubnetByID                                     = findSecondarySubnetByID
 	FindSecurityGroupByID                                       = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
+	FindSecurityGroupRuleIDsBySecurityGroupID                   = findSecurityGroupRuleIDsBySecurityGroupID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
+	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot
 	FindSnapshotByID                                            = findSnapshotByID
 	FindSpotDatafeedSubscription                                = findSpotDatafeedSubscription
@@ -231,6 +243,8 @@ var (
 	FindTransitGatewayMulticastGroupMemberByThreePartKey        = findTransitGatewayMulticastGroupMemberByThreePartKey
 	FindTransitGatewayMulticastGroupSourceByThreePartKey        = findTransitGatewayMulticastGroupSourceByThreePartKey
 	FindTransitGatewayPeeringAttachmentByID                     = findTransitGatewayPeeringAttachmentByID
+	FindTransitGatewayMeteringPolicyByID                        = findTransitGatewayMeteringPolicyByID
+	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey
@@ -242,6 +256,7 @@ var (
 	FindVPCBlockPublicAccessExclusionByID                       = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                             = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                               = findVPCDHCPOptionsAssociation
+	FindVPCEncryptionControlByID                                = findVPCEncryptionControlByID
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID        = findVPCEndpointConnectionByServiceIDAndVPCEndpointID
 	FindVPCEndpointConnectionNotificationByID                   = findVPCEndpointConnectionNotificationByID
 	FindVPCEndpointRouteTableAssociationExists                  = findVPCEndpointRouteTableAssociationExists
@@ -251,6 +266,7 @@ var (
 	FindVPCEndpointSubnetAssociationExists                      = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                         = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                                = findVPCPeeringConnectionByID
+	FindVPNConcentratorByID                                     = findVPNConcentratorByID
 	FindVPNConnectionByID                                       = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                          = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                          = findVPNGatewayByID
