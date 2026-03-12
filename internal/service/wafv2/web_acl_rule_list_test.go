@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,6 +70,49 @@ func TestAccWAFV2WebACLRule_List_basic(t *testing.T) {
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						"web_acl_arn":       webACLARN.Value(),
 						names.AttrName:      name2.Value(),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_wafv2_web_acl_rule.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/WebACLRule/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/WebACLRule/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_wafv2_web_acl_rule.test", identity1.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_wafv2_web_acl_rule.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(0)),
 					}),
 				},
 			},
