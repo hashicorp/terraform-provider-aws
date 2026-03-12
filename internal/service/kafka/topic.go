@@ -7,16 +7,14 @@ package kafka
 
 import (
 	"context"
-	"encoding/base64"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,7 +43,6 @@ import (
 // @ImportIDHandler(topicImportID)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeTopicResponse")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
 func newTopicResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &topicResource{}
@@ -55,10 +52,6 @@ func newTopicResource(_ context.Context) (resource.ResourceWithConfigure, error)
 
 	return r, nil
 }
-
-const (
-	ResNameTopic = "Topic"
-)
 
 type topicResource struct {
 	framework.ResourceWithModel[topicResourceModel]
@@ -71,10 +64,19 @@ func (r *topicResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"cluster_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"configs": schema.StringAttribute{
+				CustomType: jsontypes.NormalizedType{},
+				Optional:   true,
+			},
+			"configs_actual": schema.StringAttribute{
+				// configs_actual is only for display purposes of all config on the topic, also outside 'configs'
+				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -90,17 +92,6 @@ func (r *topicResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
-			},
-			"configs": schema.StringAttribute{
-				CustomType: NormalizedType{},
-				Optional:   true,
-				PlanModifiers: []planmodifier.String{
-					TopicConfigsDiffSuppress(),
-				},
-			},
-			"configs_actual": schema.StringAttribute{
-				// configs_actual is only for display purposes of all config on the topic, also outside 'configs'
-				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -122,48 +113,37 @@ func (r *topicResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	clusterARN, topicName := fwflex.StringValueFromFramework(ctx, plan.ClusterARN), fwflex.StringValueFromFramework(ctx, plan.TopicName)
 	var input kafka.CreateTopicInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Topic")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if plan.Configs.ValueString() != "" {
+	if !plan.Configs.IsNull() {
 		// Configs is base64encoded in the AWS API
-		input.Configs = aws.String(base64.StdEncoding.EncodeToString([]byte(plan.Configs.ValueString())))
+		input.Configs = aws.String(inttypes.Base64Encode([]byte(fwflex.StringValueFromFramework(ctx, plan.Configs))))
 	}
 
-	outPartial, err := conn.CreateTopic(ctx, &input)
+	_, err := conn.CreateTopic(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if outPartial == nil || outPartial.TopicName == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outPartial, &plan, flex.WithFieldNamePrefix("Topic")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outFull, err := waitTopicCreated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), createTimeout)
+	out, err := waitTopicCreated(ctx, conn, clusterARN, topicName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(outFull, &plan))
+	v, diags := flattenTopicConfigsActual(ctx, out.Configs)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outFull, &plan, flex.WithFieldNamePrefix("Topic")))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.ConfigsActual = v
+	plan.TopicARN = fwflex.StringToFramework(ctx, out.TopicArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -177,25 +157,35 @@ func (r *topicResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	out, err := findTopicByTwoPartKey(ctx, conn, state.Name.ValueString(), state.ClusterARN.ValueString())
+	clusterARN, topicName := fwflex.StringValueFromFramework(ctx, state.ClusterARN), fwflex.StringValueFromFramework(ctx, state.TopicName)
+	out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String(), state.ClusterARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, clusterARN, topicName)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Topic")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(out, &state))
+	// The Configs returned from the API contains server-augmented values.
+	// The resource's ConfigsActual contains all values whilst Config contains only client-configured values.
+	v, diags := flattenTopicConfigsActual(ctx, out.Configs)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	state.ConfigsActual = v
+
+	if !state.Configs.IsNull() {
+	} else {
+		state.Configs = jsontypes.Normalized{StringValue: state.ConfigsActual}
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -211,76 +201,65 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
+	clusterARN, topicName := fwflex.StringValueFromFramework(ctx, plan.ClusterARN), fwflex.StringValueFromFramework(ctx, plan.TopicName)
+
 	// 'configs' and 'partition_count' are updated via separate API calls:
 	// "You must specify either configs or partitionCount to update."
-
-	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("Configs"))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if diff.HasChanges() {
-		var input kafka.UpdateTopicInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Topic")))
-		if resp.Diagnostics.HasError() {
-			return
+	if plan.Configs != state.Configs {
+		input := kafka.UpdateTopicInput{
+			ClusterArn: aws.String(clusterARN),
+			TopicName:  aws.String(topicName),
 		}
-
-		_, err := conn.UpdateTopic(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-			return
-		}
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	diff, d = flex.Diff(ctx, plan, state, flex.WithIgnoredField("PartitionCount"))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if diff.HasChanges() {
-		var input kafka.UpdateTopicInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Topic"), flex.WithIgnoredFieldNamesAppend("PartitionCount")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if plan.Configs.ValueString() != "" {
+		if !plan.Configs.IsNull() {
 			// Configs is base64encoded in the AWS API
-			input.Configs = aws.String(base64.StdEncoding.EncodeToString([]byte(plan.Configs.ValueString())))
+			input.Configs = aws.String(inttypes.Base64Encode([]byte(fwflex.StringValueFromFramework(ctx, plan.Configs))))
 		} else {
-			input.Configs = aws.String(base64.StdEncoding.EncodeToString([]byte("{}")))
+			input.Configs = aws.String(inttypes.Base64Encode([]byte("{}")))
 		}
-
 		_, err := conn.UpdateTopic(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
+		out, err := waitTopicUpdated(ctx, conn, clusterARN, topicName, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(out, &plan))
+		v, diags := flattenTopicConfigsActual(ctx, out.Configs)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		plan.ConfigsActual = v
+	}
+
+	if plan.PartitionCount != state.PartitionCount {
+		input := kafka.UpdateTopicInput{
+			ClusterArn:     aws.String(clusterARN),
+			PartitionCount: fwflex.Int32FromFrameworkInt64(ctx, plan.PartitionCount),
+			TopicName:      aws.String(topicName),
+		}
+		_, err := conn.UpdateTopic(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
+			return
+		}
+
+		out, err := waitTopicUpdated(ctx, conn, clusterARN, topicName, r.UpdateTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
+			return
+		}
+
+		v, diags := flattenTopicConfigsActual(ctx, out.Configs)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.ConfigsActual = v
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -295,152 +274,146 @@ func (r *topicResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
+	clusterARN, topicName := fwflex.StringValueFromFramework(ctx, state.ClusterARN), fwflex.StringValueFromFramework(ctx, state.TopicName)
 	input := kafka.DeleteTopicInput{
-		TopicName:  state.Name.ValueStringPointer(),
-		ClusterArn: state.ClusterARN.ValueStringPointer(),
+		ClusterArn: aws.String(clusterARN),
+		TopicName:  aws.String(topicName),
 	}
-
 	_, err := conn.DeleteTopic(ctx, &input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitTopicDeleted(ctx, conn, state.Name.ValueString(), state.ClusterARN.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
+	if _, err := waitTopicDeleted(ctx, conn, clusterARN, topicName, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 		return
 	}
 }
 
-func waitTopicCreated(ctx context.Context, conn *kafka.Client, name string, clusterARN string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
+func waitTopicCreated(ctx context.Context, conn *kafka.Client, clusterARN, topicName string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.TopicStateActive),
-		Refresh:                   statusTopic(conn, name, clusterARN),
+		Refresh:                   statusTopic(conn, clusterARN, topicName),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kafka.DescribeTopicOutput); ok {
-		return out, smarterr.NewError(err)
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-func waitTopicUpdated(ctx context.Context, conn *kafka.Client, name string, clusterARN string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
+func waitTopicUpdated(ctx context.Context, conn *kafka.Client, clusterARN, topicName string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TopicStateUpdating),
 		Target:                    enum.Slice(awstypes.TopicStateActive),
-		Refresh:                   statusTopic(conn, name, clusterARN),
+		Refresh:                   statusTopic(conn, clusterARN, topicName),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kafka.DescribeTopicOutput); ok {
-		return out, smarterr.NewError(err)
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-func waitTopicDeleted(ctx context.Context, conn *kafka.Client, name string, clusterARN string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
+func waitTopicDeleted(ctx context.Context, conn *kafka.Client, clusterARN, topicName string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TopicStateDeleting, awstypes.TopicStateActive),
 		Target:  []string{},
-		Refresh: statusTopic(conn, name, clusterARN),
+		Refresh: statusTopic(conn, clusterARN, topicName),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kafka.DescribeTopicOutput); ok {
-		return out, smarterr.NewError(err)
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-func statusTopic(conn *kafka.Client, name string, clusterARN string) retry.StateRefreshFunc {
+func statusTopic(conn *kafka.Client, clusterARN, topicName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findTopicByTwoPartKey(ctx, conn, name, clusterARN)
+		out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", smarterr.NewError(err)
+			return nil, "", err
 		}
 
 		return out, string(out.Status), nil
 	}
 }
 
-func findTopicByTwoPartKey(ctx context.Context, conn *kafka.Client, name string, clusterARN string) (*kafka.DescribeTopicOutput, error) {
+func findTopicByTwoPartKey(ctx context.Context, conn *kafka.Client, clusterARN, topicName string) (*kafka.DescribeTopicOutput, error) {
 	input := kafka.DescribeTopicInput{
-		TopicName:  aws.String(name),
 		ClusterArn: aws.String(clusterARN),
+		TopicName:  aws.String(topicName),
 	}
 
-	out, err := conn.DescribeTopic(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
-		return nil, smarterr.NewError(err)
-	}
-
-	if out == nil || out.TopicName == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
-
-	return out, nil
+	return findTopic(ctx, conn, &input)
 }
 
-func flattenConfigsActual(out *kafka.DescribeTopicOutput, model *topicResourceModel) diag.Diagnostics {
+func findTopic(ctx context.Context, conn *kafka.Client, input *kafka.DescribeTopicInput) (*kafka.DescribeTopicOutput, error) {
+	output, err := conn.DescribeTopic(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.TopicName == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func flattenTopicConfigsActual(ctx context.Context, configs *string) (types.String, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// Configs is base64encoded in the AWS API
-	if out.Configs != nil {
-		decodedConfigs, err := base64.StdEncoding.DecodeString(*out.Configs)
+	if configs != nil {
+		v, err := inttypes.Base64Decode(aws.ToString(configs))
 		if err != nil {
-			diags.AddError("failed to decode configs", err.Error())
-			return diags
+			diags.AddError("base64 decoding configs", err.Error())
+			return types.StringNull(), diags
 		}
 
-		configsActual, err := structure.NormalizeJsonString(string(decodedConfigs))
-		if err != nil {
-			diags.AddError("failed to normalize configs", err.Error())
-			return diags
-		}
-		model.ConfigsActual = types.StringValue(configsActual)
+		return fwflex.StringValueToFramework(ctx, v), diags
 	}
 
-	return diags
+	return types.StringNull(), diags
 }
 
 type topicResourceModel struct {
 	framework.WithRegionModel
-	ARN               types.String   `tfsdk:"arn"`
-	ClusterARN        types.String   `tfsdk:"cluster_arn"`
-	Name              types.String   `tfsdk:"name"`
-	PartitionCount    types.Int64    `tfsdk:"partition_count"`
-	ReplicationFactor types.Int64    `tfsdk:"replication_factor"`
-	Configs           Normalized     `tfsdk:"configs" autoflex:"-"`
-	ConfigsActual     types.String   `tfsdk:"configs_actual"`
-	Timeouts          timeouts.Value `tfsdk:"timeouts"`
+	ClusterARN        fwtypes.ARN          `tfsdk:"cluster_arn"`
+	Configs           jsontypes.Normalized `tfsdk:"configs" autoflex:"-"`
+	ConfigsActual     types.String         `tfsdk:"configs_actual"`
+	PartitionCount    types.Int64          `tfsdk:"partition_count"`
+	ReplicationFactor types.Int64          `tfsdk:"replication_factor"`
+	Timeouts          timeouts.Value       `tfsdk:"timeouts"`
+	TopicARN          types.String         `tfsdk:"arn"`
+	TopicName         types.String         `tfsdk:"name"`
 }
 
 var (

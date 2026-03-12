@@ -5,7 +5,6 @@ package kafka_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -126,45 +124,39 @@ func testAccCheckTopicDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			_, err := tfkafka.FindTopicByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["cluster_arn"])
+			_, err := tfkafka.FindTopicByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_arn"], rs.Primary.Attributes[names.AttrName])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Kafka, create.ErrActionCheckingDestroyed, tfkafka.ResNameTopic, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.Kafka, create.ErrActionCheckingDestroyed, tfkafka.ResNameTopic, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("MSK Topic %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTopicExists(ctx context.Context, t *testing.T, name string, topic *kafka.DescribeTopicOutput) resource.TestCheckFunc {
+func testAccCheckTopicExists(ctx context.Context, t *testing.T, n string, v *kafka.DescribeTopicOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameTopic, name, errors.New("not found"))
-		}
-
-		name := rs.Primary.Attributes[names.AttrName]
-		clusterARN := rs.Primary.Attributes["cluster_arn"]
-		if name == "" {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameTopic, name, errors.New("topic name not set"))
-		}
-		if clusterARN == "" {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameTopic, name, errors.New("topic cluster ARN not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
-		resp, err := tfkafka.FindTopicByTwoPartKey(ctx, conn, name, clusterARN)
+		output, err := tfkafka.FindTopicByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_arn"], rs.Primary.Attributes[names.AttrName])
+
 		if err != nil {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameTopic, rs.Primary.ID, err)
+			return err
 		}
 
-		*topic = *resp
+		*v = *output
 
 		return nil
 	}
@@ -197,7 +189,6 @@ resource "aws_msk_topic" "test" {
     "min.insync.replicas" = "2"
   })
 }
-
 `, rName, clusterName))
 }
 
@@ -211,14 +202,12 @@ resource "aws_msk_topic" "test" {
 
   configs = jsonencode({
     "retention.ms"        = "604800000"
+    "compression.type"    = "snappy"
     "retention.bytes"     = "-1",
+    "segment.bytes"       = "1073741824",
     "cleanup.policy"      = "delete",
     "min.insync.replicas" = "3",
-    "segment.bytes"       = "1073741824",
-    "compression.type"    = "snappy"
   })
 }
-
-
 `, rName, clusterName))
 }
