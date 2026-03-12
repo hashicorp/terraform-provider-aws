@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -24,13 +25,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -254,50 +255,38 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	conn := r.Meta().WAFV2Client(ctx)
 
 	var plan webACLRuleModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(plan.WebACLARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	// Check for duplicate priority or name
 	for _, rule := range webACL.WebACL.Rules {
 		if rule.Priority == plan.Priority.ValueInt32() {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), nil),
-				fmt.Sprintf("Rule with priority %d already exists in Web ACL", plan.Priority.ValueInt32()),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("rule with priority %d already exists in Web ACL", plan.Priority.ValueInt32())), smerr.ID, plan.Name.ValueString())
 			return
 		}
 		if aws.ToString(rule.Name) == plan.Name.ValueString() {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), nil),
-				fmt.Sprintf("Rule with name %s already exists in Web ACL", plan.Name.ValueString()),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("rule with name %s already exists in Web ACL", plan.Name.ValueString())), smerr.ID, plan.Name.ValueString())
 			return
 		}
 	}
 
 	// Build the rule
 	var newRule awstypes.Rule
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, &newRule)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &plan, &newRule))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -333,20 +322,14 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		}
 		return append(latest.WebACL.Rules, newRule)
 	}); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	// Read back the WebACL to get computed values
 	webACL, err = findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -360,51 +343,42 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	if createdRule == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), nil),
-			"Created rule not found in Web ACL after update",
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("created rule not found in Web ACL after update")), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	// Flatten the created rule to get computed values
 	state := plan
-	resp.Diagnostics.Append(r.flattenWebACLRule(ctx, createdRule, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenWebACLRule(ctx, createdRule, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
 func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().WAFV2Client(ctx)
 
 	var state webACLRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(state.WebACLARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionReading, ResNameWebACLRule, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, state.Name.ValueString())
 		return
 	}
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
-	if retry.NotFound(err) {
+	if intretry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionReading, ResNameWebACLRule, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, state.Name.ValueString())
 		return
 	}
 
@@ -423,45 +397,39 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Flatten the rule back to state
-	resp.Diagnostics.Append(r.flattenWebACLRule(ctx, foundRule, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenWebACLRule(ctx, foundRule, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().WAFV2Client(ctx)
 
 	var plan, state webACLRuleModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(plan.WebACLARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	// Build updated rule
 	var updatedRule awstypes.Rule
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, &updatedRule)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &plan, &updatedRule))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -506,43 +474,34 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		}
 		return rules
 	}); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRule, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().WAFV2Client(ctx)
 
 	var state webACLRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(state.WebACLARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRule, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, state.Name.ValueString())
 		return
 	}
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
-	if retry.NotFound(err) {
+	if intretry.NotFound(err) {
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRule, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, state.Name.ValueString())
 		return
 	}
 
@@ -589,10 +548,7 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 		}
 		return rules
 	}); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRule, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, state.Name.ValueString())
 		return
 	}
 }
@@ -624,7 +580,7 @@ func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2
 		},
 	)
 
-	return err
+	return smarterr.NewError(err)
 }
 
 type webACLRuleImportID struct{}
