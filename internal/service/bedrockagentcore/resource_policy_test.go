@@ -6,16 +6,17 @@ package bedrockagentcore_test
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +28,8 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 	}
 
 	var resourcepolicy string
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -41,7 +43,7 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_runtime(rName),
+				Config: testAccResourcePolicyConfig_runtime(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
@@ -51,7 +53,7 @@ func TestAccBedrockAgentCoreResourcePolicy_runtime_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, names.AttrPolicy, "user"},
 			},
 		},
 	})
@@ -64,7 +66,8 @@ func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 	}
 
 	var resourcepolicy string
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,7 +81,7 @@ func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_endpoint(rName),
+				Config: testAccResourcePolicyConfig_endpoint(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcepolicy),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
@@ -88,7 +91,7 @@ func TestAccBedrockAgentCoreResourcePolicy_endpoint_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, names.AttrPolicy, "user"},
 			},
 		},
 	})
@@ -101,7 +104,7 @@ func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
 	}
 
 	var resourcepolicy string
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -125,7 +128,7 @@ func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, names.AttrPolicy, "user"},
 			},
 		},
 	})
@@ -146,7 +149,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 			}
 
 			_, err := conn.GetResourcePolicy(ctx, &input)
-			if retry.NotFound(err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
@@ -207,64 +210,74 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-func testAccResourcePolicyConfig_runtime(rName string) string {
-	policy := `{"Version":"2012-10-17","Statement":[]}`
-
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-
-resource "aws_bedrockagentcore_agent_runtime" "example" {
-  name = "%s-runtime"
+func testAccResourcePolicyConfig_runtime(rName string, rImageUri string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, rImageUri), `
+data "aws_iam_policy_document" "resource_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "bedrock-agentcore:InvokeAgentRuntime",
+    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    resources = [
+      aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+    ]
+  }
 }
 
 resource "aws_bedrockagentcore_resource_policy" "test" {
-  resource_arn = aws_bedrockagentcore_agent_runtime.example.agent_runtime_arn
-  policy       = %q
-}
-`, rName, policy)
-}
-
-func testAccResourcePolicyConfig_endpoint(rName string) string {
-	policy := `{"Version":"2012-10-17","Statement":[]}`
-
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-
-resource "aws_bedrockagentcore_agent_runtime" "example" {
-  name = "%s-runtime"
+  resource_arn = aws_bedrockagentcore_agent_runtime.test.agent_runtime_arn
+  policy       = data.aws_iam_policy_document.resource_policy.json
+}`)
 }
 
-resource "aws_bedrockagentcore_agent_runtime_endpoint" "example" {
-  agent_runtime_id = aws_bedrockagentcore_agent_runtime.example.agent_runtime_id
-  name             = "%s-endpoint"
+func testAccResourcePolicyConfig_endpoint(rName string, rImageUri string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri), `
+data "aws_iam_policy_document" "resource_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "bedrock-agentcore:InvokeAgentRuntime",
+    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    resources = [
+        aws_bedrockagentcore_agent_runtime_endpoint.test.agent_runtime_arn
+    ]
+  }
 }
 
 resource "aws_bedrockagentcore_resource_policy" "test" {
-  resource_arn = aws_bedrockagentcore_agent_runtime_endpoint.example.agent_runtime_endpoint_arn
-  policy       = %q
-}
-`, rName, rName, policy)
+  resource_arn = aws_bedrockagentcore_agent_runtime_endpoint.test.agent_runtime_arn
+  policy       = data.aws_iam_policy_document.resource_policy.json
+}`)
 }
 
 func testAccResourcePolicyConfig_gateway(rName string) string {
-	policy := `{"Version":"2012-10-17","Statement":[]}`
-
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-
-resource "aws_bedrockagentcore_gateway" "example" {
-  name = "%s-gateway"
+	return acctest.ConfigCompose(testAccGatewayConfig_basic(rName), `
+data "aws_iam_policy_document" "resource_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "bedrock-agentcore:InvokeAgentRuntime",
+    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    resources = [
+        aws_bedrockagentcore_gateway.test.agent_runtime_arn
+    ]
+  }
 }
 
 resource "aws_bedrockagentcore_resource_policy" "test" {
   resource_arn = aws_bedrockagentcore_gateway.example.gateway_arn
-  policy       = %q
-}
-`, rName, policy)
+  policy       = data.aws_iam_policy_document.resource_policy.json
+}`)
 }

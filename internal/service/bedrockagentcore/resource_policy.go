@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -36,7 +35,6 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_resource_policy", name="Resource Policy")
 // @ArnIdentity("resource_arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.DescribeResourcePolicyResponse")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
@@ -57,6 +55,7 @@ type resourcePolicyResource struct {
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -65,7 +64,7 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
 		},
@@ -97,10 +96,12 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.Policy, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	plan.setID()
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -130,11 +131,15 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	state.setID()
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourcePolicyResource) flatten(ctx context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) (diags diag.Diagnostics) {
-	diags.Append(flex.Flatten(ctx, resourcePolicy, data)...)
+func (r *resourcePolicyResource) flatten(_ context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) (diags diag.Diagnostics) {
+	if resourcePolicy != nil {
+		data.Policy = fwtypes.IAMPolicyValue(aws.ToString(resourcePolicy))
+	}
 	return diags
 }
 
@@ -156,7 +161,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		var input bedrockagentcorecontrol.PutResourcePolicyInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("ResourcePolicy")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -171,7 +176,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.Policy, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -229,8 +234,13 @@ func findResourcePolicy(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
-	ResourceARN types.String `tfsdk:"resource_arn"`
-	Policy      types.String `tfsdk:"policy"`
+	ID          types.String      `tfsdk:"id"`
+	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
+	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
+}
+
+func (data *resourcePolicyResourceModel) setID() {
+	data.ID = data.ResourceARN.StringValue
 }
 
 func sweepResourcePolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
