@@ -7,17 +7,18 @@ import (
 	"context"
 	"fmt"
 	"iter"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
@@ -44,8 +45,6 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 		}
 	}
 
-	tflog.Info(ctx, "Listing SageMaker Training Jobs")
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input sagemaker.ListTrainingJobsInput
 
@@ -56,22 +55,29 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 				return
 			}
 
-			arn := aws.ToString(item.TrainingJobArn)
 			trainingJobName := aws.ToString(item.TrainingJobName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			result := request.NewListResult(ctx)
-			trainingJob, err := findTrainingJobByName(ctx, conn, trainingJobName)
-			if err != nil {
-				result.Diagnostics.Append(diag.NewErrorDiagnostic("Reading SageMaker Training Job", err.Error()))
-				yield(result)
-				return
-			}
 
 			var data resourceTrainingJobModel
+			data.ID = fwflex.StringValueToFramework(ctx, trainingJobName)
+			data.TrainingJobName = fwflex.StringValueToFramework(ctx, trainingJobName)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, trainingJob, &data)...)
+				if request.IncludeResource {
+					trainingJob, err := findTrainingJobByName(ctx, conn, trainingJobName)
+					if err != nil {
+						result.Diagnostics.Append(diag.NewErrorDiagnostic("Reading SageMaker Training Job", err.Error()))
+						return
+					}
+
+					result.Diagnostics.Append(l.flatten(ctx, trainingJob, &data)...)
+					if result.Diagnostics.HasError() {
+						return
+					}
+				}
+
+				result.Diagnostics.Append(setZeroAttrValuesToNull(ctx, &data)...)
 				if result.Diagnostics.HasError() {
 					return
 				}
@@ -110,6 +116,68 @@ func listTrainingJobs(ctx context.Context, conn *sagemaker.Client, input *sagema
 					return
 				}
 			}
+		}
+	}
+}
+
+func setZeroAttrValuesToNull(ctx context.Context, target any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	value := reflect.ValueOf(target)
+	if !value.IsValid() || value.Kind() != reflect.Ptr || value.IsNil() {
+		return diags
+	}
+
+	walkStructSetZeroAttrNull(ctx, value.Elem(), &diags)
+
+	return diags
+}
+
+func walkStructSetZeroAttrNull(ctx context.Context, value reflect.Value, diags *diag.Diagnostics) {
+	if diags.HasError() || !value.IsValid() || value.Kind() != reflect.Struct {
+		return
+	}
+
+	for index := 0; index < value.NumField(); index++ {
+		field := value.Field(index)
+		if !field.CanSet() {
+			continue
+		}
+
+		if field.Kind() != reflect.Struct {
+			continue
+		}
+
+		if attrValue, ok := field.Interface().(attr.Value); ok {
+			if field.IsZero() {
+				nullValue, err := fwtypes.NullValueOf(ctx, attrValue)
+				if err != nil {
+					diags.AddError("Normalizing List Result", err.Error())
+					return
+				}
+
+				if nullValue == nil {
+					continue
+				}
+
+				nullValueReflect := reflect.ValueOf(nullValue)
+				switch {
+				case nullValueReflect.Type().AssignableTo(field.Type()):
+					field.Set(nullValueReflect)
+				case nullValueReflect.Type().ConvertibleTo(field.Type()):
+					field.Set(nullValueReflect.Convert(field.Type()))
+				default:
+					diags.AddError("Normalizing List Result", fmt.Sprintf("cannot assign null value of type %T to field type %s", nullValue, field.Type()))
+					return
+				}
+			}
+
+			continue
+		}
+
+		walkStructSetZeroAttrNull(ctx, field, diags)
+		if diags.HasError() {
+			return
 		}
 	}
 }

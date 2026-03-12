@@ -6,6 +6,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   training_job_name = "${var.rName}-${count.index}"
   role_arn          = aws_iam_role.test.arn
+  tags              = var.resource_tags
 
   algorithm_specification {
     training_input_mode = "File"
@@ -72,7 +73,6 @@ variable "resource_count" {
 }
 
 variable "resource_tags" {
-  description = "Tags to set on resource"
-  type        = map(string)
-  nullable    = false
+  type     = map(string)
+  nullable = true
 }
