@@ -40,7 +40,7 @@ import (
 // @IdentityAttribute("name")
 // @IdentityAttribute("cluster_arn")
 // @ImportIDHandler(topicImportID)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeTopicResponse")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeTopicOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 func newTopicResource(_ context.Context) (resource.ResourceWithConfigure, error) {
