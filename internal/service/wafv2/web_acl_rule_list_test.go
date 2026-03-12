@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -21,8 +22,8 @@ import (
 func TestAccWAFV2WebACLRule_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName1 := "aws_wafv2_web_acl_rule.test[0]"
-	resourceName2 := "aws_wafv2_web_acl_rule.test[1]"
+	resourceName1 := "aws_wafv2_web_acl_rule.test0"
+	resourceName2 := "aws_wafv2_web_acl_rule.test1"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	webACLARN := tfstatecheck.StateValue()
@@ -41,8 +42,7 @@ func TestAccWAFV2WebACLRule_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/WebACLRule/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					"resource_count": config.IntegerVariable(2),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					webACLARN.GetStateValue("aws_wafv2_web_acl.test", tfjsonpath.New(names.AttrARN)),
@@ -54,17 +54,20 @@ func TestAccWAFV2WebACLRule_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/WebACLRule/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					"resource_count": config.IntegerVariable(2),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_wafv2_web_acl_rule.test", map[string]knownvalue.Check{
-						"web_acl_arn": webACLARN.Value(),
-						names.AttrName: name1.Value(),
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						"web_acl_arn":       webACLARN.Value(),
+						names.AttrName:      name1.Value(),
 					}),
 					querycheck.ExpectIdentity("aws_wafv2_web_acl_rule.test", map[string]knownvalue.Check{
-						"web_acl_arn": webACLARN.Value(),
-						names.AttrName: name2.Value(),
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						"web_acl_arn":       webACLARN.Value(),
+						names.AttrName:      name2.Value(),
 					}),
 				},
 			},

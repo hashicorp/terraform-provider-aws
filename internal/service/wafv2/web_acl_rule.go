@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -310,12 +311,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	const timeout = 5 * time.Minute
-	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.UpdateWebACL(ctx, updateInput)
-	})
-
-	if err != nil {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
 			err.Error(),
@@ -482,12 +478,7 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	const timeout = 5 * time.Minute
-	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.UpdateWebACL(ctx, updateInput)
-	})
-
-	if err != nil {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRule, plan.Name.String(), err),
 			err.Error(),
@@ -562,18 +553,39 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	const timeout = 5 * time.Minute
-	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.UpdateWebACL(ctx, updateInput)
-	})
-
-	if err != nil {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput); err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRule, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
+}
+
+// updateWebACLWithRetry calls UpdateWebACL, retrying on WAFUnavailableEntityException.
+// On WAFOptimisticLockException it refreshes the lock token and retries once.
+func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2.UpdateWebACLInput) error {
+	const timeout = 5 * time.Minute
+
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.UpdateWebACL(ctx, input)
+	})
+
+	if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
+		output, getErr := findWebACLByThreePartKey(ctx, conn,
+			aws.ToString(input.Id), aws.ToString(input.Name), string(input.Scope))
+		if getErr != nil {
+			return getErr
+		}
+		if newToken := aws.ToString(output.LockToken); newToken != aws.ToString(input.LockToken) {
+			input.LockToken = aws.String(newToken)
+			_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
+				return conn.UpdateWebACL(ctx, input)
+			})
+		}
+	}
+
+	return err
 }
 
 type webACLRuleImportID struct{}
