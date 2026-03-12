@@ -84,11 +84,6 @@ resource "aws_sagemaker_training_job" "example" {
     training_input_mode                  = "File"
     training_image                       = data.aws_sagemaker_prebuilt_ecr_image.example.registry_path
     enable_sagemaker_metrics_time_series = true
-
-    metric_definitions {
-      name  = "loss"
-      regex = "Loss = (.*?);"
-    }
   }
 
   hyper_parameters = {
@@ -165,12 +160,14 @@ The following arguments are optional:
 * `container_arguments` - (Optional) List of arguments for the container entrypoint. Maximum of 100 entries.
 * `container_entrypoint` - (Optional) List of entrypoint commands for the container. Maximum of 100 entries.
 * `enable_sagemaker_metrics_time_series` - (Optional) Whether to enable SageMaker AI metrics time series collection.
-* `metric_definitions` - (Optional) List of metric definitions for the training job. Maximum of 40. See [`metric_definitions`](#metric_definitions) below.
+* `metric_definitions` - (Optional) List of metric definitions for the training job. Maximum of 40. Use this to extract custom metrics from your own training container logs. SageMaker can still publish built-in metrics for built-in algorithms and supported prebuilt images when this block is omitted. See [`metric_definitions`](#metric_definitions) below.
 * `training_image` - (Optional) Registry path of the Docker image that contains the training algorithm.
 * `training_image_config` - (Optional) Training image configuration. See [`training_image_config`](#training_image_config) below.
 * `training_input_mode` - (Optional) Input mode for the training data. Valid values: `File`, `Pipe`, `FastFile`.
 
 ### `metric_definitions`
+
+Use `metric_definitions` when you need to parse custom metrics from your training container logs. For SageMaker built-in algorithms and supported prebuilt images, SageMaker can populate default metrics without this block.
 
 * `name` - (Required) Name of the metric.
 * `regex` - (Required) Regular expression that searches the output of the training job and captures the value of the metric.
