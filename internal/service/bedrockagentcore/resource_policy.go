@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -96,10 +95,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.Policy, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	r.flatten(ctx, out.Policy, &plan)
 
 	plan.setID()
 
@@ -126,21 +122,17 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	r.flatten(ctx, out, &state)
 
 	state.setID()
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourcePolicyResource) flatten(_ context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) (diags diag.Diagnostics) {
+func (r *resourcePolicyResource) flatten(_ context.Context, resourcePolicy *string, data *resourcePolicyResourceModel) {
 	if resourcePolicy != nil {
 		data.Policy = fwtypes.IAMPolicyValue(aws.ToString(resourcePolicy))
 	}
-	return diags
 }
 
 func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -176,10 +168,7 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out.Policy, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		r.flatten(ctx, out.Policy, &plan)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
