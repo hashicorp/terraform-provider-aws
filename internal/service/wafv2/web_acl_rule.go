@@ -368,16 +368,11 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Flatten the created rule to get computed values
-	var state webACLRuleModel
+	state := plan
 	resp.Diagnostics.Append(r.flattenWebACLRule(ctx, createdRule, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Preserve fields from plan that aren't in the Rule
-	state.WebACLARN = plan.WebACLARN
-	state.WithRegionModel = plan.WithRegionModel
-	state.Timeouts = plan.Timeouts
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
