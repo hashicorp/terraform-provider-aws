@@ -104,7 +104,7 @@ func TestAccBedrockAgentCoreResourcePolicy_gateway_basic(t *testing.T) {
 	}
 
 	var resourcepolicy string
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -271,13 +271,13 @@ data "aws_iam_policy_document" "resource_policy" {
       identifiers = ["*"]
     }
     resources = [
-        aws_bedrockagentcore_gateway.test.agent_runtime_arn
+        aws_bedrockagentcore_gateway.test.gateway_arn
     ]
   }
 }
 
 resource "aws_bedrockagentcore_resource_policy" "test" {
-  resource_arn = aws_bedrockagentcore_gateway.example.gateway_arn
+  resource_arn = aws_bedrockagentcore_gateway.test.gateway_arn
   policy       = data.aws_iam_policy_document.resource_policy.json
 }`)
 }
