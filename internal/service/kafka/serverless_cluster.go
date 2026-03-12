@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_msk_serverless_cluster", name="Serverless Cluster")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceServerlessCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerlessClusterCreate,
