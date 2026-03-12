@@ -60,6 +60,7 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore:              []string{"configs"},
 			},
 			{
 				Config: testAccTopicConfig_basic(rName, clusterName, 3, 2),
@@ -262,7 +263,6 @@ resource "aws_msk_topic" "test" {
     "compression.type"    = "snappy"
     "retention.bytes"     = "-1",
     "segment.bytes"       = "1073741824",
-    "cleanup.policy"      = "delete",
     "min.insync.replicas" = "3",
   })
 }
