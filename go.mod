@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.12
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.12
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.18
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.57.3
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.14
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.11
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.4
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.11
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.73.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.12
@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.26.19
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/rum v1.30.7
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.4
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.68.2
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.10
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.14.2
