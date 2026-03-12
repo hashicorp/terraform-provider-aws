@@ -142,6 +142,7 @@ The `custom_jwt_authorizer` block supports the following:
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
+* `allowed_scopes` - (Optional) Set of allowed scopes for JWT token validation.
 
 ### `interceptor_configuration`
 
