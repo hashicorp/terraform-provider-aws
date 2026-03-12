@@ -6,6 +6,7 @@ package wafv2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -76,7 +77,7 @@ func (r *webACLRuleListResource) List(ctx context.Context, request list.ListRequ
 
 		for i := range webACL.WebACL.Rules {
 			rule := &webACL.WebACL.Rules[i]
-			ruleName := *rule.Name
+			ruleName := aws.ToString(rule.Name)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), ruleName)
 
 			var data webACLRuleModel
