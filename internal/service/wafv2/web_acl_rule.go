@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -42,7 +43,13 @@ import (
 // @Testing(importStateIdAttributes="web_acl_arn;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(importStateIdAttribute="web_acl_arn")
 func newResourceWebACLRule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceWebACLRule{}, nil
+	r := &resourceWebACLRule{}
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
+	return r, nil
 }
 
 const (
@@ -52,6 +59,7 @@ const (
 type resourceWebACLRule struct {
 	framework.ResourceWithModel[webACLRuleModel]
 	framework.WithImportByIdentity
+	framework.WithTimeouts
 }
 
 func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -207,6 +215,11 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Labels to apply to matching web requests.",
 			},
 			"statement": statementBlock(ctx, webACLRuleStatementSchemaLevel),
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"visibility_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleVisibilityConfigModel](ctx),
 				Validators: []validator.List{
@@ -234,7 +247,6 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "CloudWatch metrics configuration.",
 			},
 		},
-		Description: "Manages an individual rule within a WAFv2 Web ACL. Creates proper Terraform dependencies for safe deletion of referenced resources like IP sets.",
 	}
 }
 
@@ -311,7 +323,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	if err = updateWebACLWithRetry(ctx, conn, updateInput, func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput, r.CreateTimeout(ctx, plan.Timeouts), func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
 		// Re-append our rule to the latest rule list (which may have grown since we fetched).
 		for _, r := range latest.WebACL.Rules {
 			if aws.ToString(r.Name) == plan.Name.ValueString() {
@@ -487,7 +499,7 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	if err = updateWebACLWithRetry(ctx, conn, updateInput, func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput, r.UpdateTimeout(ctx, plan.Timeouts), func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
 		var rules []awstypes.Rule
 		for _, r := range latest.WebACL.Rules {
 			if aws.ToString(r.Name) == state.Name.ValueString() {
@@ -572,7 +584,7 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 		updateInput.Description = webACL.WebACL.Description
 	}
 
-	if err = updateWebACLWithRetry(ctx, conn, updateInput, func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
+	if err = updateWebACLWithRetry(ctx, conn, updateInput, r.DeleteTimeout(ctx, state.Timeouts), func(latest *wafv2.GetWebACLOutput) []awstypes.Rule {
 		var rules []awstypes.Rule
 		for _, r := range latest.WebACL.Rules {
 			if aws.ToString(r.Name) != state.Name.ValueString() {
@@ -592,8 +604,7 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 // updateWebACLWithRetry calls UpdateWebACL, retrying on WAFUnavailableEntityException
 // and WAFOptimisticLockException. On optimistic lock conflict it re-fetches the Web ACL
 // and calls rebuildRules to reconstruct the rule list from the latest state before retrying.
-func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2.UpdateWebACLInput, rebuildRules func(*wafv2.GetWebACLOutput) []awstypes.Rule) error {
-	const timeout = 5 * time.Minute
+func updateWebACLWithRetry(ctx context.Context, conn *wafv2.Client, input *wafv2.UpdateWebACLInput, timeout time.Duration, rebuildRules func(*wafv2.GetWebACLOutput) []awstypes.Rule) error {
 
 	_, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
@@ -643,6 +654,7 @@ type webACLRuleModel struct {
 	framework.WithRegionModel
 	Name             types.String                                                     `tfsdk:"name"`
 	Priority         types.Int32                                                      `tfsdk:"priority"`
+	Timeouts         timeouts.Value                                                   `tfsdk:"timeouts"`
 	WebACLARN        types.String                                                     `tfsdk:"web_acl_arn"`
 	Action           fwtypes.ListNestedObjectValueOf[webACLRuleActionModel]           `tfsdk:"action"`
 	CaptchaConfig    fwtypes.ListNestedObjectValueOf[webACLRuleImmunityTimeModel]     `tfsdk:"captcha_config"`
