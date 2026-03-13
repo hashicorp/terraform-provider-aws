@@ -9,7 +9,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
   output_data_config {
@@ -18,8 +18,8 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-    instance_type     = "ml.m5.large"
-    instance_count    = 1
+    instance_type  = "ml.m5.large"
+    instance_count = 1
     volume_size_in_gb = 30
   }
 
@@ -32,9 +32,12 @@ resource "aws_sagemaker_training_job" "test" {
 
 data "aws_partition" "current" {}
 
-data "aws_region" "current" {
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
   region = var.region
 
+
+  repository_name = "linear-learner"
+  image_tag       = "1"
 }
 
 resource "aws_iam_role" "test" {
