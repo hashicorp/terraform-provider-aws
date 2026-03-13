@@ -42,6 +42,7 @@ func TestAccConnect_serial(t *testing.T) {
 			acctest.CtBasic:      testAccContactFlowModule_basic,
 			acctest.CtDisappears: testAccContactFlowModule_disappears,
 			"filename":           testAccContactFlowModule_filename,
+			"settings":           testAccContactFlowModule_settings,
 			"dataSource_id":      testAccContactFlowModuleDataSource_contactFlowModuleID,
 			"dataSource_name":    testAccContactFlowModuleDataSource_name,
 		},
