@@ -53,8 +53,8 @@ func TestAccKafkaTopicDataSource_basic(t *testing.T) {
 func testAccTopicDataSourceConfig_basic(rName, clusterName string) string {
 	return acctest.ConfigCompose(testAccTopicConfig_basic(rName, clusterName, 2, 2), `
 data "aws_msk_topic" "test" {
-  name               = aws_msk_topic.test.name
-  cluster_arn        = aws_msk_topic.test.cluster_arn
+  name        = aws_msk_topic.test.name
+  cluster_arn = aws_msk_topic.test.cluster_arn
 }
 `)
 }
