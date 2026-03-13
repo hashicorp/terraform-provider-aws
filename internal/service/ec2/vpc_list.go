@@ -22,6 +22,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
@@ -150,6 +151,20 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				return
 			}
 
+			vpcIDs := tfslices.ApplyToAll(page.Vpcs, func(v awstypes.Vpc) string {
+				return aws.ToString(v.VpcId)
+			})
+
+			var defaultNetworkACLs map[string]*awstypes.NetworkAcl
+			if request.IncludeResource {
+				defaultNetworkACLs, err = batchFindVPCDefaultNetworkACLs(ctx, conn, vpcIDs)
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+			}
+
 			for _, vpc := range page.Vpcs {
 				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
 
@@ -171,6 +186,10 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 					result = fwdiag.NewListResultErrorDiagnostic(err)
 					yield(result)
 					return
+				}
+
+				if defaultNetworkACL, ok := defaultNetworkACLs[aws.ToString(vpc.VpcId)]; ok {
+					rd.Set("default_network_acl_id", defaultNetworkACL.NetworkAclId)
 				}
 
 				if v, ok := tags["Name"]; ok {

@@ -292,6 +292,13 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		diags = sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+	} else {
+		d.Set("default_network_acl_id", v.NetworkAclId)
+	}
+
 	return diags
 }
 
@@ -682,13 +689,6 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		return fmt.Errorf("reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
-	}
-
-	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
-	} else {
-		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
 	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {

@@ -1723,7 +1723,7 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 	return findNetworkACL(ctx, conn, &input)
 }
 
-func batchFindVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
+func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
 	input := ec2.DescribeNetworkAclsInput{
 		Filters: newMultiValueAttributeFilterList(map[string][]string{
 			"default": {"true"},
@@ -1731,7 +1731,7 @@ func batchFindVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, ids []
 		}),
 	}
 
-	return batchFindNetworkACL(ctx, conn, &input)
+	return batchFindNetworkACLs(ctx, conn, &input)
 }
 
 func findNATGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*awstypes.NatGateway, error) {
@@ -1861,7 +1861,7 @@ func findNetworkACL(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func batchFindNetworkACL(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (map[string]*awstypes.NetworkAcl, error) {
+func batchFindNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (map[string]*awstypes.NetworkAcl, error) {
 	output, err := findNetworkACLs(ctx, conn, input)
 
 	if err != nil {
