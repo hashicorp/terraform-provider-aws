@@ -14,6 +14,73 @@ Manages an individual rule within a WAFv2 Web ACL. This resource creates proper 
 
 ## Example Usage
 
+### Migrating from Inline Rules
+
+This resource supports a "create-or-adopt" pattern that allows seamless migration from inline Web ACL rules to separate `aws_wafv2_web_acl_rule` resources without infrastructure changes.
+
+When you create an `aws_wafv2_web_acl_rule` resource with the same name as an existing inline rule in the Web ACL, the resource will automatically adopt the existing rule instead of creating a duplicate. This enables zero-downtime migration from inline rules to separate resources.
+
+Starting with inline rules, update your configuration to use separate rule resources and apply:
+
+```terraform
+resource "aws_wafv2_web_acl" "example" {
+  name  = "example"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  # Remove inline rule block - it's now managed separately
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "example"
+    sampled_requests_enabled   = false
+  }
+
+  # Prevent Terraform from managing inline rules
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+# Separate rule resource with identical configuration
+resource "aws_wafv2_web_acl_rule" "block_countries" {
+  name        = "block-countries" # Must match existing rule name
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["CN", "RU"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "block-countries"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
+Apply the configuration:
+
+```bash
+terraform apply
+```
+
+The `aws_wafv2_web_acl_rule` resource will adopt the existing inline rule without making any changes to the actual Web ACL infrastructure. The rule continues to function identically, but is now managed as a separate Terraform resource.
+
+- The rule name in the `aws_wafv2_web_acl_rule` resource must exactly match the existing inline rule name
+- Add `lifecycle { ignore_changes = [rule] }` to your Web ACL resource to prevent conflicts
+- The create-or-adopt behavior only applies when a rule with the same name already exists in the Web ACL
+
 ### Basic Geo Match Rule
 
 ```terraform
@@ -201,7 +268,7 @@ resource "aws_wafv2_web_acl_rule" "captcha_with_headers" {
 }
 ```
 
-## Example Usage - IP Set Reference
+### IP Set Reference
 
 ```terraform
 resource "aws_wafv2_web_acl_rule" "blocked_ips" {
@@ -358,18 +425,18 @@ The following arguments are required:
 
 * `name` - (Required) Name of the rule. Must be unique within the Web ACL.
 * `priority` - (Required) Rule priority. Rules with lower priority are evaluated first.
-* `web_acl_arn` - (Required) ARN of the Web ACL to add the rule to.
 * `statement` - (Required) Rule statement. See [Statement](#statement) below.
 * `visibility_config` - (Required) CloudWatch metrics configuration. See [Visibility Config](#visibility-config) below.
+* `web_acl_arn` - (Required) ARN of the Web ACL to add the rule to.
 
 The following arguments are optional:
 
 * `action` - (Optional) Action to take when the rule matches. See [Action](#action) below. Conflicts with `override_action`.
-* `override_action` - (Optional) Override action for managed rule groups. See [Override Action](#override-action) below. Conflicts with `action`.
 * `captcha_config` - (Optional) CAPTCHA configuration that overrides the web ACL level setting. See [Captcha Config](#captcha-config) below.
 * `challenge_config` - (Optional) Challenge configuration that overrides the web ACL level setting. See [Challenge Config](#challenge-config) below.
-* `rule_label` - (Optional) Labels to apply to matching web requests. See [Rule Label](#rule-label) below.
+* `override_action` - (Optional) Override action for managed rule groups. See [Override Action](#override-action) below. Conflicts with `action`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rule_label` - (Optional) Labels to apply to matching web requests. See [Rule Label](#rule-label) below.
 
 ### Action
 
@@ -573,9 +640,9 @@ One of the following override action blocks must be specified when using managed
 
 ### Visibility Config
 
-* `cloudwatch_metrics_enabled` - (Optional) Whether to enable CloudWatch metrics. Defaults to `true`.
-* `metric_name` - (Optional) Name of the CloudWatch metric. Defaults to the rule name.
-* `sampled_requests_enabled` - (Optional) Whether to store sampled requests. Defaults to `true`.
+* `cloudwatch_metrics_enabled` - (Required) Whether to enable CloudWatch metrics.
+* `metric_name` - (Required) Name of the CloudWatch metric.
+* `sampled_requests_enabled` - (Required) Whether to store sampled requests.
 
 ### Field to Match
 
