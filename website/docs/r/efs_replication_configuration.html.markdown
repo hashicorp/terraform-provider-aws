@@ -73,6 +73,7 @@ This resource supports the following arguments:
 * `file_system_id` - (Optional) The ID of the destination file system for the replication. If no ID is provided, then EFS creates a new file system with the default settings.
 * `kms_key_id` - (Optional) The Key ID, ARN, alias, or alias ARN of the KMS key that should be used to encrypt the replica file system. If omitted, the default KMS key for EFS `/aws/elasticfilesystem` will be used.
 * `region` - (Optional) The region in which the replica should be created.
+* `role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM role in the source account that allows Amazon EFS to perform replication on its behalf. This is optional for same-account replication and required for cross-account replication.
 
 ## Attribute Reference
 

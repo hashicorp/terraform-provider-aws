@@ -80,6 +80,12 @@ func resourceReplicationConfiguration() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -344,6 +350,10 @@ func expandDestinationToCreate(tfMap map[string]any) *awstypes.DestinationToCrea
 		apiObject.Region = aws.String(v)
 	}
 
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -377,6 +387,10 @@ func flattenDestination(apiObject awstypes.Destination) map[string]any {
 
 	if v := apiObject.Region; v != nil {
 		tfMap[names.AttrRegion] = aws.ToString(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	tfMap[names.AttrStatus] = string(apiObject.Status)
