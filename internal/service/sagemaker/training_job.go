@@ -55,7 +55,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("training_job_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeTrainingJobOutput")
-// @Testing(importIgnore="algorithm_specification.0.metric_definitions;serverless_job_config.0.base_model_arn")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(importStateIdAttribute="training_job_name")
 // @Testing(hasNoPreExistingResource=true)

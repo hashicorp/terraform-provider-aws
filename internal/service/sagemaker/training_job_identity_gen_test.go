@@ -69,9 +69,6 @@ func TestAccSageMakerTrainingJob_Identity_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "training_job_name",
-				ImportStateVerifyIgnore: []string{
-					"algorithm_specification.0.metric_definitions",
-				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -158,9 +155,6 @@ func TestAccSageMakerTrainingJob_Identity_regionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "training_job_name",
-				ImportStateVerifyIgnore: []string{
-					"algorithm_specification.0.metric_definitions",
-				},
 			},
 
 			// Step 3: Import block with Import ID
