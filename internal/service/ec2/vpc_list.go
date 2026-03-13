@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -142,66 +141,51 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 	tflog.Info(ctx, "Listing resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for vpc, err := range listVPCs(ctx, conn, &input) {
+		pages := ec2.NewDescribeVpcsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
-
-			result := request.NewListResult(ctx)
-
-			tags := keyValueTags(ctx, vpc.Tags)
-			setTagsOut(ctx, vpc.Tags)
-
-			rd := l.ResourceData()
-			rd.SetId(aws.ToString(vpc.VpcId))
-
-			tflog.Info(ctx, "Reading resource")
-			err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
-			if retry.NotFound(err) {
-				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-				continue
-			}
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			if v, ok := tags["Name"]; ok {
-				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(vpc.VpcId))
-			} else {
-				result.DisplayName = aws.ToString(vpc.VpcId)
-			}
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
-func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) iter.Seq2[awstypes.Vpc, error] {
-	return func(yield func(awstypes.Vpc, error) bool) {
-		pages := ec2.NewDescribeVpcsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Vpc{}, fmt.Errorf("listing EC2 VPCs: %w", err))
-				return
-			}
-
 			for _, vpc := range page.Vpcs {
-				if !yield(vpc, nil) {
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
+
+				result := request.NewListResult(ctx)
+
+				tags := keyValueTags(ctx, vpc.Tags)
+				setTagsOut(ctx, vpc.Tags)
+
+				rd := l.ResourceData()
+				rd.SetId(aws.ToString(vpc.VpcId))
+
+				tflog.Info(ctx, "Reading resource")
+				err := resourceVPCFlatten(ctx, awsClient, &vpc, rd)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				if v, ok := tags["Name"]; ok {
+					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(vpc.VpcId))
+				} else {
+					result.DisplayName = aws.ToString(vpc.VpcId)
+				}
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
 					return
 				}
 			}
