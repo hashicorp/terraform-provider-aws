@@ -407,6 +407,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "User",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceUserGroupMembership,
@@ -494,6 +500,19 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute(names.AttrRole, true),
 				inttypes.StringIdentityAttribute("policy_arn", true),
 			}),
+		},
+		{
+			Factory:  newUserResourceAsListResource,
+			TypeName: "aws_iam_user",
+			Name:     "User",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+				ResourceType:        "User",
+			}),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
+				inttypes.WithMutableIdentity(),
+			),
 		},
 	})
 }
