@@ -178,7 +178,7 @@ Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
-OpenSearch Ingestion
+OpenSearch Ingestion (OSIS)
 OpenSearch Serverless
 Oracle Database@AWS
 Organizations
