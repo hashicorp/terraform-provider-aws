@@ -968,7 +968,32 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 					input.Engine = aws.String(engineRedis)
 				}
 			}
-			requestUpdate = true
+			if d.HasChange("log_delivery_configuration") {
+				n, _ := d.GetOk("log_delivery_configuration")
+				if checkIfLogTypeSlowLog(n.(*schema.Set).List()) &&
+					checkIfEngineSupportsSlowLog(input.Engine, input.EngineVersion) {
+					// log_type slow-log is supported in redis >= 6.0 and valkey >= 7.x .
+					engineVersionInput := elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:   aws.Bool(true),
+						Engine:             input.Engine,
+						EngineVersion:      input.EngineVersion,
+						ReplicationGroupId: aws.String(d.Id()),
+					}
+					updateFuncs = append(updateFuncs, func() error {
+						_, err := conn.ModifyReplicationGroup(ctx, &engineVersionInput)
+						if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+							return nil
+						}
+
+						if err != nil {
+							return fmt.Errorf("modifying ElastiCache Replication Group (%s) log_delivery_configuration: %w", d.Id(), err)
+						}
+						return nil
+					})
+				}
+			} else {
+				requestUpdate = true
+			}
 		}
 
 		if d.HasChange("ip_discovery") {
@@ -1641,6 +1666,26 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
 	_, has_global_replication_group := d.GetOk("global_replication_group_id")
 	return has_global_replication_group && !d.IsNewResource()
+}
+
+func checkIfEngineSupportsSlowLog(engine, engineVersion *string) bool {
+	majorVersion, err := strconv.Atoi(string(aws.ToString(engineVersion)[0]))
+	return err == nil &&
+		((majorVersion >= 6 && aws.ToString(engine) == engineRedis) ||
+			(majorVersion >= 7 && aws.ToString(engine) == engineValkey))
+}
+
+func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
+	logTypeSlowLogExists := false
+
+	for _, current := range currentLogDeliveryConfig {
+		logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]any))
+		if logDeliveryConfigurationRequest.LogType == awstypes.LogTypeSlowLog {
+			logTypeSlowLogExists = true
+			break
+		}
+	}
+	return logTypeSlowLogExists
 }
 
 func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
