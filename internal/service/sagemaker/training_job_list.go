@@ -60,7 +60,7 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 			result := request.NewListResult(ctx)
 
 			var data resourceTrainingJobModel
-			data.ID = fwflex.StringValueToFramework(ctx, trainingJobName)
+			data.TrainingJobName = fwflex.StringValueToFramework(ctx, trainingJobName)
 			data.TrainingJobName = fwflex.StringValueToFramework(ctx, trainingJobName)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
@@ -71,7 +71,7 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 						return
 					}
 
-					result.Diagnostics.Append(l.flatten(ctx, trainingJob, &data)...)
+					result.Diagnostics.Append(fwflex.Flatten(ctx, trainingJob, &data)...)
 					if result.Diagnostics.HasError() {
 						return
 					}

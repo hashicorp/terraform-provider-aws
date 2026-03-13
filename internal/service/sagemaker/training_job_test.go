@@ -51,7 +51,6 @@ func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.training_input_mode", "File"),
 					resource.TestCheckResourceAttrPair(resourceName, "algorithm_specification.0.training_image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
@@ -67,9 +66,11 @@ func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -148,9 +149,11 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -199,10 +202,11 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"serverless_job_config.0.base_model_arn"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -251,9 +255,11 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -305,9 +311,11 @@ func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -353,9 +361,11 @@ func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -401,9 +411,11 @@ func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -451,9 +463,11 @@ func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -551,10 +565,12 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"algorithm_specification.0.metric_definitions"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
+				ImportStateVerifyIgnore:              []string{"algorithm_specification.0.metric_definitions"},
 			},
 		},
 	})
@@ -598,9 +614,11 @@ func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -658,9 +676,12 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
+				ImportStateVerifyIgnore:              []string{"serverless_job_config.0.base_model_arn"},
 			},
 		},
 	})
@@ -700,10 +721,12 @@ func TestAccSageMakerTrainingJob_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"algorithm_specification.0.metric_definitions"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
+				ImportStateVerifyIgnore:              []string{"algorithm_specification.0.metric_definitions"},
 			},
 			{
 				Config: testAccTrainingJobConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -781,9 +804,11 @@ func TestAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -833,9 +858,11 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -881,9 +908,11 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
@@ -928,10 +957,12 @@ func TestAccSageMakerTrainingJob_sessionChainingConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"session_chaining_config"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
+				ImportStateVerifyIgnore:              []string{"session_chaining_config"},
 			},
 		},
 	})
@@ -948,7 +979,7 @@ func testAccCheckTrainingJobDestroy(ctx context.Context, t *testing.T) resource.
 
 			trainingJobName := rs.Primary.Attributes["training_job_name"]
 			if trainingJobName == "" {
-				trainingJobName = rs.Primary.ID
+				return fmt.Errorf("No SageMaker Training Job name is set")
 			}
 
 			_, err := tfsagemaker.FindTrainingJobByName(ctx, conn, trainingJobName)
@@ -973,17 +1004,15 @@ func testAccCheckTrainingJobExists(ctx context.Context, t *testing.T, name strin
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			if rs.Primary.Attributes["training_job_name"] == "" {
-				return fmt.Errorf("No SageMaker Training Job ID or name is set")
-			}
+		if rs.Primary.Attributes["training_job_name"] == "" {
+			return fmt.Errorf("No SageMaker Training Job name is set")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		trainingJobName := rs.Primary.Attributes["training_job_name"]
 		if trainingJobName == "" {
-			trainingJobName = rs.Primary.ID
+			return fmt.Errorf("No SageMaker Training Job name is set")
 		}
 
 		output, err := tfsagemaker.FindTrainingJobByName(ctx, conn, trainingJobName)
