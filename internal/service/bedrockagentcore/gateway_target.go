@@ -479,7 +479,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												"rest_api_id": schema.StringAttribute{
 													Required: true,
 												},
-												"stage": schema.StringAttribute{
+												names.AttrStage: schema.StringAttribute{
 													Required: true,
 												},
 											},
@@ -509,7 +509,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 																CustomType: fwtypes.NewSetNestedObjectTypeOf[mcpApiGatewayToolOverrideModel](ctx),
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
-																		"description": schema.StringAttribute{
+																		names.AttrDescription: schema.StringAttribute{
 																			Optional: true,
 																		},
 																		"method": schema.StringAttribute{
