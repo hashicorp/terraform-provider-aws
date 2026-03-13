@@ -89,7 +89,7 @@ func (d *dataSourceAssociateDisassociateIAMRole) Read(ctx context.Context, req d
 	var combinedARNs []dataSourceCompositeARNModel
 	data.CombinedARN.ElementsAs(ctx, &combinedARNs, false)
 
-	out, err := FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer())
+	out, err := FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx, conn, combinedARNs[0].ResourceARN.ValueString(), combinedARNs[0].IAMRoleARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameAssociateDisassociateIAMRole, data.CombinedARN.String(), err),
@@ -104,8 +104,8 @@ func (d *dataSourceAssociateDisassociateIAMRole) Read(ctx context.Context, req d
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, conn *odb.Client, resourceARN *string, roleARN *string) (*odbtypes.IamRole, error) {
-	parsedResourceARN, err := arn.Parse(*resourceARN)
+func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, conn *odb.Client, resourceARN string, roleARN string) (*odbtypes.IamRole, error) {
+	parsedResourceARN, err := arn.Parse(resourceARN)
 	if err != nil {
 		return nil, err
 	}
@@ -123,18 +123,12 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 		iamRolesList := out.CloudVmCluster.IamRoles
 
 		for _, element := range iamRolesList {
-			if element.IamRoleArn == roleARN {
+			if *element.IamRoleArn == roleARN {
 				//we found the correct role
-				var iamRole iamRoleResourceInternalDataSource
-				iamRole.iamRoleArn = element.IamRoleArn
-				iamRole.awsIntegration = element.AwsIntegration
-				iamRole.resourceARN = resourceARN
-				iamRole.statusReason = element.StatusReason
-				iamRole.status = element.Status
 				return &element, nil
 			}
 		}
-		err = errors.New("no IAM role found for the vm cluster : " + *resourceARN)
+		err = errors.New("no IAM role found for the vm cluster : " + resourceARN)
 		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
@@ -149,24 +143,18 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 			return nil, err
 		}
 		for _, element := range out.CloudAutonomousVmCluster.IamRoles {
-			if element.IamRoleArn == roleARN {
+			if *element.IamRoleArn == roleARN {
 				//We found a match
-				var iamRole iamRoleResourceInternalDataSource
-				iamRole.iamRoleArn = element.IamRoleArn
-				iamRole.awsIntegration = element.AwsIntegration
-				iamRole.resourceARN = resourceARN
-				iamRole.statusReason = element.StatusReason
-				iamRole.status = element.Status
 				return &element, nil
 			}
 		}
-		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + *resourceARN)
+		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + resourceARN)
 		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}
 	}
-	return nil, errors.New("IAM role association / disassociation not supported : " + *resourceARN)
+	return nil, errors.New("IAM role association / disassociation not supported : " + resourceARN)
 }
 
 type dataSourceAssociateDisassociateIAMRoleModel struct {
@@ -180,24 +168,4 @@ type dataSourceAssociateDisassociateIAMRoleModel struct {
 type dataSourceCompositeARNModel struct {
 	IAMRoleARN  types.String `tfsdk:"iam_role_arn"`
 	ResourceARN types.String `tfsdk:"resource_arn"`
-}
-type iamRoleResourceInternalDataSource struct {
-
-	// The Amazon Web Services integration configuration settings for the Amazon Web
-	// Services Identity and Access Management (IAM) service role.
-	awsIntegration odbtypes.SupportedAwsIntegration
-
-	// The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access
-	// Management (IAM) service role.
-	iamRoleArn *string
-
-	// The current status of the Amazon Web Services Identity and Access Management
-	// (IAM) service role.
-	status odbtypes.IamRoleStatus
-
-	// Additional information about the current status of the Amazon Web Services
-	// Identity and Access Management (IAM) service role, if applicable.
-	statusReason *string
-	//ARN of the resource for which the IAM role is configured.
-	resourceARN *string
 }

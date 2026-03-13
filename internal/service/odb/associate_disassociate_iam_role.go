@@ -114,7 +114,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARNs []dataSourceCompositeARNModel
+	var combinedARNs []resourceCompositeARNModel
 	plan.CompositeARN.ElementsAs(ctx, &combinedARNs, false)
 	var input odb.AssociateIamRoleToResourceInput
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
@@ -151,7 +151,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 		)
 		return
 	}
-	iamRoleOut, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, input.ResourceArn, input.IamRoleArn)
+	iamRoleOut, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, *input.ResourceArn, *input.IamRoleArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameAssociateDisassociateIAMRole, plan.CompositeARN.String(), err),
@@ -186,7 +186,7 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 		return
 	}
 
-	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer())
+	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARNs[0].ResourceARN.ValueString(), combinedARNs[0].IAMRoleARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -378,7 +378,7 @@ func waitAssociateDisassociateIAMRoleDeleted(ctx context.Context, conn *odb.Clie
 
 func statusAssociateDisassociateIAMRole(ctx context.Context, conn *odb.Client, resourceARN *string, roleARN *string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, resourceARN, roleARN)
+		out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, *resourceARN, *roleARN)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -390,8 +390,8 @@ func statusAssociateDisassociateIAMRole(ctx context.Context, conn *odb.Client, r
 	}
 }
 
-func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, conn *odb.Client, resourceARN *string, roleARN *string) (*odbtypes.IamRole, error) {
-	parsedResourceARN, err := arn.Parse(*resourceARN)
+func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, conn *odb.Client, resourceARN string, roleARN string) (*odbtypes.IamRole, error) {
+	parsedResourceARN, err := arn.Parse(resourceARN)
 	if err != nil {
 		return nil, err
 	}
@@ -409,18 +409,12 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 		iamRolesList := out.CloudVmCluster.IamRoles
 
 		for _, element := range iamRolesList {
-			if element.IamRoleArn == roleARN {
+			if *element.IamRoleArn == roleARN {
 				//we found the correct role
-				var iamRole iamRoleResourceInternal
-				iamRole.iamRoleArn = element.IamRoleArn
-				iamRole.awsIntegration = element.AwsIntegration
-				iamRole.resourceARN = resourceARN
-				iamRole.statusReason = element.StatusReason
-				iamRole.status = element.Status
 				return &element, nil
 			}
 		}
-		err = errors.New("no IAM role found for the vm cluster : " + *resourceARN)
+		err = errors.New("no IAM role found for the vm cluster : " + resourceARN)
 		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
@@ -435,24 +429,18 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			return nil, err
 		}
 		for _, element := range out.CloudAutonomousVmCluster.IamRoles {
-			if element.IamRoleArn == roleARN {
+			if *element.IamRoleArn == roleARN {
 				//We found a match
-				var iamRole iamRoleResourceInternal
-				iamRole.iamRoleArn = element.IamRoleArn
-				iamRole.awsIntegration = element.AwsIntegration
-				iamRole.resourceARN = resourceARN
-				iamRole.statusReason = element.StatusReason
-				iamRole.status = element.Status
 				return &element, nil
 			}
 		}
-		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + *resourceARN)
+		err = errors.New("no IAM role found for the cloud autonomous vm cluster : " + resourceARN)
 		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}
 	}
-	return nil, errors.New("IAM role association / disassociation not supported : " + *resourceARN)
+	return nil, errors.New("IAM role association / disassociation not supported : " + resourceARN)
 }
 
 type resourceAssociateDisassociateIAMRoleResourceModel struct {
@@ -468,25 +456,4 @@ type resourceAssociateDisassociateIAMRoleResourceModel struct {
 type resourceCompositeARNModel struct {
 	IAMRoleARN  types.String `tfsdk:"iam_role_arn"`
 	ResourceARN types.String `tfsdk:"resource_arn"`
-}
-
-type iamRoleResourceInternal struct {
-
-	// The Amazon Web Services integration configuration settings for the Amazon Web
-	// Services Identity and Access Management (IAM) service role.
-	awsIntegration odbtypes.SupportedAwsIntegration
-
-	// The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access
-	// Management (IAM) service role.
-	iamRoleArn *string
-
-	// The current status of the Amazon Web Services Identity and Access Management
-	// (IAM) service role.
-	status odbtypes.IamRoleStatus
-
-	// Additional information about the current status of the Amazon Web Services
-	// Identity and Access Management (IAM) service role, if applicable.
-	statusReason *string
-	//ARN of the resource for which the IAM role is configured.
-	resourceARN *string
 }

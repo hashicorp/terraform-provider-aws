@@ -25,12 +25,14 @@ type iamRoleAssociationDisassociationTest struct {
 
 var iamRoleAssociationDisassociationTestEntity = iamRoleAssociationDisassociationTest{}
 
-func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
+func TestAccODBAssociateDisassociateIAMRole_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
+	ignoreId := []string{
+		"id",
+	}
 	var associateDisassociateIAMRole odbtypes.IamRole
 	resourceName := "aws_odb_associate_disassociate_iam_role.test"
 
@@ -50,9 +52,28 @@ func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: ignoreId,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					rs, ok := state.RootModule().Resources[resourceName]
+					if !ok {
+						return "", errors.New("resource not found in state")
+					}
+
+					iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+					if !ok || iamRoleARN == "" {
+						return "", errors.New("missing composite_arn.0.iam_role_arn in state")
+					}
+
+					resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+					if !ok || resourceARN == "" {
+						return "", errors.New("missing composite_arn.0.resource_arn in state")
+					}
+
+					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
+				},
 			},
 		},
 	})
@@ -112,7 +133,7 @@ func testAccCheckAssociateDisassociateIAMRoleDestroy(ctx context.Context) resour
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, errors.New("IAM role ARN not found in state"))
 			}
 
-			_, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, &resourceARN, &iamRoleARN)
+			_, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, resourceARN, iamRoleARN)
 			if retry.NotFound(err) {
 				return nil
 			}
@@ -146,7 +167,7 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
-		resp, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, &resourceARN, &iamRoleARN)
+		resp, err := tfodb.FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, resourceARN, iamRoleARN)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameAssociateDisassociateIAMRole, rs.Primary.ID, err)
 		}
