@@ -38,6 +38,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -172,6 +173,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -206,6 +208,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -517,6 +520,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -575,6 +579,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -619,6 +624,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -645,6 +651,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -671,6 +678,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -724,6 +732,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sqs_queue_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -767,6 +776,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.step_function_state_machine_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -779,6 +789,135 @@ func targetParametersSchema() *schema.Schema {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+						},
+					},
+				},
+				"timestream_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"target_parameters.0.batch_job_parameters",
+						"target_parameters.0.cloudwatch_logs_parameters",
+						"target_parameters.0.ecs_task_parameters",
+						"target_parameters.0.eventbridge_event_bus_parameters",
+						"target_parameters.0.http_parameters",
+						"target_parameters.0.kinesis_stream_parameters",
+						"target_parameters.0.lambda_function_parameters",
+						"target_parameters.0.redshift_data_parameters",
+						"target_parameters.0.sagemaker_pipeline_parameters",
+						"target_parameters.0.sqs_queue_parameters",
+						"target_parameters.0.step_function_state_machine_parameters",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dimension_mapping": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimension_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"dimension_value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+										"dimension_value_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.DimensionValueType](),
+										},
+									},
+								},
+							},
+							"time_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"version_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"epoch_time_unit": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.EpochTimeUnit](),
+							},
+							"multi_measure_mapping": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"multi_measure_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"multi_measure_attribute_mapping": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"measure_value": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 2048),
+													},
+													"measure_value_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.MeasureValueType](),
+													},
+													"multi_measure_attribute_name": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"single_measure_mapping": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"measure_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"measure_value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 2048),
+										},
+										"measure_value_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.MeasureValueType](),
+										},
+									},
+								},
+							},
+							"time_field_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.TimeFieldType](),
+							},
+							"timestamp_format": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
 					},
@@ -798,6 +937,7 @@ func targetParametersSchema() *schema.Schema {
 						"target_parameters.0.redshift_data_parameters",
 						"target_parameters.0.sagemaker_pipeline_parameters",
 						"target_parameters.0.sqs_queue_parameters",
+						"target_parameters.0.timestream_parameters",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
