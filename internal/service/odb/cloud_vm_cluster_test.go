@@ -332,6 +332,44 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 	})
 }
 
+func TestAccODBCloudVmCluster_systemVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cloudvmcluster odbtypes.CloudVmCluster
+	vmcClusterDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	resourceName := "aws_odb_cloud_vm_cluster.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: vmClusterTestEntity.cloudVmClusterWithSystemVersion(vmcClusterDisplayName, publicKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
+					resource.TestCheckResourceAttr(resourceName, "system_version", "25.1.14.0.0.260206"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccODBCloudVmCluster_variables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -567,6 +605,49 @@ resource "aws_odb_cloud_vm_cluster" "test" {
     is_diagnostics_events_enabled = true
     is_health_monitoring_enabled  = true
     is_incident_logs_enabled      = true
+  }
+}
+`, exaInfra, odbNet, vmClusterDisplayName, sshKey)
+	return res
+}
+
+func (cloudVmClusterResourceTest) cloudVmClusterWithSystemVersion(vmClusterDisplayName, sshKey string) string {
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
+	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)
+	exaInfra := vmClusterTestEntity.exaInfra(exaInfraDisplayName)
+	odbNet := vmClusterTestEntity.oracleDBNetwork(odbNetDisplayName)
+
+	res := fmt.Sprintf(`
+
+%s
+
+%s
+
+
+data "aws_odb_db_servers" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["%[4]s"]
+  odb_network_id                  = aws_odb_network.test.id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.test.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  system_version                  = "25.1.14.0.0.260206"
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
   }
 }
 `, exaInfra, odbNet, vmClusterDisplayName, sshKey)

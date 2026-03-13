@@ -58,6 +58,7 @@ resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
   cluster_name                    = "julia-13"
   timezone                        = "UTC"
   scan_listener_port_tcp          = 1521
+  system_version                  = "25.1.14.0.0.260206"
   tags = {
     "env" = "dev"
   }
@@ -95,6 +96,7 @@ The following arguments are optional:
 * `license_model` - (Optional) The Oracle license model to apply to the VM cluster. Default: LICENSE_INCLUDED. Changing this will create a new resource.
 * `memory_size_in_gbs` - (Optional) The amount of memory, in gigabytes (GBs), to allocate for the VM cluster. Changing this will create a new resource.
 * `scan_listener_port_tcp` - (Optional) The port number for TCP connections to the single client access name (SCAN) listener. Valid values: 1024–8999, except 2484, 6100, 6200, 7060, 7070, 7085, and 7879. Default: 1521. Changing this will create a new resource.
+* `system_version` - (Optional) The operating system version of the image for the VM cluster. To get the list of valid values, use the `ListSystemVersions` operation, specifying the GI version and Exadata infrastructure shape. If not specified, the default system version is used. Changing this will create a new resource.
 * `timezone` - (Optional) The configured time zone of the VM cluster. Changing this will create a new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -123,7 +125,6 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - The current lifecycle status of the VM cluster.
 * `status_reason` - Additional information regarding the current status of the VM cluster.
 * `storage_size_in_gbs` - The local node storage allocated to the VM cluster, in gigabytes (GB).
-* `system_version` - The operating system version of the image chosen for the VM cluster.
 * `vip_ids` - The virtual IP (VIP) addresses assigned to the VM cluster. CRS assigns one VIP per node for failover support.
 * `created_at` - The timestamp when the VM cluster was created.
 * `gi_version_computed` - A complete software version of Oracle Grid Infrastructure (GI).
