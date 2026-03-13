@@ -1587,7 +1587,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.(?:amazonaws\.com|on\.aws)$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 				),
