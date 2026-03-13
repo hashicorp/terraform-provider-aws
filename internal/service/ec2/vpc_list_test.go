@@ -70,15 +70,15 @@ func TestAccVPC_List_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/VPC/list_basic"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), id1.Value()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), id1.ValueCheck()),
 					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), id2.Value()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), id2.ValueCheck()),
 					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity3.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks()), id3.Value()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks()), id3.ValueCheck()),
 					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks())),
 				},
 			},
@@ -135,19 +135,19 @@ func TestAccVPC_List_regionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        id3.Value(),
+						names.AttrID:        id3.ValueCheck(),
 					}),
 				},
 			},
@@ -211,25 +211,25 @@ func TestAccVPC_List_filtered(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected1.Value(),
+						names.AttrID:        expected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected2.Value(),
+						names.AttrID:        expected2.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected1.Value(),
+						names.AttrID:        notExpected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected2.Value(),
+						names.AttrID:        notExpected2.ValueCheck(),
 					}),
 				},
 			},
@@ -272,13 +272,13 @@ func TestAccVPC_List_DefaultVPC_exclude(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id.Value(),
+						names.AttrID:        id.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        defaultVPCID.Value(),
+						names.AttrID:        defaultVPCID.ValueCheck(),
 					}),
 				},
 			},
@@ -331,19 +331,19 @@ func TestAccVPC_List_vpcIDs(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id3.Value(),
+						names.AttrID:        id3.ValueCheck(),
 					}),
 				},
 			},
@@ -409,25 +409,25 @@ func TestAccVPC_List_filteredVPCIDs(t *testing.T) {
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected1.Value(),
+						names.AttrID:        expected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        expected2.Value(),
+						names.AttrID:        expected2.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected1.Value(),
+						names.AttrID:        notExpected1.ValueCheck(),
 					}),
 
 					querycheck.ExpectNoIdentity("aws_vpc.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        notExpected2.Value(),
+						names.AttrID:        notExpected2.ValueCheck(),
 					}),
 				},
 			},
