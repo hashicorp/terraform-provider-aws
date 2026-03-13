@@ -302,14 +302,30 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// Check for duplicate priority or name
+	// Check for existing rule with same name - adopt it if found
+	var existingRule *awstypes.Rule
+	for i, rule := range webACL.WebACL.Rules {
+		if aws.ToString(rule.Name) == plan.Name.ValueString() {
+			existingRule = &webACL.WebACL.Rules[i]
+			break
+		}
+	}
+
+	if existingRule != nil {
+		// Adopt existing rule - populate state and return
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, existingRule, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.WebACLARN = types.StringValue(plan.WebACLARN.ValueString())
+		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+		return
+	}
+
+	// Check for duplicate priority (only for new rules)
 	for _, rule := range webACL.WebACL.Rules {
 		if rule.Priority == plan.Priority.ValueInt32() {
 			smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("rule with priority %d already exists in Web ACL", plan.Priority.ValueInt32())), smerr.ID, plan.Name.ValueString())
-			return
-		}
-		if aws.ToString(rule.Name) == plan.Name.ValueString() {
-			smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("rule with name %s already exists in Web ACL", plan.Name.ValueString())), smerr.ID, plan.Name.ValueString())
 			return
 		}
 	}
