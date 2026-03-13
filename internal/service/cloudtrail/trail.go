@@ -218,6 +218,14 @@ func resourceTrail() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"event_categories": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[types.SourceEventCategory](),
+							},
+						},
 						"insight_type": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -893,6 +901,13 @@ func expandInsightSelector(configured []any) []types.InsightSelector {
 		is := types.InsightSelector{
 			InsightType: types.InsightType(data["insight_type"].(string)),
 		}
+
+		if v, ok := data["event_categories"].([]any); ok && len(v) > 0 {
+			for _, c := range v {
+				is.EventCategories = append(is.EventCategories, types.SourceEventCategory(c.(string)))
+			}
+		}
+
 		insightSelectors = append(insightSelectors, is)
 	}
 
@@ -905,6 +920,12 @@ func flattenInsightSelector(configured []types.InsightSelector) []map[string]any
 	for _, raw := range configured {
 		item := make(map[string]any)
 		item["insight_type"] = raw.InsightType
+
+		cats := make([]string, 0, len(raw.EventCategories))
+		for _, c := range raw.EventCategories {
+			cats = append(cats, string(c))
+		}
+		item["event_categories"] = cats
 
 		insightSelectors = append(insightSelectors, item)
 	}
