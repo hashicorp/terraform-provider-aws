@@ -121,7 +121,7 @@ var (
 	}
 )
 
-func checkEngineEquivalent(diff getChangeDiffer) (bool, error) {
+func checkCrossEngineEquivalent(diff getChangeDiffer) (bool, error) {
 	o, n := diff.GetChange(names.AttrEngineVersion)
 	oEngine, nEngine := diff.GetChange(names.AttrEngine)
 	oVersion, err := normalizeEngineVersion(o.(string))
@@ -158,7 +158,7 @@ func customizeDiffEngineForceNewOnDowngrade() schema.CustomizeDiffFunc {
 			return false
 		}
 
-		if equivalent, _ := checkEngineEquivalent(diff); equivalent {
+		if equivalent, _ := checkCrossEngineEquivalent(diff); equivalent {
 			return false
 		}
 
@@ -169,24 +169,6 @@ func customizeDiffEngineForceNewOnDowngrade() schema.CustomizeDiffFunc {
 type getChangeDiffer interface {
 	Get(key string) any
 	GetChange(key string) (any, any)
-}
-
-func engineMajorVersionIsEqual(diff getChangeDiffer) (bool, error) {
-	o, n := diff.GetChange(names.AttrEngineVersion)
-	oVersion, err := normalizeEngineVersion(o.(string))
-	if err != nil {
-		return false, fmt.Errorf("parsing old engine_version: %w", err)
-	}
-	nVersion, err := normalizeEngineVersion(n.(string))
-	if err != nil {
-		return false, fmt.Errorf("parsing new engine_version: %w", err)
-	}
-
-	if majorVersionEqual := oVersion.Segments()[0] == nVersion.Segments()[0]; majorVersionEqual {
-		return majorVersionEqual, nil
-	}
-
-	return false, nil
 }
 
 func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
@@ -220,6 +202,12 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 		return false, fmt.Errorf("parsing new engine_version: %w", err)
 	}
 
+	if oVersion.Segments()[0] == nVersion.Segments()[0] {
+		if equivalent, _ := checkCrossEngineEquivalent(diff); equivalent {
+			return false, nil
+		}
+	}
+
 	return nVersion.LessThan(oVersion), nil
 }
 
@@ -244,12 +232,6 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 	if downgrade, err := engineVersionIsDowngrade(diff); err != nil {
 		return err
 	} else if !downgrade {
-		return nil
-	}
-
-	if majorVersionEqual, err := engineMajorVersionIsEqual(diff); err != nil {
-		return err
-	} else if majorVersionEqual {
 		return nil
 	}
 
