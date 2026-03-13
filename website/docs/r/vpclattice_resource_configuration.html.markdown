@@ -88,6 +88,43 @@ resource "aws_vpclattice_resource_configuration" "example" {
 }
 ```
 
+### GROUP type with group domain
+
+```terraform
+resource "aws_vpclattice_domain_verification" "group" {
+  domain_name = "example.com"
+}
+
+resource "aws_vpclattice_resource_configuration" "group" {
+  name = "Group Example"
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.example.id
+  type                        = "GROUP"
+  custom_domain_name          = "example.com"
+  domain_verification_id      = aws_vpclattice_domain_verification.group.id
+
+  protocol    = "TCP"
+  port_ranges = ["443"]
+}
+
+resource "aws_vpclattice_resource_configuration" "child" {
+  name = "Child Example"
+
+  resource_configuration_group_id = aws_vpclattice_resource_configuration.group.id
+  type                           = "CHILD"
+  custom_domain_name             = "child.example.com"
+
+  port_ranges = ["80"]
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "backend.example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+```
+
 ### ARN Example
 
 ```terraform
@@ -118,8 +155,8 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allow_association_to_shareable_service_network` (Optional) Allow or Deny the association of this resource to a shareable service network.
-* `custom_domain_name` - (Optional) Custom domain name for your resource configuration. Additionally, provide a `domain_verification_id` to prove your ownership of a domain.
-* `domain_verification_id` - (Optional) The domain verification ID of your verified custom domain name. If you don't provide an ID, you must configure the DNS settings yourself.
+* `custom_domain_name` - (Optional) Domain name for your resource configuration. For `GROUP` type resource configurations, this specifies the group domain. For other types (`CHILD`, `SINGLE`, `ARN`), this specifies a custom domain name. Additionally, provide a `domain_verification_id` to prove your ownership of a domain. For `CHILD` type resource configurations, the custom domain must be a subdomain of the parent group's domain.
+* `domain_verification_id` - (Optional) The domain verification ID of your verified domain name. If you don't provide an ID, you must configure the DNS settings yourself.
 * `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resource_configuration_group_id` is not.
 * `resource_configuration_group_id` (Optional) ID of Resource Configuration where `type` is `CHILD`.
 * `resource_gateway_identifier` - (Optional) ID of the Resource Gateway used to access the resource. MUST be specified if `resource_configuration_group_id` is not.
