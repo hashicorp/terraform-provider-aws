@@ -70,9 +70,6 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 			},
 			"baseline_version": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"operation_identifier": schema.StringAttribute{
 				Computed: true,
