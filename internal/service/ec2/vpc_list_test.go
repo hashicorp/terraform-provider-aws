@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,6 +33,10 @@ func TestAccVPC_List_basic(t *testing.T) {
 	id2 := tfstatecheck.StateValue()
 	id3 := tfstatecheck.StateValue()
 
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+	identity3 := tfstatecheck.Identity()
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
@@ -44,12 +50,15 @@ func TestAccVPC_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPC/list_basic"),
 				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
 					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 
+					identity2.GetIdentity(resourceName2),
 					id2.GetStateValue(resourceName2, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName2, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 
+					identity3.GetIdentity(resourceName3),
 					id3.GetStateValue(resourceName3, tfjsonpath.New(names.AttrID)),
 					tfstatecheck.ExpectRegionalARNFormat(resourceName3, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
 				},
@@ -60,23 +69,17 @@ func TestAccVPC_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/VPC/list_basic"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id1.Value(),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), id1.Value()),
+					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
-					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id2.Value(),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), id2.Value()),
+					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 
-					querycheck.ExpectIdentity("aws_vpc.test", map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        id3.Value(),
-					}),
+					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity3.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks()), id3.Value()),
+					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks())),
 				},
 			},
 		},
