@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_emrcontainers_job_template: Add `parameter_configuration` attribute to `job_template_data`
+```
