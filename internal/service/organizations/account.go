@@ -338,8 +338,8 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if close {
-		if _, err := waitAccountDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for AWS Organizations Account (%s) delete: %s", d.Id(), err)
+		if _, err := waitAccountCloseInitiated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for AWS Organizations Account (%s) close initiation: %s", d.Id(), err)
 		}
 	}
 
@@ -482,11 +482,11 @@ func statusCreateAccountState(conn *organizations.Client, id string) retry.State
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
 		if err != nil {
+			if retry.NotFound(err) {
+				return nil, "", nil
+			}
+
 			return nil, "", err
 		}
 
@@ -520,11 +520,11 @@ func statusAccountState(conn *organizations.Client, id string) retry.StateRefres
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
 		if err != nil {
+			if retry.NotFound(err) {
+				return nil, "", nil
+			}
+
 			return nil, "", err
 		}
 
@@ -542,6 +542,32 @@ func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id stri
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Account); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAccountCloseInitiated(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.Account, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.AccountStateActive,
+		),
+		Target: enum.Slice(
+			awstypes.AccountStatePendingClosure,
+		),
+		Refresh:      statusAccountState(ctx, conn, id),
+		PollInterval: 10 * time.Second,
+		Timeout:      timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if retry.NotFound(err) {
+		return nil, nil
+	}
 
 	if output, ok := outputRaw.(*awstypes.Account); ok {
 		return output, err
