@@ -112,10 +112,291 @@ func testAccAdminAccountExists(ctx context.Context, t *testing.T, n string) reso
 	}
 }
 
+func testAccAdminAccount_adminScope_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_adminScope_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.0.all_regions_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAdminAccount_adminScope_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_adminScope_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.0.all_regions_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccAdminAccountConfig_adminScope_regionScope,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.0.all_regions_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.0.regions.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAdminAccount_adminScope_regionScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_adminScope_regionScope,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.0.all_regions_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.region_scope.0.regions.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAdminAccount_adminScope_policyTypeScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_adminScope_policyTypeScope,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.policy_type_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.policy_type_scope.0.all_policy_types_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.policy_type_scope.0.policy_types.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAdminAccount_adminScope_accountScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_adminScope_accountScope,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.account_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.account_scope.0.all_accounts_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAdminAccount_adminScope_ouScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_adminScope_ouScope,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.organizational_unit_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_scope.0.organizational_unit_scope.0.all_organizational_units_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 const testAccAdminAccountConfig_basic = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_fms_admin_account" "test" {
   account_id = data.aws_caller_identity.current.account_id
+}
+`
+
+const testAccAdminAccountConfig_adminScope_basic = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+
+  admin_scope {
+    region_scope {
+      all_regions_enabled = true
+    }
+  }
+}
+`
+
+const testAccAdminAccountConfig_adminScope_regionScope = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+
+  admin_scope {
+    region_scope {
+      regions             = ["us-east-1", "us-west-2"]
+      all_regions_enabled = false
+    }
+  }
+}
+`
+
+const testAccAdminAccountConfig_adminScope_policyTypeScope = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+
+  admin_scope {
+    policy_type_scope {
+      policy_types              = ["WAF", "WAFV2"]
+      all_policy_types_enabled  = false
+    }
+  }
+}
+`
+
+const testAccAdminAccountConfig_adminScope_accountScope = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+
+  admin_scope {
+    account_scope {
+      all_accounts_enabled = true
+    }
+  }
+}
+`
+
+const testAccAdminAccountConfig_adminScope_ouScope = `
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+
+  admin_scope {
+    organizational_unit_scope {
+      all_organizational_units_enabled = true
+    }
+  }
 }
 `
