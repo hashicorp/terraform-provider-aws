@@ -230,10 +230,10 @@ func testAccTopicConfig_basic(rName, clusterName string, partitionCount, replica
 resource "aws_msk_topic" "test" {
   name               = %[1]q
   cluster_arn        = aws_msk_cluster.test.arn
-  partition_count    = %[3]d
-  replication_factor = %[4]d
+  partition_count    = %[2]d
+  replication_factor = %[3]d
 }
-`, rName, clusterName, partitionCount, replicationFactor))
+`, rName, partitionCount, replicationFactor))
 }
 
 func testAccTopicConfig_configs(rName, clusterName string) string {
@@ -251,7 +251,7 @@ resource "aws_msk_topic" "test" {
     "min.insync.replicas" = "2"
   })
 }
-`, rName, clusterName))
+`, rName))
 }
 
 func testAccTopicConfig_configsUpdate(rName, clusterName string) string {
@@ -270,5 +270,5 @@ resource "aws_msk_topic" "test" {
     "min.insync.replicas" = "3",
   })
 }
-`, rName, clusterName))
+`, rName))
 }
