@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -230,18 +229,13 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"cloudwatch_metrics_enabled": schema.BoolAttribute{
-							Optional: true,
-							Computed: true,
-							Default:  booldefault.StaticBool(true),
+							Required: true,
 						},
 						names.AttrMetricName: schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Required: true,
 						},
 						"sampled_requests_enabled": schema.BoolAttribute{
-							Optional: true,
-							Computed: true,
-							Default:  booldefault.StaticBool(true),
+							Required: true,
 						},
 					},
 				},

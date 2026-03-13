@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -169,7 +168,8 @@ func managedRuleGroupStatementBlock(ctx context.Context) schema.ListNestedBlock 
 					},
 				},
 				names.AttrVersion: schema.StringAttribute{
-					Optional:    true,
+					Optional: true,
+					//Computed:    true,
 					Description: "Version of the managed rule group.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 128),
@@ -230,7 +230,7 @@ func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
 				"evaluation_window_sec": schema.Int64Attribute{
 					Optional:    true,
 					Computed:    true,
-					Description: "Time window for AWS WAF to use to check the rate (60, 120, 300, 600). Default: 300.",
+					Description: "Time window for AWS WAF to use to check the rate (60, 120, 300, 600).",
 					Validators: []validator.Int64{
 						int64validator.OneOf(60, 120, 300, 600),
 					},
@@ -283,11 +283,11 @@ func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"sensitivity_level": schema.StringAttribute{
-					CustomType:  fwtypes.StringEnumType[awstypes.SensitivityLevel](),
-					Optional:    true,
-					Computed:    true,
-					Default:     stringdefault.StaticString(string(awstypes.SensitivityLevelLow)),
-					Description: "Sensitivity level for detecting SQL injection attacks. Valid values: `HIGH`, `LOW`. Defaults to `LOW`.",
+					CustomType: fwtypes.StringEnumType[awstypes.SensitivityLevel](),
+					Optional:   true,
+					Computed:   true,
+					//Default:     stringdefault.StaticString(string(awstypes.SensitivityLevelLow)),
+					Description: "Sensitivity level for detecting SQL injection attacks. Valid values: `HIGH`, `LOW`.",
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -418,13 +418,17 @@ func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 			Attributes: map[string]schema.Attribute{
 				"login_path": schema.StringAttribute{
 					Optional: true,
+					//Computed:           true,
+					DeprecationMessage: "Use aws_managed_rules_atp_rule_set login_path",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 256),
 					},
 				},
 				"payload_type": schema.StringAttribute{
-					CustomType: fwtypes.StringEnumType[awstypes.PayloadType](),
-					Optional:   true,
+					CustomType:         fwtypes.StringEnumType[awstypes.PayloadType](),
+					Optional:           true,
+					Computed:           true,
+					DeprecationMessage: "Use aws_managed_rules_atp_rule_set request_inspection payload_type",
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -432,8 +436,8 @@ func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 				"aws_managed_rules_anti_ddos_rule_set":   awsManagedRulesAntiDDoSRuleSetBlock(ctx),
 				"aws_managed_rules_atp_rule_set":         awsManagedRulesATPRuleSetBlock(ctx),
 				"aws_managed_rules_bot_control_rule_set": awsManagedRulesBotControlRuleSetBlock(ctx),
-				"password_field":                         identifierFieldBlock(ctx),
-				"username_field":                         identifierFieldBlock(ctx),
+				"password_field":                         identifierFieldBlockDeprecated(ctx, "Use aws_managed_rules_atp_rule_set request_inspection password_field"),
+				"username_field":                         identifierFieldBlockDeprecated(ctx, "Use aws_managed_rules_atp_rule_set request_inspection username_field"),
 			},
 		},
 	}
@@ -453,6 +457,24 @@ func identifierFieldBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 		},
+	}
+}
+
+func identifierFieldBlockDeprecated(ctx context.Context, deprecationMessage string) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifierFieldModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrIdentifier: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 512),
+					},
+				},
+			},
+		},
+		DeprecationMessage: deprecationMessage,
 	}
 }
 
@@ -480,6 +502,7 @@ func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNeste
 			Attributes: map[string]schema.Attribute{
 				"enable_machine_learning": schema.BoolAttribute{
 					Optional: true,
+					Computed: true, // legacy has a default of false but API default is true, so we set to computed to avoid drift
 				},
 				"inspection_level": schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.InspectionLevel](),
@@ -600,7 +623,7 @@ func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"regex_string": schema.StringAttribute{
-								Optional: true,
+								Optional: true, // required if usage_of_action is set to ENABLED
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 512),
 								},
@@ -906,8 +929,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 							"oversize_handling": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Optional:   true,
-								Computed:   true,
-								Default:    stringdefault.StaticString(string(awstypes.OversizeHandlingContinue)),
+								Computed:   true, // legacy has a default of CONTINUE
+								//Default:    stringdefault.StaticString(string(awstypes.OversizeHandlingContinue)),
 							},
 						},
 					},
@@ -1048,8 +1071,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 							"oversize_handling": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
 								Optional:   true,
-								Computed:   true,
-								Default:    stringdefault.StaticString(string(awstypes.OversizeHandlingContinue)),
+								Computed:   true, // legacy has a default of CONTINUE
+								//Default:    stringdefault.StaticString(string(awstypes.OversizeHandlingContinue)),
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -1062,6 +1085,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 											CustomType:  fwtypes.ListOfStringType,
 											ElementType: types.StringType,
 											Optional:    true,
+											Computed:    true,
 										},
 									},
 									Blocks: map[string]schema.Block{
