@@ -6,12 +6,12 @@ package workmail
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -25,10 +25,16 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_workmail_domain", name="Domain")
+// @IdentityAttribute("organization_id")
+// @IdentityAttribute("domain_name")
+// @ImportIDHandler("domainImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttributes="organization_id;domain_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainResource{}
 
@@ -43,6 +49,7 @@ const (
 type domainResource struct {
 	framework.ResourceWithModel[domainResourceModel]
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -169,17 +176,6 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *domainResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, domainIDParts, false)
-	if err != nil {
-		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[1])...)
-}
-
 func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, domainName string) (*workmail.GetMailDomainOutput, error) {
 	input := workmail.GetMailDomainInput{
 		OrganizationId: aws.String(orgID),
@@ -214,6 +210,26 @@ func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, d
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = domainImportID{}
+)
+
+type domainImportID struct{}
+
+func (domainImportID) Parse(id string) (string, map[string]any, error) {
+	orgID, domainName, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <organization-id>%s<domain-name>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		"organization_id":    orgID,
+		names.AttrDomainName: domainName,
+	}
+
+	return id, result, nil
 }
 
 type domainResourceModel struct {
