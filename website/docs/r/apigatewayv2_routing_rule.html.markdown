@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `domain_name_id` - (Optional) The identifier of the domain name. Supported only for private custom domain names.
 * `priority` - (Optional) The order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
@@ -90,7 +91,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway V2 Routing Rule using the `routing_rule_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway V2 Routing Rule using the `routing_rule_arn` or `routing_rule_arn` and `domain_name_id` (for private custom domain names). For example:
 
 ```terraform
 import {
@@ -99,8 +100,23 @@ import {
 }
 ```
 
-Using `terraform import`, import API Gateway V2 Routing Rule using the `routing_rule_arn`. For example:
+For a private custom domain name:
+
+```terraform
+import {
+  to = aws_apigatewayv2_routing_rule.example
+  id = "arn:aws:apigateway:us-east-1:123456789012:/domainnames/api.internal.example.com+abcde12345/routingrules/rule1"
+}
+```
+
+Using `terraform import`, import API Gateway V2 Routing Rule using the `routing_rule_arn` or `routing_rule_arn` and `domain_name_id` (for private custom domain names). For example:
 
 ```console
 % terraform import aws_apigatewayv2_routing_rule.example arn:aws:apigateway:us-east-1:123456789012:/domainnames/example.com/routingrules/rule1
+```
+
+For a private custom domain name:
+
+```console
+% terraform import aws_apigatewayv2_routing_rule.example arn:aws:apigateway:us-east-1:123456789012:/domainnames/internal.example.com+abcde12345/routingrules/rule1
 ```

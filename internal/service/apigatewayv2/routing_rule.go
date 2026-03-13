@@ -60,6 +60,9 @@ func (r *routingRuleResource) Schema(ctx context.Context, req resource.SchemaReq
 					int32validator.Between(1, 1000000),
 				},
 			},
+			"domain_name_id": schema.StringAttribute{
+				Optional: true,
+			},
 			"routing_rule_arn": framework.ARNAttributeComputedOnly(),
 			"routing_rule_id":  framework.IDAttribute(),
 		},
@@ -203,8 +206,9 @@ func (r *routingRuleResource) Read(ctx context.Context, req resource.ReadRequest
 
 	conn := r.Meta().APIGatewayV2Client(ctx)
 
-	domainName, ruleID := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.RoutingRuleID)
-	out, err := findRoutingRuleByTwoPartKey(ctx, conn, domainName, ruleID)
+	domainName, domainNameId, ruleID := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.DomainNameId), fwflex.StringValueFromFramework(ctx, state.RoutingRuleID)
+
+	out, err := findRoutingRuleByThreePartKey(ctx, conn, domainName, domainNameId, ruleID)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -266,11 +270,16 @@ func (r *routingRuleResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	conn := r.Meta().APIGatewayV2Client(ctx)
 
-	domainName, ruleID := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.RoutingRuleID)
+	domainName, domainNameId, ruleID := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.DomainNameId), fwflex.StringValueFromFramework(ctx, state.RoutingRuleID)
 	input := apigatewayv2.DeleteRoutingRuleInput{
 		DomainName:    aws.String(domainName),
 		RoutingRuleId: aws.String(ruleID),
 	}
+
+	if domainNameId != "" {
+		input.DomainNameId = aws.String(domainNameId)
+	}
+
 	_, err := conn.DeleteRoutingRule(ctx, &input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return
@@ -282,7 +291,8 @@ func (r *routingRuleResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *routingRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	domainName, ruleID, err := parseRoutingRuleARN(req.ID)
+
+	domainName, domainNameId, ruleID, err := parseRoutingRuleARN(req.ID)
 	if err != nil {
 		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
@@ -290,12 +300,20 @@ func (r *routingRuleResource) ImportState(ctx context.Context, req resource.Impo
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), domainName)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("routing_rule_id"), ruleID)...)
+
+	if domainNameId != "" {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name_id"), domainNameId)...)
+	}
 }
 
-func findRoutingRuleByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, domainName, ruleID string) (*apigatewayv2.GetRoutingRuleOutput, error) {
+func findRoutingRuleByThreePartKey(ctx context.Context, conn *apigatewayv2.Client, domainName, domainNameId, ruleID string) (*apigatewayv2.GetRoutingRuleOutput, error) {
 	input := apigatewayv2.GetRoutingRuleInput{
 		DomainName:    aws.String(domainName),
 		RoutingRuleId: aws.String(ruleID),
+	}
+
+	if domainNameId != "" {
+		input.DomainNameId = aws.String(domainNameId)
 	}
 
 	return findRoutingRule(ctx, conn, &input)
@@ -321,19 +339,32 @@ func findRoutingRule(ctx context.Context, conn *apigatewayv2.Client, input *apig
 	return output, nil
 }
 
-func parseRoutingRuleARN(v string) (string, string, error) {
+func parseRoutingRuleARN(v string) (string, string, string, error) {
 	// arn:${Partition}:apigateway:${Region}:${Account}:/domainnames/${DomainName}/routingrules/${RoutingRuleId}
+	//
+	// OR for Private Domains
+	//
+	// arn:${Partition}:apigateway:${Region}:${Account}:/domainnames/${DomainName}+${DomainNameId}/routingrules/${RoutingRuleId}
 	arn, err := arn.Parse(v)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	parts := strings.Split(strings.TrimPrefix(arn.Resource, "/domainnames/"), "/routingrules/")
 	if len(parts) != 2 {
-		return "", "", errors.New("invalid routing rule ARN")
+		return "", "", "", errors.New("invalid routing rule ARN")
 	}
 
-	return parts[0], parts[1], nil
+	domainName := parts[0]
+	domainNameId := ""
+
+	lastIndex := strings.LastIndex(domainName, "+")
+	if lastIndex >= 0 {
+		domainNameId = domainName[lastIndex+1:]
+		domainName = domainName[:lastIndex]
+	}
+
+	return domainName, domainNameId, parts[1], nil
 }
 
 type routingRuleResourceModel struct {
@@ -341,6 +372,7 @@ type routingRuleResourceModel struct {
 	Actions        fwtypes.ListNestedObjectValueOf[routingRuleActionModel]    `tfsdk:"action"`
 	Conditions     fwtypes.ListNestedObjectValueOf[routingRuleConditionModel] `tfsdk:"condition"`
 	DomainName     types.String                                               `tfsdk:"domain_name"`
+	DomainNameId   types.String                                               `tfsdk:"domain_name_id"`
 	Priority       types.Int32                                                `tfsdk:"priority"`
 	RoutingRuleARN types.String                                               `tfsdk:"routing_rule_arn"`
 	RoutingRuleID  types.String                                               `tfsdk:"routing_rule_id"`
