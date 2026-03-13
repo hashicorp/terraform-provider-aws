@@ -1723,6 +1723,17 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 	return findNetworkACL(ctx, conn, &input)
 }
 
+func batchFindVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
+	input := ec2.DescribeNetworkAclsInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"default": {"true"},
+			"vpc-id":  ids,
+		}),
+	}
+
+	return batchFindNetworkACL(ctx, conn, &input)
+}
+
 func findNATGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*awstypes.NatGateway, error) {
 	output, err := findNATGateways(ctx, conn, input)
 
@@ -1848,6 +1859,21 @@ func findNetworkACL(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNe
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func batchFindNetworkACL(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (map[string]*awstypes.NetworkAcl, error) {
+	output, err := findNetworkACLs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.NetworkAcl, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
 }
 
 func findNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
