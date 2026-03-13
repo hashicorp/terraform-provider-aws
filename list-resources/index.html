@@ -1,0 +1,1673 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../resource-identity/">
+      
+      
+        <link rel="next" href="../retries-and-waiters/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>List Resources - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#enabling-list-resource-support" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              List Resources
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Add a New AWS Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Add a New Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Add a New Data Source Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Add a New Ephemeral Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Add a New Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-list-resource/" class="md-nav__link">
+        Add a New List Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        Add a New AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-resource-identity-support/" class="md-nav__link">
+        Add Resource Identity Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Add Resource Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-generation/" class="md-nav__link">
+        Generated Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-usage/" class="md-nav__link">
+        AI Usage
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agents/" class="md-nav__link">
+        AI Agents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-expanded="false">
+          AI Agent Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="AI Agent Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          AI Agent Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/go-vcr-migration/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/list-resource/" class="md-nav__link">
+        List Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/arn-based-resource-identity/" class="md-nav__link">
+        Resource Identity (ARN-based)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/parameterized-resource-identity/" class="md-nav__link">
+        Resource Identity (Parameterized)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/smarterr/" class="md-nav__link">
+        Smarterr
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-identity/" class="md-nav__link">
+        Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          List Resources
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        List Resources
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#concepts" class="md-nav__link">
+    Concepts
+  </a>
+  
+    <nav class="md-nav" aria-label="Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relationship-to-other-resources" class="md-nav__link">
+    Relationship to Other Resources
+  </a>
+  
+    <nav class="md-nav" aria-label="Relationship to Other Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strong-entity" class="md-nav__link">
+    Strong Entity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weak-entity" class="md-nav__link">
+    Weak Entity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#property-entity" class="md-nav__link">
+    Property Entity
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-api-patterns" class="md-nav__link">
+    AWS API Patterns
+  </a>
+  
+    <nav class="md-nav" aria-label="AWS API Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-or-one" class="md-nav__link">
+    All-Or-One
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-or-some" class="md-nav__link">
+    All-Or-Some
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-list" class="md-nav__link">
+    Summary List
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-considerations" class="md-nav__link">
+    Terraform Considerations
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manageable-resources" class="md-nav__link">
+    Manageable Resources
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#special-case-resource-types" class="md-nav__link">
+    "Special Case" Resource Types
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    Implementation
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-framework" class="md-nav__link">
+    Plugin Framework
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-sdk" class="md-nav__link">
+    Plugin SDK
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-testing" class="md-nav__link">
+    Acceptance Testing
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests-to-create" class="md-nav__link">
+    Tests to Create
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-configuration" class="md-nav__link">
+    Test Configuration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#concepts" class="md-nav__link">
+    Concepts
+  </a>
+  
+    <nav class="md-nav" aria-label="Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relationship-to-other-resources" class="md-nav__link">
+    Relationship to Other Resources
+  </a>
+  
+    <nav class="md-nav" aria-label="Relationship to Other Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strong-entity" class="md-nav__link">
+    Strong Entity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weak-entity" class="md-nav__link">
+    Weak Entity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#property-entity" class="md-nav__link">
+    Property Entity
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-api-patterns" class="md-nav__link">
+    AWS API Patterns
+  </a>
+  
+    <nav class="md-nav" aria-label="AWS API Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-or-one" class="md-nav__link">
+    All-Or-One
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-or-some" class="md-nav__link">
+    All-Or-Some
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-list" class="md-nav__link">
+    Summary List
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-considerations" class="md-nav__link">
+    Terraform Considerations
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manageable-resources" class="md-nav__link">
+    Manageable Resources
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#special-case-resource-types" class="md-nav__link">
+    "Special Case" Resource Types
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    Implementation
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-framework" class="md-nav__link">
+    Plugin Framework
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-sdk" class="md-nav__link">
+    Plugin SDK
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-testing" class="md-nav__link">
+    Acceptance Testing
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tests-to-create" class="md-nav__link">
+    Tests to Create
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-configuration" class="md-nav__link">
+    Test Configuration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<h1 id="enabling-list-resource-support">Enabling List Resource Support<a class="headerlink" href="#enabling-list-resource-support" title="Permanent link">#</a></h1>
+<p>Terraform version 1.14 introduced resource queries using the <code>list</code> block.</p>
+<h2 id="concepts">Concepts<a class="headerlink" href="#concepts" title="Permanent link">#</a></h2>
+<p>In order to implement the List Resource for a remote resource type,
+the remote resource type must be categorized on several axes:
+relationship to other resources,
+how the AWS API works, and
+Terraform considerations.</p>
+<h3 id="relationship-to-other-resources">Relationship to Other Resources<a class="headerlink" href="#relationship-to-other-resources" title="Permanent link">#</a></h3>
+<p>The relationship to other resources influences the design of the List Resource, as well as the resource type's Resource Identity.</p>
+<p>This section will borrow terms from the <a href="https://en.wikipedia.org/wiki/Entity–relationship_model">Entity-Relationship model</a> for database design.
+The differentiating factor for List Resource implementation is that it is solely based on identifiers used for reading the remote resource,
+rather than any relationship as in databases.</p>
+<h4 id="strong-entity">Strong Entity<a class="headerlink" href="#strong-entity" title="Permanent link">#</a></h4>
+<p>A <strong>strong entity</strong> is a resource type that can be read or listed using only its own identity information.
+It is still a strong entity if it must be associated with another resource, if that other resource's identifier is not needed for reading or listing.</p>
+<p>For example, an EC2 Instance (<code>aws_instance</code>) can be read using only its <code>InstanceID</code>, so it is a <strong>strong entity</strong>, even though it must reside in a VPC Subnet, which is contained in a VPC.</p>
+<h4 id="weak-entity">Weak Entity<a class="headerlink" href="#weak-entity" title="Permanent link">#</a></h4>
+<p>A <strong>weak entity</strong> is a resource type that cannot be read or listed using only its own identity information, and also requires the identifier of an associated resource.</p>
+<p>For example, an ELB Listener (<code>aws_lb_listener</code>) can only be returned in a list operation by including the containing ELB Load Balancer's ARN, so it is a <strong>weak entity</strong>.</p>
+<h4 id="property-entity">Property Entity<a class="headerlink" href="#property-entity" title="Permanent link">#</a></h4>
+<p>A property entity is a resource type that models a property of an associated resource in a 1:1 or 1:[0,1] relationship.
+Property entities with a 1:[0,1] relationship can be called an <strong>optional property entity</strong>.
+This is a special case of a <strong>weak entity</strong>.
+Note that this is not a concept from the Entity-Relationship model.</p>
+<p>For example, the S3 Bucket (<code>aws_s3_bucket</code>) has many properties modelled as separate resources, such as Bucket ACLs (<code>aws_s3_bucket_acl</code>), and Bucket Policies (<code>aws_s3_bucket_policy</code>).
+A Bucket Policy is only created if the user requests one, so it is an <strong>optional property entity</strong>.</p>
+<h3 id="aws-api-patterns">AWS API Patterns<a class="headerlink" href="#aws-api-patterns" title="Permanent link">#</a></h3>
+<p>The AWS APIs used to list remote resources follow several patterns.</p>
+<h4 id="all-or-one">All-Or-One<a class="headerlink" href="#all-or-one" title="Permanent link">#</a></h4>
+<p>The AWS request can be used either to retrieve a single remote resource when an identifier is supplied, or all remote resources when no identifier is supplied.</p>
+<h4 id="all-or-some">All-Or-Some<a class="headerlink" href="#all-or-some" title="Permanent link">#</a></h4>
+<p>The AWS request can be used either to retrieve a set of remote resource when a set of identifiers is supplied, or all remote resources when no identifiers are supplied.</p>
+<h4 id="summary-list">Summary List<a class="headerlink" href="#summary-list" title="Permanent link">#</a></h4>
+<p>The AWS API responds with a subset of remote resource information.
+Subsequent API calls are required to retrieve full resource information.</p>
+<p>A simple, very common example of this is when resource tags are not returned by the list call,
+and they must be retrieved using a separate API call.</p>
+<h3 id="terraform-considerations">Terraform Considerations<a class="headerlink" href="#terraform-considerations" title="Permanent link">#</a></h3>
+<p>In some cases, how the AWS provider manages a resource type will influence the implementation of the List Resource.</p>
+<h4 id="manageable-resources">Manageable Resources<a class="headerlink" href="#manageable-resources" title="Permanent link">#</a></h4>
+<p>A <strong>manageable resource</strong> is a remote resource than <em>can</em> be brought into Terraform management.
+In most cases, all remote resources of a resource type are <strong>manageable resources</strong>.
+However, in some cases, AWS defines a set of default instances that cannot be modified by users.</p>
+<p>For example, RDS and other RDS-derived services define a set of default Parameter Groups, which represent a set of datastore configuration parameters.
+Users can create custom Parameter Groups but cannot make any changes to the defaults.
+These default parameter groups would be <strong>non-manageable resources</strong>, and therefore should be neither importable nor listable.</p>
+<h4 id="special-case-resource-types">"Special Case" Resource Types<a class="headerlink" href="#special-case-resource-types" title="Permanent link">#</a></h4>
+<p>Some resource types have associated resource types to allow for special handling, especially around creation and possibly deletion.</p>
+<p>For example, the EC2 service defines default variants of <code>aws_vpc</code>, <code>aws_security_group</code>, <code>aws_network_acl</code>, <code>aws_route_table</code>, <code>aws_subnet</code>, and <code>aws_vpc_dhcp_options</code>.
+These all implement the Adopt-on-Create pattern, and either have a no-op delete or ignore deletion failures.</p>
+<p>There is typically a way to identify the remote resources as needing to be managed as a <strong>“special case” resource type</strong>, such as a flag or other value on the resource data.</p>
+<h2 id="implementation">Implementation<a class="headerlink" href="#implementation" title="Permanent link">#</a></h2>
+<p>By default, the List Resource must only return the Resource Identity and a Display Name for each remote resource.
+If the parameter <code>IncludeResource</code> on the list request is set to <code>true</code>, the resource data should also be populated.</p>
+<p>The Display Name should be set to a value that can uniquely identify the resource in a user-friendly way, as much as possible.
+For resource types that have a <code>Name</code> field, or a name-equivalent such as<code>DBIdentifier</code> for RDS resources types, this is the best choice.
+Some services, such as EC2 and ELB, treat a resource tag with the key <code>Name</code> as the name value in the AWS Console for many resource types.
+In these cases, the value of the <code>Name</code> tag should be used.</p>
+<p><strong>Non-manageable resources</strong> should be excluded from the results, as they cannot be brought under Terraform management.</p>
+<p>Because there is no mechanism for overriding the resource type of a returned resource, <strong>“special case” resource types</strong> should be excluded from the results.
+This should be documented in practitioner documentation.
+A List Resource for the <strong>“special case” resource type</strong> should be created.</p>
+<p>If a resource type is a <strong>weak entity</strong>, but <em>not</em> a <strong>property entity</strong>,
+the List Resource schema should define a required attribute corresponding to the identifier of the parent resource.
+For example, the <code>aws_s3_object</code> is a <strong>weak entity</strong> which requires the <code>bucket</code> attribute to identify the containing S3 Bucket.</p>
+<h3 id="plugin-framework">Plugin Framework<a class="headerlink" href="#plugin-framework" title="Permanent link">#</a></h3>
+<p>The scaffolding can be generated by the <code>skaff</code> tool in the desired service directory.</p>
+<div class="highlight"><pre><span></span><code><span class="go">skaff list --framework --name &lt;resource-name&gt;</span>
+</code></pre></div>
+<p>The annotation <code>@FrameworkListResource("&lt;resource_name&gt;")</code> is required to register the List Resource with the provider.
+The value of <code>&lt;resource_name&gt;</code> must match the name of the associated resource type.</p>
+<p>When adding a List Resource for an existing resource type,
+extract the portion of the existing resource type's Read operation that flattens the API response into the resource data model into a new method <code>flatten</code>.
+For many resource types, this will simply call <code>flex.Flatten(...)</code>.</p>
+<p>Both the List Resource and the resource type's Read operation should call the <code>flatten</code> function.</p>
+<h3 id="plugin-sdk">Plugin SDK<a class="headerlink" href="#plugin-sdk" title="Permanent link">#</a></h3>
+<p>The scaffolding can be generated by the <code>skaff</code> tool in the desired service directory.</p>
+<div class="highlight"><pre><span></span><code><span class="go">skaff list --name &lt;resource-name&gt;</span>
+</code></pre></div>
+<p>The annotation <code>@SDKListResource("&lt;resource_name&gt;")</code> is required to register the List Resource with the provider.
+The value of <code>&lt;resource_name&gt;</code> must match the name of the associated resource type.</p>
+<p>In the iterator loop body,
+the resource data <code>rd</code> must always be populated with the <code>id</code> value, using <code>rd.SetId(&lt;value&gt;)</code>.
+Any additional attributes needed for the Resource Identity must be set using <code>rd.Set(&lt;attribute-name&gt;, &lt;attribute-value&gt;)</code>.</p>
+<p>If the list request parameter <code>IncludeResource</code> is set, the resource data should be populated.
+This should be done using a function named <code>resource&lt;Resource Name&gt;Flatten</code>.
+Both the List Resource and the resource's Read operation should use this flatten function.
+If the function does not exist, refactor the resource's Read operation so that the body of the function that sets values on the resource data is moved to the flattening function.</p>
+<h2 id="acceptance-testing">Acceptance Testing<a class="headerlink" href="#acceptance-testing" title="Permanent link">#</a></h2>
+<p>The <code>skaff</code> tool will generate scaffolding for acceptance tests for the List Resource.</p>
+<h3 id="tests-to-create">Tests to Create<a class="headerlink" href="#tests-to-create" title="Permanent link">#</a></h3>
+<p>List Resources must have the following tests:</p>
+<ul>
+<li>A <code>basic</code> test that validates that multiple resources can be queried</li>
+<li>An <code>includeResource</code> test that validates that resource data is populated when <code>IncludeResource</code> is set to <code>true</code></li>
+</ul>
+<p>List Resources for regional resources, which is most resource types, must also have:</p>
+<ul>
+<li>A <code>regionOverride</code> test that validates that the <code>region</code> attribute on the <code>list</code> block overrides the default region of the provider.</li>
+</ul>
+<p>In general, the configuration should be as simple as possible, avoiding optional attributes.
+One exception is if a resource type has an optional <code>name</code> attribute or the combination of <code>name</code> and <code>name_prefix</code>.
+In that case, <code>name</code> should be specified if the <code>name</code> value is used in the Resource Identity.</p>
+<p>If a resource type has attribute settings that could affect listing behavior,
+additional tests to validate that behavior should be added.</p>
+<h3 id="test-configuration">Test Configuration<a class="headerlink" href="#test-configuration" title="Permanent link">#</a></h3>
+<p>All tests should create multiple instances of the resource type being tested.
+Set the <a href="https://developer.hashicorp.com/terraform/language/meta-arguments/count"><code>count</code> meta-argument</a> to <code>var.resource_count</code>.
+Other resources in the configuration should have a single instance, unless more than one is needed, for example EC2 Subnets when testing ELB Load Balancers.</p>
+<p>For <strong>property entities</strong>, multiple instances of the parent resource must be created and each <strong>property entity</strong> resource must be associated with an instance of the parent resource.</p>
+<p>The <code>includeResource</code> test should set the <code>tags</code> attribute if the resource type supports tagging.
+Tags should only be applied to the resource that is being tested.
+The <code>QueryResultChecks</code> should include a <code>querycheck.ExpectResourceKnownValues</code> check that verifies that each attribute on the resource has a value set to an expected value.
+In the list query configuration file, the <code>include_resource</code> attribute should be set to <code>true</code>.</p>
+<p>The <code>regionOverride</code> test should set the <code>region</code> attribute for all non-global resources in the configuration.
+In the list query configuration file, the <code>region</code> attribute in the <code>config</code> block should be set to <code>var.region</code>.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      IBM Corp.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
