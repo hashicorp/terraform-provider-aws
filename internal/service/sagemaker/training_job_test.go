@@ -514,9 +514,11 @@ func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
+				ImportStateVerifyIdentifierAttribute: "training_job_name",
 			},
 		},
 	})
