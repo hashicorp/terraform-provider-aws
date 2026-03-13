@@ -5,6 +5,7 @@ package dynamodb_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -26,13 +27,13 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 
 	tableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	hashKey := "hashKey"
-	itemContent := `{
+	itemContent := testAccNormalizeItemJSON(t, `{
 	"hashKey": {"S": "something"},
 	"one": {"N": "11111"},
 	"two": {"N": "22222"},
 	"three": {"N": "33333"},
 	"four": {"N": "44444"}
-}`
+}`)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -50,6 +51,11 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
 			},
+			{
+				ResourceName:      "aws_dynamodb_table_item.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -61,14 +67,14 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 	tableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	hashKey := "hashKey"
 	rangeKey := "rangeKey"
-	itemContent := `{
+	itemContent := testAccNormalizeItemJSON(t, `{
 	"hashKey": {"S": "something"},
 	"rangeKey": {"S": "something-else"},
 	"one": {"N": "11111"},
 	"two": {"N": "22222"},
 	"three": {"N": "33333"},
 	"four": {"N": "44444"}
-}`
+}`)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -86,6 +92,11 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", names.AttrTableName, tableName),
 					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
+			},
+			{
+				ResourceName:      "aws_dynamodb_table_item.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -714,4 +725,17 @@ resource "aws_dynamodb_table_item" "test" {
 ITEM
 }
 `, tableName, hashKey, content)
+}
+
+func testAccNormalizeItemJSON(t *testing.T, item string) string {
+	t.Helper()
+	var data any
+	if err := json.Unmarshal([]byte(item), &data); err != nil {
+		t.Fatalf("failed to unmarshal JSON: %s", err)
+	}
+	normalized, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("failed to marshal JSON: %s", err)
+	}
+	return string(normalized)
 }
