@@ -78,6 +78,38 @@ func testAccLandingZone_disappears(t *testing.T) {
 	})
 }
 
+func testAccLandingZone_remediationTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_controltower_landing_zone.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckNoLandingZone(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLandingZoneConfig_remediationTypes,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "remediation_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "remediation_types.*", "INHERITANCE_DRIFT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccLandingZone_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_controltower_landing_zone.test"
@@ -196,6 +228,14 @@ resource "aws_controltower_landing_zone" "test" {
   manifest_json = file("${path.module}/test-fixtures/LandingZoneManifest.json")
 
   version = %[2]q
+}
+`, acctest.Region(), landingZoneVersion)
+
+var testAccLandingZoneConfig_remediationTypes = fmt.Sprintf(`
+resource "aws_controltower_landing_zone" "test" {
+  manifest_json = file("${path.module}/test-fixtures/LandingZoneManifest.json")
+  version = %[2]q
+  remediation_types = ["INHERITANCE_DRIFT"]
 }
 `, acctest.Region(), landingZoneVersion)
 
