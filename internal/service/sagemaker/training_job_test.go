@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -50,11 +51,11 @@ func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`training-job/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.training_input_mode", "File"),
 					resource.TestCheckResourceAttrPair(resourceName, "algorithm_specification.0.training_image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.enable_sagemaker_metrics_time_series", "true"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.enable_sagemaker_metrics_time_series", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.s3_output_path", fmt.Sprintf("s3://%s/output/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "resource_config.#", "1"),
@@ -238,7 +239,7 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "500"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_rule_configurations.#", "1"),
 				),
@@ -249,7 +250,7 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_rule_configurations.#", "1"),
 				),
@@ -293,7 +294,7 @@ func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.TEST_ENV", "test_value"),
 					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.epochs", "10"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
 				),
 			},
@@ -306,7 +307,7 @@ func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.TEST_ENV", "updated_value"),
 					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.epochs", "20"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
@@ -650,7 +651,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
-					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", "true"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.customization_technique", "SFT"),
 					resource.TestCheckResourceAttrSet(resourceName, "serverless_job_config.0.base_model_arn"),
 					resource.TestCheckResourceAttr(resourceName, "model_package_config.#", "1"),
@@ -666,7 +667,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
-					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", "true"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.customization_technique", "DPO"),
 					resource.TestCheckResourceAttrSet(resourceName, "serverless_job_config.0.base_model_arn"),
 					resource.TestCheckResourceAttr(resourceName, "model_package_config.#", "1"),
@@ -791,7 +792,7 @@ func TestAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "infra_check_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "infra_check_config.0.enable_infra_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "infra_check_config.0.enable_infra_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -800,7 +801,7 @@ func TestAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "infra_check_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "infra_check_config.0.enable_infra_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "infra_check_config.0.enable_infra_check", acctest.CtFalse),
 				),
 			},
 			{
@@ -895,7 +896,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.0.enable_remote_debug", "false"),
+					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.0.enable_remote_debug", acctest.CtFalse),
 				),
 			},
 			{
@@ -904,7 +905,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.0.enable_remote_debug", "true"),
+					resource.TestCheckResourceAttr(resourceName, "remote_debug_config.0.enable_remote_debug", acctest.CtTrue),
 				),
 			},
 			{
@@ -944,7 +945,7 @@ func TestAccSageMakerTrainingJob_sessionChainingConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "session_chaining_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "session_chaining_config.0.enable_session_tag_chaining", "true"),
+					resource.TestCheckResourceAttr(resourceName, "session_chaining_config.0.enable_session_tag_chaining", acctest.CtTrue),
 				),
 			},
 			{
@@ -953,7 +954,7 @@ func TestAccSageMakerTrainingJob_sessionChainingConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "session_chaining_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "session_chaining_config.0.enable_session_tag_chaining", "false"),
+					resource.TestCheckResourceAttr(resourceName, "session_chaining_config.0.enable_session_tag_chaining", acctest.CtFalse),
 				),
 			},
 			{
@@ -1043,6 +1044,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccTrainingJobConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity", "sts:TagSession"]
@@ -1060,7 +1063,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1515,6 +1518,8 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_environmentAndHyperParameters(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
@@ -1532,7 +1537,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1589,6 +1594,8 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_environmentAndHyperParametersUpdate(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
@@ -1606,7 +1613,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -2221,6 +2228,9 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_serverless(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
@@ -2238,7 +2248,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_iam_role_policy" "hub_access" {
@@ -2317,7 +2327,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   serverless_job_config {
     accept_eula             = true
-    base_model_arn          = "arn:aws:sagemaker:us-west-2:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct/2.40.0"
+    base_model_arn          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct/2.40.0"
     job_type                = "FineTuning"
     customization_technique = "SFT"
   }
@@ -2329,6 +2339,9 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_serverlessUpdate(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
@@ -2346,7 +2359,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_iam_role_policy" "hub_access" {
@@ -2425,7 +2438,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   serverless_job_config {
     accept_eula             = true
-    base_model_arn          = "arn:aws:sagemaker:us-west-2:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct/2.40.0"
+    base_model_arn          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-3-1-8b-instruct/2.40.0"
     job_type                = "FineTuning"
     customization_technique = "DPO"
     peft                    = "LORA"
@@ -2575,6 +2588,8 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_mlflow(rName, novaModelARN string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
@@ -2592,7 +2607,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_iam_role_policy" "s3" {
@@ -2681,6 +2696,8 @@ resource "aws_sagemaker_training_job" "test" {
 
 func testAccTrainingJobConfig_mlflowUpdate(rName, novaModelARN string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
@@ -2698,7 +2715,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_iam_role_policy" "s3" {

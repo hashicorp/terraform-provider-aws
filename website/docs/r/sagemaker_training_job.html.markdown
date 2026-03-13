@@ -145,6 +145,7 @@ The following arguments are optional:
 * `output_data_config` - (Optional) Location of the output data from the training job. See [`output_data_config`](#output_data_config) below.
 * `profiler_config` - (Optional) Configuration for the profiler. See [`profiler_config`](#profiler_config) below. Conflicts with `serverless_job_config`.
 * `profiler_rule_configurations` - (Optional) List of profiler rule configurations. Maximum of 20. See [`profiler_rule_configurations`](#profiler_rule_configurations) below. Conflicts with `serverless_job_config`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remote_debug_config` - (Optional) Configuration for remote debugging. See [`remote_debug_config`](#remote_debug_config) below.
 * `resource_config` - (Optional) Resources for the training job, including compute instances and storage volumes. See [`resource_config`](#resource_config) below.
 * `retry_strategy` - (Optional) Number of times to retry the job if it fails. See [`retry_strategy`](#retry_strategy) below. Conflicts with `serverless_job_config`.
