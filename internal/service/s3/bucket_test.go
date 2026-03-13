@@ -2863,7 +2863,7 @@ func TestValidBucketName(t *testing.T) {
 		"bar.",
 		"foo_bar",
 		strings.Repeat("x", 64),
-		"test-bucket-123456789012-us-west-2-an",
+		"test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
 	}
 
 	for _, v := range invalidUsWest2GlobalNames {
@@ -2901,7 +2901,7 @@ func TestValidBucketName(t *testing.T) {
 	}
 
 	validUsWest2AccountRegionalNames := []string{
-		"test-bucket-123456789012-us-west-2-an",
+		"test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
 		"test-bucket-123456789012-usw2-an",
 	}
 
@@ -3032,24 +3032,24 @@ func TestBucketNamespace(t *testing.T) {
 			BucketName: "test-bucket-123456789012-an",
 		},
 		{
-			BucketName: "test-bucket-us-west-2-an",
+			BucketName: "test-bucket-us-west-2-an", //lintignore:AWSAT003
 		},
 		{
-			BucketName: "test-bucket-123456789012-us-west-2",
+			BucketName: "test-bucket-123456789012-us-west-2", //lintignore:AWSAT003
 		},
 		{
-			BucketName: "test-bucket-1234567890123-us-west-2-an",
+			BucketName: "test-bucket-1234567890123-us-west-2-an", //lintignore:AWSAT003
 		},
 		{
-			BucketName: "test-bucket-123456789012-us-west-2-an",
+			BucketName: "test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
 			Expect:     true,
 		},
 		{
-			BucketName: "test-bucket-123456789012-eusc-de-east-1-an",
+			BucketName: "test-bucket-123456789012-eusc-de-east-1-an", //lintignore:AWSAT003
 			Expect:     true,
 		},
 		{
-			BucketName: "test-bucket-123456789012-us-gov-east-1-an",
+			BucketName: "test-bucket-123456789012-us-gov-east-1-an", //lintignore:AWSAT003
 			Expect:     true,
 		},
 		{
