@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -69,6 +70,39 @@ func testAccDetector_basic(t *testing.T) {
 					testAccCheckDetectorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
 				),
+			},
+		},
+	})
+}
+
+func testAccDetector_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceDetector(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

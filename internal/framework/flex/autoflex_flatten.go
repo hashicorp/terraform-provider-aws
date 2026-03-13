@@ -1351,9 +1351,20 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 		return diags
 	}
 
-	diags.Append(flattenStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
-	if diags.HasError() {
-		return diags
+	// Check if target implements Flattener interface
+	if targetFlattener, ok := to.(Flattener); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener", map[string]any{
+			logAttrKeyTargetType: fullTypeName(reflect.TypeOf(to)),
+		})
+		diags.Append(targetFlattener.Flatten(ctx, vFrom.Interface())...)
+		if diags.HasError() {
+			return diags
+		}
+	} else {
+		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
+		if diags.HasError() {
+			return diags
+		}
 	}
 
 	// Set the target structure as a mapped Object.

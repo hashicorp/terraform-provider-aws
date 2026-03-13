@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,21 +20,21 @@ import (
 func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkInterfacePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
+					testAccCheckNetworkInterfacePermissionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, "permission"),
@@ -56,21 +54,21 @@ func TestAccVPCNetworkInterfacePermission_basic(t *testing.T) {
 func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_permission.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkInterfacePermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfacePermissionExists(ctx, resourceName),
+					testAccCheckNetworkInterfacePermissionExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceNetworkInterfacePermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,15 +79,15 @@ func TestAccVPCNetworkInterfacePermission_disappears(t *testing.T) {
 
 func TestAccVPCNetworkInterfacePermission_ownerExpectError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfacePermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccNetworkInterfacePermissionConfig_accountOwner(rName),
@@ -99,9 +97,9 @@ func TestAccVPCNetworkInterfacePermission_ownerExpectError(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkInterfacePermissionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNetworkInterfacePermissionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_interface_permission" {
@@ -125,14 +123,14 @@ func testAccCheckNetworkInterfacePermissionDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckNetworkInterfacePermissionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckNetworkInterfacePermissionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindNetworkInterfacePermissionByID(ctx, conn, rs.Primary.Attributes["network_interface_permission_id"])
 

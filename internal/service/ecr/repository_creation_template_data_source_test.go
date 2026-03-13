@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,7 +15,7 @@ import (
 
 func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,7 +68,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplateDataSource_mutabilityWithExclusion(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
 	acctest.Test(ctx, t, resource.TestCase{

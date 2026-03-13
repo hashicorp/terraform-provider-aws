@@ -37,13 +37,13 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RuleAssociation/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RuleAssociation/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -57,9 +57,8 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/RuleAssociation/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/RuleAssociation/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),

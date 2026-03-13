@@ -15,14 +15,7 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/arcregionswitch"
-        - "/internal/service/cleanrooms"
-        - "/internal/service/docdb"
-        - "/internal/service/ec2"
-        - "/internal/service/networkflowmonitor"
-        - "/internal/service/observabilityadmin"
         - "/internal/service/odb"
-        - "/internal/service/savingsplans"
 
   - id: use-acctest-paralleltest
     languages: [go]
@@ -37,14 +30,7 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/arcregionswitch"
-        - "/internal/service/cleanrooms"
-        - "/internal/service/docdb"
-        - "/internal/service/ec2"
-        - "/internal/service/networkflowmonitor"
-        - "/internal/service/observabilityadmin"
         - "/internal/service/odb"
-        - "/internal/service/savingsplans"
 
   - id: use-acctest-providermeta
     languages: [go]
@@ -59,11 +45,4 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/arcregionswitch"
-        - "/internal/service/cleanrooms"
-        - "/internal/service/docdb"
-        - "/internal/service/ec2"
-        - "/internal/service/networkflowmonitor"
-        - "/internal/service/observabilityadmin"
         - "/internal/service/odb"
-        - "/internal/service/savingsplans"

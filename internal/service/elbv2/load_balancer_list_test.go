@@ -41,31 +41,30 @@ func TestAccELBV2LoadBalancer_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LoadBalancer/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LoadBalancer/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-1")))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-1")),
 				},
 			},
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LoadBalancer/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/LoadBalancer/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -99,13 +98,13 @@ func TestAccELBV2LoadBalancer_List_includeResource(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LoadBalancer/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LoadBalancer/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -115,15 +114,14 @@ func TestAccELBV2LoadBalancer_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-0")),
 				},
 			},
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LoadBalancer/list_include_resource/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/LoadBalancer/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -136,7 +134,7 @@ func TestAccELBV2LoadBalancer_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceDisplayName("aws_lb.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_lb.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("access_logs"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("arn_suffix"), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf("^app/%s/[a-z0-9]{16}$", rName+"-0")))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("client_keep_alive"), knownvalue.Int32Exact(3600)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("connection_logs"), knownvalue.ListSizeExact(1)),
@@ -203,13 +201,13 @@ func TestAccELBV2LoadBalancer_List_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LoadBalancer/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LoadBalancer/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -217,18 +215,17 @@ func TestAccELBV2LoadBalancer_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerAlternateRegionARN(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-1")))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerAlternateRegionARN(rName+"-1")),
 				},
 			},
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LoadBalancer/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/LoadBalancer/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -242,4 +239,12 @@ func TestAccELBV2LoadBalancer_List_regionOverride(t *testing.T) {
 			},
 		},
 	})
+}
+
+func knownValueApplicationLoadBalancerARN(lbName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)))
+}
+
+func knownValueApplicationLoadBalancerAlternateRegionARN(lbName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)))
 }

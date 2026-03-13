@@ -96,6 +96,8 @@ var (
 	ResourceTransitGatewayMulticastGroupSource            = resourceTransitGatewayMulticastGroupSource
 	ResourceTransitGatewayPeeringAttachment               = resourceTransitGatewayPeeringAttachment
 	ResourceTransitGatewayPeeringAttachmentAccepter       = resourceTransitGatewayPeeringAttachmentAccepter
+	ResourceTransitGatewayMeteringPolicy                  = newTransitGatewayMeteringPolicyResource
+	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
@@ -241,6 +243,8 @@ var (
 	FindTransitGatewayMulticastGroupMemberByThreePartKey        = findTransitGatewayMulticastGroupMemberByThreePartKey
 	FindTransitGatewayMulticastGroupSourceByThreePartKey        = findTransitGatewayMulticastGroupSourceByThreePartKey
 	FindTransitGatewayPeeringAttachmentByID                     = findTransitGatewayPeeringAttachmentByID
+	FindTransitGatewayMeteringPolicyByID                        = findTransitGatewayMeteringPolicyByID
+	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey

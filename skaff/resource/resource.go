@@ -78,7 +78,7 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 
 	templateData := TemplateData{
 		Resource:             resName,
-		ResourceAWS:          capitalizeForAWS(resName),
+		ResourceAWS:          convert.ToAWSCapitalization(resName),
 		ResourceLower:        strings.ToLower(resName),
 		ResourceLowerCamel:   convert.ToLowercasePrefix(resName),
 		ResourceSnake:        snakeName,
@@ -151,9 +151,4 @@ func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateD
 	}
 
 	return nil
-}
-
-// AWS API structs use different capitalization than the provider standards
-func capitalizeForAWS(s string) string {
-	return strings.ReplaceAll(s, "VPC", "Vpc")
 }

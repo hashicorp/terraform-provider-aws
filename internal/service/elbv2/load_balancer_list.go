@@ -6,7 +6,6 @@ package elbv2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -44,43 +43,65 @@ func (l *listResourceLoadBalancer) List(ctx context.Context, request list.ListRe
 		}
 	}
 
-	tflog.Info(ctx, "Listing ELB Load Balancer")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input elasticloadbalancingv2.DescribeLoadBalancersInput
-		for item, err := range listLoadBalancers(ctx, conn, &input) {
+		pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ELB Load Balancer resources: %w", err))
 				yield(result)
 				return
 			}
 
-			arn := aws.ToString(item.LoadBalancerArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			rd.Set(names.AttrARN, arn)
-
+			var tags map[string][]awstypes.Tag
 			if request.IncludeResource {
-				if err := resourceLoadBalancerFlatten(ctx, l.Meta(), &item, rd); err != nil {
-					tflog.Error(ctx, "Reading ELB Load Balancer", map[string]any{
-						"error": err.Error(),
-					})
-					continue
+				arns := make([]string, len(page.LoadBalancers))
+				for i, lb := range page.LoadBalancers {
+					arns[i] = aws.ToString(lb.LoadBalancerArn)
+				}
+
+				tags, err = batchListTags(ctx, conn, arns)
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ELB Load Balancer resource tags: %w", err))
+					yield(result)
+					return
 				}
 			}
 
-			result.DisplayName = aws.ToString(item.LoadBalancerName)
+			for _, item := range page.LoadBalancers {
+				arn := aws.ToString(item.LoadBalancerArn)
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
+				result := request.NewListResult(ctx)
 
-			if !yield(result) {
-				return
+				rd := l.ResourceData()
+				rd.SetId(arn)
+				rd.Set(names.AttrARN, arn)
+
+				if request.IncludeResource {
+					setTagsOut(ctx, tags[arn])
+					if err := resourceLoadBalancerFlatten(ctx, l.Meta(), &item, rd); err != nil {
+						tflog.Error(ctx, "Reading ELB Load Balancer", map[string]any{
+							"error": err.Error(),
+						})
+						continue
+					}
+				}
+
+				result.DisplayName = aws.ToString(item.LoadBalancerName)
+
+				l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
 			}
 		}
 	}
@@ -88,23 +109,4 @@ func (l *listResourceLoadBalancer) List(ctx context.Context, request list.ListRe
 
 type listLoadBalancerModel struct {
 	framework.WithRegionModel
-}
-
-func listLoadBalancers(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeLoadBalancersInput) iter.Seq2[awstypes.LoadBalancer, error] {
-	return func(yield func(awstypes.LoadBalancer, error) bool) {
-		pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.LoadBalancer{}, fmt.Errorf("listing ELB Load Balancer resources: %w", err))
-				return
-			}
-
-			for _, item := range page.LoadBalancers {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
 }

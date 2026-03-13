@@ -17,7 +17,7 @@ func TestAccOpenSearchDomainDataSource_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
@@ -50,7 +50,7 @@ func TestAccOpenSearchDomainDataSource_complex(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName := testAccRandomDomainName()
+	rName := testAccRandomDomainName(t)
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
