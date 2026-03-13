@@ -1028,7 +1028,6 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
 			MfaConfiguration:              mfaConfiguration,
-			EmailMfaConfiguration:         expandEmailMFAConfigType(d.Get("email_mfa_configuration").([]any)),
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any)),
 			UserPoolId:                    aws.String(d.Id()),
 			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]any)),
@@ -1045,6 +1044,13 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			if v, ok := d.GetOk("sms_authentication_message"); ok {
 				input.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
 			}
+		}
+
+		// Since Email MFA configuration applies to MFA, only include if MFA is enabled.
+		// Otherwise, the API will return the following error:
+		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
+		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
+			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
