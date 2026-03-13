@@ -1989,23 +1989,16 @@ func findSecurityGroup(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 }
 
 func findSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
-	var output []awstypes.SecurityGroup
+	output, err := tfslices.CollectWithError(listSecurityGroups(ctx, conn, input))
 
-	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.SecurityGroups...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
