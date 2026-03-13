@@ -53,6 +53,17 @@ func getWebACLMutex(webACLID string) *sync.Mutex {
 	return mutex.(*sync.Mutex)
 }
 
+// findRuleInWebACL finds a rule by name within a WebACL's rules slice.
+// Returns nil if the rule is not found.
+func findRuleInWebACL(webACL *wafv2.GetWebACLOutput, ruleName string) *awstypes.Rule {
+	for i := range webACL.WebACL.Rules {
+		if aws.ToString(webACL.WebACL.Rules[i].Name) == ruleName {
+			return &webACL.WebACL.Rules[i]
+		}
+	}
+	return nil
+}
+
 // @FrameworkResource("aws_wafv2_web_acl_rule", name="Web ACL Rule")
 // @IdentityAttribute("web_acl_arn")
 // @IdentityAttribute("name")
@@ -353,14 +364,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Find the created rule
-	var createdRule *awstypes.Rule
-	for i := range webACL.WebACL.Rules {
-		if aws.ToString(webACL.WebACL.Rules[i].Name) == plan.Name.ValueString() {
-			createdRule = &webACL.WebACL.Rules[i]
-			break
-		}
-	}
-
+	createdRule := findRuleInWebACL(webACL, plan.Name.ValueString())
 	if createdRule == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("created rule not found in Web ACL after update")), smerr.ID, plan.Name.ValueString())
 		return
@@ -402,14 +406,7 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Find the rule
-	var foundRule *awstypes.Rule
-	for i := range webACL.WebACL.Rules {
-		if aws.ToString(webACL.WebACL.Rules[i].Name) == state.Name.ValueString() {
-			foundRule = &webACL.WebACL.Rules[i]
-			break
-		}
-	}
-
+	foundRule := findRuleInWebACL(webACL, state.Name.ValueString())
 	if foundRule == nil {
 		resp.State.RemoveResource(ctx)
 		return
