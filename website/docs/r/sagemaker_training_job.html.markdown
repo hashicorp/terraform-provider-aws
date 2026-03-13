@@ -118,13 +118,182 @@ resource "aws_sagemaker_training_job" "example" {
 }
 ```
 
+### With Encrypted Output, Checkpoints, and TensorBoard
+
+```terraform
+resource "aws_sagemaker_training_job" "example" {
+  training_job_name = "example"
+  role_arn          = aws_iam_role.example.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.example.registry_path
+  }
+
+  checkpoint_config {
+    local_path = "/opt/ml/checkpoints"
+    s3_uri     = "s3://${aws_s3_bucket.example.bucket}/checkpoints/"
+  }
+
+  output_data_config {
+    compression_type = "GZIP"
+    kms_key_id       = aws_kms_key.example.arn
+    s3_output_path   = "s3://${aws_s3_bucket.example.bucket}/output/"
+  }
+
+  resource_config {
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
+    volume_kms_key_id = aws_kms_key.example.arn
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 3600
+  }
+
+  tensor_board_output_config {
+    local_path     = "/opt/ml/output/tensorboard"
+    s3_output_path = "s3://${aws_s3_bucket.example.bucket}/tensorboard/"
+  }
+}
+```
+
+### With Managed Spot Training and Custom Metrics
+
+```terraform
+resource "aws_sagemaker_training_job" "example" {
+  training_job_name                            = "example"
+  role_arn                                     = aws_iam_role.example.arn
+  enable_managed_spot_training                 = true
+  enable_network_isolation                     = true
+  enable_inter_container_traffic_encryption    = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = var.training_image
+    container_entrypoint = ["python", "/opt/ml/code/train.py"]
+    container_arguments  = ["--epochs", "10", "--batch-size", "128"]
+
+    metric_definitions {
+      name  = "train:loss"
+      regex = "loss: ([0-9\\.]+)"
+    }
+
+    metric_definitions {
+      name  = "validation:accuracy"
+      regex = "accuracy: ([0-9\\.]+)"
+    }
+  }
+
+  environment = {
+    MODEL_DIR    = "/opt/ml/model"
+    SM_LOG_LEVEL = "20"
+  }
+
+  hyper_parameters = {
+    epochs     = "10"
+    batch_size = "128"
+  }
+
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.example.bucket}/output/"
+  }
+
+  resource_config {
+    instance_type                = "ml.m5.xlarge"
+    instance_count               = 1
+    volume_size_in_gb            = 50
+    keep_alive_period_in_seconds = 600
+  }
+
+  retry_strategy {
+    maximum_retry_attempts = 3
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds   = 3600
+    max_wait_time_in_seconds = 7200
+  }
+
+  tags = {
+    Environment = "test"
+    Workload    = "training"
+  }
+}
+```
+
+### With Multiple Input Channels, Infrastructure Checks, and Session Tag Chaining
+
+```terraform
+resource "aws_sagemaker_training_job" "example" {
+  training_job_name = "example"
+  role_arn          = aws_iam_role.example.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.example.registry_path
+  }
+
+  input_data_config {
+    channel_name = "train"
+    content_type = "text/csv"
+    input_mode   = "File"
+
+    data_source {
+      s3_data_source {
+        s3_data_distribution_type = "FullyReplicated"
+        s3_data_type              = "S3Prefix"
+        s3_uri                    = "s3://${aws_s3_bucket.example.bucket}/train/"
+      }
+    }
+  }
+
+  input_data_config {
+    channel_name = "validation"
+    content_type = "text/csv"
+    input_mode   = "File"
+
+    data_source {
+      s3_data_source {
+        s3_data_distribution_type = "FullyReplicated"
+        s3_data_type              = "S3Prefix"
+        s3_uri                    = "s3://${aws_s3_bucket.example.bucket}/validation/"
+      }
+    }
+  }
+
+  infra_check_config {
+    enable_infra_check = true
+  }
+
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.example.bucket}/output/"
+  }
+
+  resource_config {
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
+  }
+
+  session_chaining_config {
+    enable_session_tag_chaining = true
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 3600
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `role_arn` - (Required) ARN of the IAM role that SageMaker AI assumes to perform tasks on your behalf during training.
-* `stopping_condition` - (Required) Time limit for how long the training job can run. See [`stopping_condition`](#stopping_condition) below.
 * `training_job_name` - (Required) Name of the training job. Must be between 1 and 63 characters, start with a letter or number, and contain only letters, numbers, and hyphens.
+* `output_data_config` - (Required) Location of the output data from the training job. See [`output_data_config`](#output_data_config) below.
 
 The following arguments are optional:
 
@@ -142,7 +311,6 @@ The following arguments are optional:
 * `input_data_config` - (Optional) List of input data channel configurations for the training job. Maximum of 20. See [`input_data_config`](#input_data_config) below.
 * `mlflow_config` - (Optional) MLflow integration configuration. See [`mlflow_config`](#mlflow_config) below.
 * `model_package_config` - (Optional) Model package configuration. Requires `serverless_job_config`. See [`model_package_config`](#model_package_config) below.
-* `output_data_config` - (Optional) Location of the output data from the training job. See [`output_data_config`](#output_data_config) below.
 * `profiler_config` - (Optional) Configuration for the profiler. See [`profiler_config`](#profiler_config) below. Conflicts with `serverless_job_config`.
 * `profiler_rule_configurations` - (Optional) List of profiler rule configurations. Maximum of 20. See [`profiler_rule_configurations`](#profiler_rule_configurations) below. Conflicts with `serverless_job_config`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
