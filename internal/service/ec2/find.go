@@ -427,6 +427,10 @@ func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIns
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
 }
 
@@ -1959,23 +1963,16 @@ func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRo
 }
 
 func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
-	var output []awstypes.RouteTable
+	output, err := tfslices.CollectWithError(listRouteTables(ctx, conn, input))
 
-	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.RouteTables...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
@@ -5213,6 +5210,10 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
