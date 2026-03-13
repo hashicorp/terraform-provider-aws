@@ -169,6 +169,16 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 			}
 
+			var mainRouteTables map[string]*awstypes.RouteTable
+			if request.IncludeResource {
+				mainRouteTables, err = batchFindVPCMainRouteTables(ctx, conn, vpcIDs)
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+			}
+
 			for _, vpc := range page.Vpcs {
 				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
 
@@ -194,6 +204,11 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 
 				if defaultNetworkACL, ok := defaultNetworkACLs[aws.ToString(vpc.VpcId)]; ok {
 					rd.Set("default_network_acl_id", defaultNetworkACL.NetworkAclId)
+				}
+
+				if mainRouteTable, ok := mainRouteTables[aws.ToString(vpc.VpcId)]; ok {
+					rd.Set("default_route_table_id", mainRouteTable.RouteTableId)
+					rd.Set("main_route_table_id", mainRouteTable.RouteTableId)
 				}
 
 				if v, ok := tags["Name"]; ok {

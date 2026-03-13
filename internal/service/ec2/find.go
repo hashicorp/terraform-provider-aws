@@ -1993,6 +1993,17 @@ func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*a
 	return findRouteTable(ctx, conn, &input)
 }
 
+func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.RouteTable, error) {
+	input := ec2.DescribeRouteTablesInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"association.main": {"true"},
+			"vpc-id":           ids,
+		}),
+	}
+
+	return batchFindRouteTables(ctx, conn, &input)
+}
+
 func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
 	output, err := findRouteTables(ctx, conn, input)
 
@@ -2001,6 +2012,21 @@ func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRo
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func batchFindRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (map[string]*awstypes.RouteTable, error) {
+	output, err := findRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.RouteTable, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
 }
 
 func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
