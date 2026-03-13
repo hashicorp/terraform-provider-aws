@@ -42,7 +42,8 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 Bucket Public Access Block")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := s3.ListBucketsInput{
 			BucketRegion: aws.String(l.Meta().Region(ctx)),
@@ -80,7 +81,7 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
