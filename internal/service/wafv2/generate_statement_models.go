@@ -57,7 +57,7 @@ func main() {
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error formatting: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Generated code:\n%s\n", buf.String())
+		os.WriteFile("web_acl_rule_statement_models_gen.go", buf.Bytes(), 0644)
 		os.Exit(1)
 	}
 
