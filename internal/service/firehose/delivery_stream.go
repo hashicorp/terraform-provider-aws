@@ -268,15 +268,16 @@ func resourceDeliveryStream() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"buffering_interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  300,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(0, 900),
 						},
 						"buffering_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
-							ValidateFunc: validation.IntAtLeast(1),
+							ValidateFunc: validation.IntBetween(1, 128),
 						},
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 						"compression_format": {
@@ -812,7 +813,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      5,
-								ValidateFunc: validation.IntBetween(1, 100),
+								ValidateFunc: validation.IntBetween(1, 64),
 							},
 							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 							names.AttrName: {
