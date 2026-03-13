@@ -433,8 +433,6 @@ func TestAccVPC_List_filteredVPCIDs(t *testing.T) {
 }
 
 func TestAccVPC_List_Filtered_isDefault(t *testing.T) {
-	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
-
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

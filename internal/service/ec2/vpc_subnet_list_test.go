@@ -428,8 +428,6 @@ func TestAccVPCSubnet_List_filteredSubnetIDs(t *testing.T) {
 }
 
 func TestAccVPCSubnet_List_Filtered_defaultForAZ(t *testing.T) {
-	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
-
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
