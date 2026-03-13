@@ -141,6 +141,19 @@ resource "aws_lakeformation_permissions" "example" {
 }
 ```
 
+### Grant Permissions For An S3 Tables Catalog
+
+```terraform
+resource "aws_lakeformation_permissions" "example" {
+  principal   = aws_iam_role.workflow_role.arn
+  permissions = ["ALL"]
+
+  # S3 Tables catalogs require the catalog identifier in Resource.Catalog.Id
+  catalog_resource    = true
+  catalog_resource_id = "110376042874:s3tablescatalog/my-s3tables-bucket"
+}
+```
+
 ### Grant Permissions Using Tag-Based Access Control
 
 ```terraform
@@ -188,6 +201,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `catalog_resource_id` - (Optional) Identifier for the catalog resource when `catalog_resource = true`. Use this to grant permissions on non-default catalogs such as S3 Tables (e.g., `<account-id>:s3tablescatalog/<bucket>`).
 * `permissions_with_grant_option` - (Optional) Subset of `permissions` which the principal can pass.
 
 ### data_cells_filter
