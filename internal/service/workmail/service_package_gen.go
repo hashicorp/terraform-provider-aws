@@ -67,6 +67,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newDomainResourceAsListResource,
+			TypeName: "aws_workmail_domain",
+			Name:     "Domain",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute(names.AttrDomainName, true),
+			}),
+		},
+		{
 			Factory:  newOrganizationResourceAsListResource,
 			TypeName: "aws_workmail_organization",
 			Name:     "Organization",

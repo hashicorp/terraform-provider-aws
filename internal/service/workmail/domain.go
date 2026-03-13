@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -114,7 +115,7 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -142,7 +143,7 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -174,6 +175,12 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.DomainName.String())
 		return
 	}
+}
+
+func (r *domainResource) flatten(ctx context.Context, domain *workmail.GetMailDomainOutput, data *domainResourceModel) (diags diag.Diagnostics) {
+	diags.Append(flex.Flatten(ctx, domain, data)...)
+
+	return diags
 }
 
 func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, domainName string) (*workmail.GetMailDomainOutput, error) {
