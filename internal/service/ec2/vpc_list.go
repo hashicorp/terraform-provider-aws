@@ -138,6 +138,10 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 		Name:   aws.String("is-default"),
 		Values: []string{"false"},
 	})
+	input.Filters = append(input.Filters, awstypes.Filter{
+		Name:   aws.String("owner-id"),
+		Values: []string{awsClient.AccountID(ctx)},
+	})
 
 	tflog.Info(ctx, "Listing resources")
 
