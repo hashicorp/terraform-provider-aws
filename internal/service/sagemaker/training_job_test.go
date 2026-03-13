@@ -1150,7 +1150,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets           = [aws_subnet.test.id]
+    subnets            = [aws_subnet.test.id]
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1204,7 +1204,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets           = [aws_subnet.test.id, aws_subnet.test2.id]
+    subnets            = [aws_subnet.test.id, aws_subnet.test2.id]
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1278,7 +1278,7 @@ resource "aws_sagemaker_training_job" "test" {
     rule_parameters = {
       "rule_to_invoke" = "LossNotDecreasing"
     }
-    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/debug-rules/"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-rules/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
@@ -1352,7 +1352,7 @@ resource "aws_sagemaker_training_job" "test" {
     rule_parameters = {
       "rule_to_invoke" = "LossNotDecreasing"
     }
-    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/debug-rules-updated/"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-rules-updated/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
@@ -1430,7 +1430,7 @@ resource "aws_sagemaker_training_job" "test" {
     rule_parameters = {
       "rule_to_invoke" = "ProfilerReport"
     }
-    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
@@ -1508,7 +1508,7 @@ resource "aws_sagemaker_training_job" "test" {
     rule_parameters = {
       "rule_to_invoke" = "ProfilerReport"
     }
-    s3_output_path    = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/profiler-rules/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
@@ -1541,7 +1541,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
+  bucket = %[1]q
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
@@ -1554,11 +1554,11 @@ resource "aws_sagemaker_training_job" "test" {
   role_arn          = aws_iam_role.test.arn
 
   enable_inter_container_traffic_encryption = true
-  enable_managed_spot_training             = true
-  enable_network_isolation                 = false
+  enable_managed_spot_training              = true
+  enable_network_isolation                  = false
 
   environment = {
-    "TEST_ENV"   = "test_value"
+    "TEST_ENV"    = "test_value"
     "ANOTHER_ENV" = "another_value"
   }
 
@@ -1572,19 +1572,19 @@ resource "aws_sagemaker_training_job" "test" {
     training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
     max_runtime_in_seconds   = 3600
-	max_wait_time_in_seconds = 3600
+    max_wait_time_in_seconds = 3600
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1617,7 +1617,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
+  bucket = %[1]q
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
@@ -1630,11 +1630,11 @@ resource "aws_sagemaker_training_job" "test" {
   role_arn          = aws_iam_role.test.arn
 
   enable_inter_container_traffic_encryption = false
-  enable_managed_spot_training             = true
-  enable_network_isolation                 = false
+  enable_managed_spot_training              = true
+  enable_network_isolation                  = false
 
   environment = {
-    "TEST_ENV"   = "updated_value"
+    "TEST_ENV"    = "updated_value"
     "ANOTHER_ENV" = "another_value"
   }
 
@@ -1648,19 +1648,19 @@ resource "aws_sagemaker_training_job" "test" {
     training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
     max_runtime_in_seconds   = 7200
-	max_wait_time_in_seconds = 8000
+    max_wait_time_in_seconds = 8000
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -2072,7 +2072,7 @@ resource "aws_sagemaker_training_job" "test" {
       name  = "train:loss"
       regex = "loss: ([0-9\\.]+)"
     }
-  
+
   }
 
   output_data_config {
@@ -2272,11 +2272,11 @@ resource "aws_iam_role_policy" "s3" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
+      Effect = "Allow"
+      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
       Resource = [
-        "arn:aws:s3:::%[1]s",
-        "arn:aws:s3:::%[1]s/*"
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s",
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
       ]
     }]
   })
@@ -2383,11 +2383,11 @@ resource "aws_iam_role_policy" "s3" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
+      Effect = "Allow"
+      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
       Resource = [
-        "arn:aws:s3:::%[1]s",
-        "arn:aws:s3:::%[1]s/*"
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s",
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
       ]
     }]
   })
@@ -2617,11 +2617,11 @@ resource "aws_iam_role_policy" "s3" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
+      Effect = "Allow"
+      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
       Resource = [
-        "arn:aws:s3:::%[1]s",
-        "arn:aws:s3:::%[1]s/*"
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s",
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
       ]
     }]
   })
@@ -2725,11 +2725,11 @@ resource "aws_iam_role_policy" "s3" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
+      Effect = "Allow"
+      Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
       Resource = [
-        "arn:aws:s3:::%[1]s",
-        "arn:aws:s3:::%[1]s/*"
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s",
+        "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
       ]
     }]
   })
