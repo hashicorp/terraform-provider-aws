@@ -6,6 +6,7 @@ package apigateway_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -43,6 +44,108 @@ func TestAccAPIGatewayResource_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayResource_fullPath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetResourceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_fullPath(rName, "/users/123/posts"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/users/123/posts"),
+					resource.TestCheckResourceAttr(resourceName, "full_path", "/users/123/posts"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayResource_fullPathNested(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetResourceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_fullPath(rName, "/api/v1/users/123/orders/456"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/api/v1/users/123/orders/456"),
+					resource.TestCheckResourceAttr(resourceName, "full_path", "/api/v1/users/123/orders/456"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayResource_fullPathRoot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetResourceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_resource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_fullPath(rName, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, "full_path", "/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayResource_fullPathConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_fullPathConflict(rName),
+				ExpectError: regexp.MustCompile(`conflicts with full_path`),
 			},
 		},
 	})
@@ -269,6 +372,26 @@ resource "aws_api_gateway_resource" "copy" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "${replace(aws_api_gateway_resource.test.path, "/", "")}-copy"
+}
+`)
+}
+
+func testAccResourceConfig_fullPath(rName string, fullPath string) string {
+	return acctest.ConfigCompose(testAccResourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  full_path   = %[1]q
+}
+`, fullPath))
+}
+
+func testAccResourceConfig_fullPathConflict(rName string) string {
+	return acctest.ConfigCompose(testAccResourceConfig_base(rName), `
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  full_path   = "/users/123"
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "users"
 }
 `)
 }
