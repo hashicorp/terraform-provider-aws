@@ -1604,23 +1604,16 @@ func findVPC(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput
 }
 
 func findVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) ([]awstypes.Vpc, error) {
-	var output []awstypes.Vpc
+	output, err := tfslices.CollectWithError(listVPCs(ctx, conn, input, optFns...))
 
-	pages := ec2.NewDescribeVpcsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx, optFns...)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.Vpcs...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
