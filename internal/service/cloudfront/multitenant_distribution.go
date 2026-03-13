@@ -39,11 +39,10 @@ import (
 )
 
 const (
-	defaultConnectionAttempts        = 3
-	defaultConnectionTimeout         = 10
-	defaultResponseCompletionTimeout = 30
-	defaultOriginKeepaliveTimeout    = 5
-	defaultOriginReadTimeout         = 30
+	defaultConnectionAttempts     = 3
+	defaultConnectionTimeout      = 10
+	defaultOriginKeepaliveTimeout = 5
+	defaultOriginReadTimeout      = 30
 )
 
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
@@ -432,8 +431,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
-							Computed: true,
-							Default:  int32default.StaticInt32(defaultResponseCompletionTimeout),
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -1065,7 +1062,7 @@ type originModel struct {
 	OriginAccessControlID     types.String                                             `tfsdk:"origin_access_control_id" autoflex:",omitempty"`
 	OriginPath                types.String                                             `tfsdk:"origin_path"`
 	OriginShield              fwtypes.ListNestedObjectValueOf[originShieldModel]       `tfsdk:"origin_shield" autoflex:",omitempty"`
-	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout"`
+	ResponseCompletionTimeout types.Int32                                              `tfsdk:"response_completion_timeout" autoflex:",omitempty"`
 	VpcOriginConfig           fwtypes.ListNestedObjectValueOf[vpcOriginConfigModel]    `tfsdk:"vpc_origin_config" autoflex:",omitempty"`
 }
 

@@ -38,6 +38,9 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
+
+					// Check ResponseCompletionTimeout is not enabled with no value set
+					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
 				),
 			},
 			{
@@ -107,6 +110,9 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.0.header_name", "X-Custom-Header"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_header.0.header_value", "test-value"),
+
+					// Check ResponseCompletionTimeout is enabled with value set
+					resource.TestCheckResourceAttr(resourceName, "origin.0.response_completion_timeout", "30"),
 
 					// Check cache behaviors
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
@@ -431,9 +437,10 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   default_root_object = %[3]q
 
   origin {
-    domain_name = "example.com"
-    id          = "custom-origin"
-    origin_path = "/api"
+    domain_name                 = "example.com"
+    id                          = "custom-origin"
+    origin_path                 = "/api"
+    response_completion_timeout = 30
 
     custom_header {
       header_name  = "X-Custom-Header"
