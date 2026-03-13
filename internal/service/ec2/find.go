@@ -2075,23 +2075,16 @@ func findSecurityGroupRule(ctx context.Context, conn *ec2.Client, input *ec2.Des
 }
 
 func findSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) ([]awstypes.SecurityGroupRule, error) {
-	var output []awstypes.SecurityGroupRule
+	output, err := tfslices.CollectWithError(listSecurityGroupRules(ctx, conn, input, tfslices.PredicateTrue[awstypes.SecurityGroupRule]()))
 
-	pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.SecurityGroupRules...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
