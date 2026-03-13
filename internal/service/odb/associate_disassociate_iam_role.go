@@ -6,6 +6,7 @@ package odb
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"strings"
 	"time"
 
@@ -346,12 +347,10 @@ func (r *resourceAssociateDisassociateIAMRole) ImportState(ctx context.Context, 
 
 func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Client, resourceARN *string, iamRoleARN *string, timeout time.Duration) (*odb.AssociateIamRoleToResourceOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:                   enum.Slice(odbtypes.IamRoleStatusAssociating),
-		Target:                    enum.Slice(odbtypes.IamRoleStatusFailed, odbtypes.IamRoleStatusConnected),
-		Refresh:                   statusAssociateDisassociateIAMRole(ctx, conn, resourceARN, iamRoleARN),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(odbtypes.IamRoleStatusAssociating),
+		Target:  enum.Slice(odbtypes.IamRoleStatusFailed, odbtypes.IamRoleStatusConnected),
+		Refresh: statusAssociateDisassociateIAMRole(ctx, conn, resourceARN, iamRoleARN),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -409,7 +408,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 		iamRolesList := out.CloudVmCluster.IamRoles
 
 		for _, element := range iamRolesList {
-			if *element.IamRoleArn == roleARN {
+			if aws.ToString(element.IamRoleArn) == roleARN {
 				//we found the correct role
 				return &element, nil
 			}
@@ -429,7 +428,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 			return nil, err
 		}
 		for _, element := range out.CloudAutonomousVmCluster.IamRoles {
-			if *element.IamRoleArn == roleARN {
+			if aws.ToString(element.IamRoleArn) == roleARN {
 				//We found a match
 				return &element, nil
 			}

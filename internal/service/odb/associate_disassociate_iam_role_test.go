@@ -30,9 +30,6 @@ func TestAccODBAssociateDisassociateIAMRole_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	ignoreId := []string{
-		"id",
-	}
 	var associateDisassociateIAMRole odbtypes.IamRole
 	resourceName := "aws_odb_associate_disassociate_iam_role.test"
 
@@ -52,10 +49,10 @@ func TestAccODBAssociateDisassociateIAMRole_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: ignoreId,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "composite_arn",
 				ImportStateIdFunc: func(state *terraform.State) (string, error) {
 					rs, ok := state.RootModule().Resources[resourceName]
 					if !ok {
