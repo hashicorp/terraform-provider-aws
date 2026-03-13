@@ -1406,23 +1406,16 @@ func findSubnet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnet
 }
 
 func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
-	var output []awstypes.Subnet
+	output, err := tfslices.CollectWithError(listSubnets(ctx, conn, input))
 
-	pages := ec2.NewDescribeSubnetsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.Subnets...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
