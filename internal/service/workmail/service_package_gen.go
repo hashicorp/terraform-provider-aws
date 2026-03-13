@@ -29,6 +29,26 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newDefaultDomainResource,
+			TypeName: "aws_workmail_default_domain",
+			Name:     "Default Domain",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDomainResource,
+			TypeName: "aws_workmail_domain",
+			Name:     "Domain",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute(names.AttrDomainName, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      domainImportID{},
+			},
+		},
+		{
 			Factory:  newOrganizationResource,
 			TypeName: "aws_workmail_organization",
 			Name:     "Organization",
@@ -46,6 +66,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newDomainResourceAsListResource,
+			TypeName: "aws_workmail_domain",
+			Name:     "Domain",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute(names.AttrDomainName, true),
+			}),
+		},
 		{
 			Factory:  newOrganizationResourceAsListResource,
 			TypeName: "aws_workmail_organization",
