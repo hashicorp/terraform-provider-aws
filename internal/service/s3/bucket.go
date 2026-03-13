@@ -1660,7 +1660,7 @@ func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, buck
 	d.Set(names.AttrBucket, bucketName)
 	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
 
-	bucketNamespace := bucketNamespace(ctx, awsClient, bucketName)
+	bucketNamespace := bucketNamespace(bucketName)
 	d.Set("bucket_namespace", bucketNamespace)
 	if bucketNamespace == types.BucketNamespaceAccountRegional {
 		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(bucketName, fmt.Sprintf("-%s-%s-an", awsClient.AccountID(ctx), awsClient.Region(ctx))))
@@ -1778,7 +1778,7 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
 }
 
-func bucketNamespace(ctx context.Context, c *conns.AWSClient, bucket string) types.BucketNamespace {
+func bucketNamespace(bucket string) types.BucketNamespace {
 	if accountRegionalBucketNameRegex.MatchString(bucket) {
 		return types.BucketNamespaceAccountRegional
 	}
