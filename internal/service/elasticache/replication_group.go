@@ -834,16 +834,6 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("user_group_ids", rgp.UserGroupIds)
 
-	// Tags cannot be read when the replication group is not Available
-	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
-
-	const (
-		delay = 0 * time.Second
-	)
-	if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) create: %s", aws.ToString(rgp.ARN), err)
-	}
-
 	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
 
 	// This section reads settings that require checking the underlying cache clusters
