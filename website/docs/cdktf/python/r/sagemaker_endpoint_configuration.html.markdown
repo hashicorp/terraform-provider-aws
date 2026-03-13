@@ -74,6 +74,7 @@ This resource supports the following arguments:
 * `managed_instance_scaling` - (Optional) Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
 * `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
+* `capacity_reservation_config` - (Optional) Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint. See [capacity_reservation_config](#capacity_reservation_config) below.
 
 #### core_dump_config
 
@@ -83,6 +84,11 @@ This resource supports the following arguments:
 #### routing_config
 
 * `routing_strategy` - (Required) Sets how the endpoint routes incoming traffic. Valid values are `LEAST_OUTSTANDING_REQUESTS` and `RANDOM`. `LEAST_OUTSTANDING_REQUESTS` routes requests to the specific instances that have more capacity to process them. `RANDOM` routes each request to a randomly chosen instance.
+
+#### capacity_reservation_config
+
+* `capacity_reservation_preference` - (Optional) Options that you can choose for the capacity reservation. Valid value is `capacity-reservations-only`. `capacity-reservations-only` SageMaker AI launches instances only into an ML capacity reservation. If no capacity is available, the instances fail to launch.
+* `ml_reservation_arn` - (Optional) The Amazon Resource Name (ARN) that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
 
 #### serverless_config
 
