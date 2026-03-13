@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -34,6 +35,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+var webACLMutexes sync.Map // map[string]*sync.Mutex
+
+// getWebACLMutex provides per-WebACL mutex protection for rule operations.
+// This is the first layer of defense against race conditions within a single
+// provider instance. WAFv2 rules are not truly independent resources - all
+// rules on a WebACL are modified through the WebACL itself, creating high
+// potential for conflicts in large configurations with many rule resources.
+//
+// Defense layers:
+// 1. This mutex: Serializes operations on the same WebACL within provider instance
+// 2. Retry logic: Handles transient conflicts and AWS API rate limits
+// 3. Optimistic locking: Uses WebACL LockToken to detect concurrent modifications
+func getWebACLMutex(webACLID string) *sync.Mutex {
+	mutex, _ := webACLMutexes.LoadOrStore(webACLID, &sync.Mutex{})
+	return mutex.(*sync.Mutex)
+}
 
 // @FrameworkResource("aws_wafv2_web_acl_rule", name="Web ACL Rule")
 // @IdentityAttribute("web_acl_arn")
@@ -260,6 +278,13 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	// Large configurations with many aws_wafv2_web_acl_rule resources targeting the
+	// same WebACL are particularly susceptible since all rules modify the WebACL.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
@@ -414,6 +439,13 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
 		return
 	}
+
+	// Serialize operations on this WebACL to prevent intra-provider race conditions.
+	// Large configurations with many aws_wafv2_web_acl_rule resources targeting the
+	// same WebACL are particularly susceptible since all rules modify the WebACL.
+	mutex := getWebACLMutex(webACLID)
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
