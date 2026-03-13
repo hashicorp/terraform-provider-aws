@@ -591,7 +591,12 @@ argument should not be specified.
 * `origin_protocol_policy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
 * `origin_ssl_protocols` (Required) - List of SSL/TLS protocols that CloudFront can use when connecting to your origin over HTTPS. Valid values: `SSLv3`, `TLSv1`, `TLSv1.1`, `TLSv1.2`. For more information, see [Minimum Origin SSL Protocol](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols) in the Amazon CloudFront Developer Guide.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
+* `origin_mtls_config` - (Optional) The [origin mTLS configuration](#origin-mtls-config-arguments) for mutual TLS authentication between CloudFront and your origin.
 * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `30`.
+
+##### Origin mTLS Config Arguments
+
+* `client_certificate_arn` (Required) - ARN of the ACM certificate to use for mutual TLS authentication with the origin. The certificate must have Extended Key Usage set to TLS Web Client Authentication (OID 1.3.6.1.5.5.7.3.2).
 
 ##### Origin Shield Arguments
 
