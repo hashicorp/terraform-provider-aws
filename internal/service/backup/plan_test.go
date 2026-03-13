@@ -551,11 +551,17 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
 						"backup_options.%":          "1",
 						"backup_options.WindowsVSS": names.AttrEnabled,
 						names.AttrResourceType:      "EC2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":                "2",
+						"backup_options.BackupACLs":       names.AttrEnabled,
+						"backup_options.BackupObjectTags": names.AttrEnabled,
+						names.AttrResourceType:            "S3",
 					}),
 				),
 			},
@@ -569,11 +575,17 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
 						"backup_options.%":          "1",
 						"backup_options.WindowsVSS": "disabled",
 						names.AttrResourceType:      "EC2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":                "2",
+						"backup_options.BackupACLs":       names.AttrEnabled,
+						"backup_options.BackupObjectTags": names.AttrEnabled,
+						names.AttrResourceType:            "S3",
 					}),
 				),
 			},
@@ -1231,6 +1243,15 @@ resource "aws_backup_plan" "test" {
 
     resource_type = "EC2"
   }
+
+	advanced_backup_setting {
+		backup_options = {
+			BackupACLs      = "enabled"
+			BackupObjectTags = "enabled"
+		}
+
+		resource_type = "S3"
+	}
 }
 `, rName)
 }
@@ -1262,6 +1283,15 @@ resource "aws_backup_plan" "test" {
 
     resource_type = "EC2"
   }
+
+	advanced_backup_setting {
+		backup_options = {
+			BackupACLs      = "enabled"
+			BackupObjectTags = "enabled"
+		}
+
+		resource_type = "S3"
+	}
 }
 `, rName)
 }
