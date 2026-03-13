@@ -158,6 +158,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
+			Factory:  resourceGroupRetention,
+			TypeName: "aws_cloudwatch_log_group_retention",
+			Name:     "Log Group Retention",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceMetricFilter,
 			TypeName: "aws_cloudwatch_log_metric_filter",
 			Name:     "Metric Filter",
