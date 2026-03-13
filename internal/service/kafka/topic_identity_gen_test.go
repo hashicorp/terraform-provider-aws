@@ -68,11 +68,12 @@ func TestAccKafkaTopic_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: testAccTopicImportStateIDFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    testAccTopicImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 
 			// Step 3: Import block with Import ID
@@ -160,11 +161,12 @@ func TestAccKafkaTopic_Identity_regionOverride(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTopicImportStateIDFunc),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTopicImportStateIDFunc),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 
 			// Step 3: Import block with Import ID

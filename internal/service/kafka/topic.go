@@ -44,6 +44,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdFunc="testAccTopicImportStateIDFunc")
+// @Testing(importStateIdAttribute="name")
 func newTopicResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &topicResource{}
 
