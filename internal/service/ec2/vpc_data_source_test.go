@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,10 +14,10 @@ import (
 
 func TestAccVPCDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt1 := sdkacctest.RandIntRange(1, 128)
-	rInt2 := sdkacctest.RandIntRange(128, 254)
+	rInt1 := acctest.RandIntRange(t, 1, 128)
+	rInt2 := acctest.RandIntRange(t, 128, 254)
 	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	vpcResourceName := "aws_vpc.test"
 	ds1ResourceName := "data.aws_vpc.by_id"
@@ -26,7 +25,7 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 	ds3ResourceName := "data.aws_vpc.by_tag"
 	ds4ResourceName := "data.aws_vpc.by_filter"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,9 +68,9 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

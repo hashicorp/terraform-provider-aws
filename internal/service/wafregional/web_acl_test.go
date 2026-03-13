@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ import (
 func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -57,7 +56,7 @@ func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -103,7 +102,7 @@ func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -135,7 +134,7 @@ func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -167,8 +166,8 @@ func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
-	wafAclNewName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
+	wafAclNewName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -211,8 +210,8 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
-	wafAclNewName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
+	wafAclNewName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -255,7 +254,7 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -279,7 +278,7 @@ func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -312,7 +311,7 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 	var v awstypes.WebACL
 	var r awstypes.Rule
 	var idx int
-	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	wafAclName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -358,7 +357,7 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL1, webACL2, webACL3 awstypes.WebACL
-	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

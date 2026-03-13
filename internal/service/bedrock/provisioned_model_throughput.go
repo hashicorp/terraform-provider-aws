@@ -40,6 +40,7 @@ import (
 // @ArnIdentity("provisioned_model_arn", identityDuplicateAttributes="id")
 // Testing is cost-prohibitive
 // @Testing(tagsTest=false, identityTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &provisionedModelThroughputResource{}
 

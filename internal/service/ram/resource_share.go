@@ -35,6 +35,7 @@ const (
 
 // @SDKResource("aws_ram_resource_share", name="Resource Share")
 // @Tags(identifierAttribute="arn", resourceType="ResourceShare")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShare")
 func resourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareCreate,

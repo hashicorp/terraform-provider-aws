@@ -61,7 +61,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 			result.DisplayName = aws.ToString(output.LogGroupName)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

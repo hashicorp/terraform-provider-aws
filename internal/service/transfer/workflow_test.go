@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -63,7 +62,7 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -110,7 +109,7 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -138,7 +137,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -184,7 +183,7 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -208,7 +207,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
-	rName := sdkacctest.RandString(25)
+	rName := acctest.RandString(t, 25)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
