@@ -31,6 +31,13 @@ func (v *stateValue) GetStateValue(resourceAddress string, attributePath tfjsonp
 	return newStateValueStateChecker(v)
 }
 
+func (v *stateValue) Value() string {
+	if v.value == nil {
+		return "<state value not set>"
+	}
+	return *v.value
+}
+
 // ValueCheck checks the stored state value against the provided value.
 // Calls to ValueCheck occur before any TestStep is run.
 func (v *stateValue) ValueCheck() knownvalue.Check {
