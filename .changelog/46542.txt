@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `replicate_source_db_cluster` attribute
+```
+

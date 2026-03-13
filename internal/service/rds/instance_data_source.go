@@ -193,6 +193,10 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"replicate_source_db_cluster": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -308,6 +312,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set("replicate_source_db_cluster", instance.ReadReplicaSourceDBClusterIdentifier)
 	d.Set(names.AttrResourceID, instance.DbiResourceId)
 	d.Set(names.AttrStorageEncrypted, instance.StorageEncrypted)
 	d.Set("storage_throughput", instance.StorageThroughput)

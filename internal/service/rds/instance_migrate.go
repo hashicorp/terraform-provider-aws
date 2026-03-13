@@ -273,6 +273,11 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Optional: true,
 			},
 
+			"replicate_source_db_cluster": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"replicas": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -709,6 +714,10 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replicate_source_db": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"replicate_source_db_cluster": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
