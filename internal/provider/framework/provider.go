@@ -113,6 +113,20 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "File containing custom root and intermediate certificates. Can also be configured using the `AWS_CA_BUNDLE` environment variable. (Setting `ca_bundle` in the shared config file is not supported.)",
 			},
+			"client_certificate": schema.StringAttribute{
+				Optional:    true,
+				Description: "File containing the client certificate for mTLS authentication. Can also be configured using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.",
+			},
+			"client_private_key": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: "File containing the client private key for mTLS authentication. Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.",
+			},
+			"client_private_key_passphrase": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Passphrase for the client private key file. Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.",
+			},
 			"ec2_metadata_service_endpoint": schema.StringAttribute{
 				Optional:    true,
 				Description: "Address of the EC2 metadata service endpoint to use. Can also be configured using the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.",
