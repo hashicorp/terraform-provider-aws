@@ -7171,23 +7171,16 @@ func findSecondaryNetwork(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 }
 
 func findSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) ([]awstypes.SecondaryNetwork, error) {
-	var output []awstypes.SecondaryNetwork
+	output, err := tfslices.CollectWithError(listSecondaryNetworks(ctx, conn, input))
 
-	pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.SecondaryNetworks...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
@@ -7230,23 +7223,16 @@ func findSecondarySubnet(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 }
 
 func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) ([]awstypes.SecondarySubnet, error) {
-	var output []awstypes.SecondarySubnet
+	output, err := tfslices.CollectWithError(listSecondarySubnets(ctx, conn, input))
 
-	pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.SecondarySubnets...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
