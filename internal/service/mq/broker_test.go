@@ -348,8 +348,8 @@ func TestNormalizeEngineVersion(t *testing.T) {
 const (
 	testAccActiveVersionNormalized5_18 = "5.18"
 	testAccRabbitVersionNormalized3_13 = "3.13"
-	testAccNoAutoMinorVersionUpgrade   = "false"
-	testAccAutoMinorVersionUpgrade     = "true"
+	// testAccNoAutoMinorVersionUpgrade   = acctest.CtFalse
+	testAccAutoMinorVersionUpgrade = acctest.CtTrue
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
