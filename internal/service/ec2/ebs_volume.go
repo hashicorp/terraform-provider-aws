@@ -348,6 +348,21 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 	throughput := diff.Get(names.AttrThroughput).(int)
 	volumeType := awstypes.VolumeType(diff.Get(names.AttrType).(string))
 
+	var isKnownType bool
+	for _, v := range volumeType.Values() {
+		if volumeType == v {
+			isKnownType = true
+			break
+		}
+	}
+
+	if !isKnownType {
+		// if the volume type is not known to this provider then we can't
+		// assume that rules about iops, multi-attach, etc apply to it
+		// so just return
+		return nil
+	}
+
 	if diff.Id() == "" {
 		// Create.
 
