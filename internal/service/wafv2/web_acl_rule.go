@@ -501,6 +501,25 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Read back the WebACL to get computed values
+	webACL, err = findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(err), smerr.ID, plan.Name.ValueString())
+		return
+	}
+
+	// Find the updated rule
+	updatedRuleFromAWS := findRuleInWebACL(webACL, plan.Name.ValueString())
+	if updatedRuleFromAWS == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, smarterr.NewError(fmt.Errorf("updated rule not found in Web ACL after update")), smerr.ID, plan.Name.ValueString())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, updatedRuleFromAWS, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
