@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_workmail_domain
+```
+
+```release-note:new-resource
+aws_workmail_default_domain
+```
+
+```release-note:new-list-resource
+aws_workmail_domain
+```
