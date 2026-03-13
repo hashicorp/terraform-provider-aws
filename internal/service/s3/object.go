@@ -328,6 +328,9 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	// Content changes take precedence as they require a full re-upload,
+	// which will also apply the new encryption settings.
 	if hasObjectContentChanges(d) {
 		return append(diags, resourceObjectUpload(ctx, d, meta)...)
 	}
@@ -401,6 +404,52 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting S3 Object (%s) retention: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("server_side_encryption", names.AttrKMSKeyID, "bucket_key_enabled") {
+		// New Feature (Jan 2026): UpdateObjectEncryption
+		// Allows changing encryption without re-uploading/copying data.
+
+		input := &s3.UpdateObjectEncryptionInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		}
+
+		sse := d.Get("server_side_encryption").(string)
+		// If explicit KMS Key ID is provided, imply aws:kms if sse not set
+		if sse == "" && d.Get(names.AttrKMSKeyID).(string) != "" {
+			sse = string(types.ServerSideEncryptionAwsKms)
+		}
+
+		if sse == string(types.ServerSideEncryptionAwsKms) {
+			kmsParams := types.SSEKMSEncryption{}
+
+			// KMS Key ARN is required for SSE-KMS updates
+			if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+				kmsParams.KMSKeyArn = aws.String(v.(string))
+			}
+			if v, ok := d.GetOk("bucket_key_enabled"); ok {
+				kmsParams.BucketKeyEnabled = aws.Bool(v.(bool))
+			}
+
+			// Only proceed if we have a key ARN (required by API for SSE-KMS)
+			if kmsParams.KMSKeyArn != nil {
+				input.ObjectEncryption = &types.ObjectEncryptionMemberSSEKMS{
+					Value: kmsParams,
+				}
+			}
+		}
+
+		// Only call API if we have a valid encryption input constructed
+		if input.ObjectEncryption != nil {
+			input.ChecksumAlgorithm = types.ChecksumAlgorithmCrc32
+
+			_, err := conn.UpdateObjectEncryption(ctx, input, optFns...)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating S3 Object (%s) encryption: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -616,8 +665,28 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 }
 
 func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
+	if d.HasChange("server_side_encryption") {
+		// UpdateObjectEncryption only supports switching TO AWS:KMS with a key.
+		// Switching to AES256 (SSE-S3) is not supported by the union type in SDK v1.96.0 yet.
+		// So we must re-upload if target is NOT aws:kms.
+		newSSE := d.Get("server_side_encryption").(string)
+		// Also handle implied KMS
+		if newSSE == "" && d.Get(names.AttrKMSKeyID).(string) != "" {
+			newSSE = string(types.ServerSideEncryptionAwsKms)
+		}
+
+		if newSSE != string(types.ServerSideEncryptionAwsKms) {
+			return true
+		}
+	}
+
 	return slices.ContainsFunc([]string{
-		"bucket_key_enabled",
+		// Encryption fields handled above or in resourceObjectUpdate:
+		// "bucket_key_enabled",
+		// "server_side_encryption",
+		// names.AttrKMSKeyID,
+		// Note: KMS Key ID change implies aws:kms target, so safe to do in-place.
+
 		"cache_control",
 		"checksum_algorithm",
 		"content_base64",
@@ -627,9 +696,9 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		names.AttrContentType,
 		names.AttrContent,
 		"etag",
-		names.AttrKMSKeyID,
+		// names.AttrKMSKeyID,
 		"metadata",
-		"server_side_encryption",
+		// "server_side_encryption",
 		names.AttrSource,
 		"source_hash",
 		names.AttrStorageClass,
