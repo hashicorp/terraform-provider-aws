@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_kms_key" "test" {

@@ -16,8 +16,8 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-    instance_type     = "ml.m5.large"
-    instance_count    = 1
+    instance_type  = "ml.m5.large"
+    instance_count = 1
     volume_size_in_gb = 30
   }
 
@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 resource "aws_kms_key" "test" {
