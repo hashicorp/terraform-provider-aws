@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `auto_switchover` argument to `blue_green_update` configuration block to support a two-apply workflow for Blue/Green deployments
+```

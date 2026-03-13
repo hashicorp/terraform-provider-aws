@@ -7291,6 +7291,125 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_autoSwitchoverFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the initial instance (no blue/green yet)
+				Config: testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_identifier", ""),
+				),
+			},
+			{
+				// Step 2: Enable blue/green with auto_switchover=false - creates green but does not switch over
+				Config: testAccInstanceConfig_BlueGreenDeployment_autoSwitchover(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.auto_switchover", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, "blue_green_deployment_identifier"),
+					// Engine version should NOT have changed yet (still on blue)
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
+				),
+			},
+			{
+				// Step 3: Set auto_switchover=true - performs the switchover
+				Config: testAccInstanceConfig_BlueGreenDeployment_autoSwitchover(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.auto_switchover", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.update", names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_identifier", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+					"latest_restorable_time",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_autoSwitchoverAbort(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the initial instance
+				Config: testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+				),
+			},
+			{
+				// Step 2: Create green environment with auto_switchover=false
+				Config: testAccInstanceConfig_BlueGreenDeployment_autoSwitchover(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "blue_green_deployment_identifier"),
+				),
+			},
+			{
+				// Step 3: Remove blue_green_update entirely - should clean up the green environment
+				Config: testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_identifier", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -14591,6 +14710,55 @@ resource "aws_db_instance" "test" {
   }
 }
 `, rName, password))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_autoSwitchover(rName string, update bool, autoSwitchover bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${local.engine_version.parameter_group_family}"
+  skip_final_snapshot     = true
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  username                = "tfacctest"
+
+  blue_green_update {
+    enabled         = true
+    auto_switchover = %[5]t
+  }
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = local.engine_version.engine
+  engine_version = local.engine_version.version
+  license_model  = "general-public-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = [%[2]s]
+}
+
+data "aws_rds_engine_version" "initial" {
+  engine                    = %[3]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_rds_engine_version.update.version_actual]
+}
+
+data "aws_rds_engine_version" "update" {
+  engine = %[3]q
+}
+
+locals {
+  engine_version = %[4]t ? data.aws_rds_engine_version.update : data.aws_rds_engine_version.initial
+}
+`, rName, mainInstanceClasses, tfrds.InstanceEngineMySQL, update, autoSwitchover))
 }
 
 func testAccInstanceConfig_engineVersion(rName string, update bool) string {
