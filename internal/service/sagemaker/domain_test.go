@@ -271,14 +271,19 @@ func testAccDomain_sharingSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_sharingSettings(rName),
+				Config: testAccDomainConfig_sharingSettings(rName, "sharing"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", names.AttrKeyID),
-					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+					resource.TestMatchResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path", regexache.MustCompile(`^s3://tf-acc-.+/sharing$`)),
 				),
 			},
 			{
@@ -286,6 +291,23 @@ func testAccDomain_sharingSettings(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_sharingSettings(rName, "sharing-updated"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", names.AttrKeyID),
+					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+					resource.TestMatchResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path", regexache.MustCompile(`^s3://tf-acc-.+/sharing-updated$`)),
+				),
 			},
 		},
 	})
@@ -1285,7 +1307,7 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainConfig_sharingSettings(rName),
+				Config: testAccDomainConfig_sharingSettings(rName, "sharing"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "VpcOnly"),
@@ -2129,7 +2151,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccDomainConfig_sharingSettings(rName string) string {
+func testAccDomainConfig_sharingSettings(rName, s3KeyPrefix string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -2156,7 +2178,7 @@ resource "aws_sagemaker_domain" "test" {
     sharing_settings {
       notebook_output_option = "Allowed"
       s3_kms_key_id          = aws_kms_key.test.key_id
-      s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
+      s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/%[2]s"
     }
   }
 
@@ -2164,7 +2186,7 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName))
+`, rName, s3KeyPrefix))
 }
 
 func testAccDomainConfig_canvasAppSettings(rName string) string {
