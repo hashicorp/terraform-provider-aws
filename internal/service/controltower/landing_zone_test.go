@@ -227,3 +227,167 @@ resource "aws_controltower_landing_zone" "test" {
 }
 `, acctest.Region(), landingZoneVersion, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+
+func TestSuppressEquivalentLandingZoneManifestDiffs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		old      string
+		new      string
+		expected bool
+	}{
+		{
+			name: "identical manifests",
+			old: `{
+				"governedRegions": ["us-east-1", "us-west-2"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 365
+						},
+						"accessLoggingBucket": {
+							"retentionDays": 365
+						}
+					}
+				}
+			}`,
+			new: `{
+				"governedRegions": ["us-east-1", "us-west-2"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 365
+						},
+						"accessLoggingBucket": {
+							"retentionDays": 365
+						}
+					}
+				}
+			}`,
+			expected: true,
+		},
+		{
+			name: "retentionDays number vs string",
+			old: `{
+				"governedRegions": ["us-east-1"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": "365"
+						},
+						"accessLoggingBucket": {
+							"retentionDays": "90"
+						}
+					}
+				}
+			}`,
+			new: `{
+				"governedRegions": ["us-east-1"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 365
+						},
+						"accessLoggingBucket": {
+							"retentionDays": 90
+						}
+					}
+				}
+			}`,
+			expected: true,
+		},
+		{
+			name: "governedRegions different order",
+			old: `{
+				"governedRegions": ["us-east-1", "eu-west-2", "us-west-2"]
+			}`,
+			new: `{
+				"governedRegions": ["eu-west-2", "us-east-1", "us-west-2"]
+			}`,
+			expected: true,
+		},
+		{
+			name: "governedRegions different order with nested config",
+			old: `{
+				"governedRegions": ["us-east-1", "eu-west-2", "us-west-2"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 365
+						}
+					}
+				}
+			}`,
+			new: `{
+				"governedRegions": ["eu-west-2", "us-east-1", "us-west-2"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 365
+						}
+					}
+				}
+			}`,
+			expected: true,
+		},
+		{
+			name: "different governedRegions",
+			old: `{
+				"governedRegions": ["us-east-1", "us-west-2"]
+			}`,
+			new: `{
+				"governedRegions": ["us-east-1"]
+			}`,
+			expected: false,
+		},
+		{
+			name: "different retentionDays values",
+			old: `{
+				"governedRegions": ["us-east-1"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 365
+						}
+					}
+				}
+			}`,
+			new: `{
+				"governedRegions": ["us-east-1"],
+				"centralizedLogging": {
+					"configurations": {
+						"loggingBucket": {
+							"retentionDays": 90
+						}
+					}
+				}
+			}`,
+			expected: false,
+		},
+		{
+			name:     "both empty",
+			old:      "",
+			new:      "",
+			expected: true,
+		},
+		{
+			name:     "one empty",
+			old:      "",
+			new:      `{"governedRegions": ["us-east-1"]}`,
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := tfcontroltower.SuppressEquivalentLandingZoneManifestDiffs("manifest_json", tc.old, tc.new, nil)
+			if actual != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
