@@ -78,7 +78,7 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 
 			result.DisplayName = resourceRoleDisplayName(role)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
