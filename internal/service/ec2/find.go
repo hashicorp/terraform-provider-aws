@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 	"slices"
 	"strconv"
 	"strings"
@@ -429,28 +428,6 @@ func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIns
 	}
 
 	return output, nil
-}
-
-// DescribeInstances is an "All-Or-Some" call.
-func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
-	return func(yield func(awstypes.Instance, error) bool) {
-		pages := ec2.NewDescribeInstancesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(inttypes.Zero[awstypes.Instance](), fmt.Errorf("listing EC2 Instances: %w", err))
-				return
-			}
-
-			for _, v := range page.Reservations {
-				for _, v := range v.Instances {
-					if !yield(v, nil) {
-						return
-					}
-				}
-			}
-		}
-	}
 }
 
 func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) ([]awstypes.InstanceCreditSpecification, error) {
@@ -5239,29 +5216,6 @@ func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 	}
 
 	return output, nil
-}
-
-func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
-	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
-		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, v := range page.TransitGatewayMeteringPolicies {
-				if !yield(v, nil) {
-					return false
-				}
-			}
-
-			return !lastPage
-		})
-
-		if err != nil {
-			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
-			return
-		}
-	}
 }
 
 func findTransitGatewayMeteringPolicy(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) (*awstypes.TransitGatewayMeteringPolicy, error) {

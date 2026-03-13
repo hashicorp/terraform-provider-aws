@@ -5,8 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -88,7 +86,7 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for rule, err := range listSecurityGroupEgressRules(ctx, conn, &input) {
+		for rule, err := range listSecurityGroupRules(ctx, conn, &input, func(v awstypes.SecurityGroupRule) bool { return aws.ToBool(v.IsEgress) }) {
 			if err != nil {
 				tflog.Error(ctx, "Listing resources", map[string]any{
 					"error": err.Error(),
@@ -132,29 +130,6 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listSecurityGroupEgressRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) iter.Seq2[awstypes.SecurityGroupRule, error] {
-	return func(yield func(awstypes.SecurityGroupRule, error) bool) {
-		pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecurityGroupRule{}, fmt.Errorf("listing VPC Security Group Egress Rules: %w", err))
-				return
-			}
-
-			for _, rule := range page.SecurityGroupRules {
-				if !aws.ToBool(rule.IsEgress) {
-					continue
-				}
-
-				if !yield(rule, nil) {
-					return
-				}
 			}
 		}
 	}

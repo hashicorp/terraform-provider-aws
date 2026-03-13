@@ -5,12 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -76,23 +73,4 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 
 type listSecondaryNetworkModel struct {
 	framework.WithRegionModel
-}
-
-func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) iter.Seq2[awstypes.SecondaryNetwork, error] {
-	return func(yield func(awstypes.SecondaryNetwork, error) bool) {
-		pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecondaryNetwork{}, fmt.Errorf("listing EC2 Secondary Network resources: %w", err))
-				return
-			}
-
-			for _, item := range page.SecondaryNetworks {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
 }

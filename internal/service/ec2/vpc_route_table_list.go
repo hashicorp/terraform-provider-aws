@@ -6,11 +6,9 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -151,25 +149,6 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) iter.Seq2[awstypes.RouteTable, error] {
-	return func(yield func(awstypes.RouteTable, error) bool) {
-		pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.RouteTable{}, fmt.Errorf("listing EC2 Route Tables: %w", err))
-				return
-			}
-
-			for _, routeTable := range page.RouteTables {
-				if !yield(routeTable, nil) {
-					return
-				}
 			}
 		}
 	}

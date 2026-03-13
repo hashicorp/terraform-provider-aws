@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -185,25 +184,6 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) iter.Seq2[awstypes.Vpc, error] {
-	return func(yield func(awstypes.Vpc, error) bool) {
-		pages := ec2.NewDescribeVpcsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Vpc{}, fmt.Errorf("listing EC2 VPCs: %w", err))
-				return
-			}
-
-			for _, vpc := range page.Vpcs {
-				if !yield(vpc, nil) {
-					return
-				}
 			}
 		}
 	}

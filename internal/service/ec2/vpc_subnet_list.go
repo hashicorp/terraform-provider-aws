@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -173,25 +172,6 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) iter.Seq2[awstypes.Subnet, error] {
-	return func(yield func(awstypes.Subnet, error) bool) {
-		pages := ec2.NewDescribeSubnetsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Subnet{}, fmt.Errorf("listing EC2 Subnets: %w", err))
-				return
-			}
-
-			for _, subnet := range page.Subnets {
-				if !yield(subnet, nil) {
-					return
-				}
 			}
 		}
 	}

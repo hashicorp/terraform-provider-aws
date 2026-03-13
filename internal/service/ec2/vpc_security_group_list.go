@@ -6,11 +6,9 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -141,25 +139,6 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) iter.Seq2[awstypes.SecurityGroup, error] {
-	return func(yield func(awstypes.SecurityGroup, error) bool) {
-		pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecurityGroup{}, fmt.Errorf("listing EC2 Security Groups: %w", err))
-				return
-			}
-
-			for _, item := range page.SecurityGroups {
-				if !yield(item, nil) {
-					return
-				}
 			}
 		}
 	}
