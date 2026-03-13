@@ -180,6 +180,8 @@ In addition, you can specify custom actions that are compatible with your standa
 
 * `tls_inspection_configuration_arn` - (Optional) The (ARN) of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."  This cannot be removed from a FW Policy.
 
+* `enable_tls_session_holding` - (Optional) Indicates whether stateful network traffic is subject to TLS session holding. When enabled, prevents TCP and TLS packets from reaching destination servers until TLS Inspection has evaluated Server Name Indication (SNI) rules. Requires an associated TLS Inspection configuration. Default: `false`.
+
 ### Rule Variables
 
 The `rule_variables` block supports the following arguments:

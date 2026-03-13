@@ -213,6 +213,10 @@ func resourceFirewallPolicy() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
+							"enable_tls_session_holding": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
 				},
@@ -590,6 +594,10 @@ func expandFirewallPolicy(tfList []any) *awstypes.FirewallPolicy {
 		apiObject.TLSInspectionConfigurationArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["enable_tls_session_holding"].(bool); ok {
+		apiObject.EnableTLSSessionHolding = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -626,6 +634,9 @@ func flattenFirewallPolicy(apiObject *awstypes.FirewallPolicy) []any {
 	}
 	if apiObject.TLSInspectionConfigurationArn != nil {
 		tfMap["tls_inspection_configuration_arn"] = aws.ToString(apiObject.TLSInspectionConfigurationArn)
+	}
+	if apiObject.EnableTLSSessionHolding != nil {
+		tfMap["enable_tls_session_holding"] = aws.ToBool(apiObject.EnableTLSSessionHolding)
 	}
 
 	return []any{tfMap}
