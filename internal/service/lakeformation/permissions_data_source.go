@@ -146,7 +146,8 @@ func DataSourcePermissions() *schema.Resource {
 						},
 						names.AttrExpression: {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -165,6 +166,25 @@ func DataSourcePermissions() *schema.Resource {
 										},
 									},
 								},
+							},
+							AtLeastOneOf: []string{
+								"lf_tag_policy.0.expression",
+								"lf_tag_policy.0.expression_name",
+							},
+							ConflictsWith: []string{
+								"lf_tag_policy.0.expression_name",
+							},
+						},
+						"expression_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							AtLeastOneOf: []string{
+								"lf_tag_policy.0.expression",
+								"lf_tag_policy.0.expression_name",
+							},
+							ConflictsWith: []string{
+								"lf_tag_policy.0.expression",
 							},
 						},
 						names.AttrResourceType: {
