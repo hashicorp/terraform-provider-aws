@@ -54,6 +54,7 @@ type Config struct {
 	SecretKey                      string
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
+	SkipArnValidation              bool
 	SkipCredsValidation            bool
 	SkipRegionValidation           bool
 	SkipRequestingAccountId        bool

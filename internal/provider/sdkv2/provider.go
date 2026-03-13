@@ -225,6 +225,12 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
+				"skip_arn_validation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Description: "Skip static validation of ARN format in the provider configuration. " +
+						"Used by users of alternative AWS-like APIs that use non-standard ARN formats.",
+				},
 				"skip_credentials_validation": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -377,6 +383,7 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
+		SkipArnValidation:              d.Get("skip_arn_validation").(bool),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
@@ -456,6 +463,23 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
 		})
+	}
+
+	if !config.SkipArnValidation {
+		for i, ar := range config.AssumeRole {
+			if _, errs := verify.ValidARN(ar.RoleARN, fmt.Sprintf("assume_role.%d.role_arn", i)); len(errs) > 0 {
+				for _, err := range errs {
+					diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: err.Error()})
+				}
+			}
+		}
+		if config.AssumeRoleWithWebIdentity != nil && config.AssumeRoleWithWebIdentity.RoleARN != "" {
+			if _, errs := verify.ValidARN(config.AssumeRoleWithWebIdentity.RoleARN, "assume_role_with_web_identity.0.role_arn"); len(errs) > 0 {
+				for _, err := range errs {
+					diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: err.Error()})
+				}
+			}
+		}
 	}
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -954,15 +978,13 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 					Elem: &schema.Schema{
-						Type:         schema.TypeString,
-						ValidateFunc: verify.ValidARN,
+						Type: schema.TypeString,
 					},
 				},
 				"role_arn": {
-					Type:         schema.TypeString,
-					Optional:     true, // For historical reasons, we allow an empty `assume_role` block
-					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
-					ValidateFunc: verify.ValidARN,
+					Type:        schema.TypeString,
+					Optional:    true, // For historical reasons, we allow an empty `assume_role` block
+					Description: "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 				},
 				"session_name": {
 					Type:         schema.TypeString,
@@ -1017,15 +1039,13 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 					Optional:    true,
 					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 					Elem: &schema.Schema{
-						Type:         schema.TypeString,
-						ValidateFunc: verify.ValidARN,
+						Type: schema.TypeString,
 					},
 				},
 				"role_arn": {
-					Type:         schema.TypeString,
-					Optional:     true, // For historical reasons, we allow an empty `assume_role_with_web_identity` block
-					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
-					ValidateFunc: verify.ValidARN,
+					Type:        schema.TypeString,
+					Optional:    true, // For historical reasons, we allow an empty `assume_role_with_web_identity` block
+					Description: "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 				},
 				"session_name": {
 					Type:         schema.TypeString,
