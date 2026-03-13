@@ -569,7 +569,27 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	deleteInput := batch.DeleteComputeEnvironmentInput{
 		ComputeEnvironment: aws.String(d.Id()),
 	}
-	_, err = conn.DeleteComputeEnvironment(ctx, &deleteInput)
+
+	// Retry the delete because AWS Batch has eventual consistency for job queue
+	// disassociation. When a compute environment is being replaced
+	// (create_before_destroy), the referencing job queue is updated to point to
+	// the new compute environment before the old one is deleted. However, the
+	// relationship may not have propagated yet, causing the delete to fail with
+	// "Cannot delete, found existing JobQueue relationship".
+	// See: https://github.com/hashicorp/terraform-provider-aws/issues/46925
+	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.DeleteComputeEnvironment(ctx, &deleteInput)
+
+		if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "existing JobQueue relationship") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Batch Compute Environment (%s): %s", d.Id(), err)
