@@ -86,6 +86,27 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
+func TestAccVPCDataSource_IPv6CIDRBlockAssociations_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_vpc.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCDataSourceConfig_IPv6CIDRBlockAssociationsMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_block_associations.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVPCDataSourceConfig_basic(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -138,6 +159,32 @@ resource "aws_vpc_ipv4_cidr_block_association" "test" {
 
 data "aws_vpc" "test" {
   id = aws_vpc_ipv4_cidr_block_association.test.vpc_id
+}
+`, rName)
+}
+
+func testAccVPCDataSourceConfig_IPv6CIDRBlockAssociationsMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipv6_cidr_block_association" "test" {
+  vpc_id                           = aws_vpc.test.id
+  assign_generated_ipv6_cidr_block = true
+}
+
+
+data "aws_vpc" "test" {
+  depends_on = [
+    aws_vpc_ipv6_cidr_block_association.test
+  ]
+  id = aws_vpc.test.id
 }
 `, rName)
 }
