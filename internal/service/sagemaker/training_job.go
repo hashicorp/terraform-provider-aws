@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -73,7 +74,7 @@ const (
 )
 
 var (
-	serverlessBaseModelARNVersionRegex = regexp.MustCompile(`/\d{1,4}\.\d{1,4}\.\d{1,4}$`)
+	serverlessBaseModelARNVersionRegex = regexache.MustCompile(`/\d{1,4}\.\d{1,4}\.\d{1,4}$`)
 )
 
 type resourceTrainingJob struct {
@@ -117,14 +118,14 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"environment": schema.MapAttribute{
+			names.AttrEnvironment: schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 				Validators: []validator.Map{
 					mapvalidator.SizeBetween(0, 100),
 					mapvalidator.KeysAre(stringvalidator.All(
 						stringvalidator.LengthBetween(0, 512),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`), "key must start with a letter or underscore and contain only letters, digits, and underscores"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`), "key must start with a letter or underscore and contain only letters, digits, and underscores"),
 					)),
 					mapvalidator.ValueStringsAre(stringvalidator.All(
 						stringvalidator.LengthBetween(0, 512),
@@ -156,7 +157,7 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -183,7 +184,7 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"session_chaining_config":      sessionChainingConfigBlock(ctx),
 			"stopping_condition":           stoppingConditionBlock(ctx),
 			"tensor_board_output_config":   tensorBoardOutputConfigBlock(ctx),
-			"vpc_config":                   vpcConfigBlock(ctx),
+			names.AttrVPCConfig:            vpcConfigBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -212,7 +213,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 					MarkdownDescription: "Name or ARN of a SageMaker algorithm resource. Exactly one of `algorithm_name` or `training_image` must be set.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 170),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*\/)?([a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)?`), "must be a valid algorithm name or ARN"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*\/)?([a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)?`), "must be a valid algorithm name or ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -276,7 +277,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
+							names.AttrName: schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 255),
@@ -357,7 +358,7 @@ func checkpointConfigBlock(ctx context.Context) schema.Block {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -405,7 +406,7 @@ func debugHookConfigBlock(ctx context.Context) schema.Block {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -448,7 +449,7 @@ func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_type": schema.StringAttribute{
+				names.AttrInstanceType: schema.StringAttribute{
 					Optional:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.ProcessingInstanceType](),
 					PlanModifiers: []planmodifier.String{
@@ -502,7 +503,7 @@ func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -536,7 +537,7 @@ func experimentConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 120),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -546,7 +547,7 @@ func experimentConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 120),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -556,7 +557,7 @@ func experimentConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 120),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -566,7 +567,7 @@ func experimentConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 120),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -608,7 +609,7 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 64),
-						stringvalidator.RegexMatches(regexp.MustCompile(`[A-Za-z0-9\.\-_]+`), "must contain only letters, numbers, dots, hyphens, and underscores"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z0-9\.\-_]+`), "must contain only letters, numbers, dots, hyphens, and underscores"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -623,7 +624,7 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"content_type": schema.StringAttribute{
+				names.AttrContentType: schema.StringAttribute{
 					Optional: true,
 					Computed: true,
 					Validators: []validator.String{
@@ -684,11 +685,11 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 												stringplanmodifier.RequiresReplace(),
 											},
 										},
-										"file_system_id": schema.StringAttribute{
+										names.AttrFileSystemID: schema.StringAttribute{
 											Required: true,
 											Validators: []validator.String{
 												stringvalidator.LengthBetween(11, 21),
-												stringvalidator.RegexMatches(regexp.MustCompile(`(fs-[0-9a-f]{8,})`), ""),
+												stringvalidator.RegexMatches(regexache.MustCompile(`(fs-[0-9a-f]{8,})`), ""),
 											},
 											PlanModifiers: []planmodifier.String{
 												stringplanmodifier.RequiresReplace(),
@@ -718,7 +719,7 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 												listvalidator.SizeBetween(0, 16),
 												listvalidator.ValueStringsAre(
 													stringvalidator.LengthBetween(1, 256),
-													stringvalidator.RegexMatches(regexp.MustCompile(`.+`), ""),
+													stringvalidator.RegexMatches(regexache.MustCompile(`.+`), ""),
 												),
 											},
 											PlanModifiers: []planmodifier.List{
@@ -732,7 +733,7 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 												listvalidator.SizeBetween(0, 5),
 												listvalidator.ValueStringsAre(
 													stringvalidator.LengthBetween(1, 64),
-													stringvalidator.RegexMatches(regexp.MustCompile(`.+`), ""),
+													stringvalidator.RegexMatches(regexache.MustCompile(`.+`), ""),
 												),
 											},
 											PlanModifiers: []planmodifier.List{
@@ -757,7 +758,7 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 											Required: true,
 											Validators: []validator.String{
 												stringvalidator.LengthBetween(0, 1024),
-												stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+												stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 											},
 											PlanModifiers: []planmodifier.String{
 												stringplanmodifier.RequiresReplace(),
@@ -879,7 +880,7 @@ func modelPackageConfigBlock(ctx context.Context) schema.Block {
 					Required:   true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package-group/[\S]+`), "must be a valid model package group ARN"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package-group/[\S]+`), "must be a valid model package group ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -890,7 +891,7 @@ func modelPackageConfigBlock(ctx context.Context) schema.Block {
 					Optional:   true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package/[\S]+`), "must be a valid source model package ARN"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package/[\S]+`), "must be a valid source model package ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -918,12 +919,12 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"kms_key_id": schema.StringAttribute{
+				names.AttrKMSKeyID: schema.StringAttribute{
 					Optional: true,
 					Computed: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.UseStateForUnknown(),
@@ -934,7 +935,7 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -979,7 +980,7 @@ func profilerConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 				},
 			},
@@ -995,7 +996,7 @@ func profilerRuleConfigurationsBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_type": schema.StringAttribute{
+				names.AttrInstanceType: schema.StringAttribute{
 					Optional:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.ProcessingInstanceType](),
 				},
@@ -1034,7 +1035,7 @@ func profilerRuleConfigurationsBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 				},
 				"volume_size_in_gb": schema.Int64Attribute{
@@ -1076,7 +1077,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_count": schema.Int64Attribute{
+				names.AttrInstanceCount: schema.Int64Attribute{
 					Optional: true,
 					Computed: true,
 					Validators: []validator.Int64{
@@ -1090,7 +1091,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 						int64planmodifier.RequiresReplace(),
 					},
 				},
-				"instance_type": schema.StringAttribute{
+				names.AttrInstanceType: schema.StringAttribute{
 					Optional:   true,
 					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
@@ -1121,7 +1122,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(50, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*`), "must be a valid training plan ARN"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*`), "must be a valid training plan ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1131,7 +1132,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1157,7 +1158,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"instance_count": schema.Int64Attribute{
+							names.AttrInstanceCount: schema.Int64Attribute{
 								Optional: true,
 								Validators: []validator.Int64{
 									int64validator.AtLeast(0),
@@ -1172,7 +1173,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 									stringplanmodifier.RequiresReplace(),
 								},
 							},
-							"instance_type": schema.StringAttribute{
+							names.AttrInstanceType: schema.StringAttribute{
 								Optional:   true,
 								CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
 								PlanModifiers: []planmodifier.String{
@@ -1201,7 +1202,7 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 								CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobPlacementSpecificationModel](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
-										"instance_count": schema.Int64Attribute{
+										names.AttrInstanceCount: schema.Int64Attribute{
 											Optional: true,
 											Validators: []validator.Int64{
 												int64validator.AtLeast(0),
@@ -1257,7 +1258,7 @@ func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 			listvalidator.ConflictsWith(
 				path.MatchRoot("algorithm_specification"),
 				path.MatchRoot("enable_managed_spot_training"),
-				path.MatchRoot("environment"),
+				path.MatchRoot(names.AttrEnvironment),
 				path.MatchRoot("retry_strategy"),
 				path.MatchRoot("checkpoint_config"),
 				path.MatchRoot("debug_hook_config"),
@@ -1280,7 +1281,7 @@ func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 					MarkdownDescription: "Base model ARN in SageMaker Public Hub. SageMaker always selects the latest version of the provided model.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid SageMaker Public Hub model ARN (hub-content)"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid SageMaker Public Hub model ARN (hub-content)"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1402,7 +1403,7 @@ func tensorBoardOutputConfigBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 4096),
-						stringvalidator.RegexMatches(regexp.MustCompile(`.*`), ""),
+						stringvalidator.RegexMatches(regexache.MustCompile(`.*`), ""),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1412,7 +1413,7 @@ func tensorBoardOutputConfigBlock(ctx context.Context) schema.Block {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 1024),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+						stringvalidator.RegexMatches(regexache.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1431,28 +1432,28 @@ func vpcConfigBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"security_group_ids": schema.ListAttribute{
+				names.AttrSecurityGroupIDs: schema.ListAttribute{
 					ElementType: types.StringType,
 					Required:    true,
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 5),
 						listvalidator.ValueStringsAre(
 							stringvalidator.LengthBetween(0, 32),
-							stringvalidator.RegexMatches(regexp.MustCompile(`[-0-9a-zA-Z]+`), "must be a valid security group ID"),
+							stringvalidator.RegexMatches(regexache.MustCompile(`[-0-9a-zA-Z]+`), "must be a valid security group ID"),
 						),
 					},
 					PlanModifiers: []planmodifier.List{
 						listplanmodifier.RequiresReplace(),
 					},
 				},
-				"subnets": schema.ListAttribute{
+				names.AttrSubnets: schema.ListAttribute{
 					ElementType: types.StringType,
 					Required:    true,
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 16),
 						listvalidator.ValueStringsAre(
 							stringvalidator.LengthBetween(0, 32),
-							stringvalidator.RegexMatches(regexp.MustCompile(`[-0-9a-zA-Z]+`), "must be a valid subnet ID"),
+							stringvalidator.RegexMatches(regexache.MustCompile(`[-0-9a-zA-Z]+`), "must be a valid subnet ID"),
 						),
 					},
 					PlanModifiers: []planmodifier.List{
@@ -1465,7 +1466,6 @@ func vpcConfigBlock(ctx context.Context) schema.Block {
 }
 
 func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().SageMakerClient(ctx)
 
 	var plan resourceTrainingJobModel
@@ -1541,7 +1541,6 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().SageMakerClient(ctx)
 
 	var state resourceTrainingJobModel
@@ -1581,7 +1580,6 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	var plan, state resourceTrainingJobModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
@@ -1619,7 +1617,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().SageMakerClient(ctx)
 
 	var state resourceTrainingJobModel
@@ -1837,26 +1834,8 @@ func normalizeServerlessBaseModelARN(v string) string {
 
 func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
-		Target:                    []string{string(awstypes.TrainingJobStatusCompleted), string(awstypes.TrainingJobStatusStopped), string(awstypes.TrainingJobStatusFailed)},
-		Refresh:                   statusTrainingJob(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
-		Target:                    []string{string(awstypes.TrainingJobStatusCompleted), string(awstypes.TrainingJobStatusStopped)},
+		Pending:                   enum.Slice(awstypes.TrainingJobStatusInProgress),
+		Target:                    enum.Slice(awstypes.TrainingJobStatusCompleted, awstypes.TrainingJobStatusStopped, awstypes.TrainingJobStatusFailed),
 		Refresh:                   statusTrainingJob(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -1873,7 +1852,7 @@ func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id stri
 
 func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.TrainingJobStatusDeleting), string(awstypes.TrainingJobStatusInProgress), string(awstypes.TrainingJobStatusStopping)},
+		Pending: enum.Slice(awstypes.TrainingJobStatusDeleting, awstypes.TrainingJobStatusInProgress, awstypes.TrainingJobStatusStopping),
 		Target:  []string{},
 		Refresh: statusTrainingJob(conn, id),
 		Timeout: timeout,
