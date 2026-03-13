@@ -187,6 +187,44 @@ func TestAccAPIGatewayV2RoutingRule_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayV2RoutingRule_woConditions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var routingrule apigatewayv2.GetRoutingRuleOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	domainName := fmt.Sprintf("%s.example.com", rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
+	resourceName := "aws_apigatewayv2_routing_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.APIGatewayV2EndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingRuleConfig_woConditions(rName, certificate, key, 1, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoutingRuleExists(ctx, t, resourceName, &routingrule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "routing_rule_arn", "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "routing_rule_arn"),
+				ImportStateVerifyIdentifierAttribute: "routing_rule_arn",
+			},
+		},
+	})
+}
+
 func testAccCheckRoutingRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
@@ -447,6 +485,98 @@ resource "aws_apigatewayv2_routing_rule" "test" {
       any_of = ["example-path"]
     }
   }
+
+  action {
+    invoke_api {
+      api_id          = aws_api_gateway_rest_api.test.id
+      stage           = aws_api_gateway_stage.test.stage_name
+      strip_base_path = true
+    }
+  }
+
+  priority = 1
+}
+`, rName, index))
+}
+
+func testAccRoutingRuleConfig_woConditions(rName, certificate, key string, count, index int) string {
+	return acctest.ConfigCompose(
+		testAccDomainNameImportedCertsConfig(rName, certificate, key, count),
+		fmt.Sprintf(`
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name = "%[1]s.example.com"
+
+  regional_certificate_arn = aws_acm_certificate.test[%[2]d].arn
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  security_policy = "TLS_1_2"
+
+  routing_mode = "ROUTING_RULE_THEN_BASE_PATH_MAPPING"
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+  status_code = "400"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  type                    = "HTTP"
+  uri                     = "http://example.com"
+  integration_http_method = "GET"
+}
+
+resource "aws_api_gateway_integration_response" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.test.status_code
+}
+
+resource "aws_api_gateway_deployment" "test" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test.id
+}
+
+resource "aws_apigatewayv2_routing_rule" "test" {
+  domain_name = aws_api_gateway_domain_name.test.domain_name
+
+  condition { }
 
   action {
     invoke_api {
