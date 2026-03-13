@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -326,6 +327,53 @@ func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccEC2InstanceDataSource_publicDNSNames(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_publicDNSNames(rName, false),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// dual-stack: all DNS names present (!= null, != "")
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("public_dns_name_dualstack"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv4"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(datasourceName, tfjsonpath.New("public_dns_name_dualstack"), knownvalue.StringExact("")),
+					tfstatecheck.ExpectNotKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv4"), knownvalue.StringExact("")),
+					tfstatecheck.ExpectNotKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				Config: testAccInstanceDataSourceConfig_publicDNSNames(rName, true),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// IPv6-only: only IPv6-based name present
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("public_dns_name_dualstack"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv4"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(datasourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.StringExact("")),
+				},
+			},
+		},
+	})
+}
+
+func testAccInstanceDataSourceConfig_publicDNSNames(rName string, IPv6Only bool) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_IPv6Dualstack(rName, IPv6Only),
+		fmt.Sprintf(`
+data "aws_instance" "test" {
+	instance_id = aws_instance.test.id
+}
+`),
+	)
 }
 
 func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
