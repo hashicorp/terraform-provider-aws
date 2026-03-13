@@ -4,6 +4,7 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -80,6 +81,94 @@ func TestAccVPC_List_basic(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity3.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks()), id3.ValueCheck()),
 					tfquerycheck.ExpectNoResourceObject("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity3.Checks())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPC_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_vpc.test[0]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	id1 := tfstatecheck.StateValue()
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/VPC/list_include_resource"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						"Name":         config.StringVariable(rName),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					id1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrID)),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName1, tfjsonpath.New(names.AttrARN), "ec2", "vpc/{id}"),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/VPC/list_basic"),
+				ConfigVariables: config.Variables{
+					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						"Name":         config.StringVariable(rName),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_vpc.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf("^%s \\(vpc-[a-z0-9]+\\)$", rName)))),
+					querycheck.ExpectResourceKnownValues("aws_vpc.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`vpc/vpc-[a-z0-9]+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("assign_generated_ipv6_cidr_block"), knownvalue.Bool(false)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCIDRBlock), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("default_network_acl_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("default_route_table_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("default_security_group_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("dhcp_options_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("enable_dns_hostnames"), knownvalue.Bool(false)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("enable_dns_support"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("enable_network_address_usage_metrics"), knownvalue.Bool(false)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), id1.ValueCheck()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("instance_tenancy"), knownvalue.StringExact("default")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv4_ipam_pool_id"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv4_netmask_length"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv6_association_id"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv6_cidr_block"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv6_cidr_block_network_border_group"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv6_ipam_pool_id"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("ipv6_netmask_length"), knownvalue.Int32Exact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("main_route_table_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrOwnerID), tfknownvalue.AccountID()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"Name":         knownvalue.StringExact(rName),
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"Name":         knownvalue.StringExact(rName),
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					}),
 				},
 			},
 		},
