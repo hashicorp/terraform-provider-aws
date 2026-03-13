@@ -206,6 +206,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 								"logs_encryption_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
 								})}),
+								"log_group_name_configuration": knownvalue.ListSizeExact(0),
 							})}),
 							names.AttrRegion: knownvalue.StringExact(endpoints.EuWest1RegionID),
 						})}),
@@ -219,6 +220,124 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 							})}),
 						})}),
 					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccObservabilityAdminCentralizationRuleForOrganization_destinationLogGroupNameConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-cloudwatch.html.
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_destinationLogGroupNameConfiguration(
+					rName,
+					"/centralized/$${source.accountId}/$${source.region}/$${source.logGroup}",
+					endpoints.EuWest1RegionID,
+					endpoints.UsWest1RegionID,
+					endpoints.ApSoutheast1RegionID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("rule_arn"),
+						tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_name_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_name_pattern"),
+						knownvalue.StringExact("/centralized/${source.accountId}/${source.region}/${source.logGroup}")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
+				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_destinationLogGroupNameConfiguration(
+					rName,
+					"/centralized-logs/$${source.accountId}/$${source.region}/$${source.logGroup}",
+					endpoints.EuWest1RegionID,
+					endpoints.UsWest1RegionID,
+					endpoints.ApSoutheast1RegionID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("rule_arn"),
+						tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_name_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_name_pattern"),
+						knownvalue.StringExact("/centralized-logs/${source.accountId}/${source.region}/${source.logGroup}")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				// Remove rule.destination.destination_logs_configuration.log_group_name_configuration block
+				Config: testAccCentralizationRuleForOrganizationConfig_updated(
+					rName,
+					endpoints.EuWest1RegionID,
+					endpoints.UsWest1RegionID,
+					endpoints.ApSoutheast1RegionID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New("rule_arn"),
+						tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
+							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_name_configuration"),
+						knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 		},
@@ -430,6 +549,48 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
   }
 }
 `, rName, dstRegion, bkupRegion, acctest.ListOfStrings(srcRegions...))
+}
+
+func testAccCentralizationRuleForOrganizationConfig_destinationLogGroupNameConfiguration(rName, logGroupNamePattern string, dstRegion, bkupRegion string, srcRegions ...string) string {
+	// Based on testAccCentralizationRuleForOrganizationConfig_updated
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    destination {
+      region  = %[2]q
+      account = data.aws_caller_identity.current.account_id
+      destination_logs_configuration {
+        logs_encryption_configuration {
+          encryption_strategy = "AWS_OWNED"
+        }
+
+        backup_configuration {
+          region = %[3]q
+        }
+
+        log_group_name_configuration {
+          log_group_name_pattern = %[4]q
+        }
+      }
+    }
+
+    source {
+      regions = [%[5]s]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_logs_configuration {
+        encrypted_log_group_strategy = "ALLOW"
+        log_group_selection_criteria = "LogGroupName LIKE '/aws/lambda%%'"
+      }
+    }
+  }
+}
+`, rName, dstRegion, bkupRegion, logGroupNamePattern, acctest.ListOfStrings(srcRegions...))
 }
 
 func testAccCentralizationRuleForOrganizationConfig_tags1(rName, tag1Key, tag1Value string) string {

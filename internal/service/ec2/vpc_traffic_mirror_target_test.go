@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +24,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -60,7 +59,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 	description := "test eni target"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -94,7 +93,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -144,7 +143,7 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -170,7 +169,7 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_traffic_mirror_target.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 	description := "test gwlb endpoint target"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
