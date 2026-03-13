@@ -62,6 +62,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "Service Quota",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  dataSourceServiceQuotas,
+			TypeName: "aws_servicequotas_service_quotas",
+			Name:     "Service Quotas",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
