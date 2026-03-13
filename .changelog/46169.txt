@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix `statusTableWarmThroughput()` hanging when using DynamoDB Local due to WarmThroughput not being returned
+resource/aws_dynamodb_global_secondary_index: Fix `statusGSIWarmThroughput()` hanging when using DynamoDB Local due to WarmThroughput not being returned
+```
