@@ -2902,7 +2902,6 @@ func TestValidBucketName(t *testing.T) {
 
 	validUsWest2AccountRegionalNames := []string{
 		"test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
-		"test-bucket-123456789012-usw2-an",
 	}
 
 	for _, v := range validUsWest2AccountRegionalNames {
@@ -2913,6 +2912,7 @@ func TestValidBucketName(t *testing.T) {
 
 	invalidUsWest2AccountRegionalNames := []string{
 		"test-bucket",
+		"test-bucket-123456789012-usw2-an",
 	}
 
 	for _, v := range invalidUsWest2AccountRegionalNames {
@@ -3054,7 +3054,6 @@ func TestBucketNamespace(t *testing.T) {
 		},
 		{
 			BucketName: "test-bucket-123456789012-usw2-an",
-			Expect:     true,
 		},
 	}
 

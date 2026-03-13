@@ -52,9 +52,10 @@ const (
 )
 
 var (
-	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html#general-purpose-bucket-names.
-	// e.g. example-123456789012-us-west-2-an or example-123456789012-usw2-an
-	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)|[a-z0-9]+)-an$`)
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+	// e.g. example-123456789012-us-west-2-an.
+	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
 )
 
 func isGeneralPurposeBucket(bucket string) bool {
@@ -862,6 +863,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrBucket, d.Id())
+	// TODO
+	// TODO Move into resourceBucketFlatten.
+	// TODO
 	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
 	var bucketNamespace types.BucketNamespace
 	if accountRegionalBucketNameRegex.MatchString(d.Id()) {
