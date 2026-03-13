@@ -36,6 +36,7 @@ import (
 
 // @SDKResource("aws_msk_cluster", name="Cluster")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
