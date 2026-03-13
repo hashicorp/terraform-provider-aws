@@ -113,14 +113,15 @@ func (oracleDBNetworkDataSourceTest) basicNetworkDataSource(rName string) string
 
 
 resource "aws_odb_network" "test_resource" {
-  display_name         = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access            = "DISABLED"
-  zero_etl_access      = "DISABLED"
-  sts_access           = "DISABLED"
-  kms_access           = "DISABLED"
+  display_name                           = %[1]q
+  availability_zone_id                   = "use1-az6"
+  client_subnet_cidr                     = "10.2.0.0/24"
+  backup_subnet_cidr                     = "10.2.1.0/24"
+  s3_access                              = "DISABLED"
+  zero_etl_access                        = "DISABLED"
+  sts_access                             = "DISABLED"
+  kms_access                             = "DISABLED"
+  cross_region_s3_restore_sources_access = ["us-west-2"]
   tags = {
     "env" = "dev"
   }
