@@ -12,7 +12,7 @@ Terraform data source for managing an AWS Batch Job Definition.
 
 ## Example Usage
 
-### Lookup via Arn
+### Lookup via ARN
 
 ```terraform
 data "aws_batch_job_definition" "arn" {
