@@ -22,7 +22,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -2777,7 +2776,7 @@ func TestAccS3Bucket_Namespace_AccountRegional_nameGenerated(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact(id.UniqueIdPrefix)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact(sdkid.UniqueIdPrefix)),
 				},
 			},
 			{
