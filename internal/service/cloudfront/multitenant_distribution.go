@@ -529,6 +529,11 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						names.AttrID: schema.StringAttribute{
 							Required: true,
 						},
+						"selection_criteria": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.OriginGroupSelectionCriteria](),
+							Optional:   true,
+							Computed:   true,
+						},
 					},
 					Blocks: map[string]schema.Block{
 						"failover_criteria": schema.ListNestedBlock{
@@ -1096,9 +1101,10 @@ type vpcOriginConfigModel struct {
 }
 
 type originGroupModel struct {
-	FailoverCriteria fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
-	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
-	ID               types.String                                           `tfsdk:"id"`
+	FailoverCriteria  fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
+	Member            fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
+	ID                types.String                                           `tfsdk:"id"`
+	SelectionCriteria fwtypes.StringEnum[awstypes.OriginGroupSelectionCriteria] `tfsdk:"selection_criteria"`
 }
 
 type failoverCriteriaModel struct {
