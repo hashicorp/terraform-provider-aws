@@ -5,3 +5,7 @@ aws_wafv2_web_acl_rule
 ```release-note:new-list-resource
 aws_wafv2_web_acl_rule
 ```
+
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix `enable_machine_learning` in `aws_managed_rules_bot_control_rule_set` incorrectly defaulting to `false` instead of reflecting the AWS default of `true`
+```
