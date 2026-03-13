@@ -862,25 +862,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
-	// TODO
-	// TODO Move into resourceBucketFlatten.
-	// TODO
-	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
-	var bucketNamespace types.BucketNamespace
-	if accountRegionalBucketNameRegex.MatchString(d.Id()) {
-		bucketNamespace = types.BucketNamespaceAccountRegional
-	} else {
-		bucketNamespace = types.BucketNamespaceGlobal
-	}
-	d.Set("bucket_namespace", bucketNamespace)
-	if bucketNamespace == types.BucketNamespaceAccountRegional {
-		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(d.Id(), fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
-	} else {
-		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
-	}
-
-	resourceBucketFlatten(ctx, meta.(*conns.AWSClient), d.Id(), d)
+	resourceBucketFlatten(ctx, c, d.Id(), d)
 
 	//
 	// Bucket Policy.
@@ -1675,7 +1657,16 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) {
 	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set(names.AttrBucket, bucketName)
 	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
+
+	bucketNamespace := bucketNamespace(ctx, awsClient, bucketName)
+	d.Set("bucket_namespace", bucketNamespace)
+	if bucketNamespace == types.BucketNamespaceAccountRegional {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(bucketName, fmt.Sprintf("-%s-%s-an", awsClient.AccountID(ctx), awsClient.Region(ctx))))
+	} else {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(bucketName))
+	}
 
 	region := awsClient.Region(ctx)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
@@ -1785,6 +1776,13 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	}
 
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
+}
+
+func bucketNamespace(ctx context.Context, c *conns.AWSClient, bucket string) types.BucketNamespace {
+	if accountRegionalBucketNameRegex.MatchString(bucket) {
+		return types.BucketNamespaceAccountRegional
+	}
+	return types.BucketNamespaceGlobal
 }
 
 //
