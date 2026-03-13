@@ -102,6 +102,58 @@ func testAccDomain_domainSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_domainSettingsSecurityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_domainSettingsSecurityGroupIDs(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.execution_role_identity_config", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.security_group_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_domainSettings(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.execution_role_identity_config", "DISABLED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDomainConfig_domainSettingsSecurityGroupIDs(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.execution_role_identity_config", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.security_group_ids.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccDomain_domainSettingsDockerSettingsUpdated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -1987,6 +2039,35 @@ resource "aws_sagemaker_domain" "test" {
 
   domain_settings {
     execution_role_identity_config = %[2]q
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, config))
+}
+
+func testAccDomainConfig_domainSettingsSecurityGroupIDs(rName, config string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  domain_settings {
+    execution_role_identity_config = %[2]q
+    security_group_ids             = [aws_security_group.test.id]
   }
 
   retention_policy {
