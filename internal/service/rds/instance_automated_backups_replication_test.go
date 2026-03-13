@@ -161,7 +161,42 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstanceAutomatedBackupsReplication_withFinalSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	replicationResourceName := "aws_db_instance_automated_backups_replication.test"
+	instanceResourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceAutomatedBackupsReplicationConfig_withFinalSnapshot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, replicationResourceName),
+					resource.TestCheckResourceAttr(replicationResourceName, names.AttrRetentionPeriod, "7"),
+					resource.TestCheckResourceAttr(instanceResourceName, "skip_final_snapshot", "false"),
+					resource.TestCheckResourceAttr(instanceResourceName, names.AttrFinalSnapshotIdentifier, rName),
+				),
+			},
+		},
+	})
+}
 func testAccCheckInstanceAutomatedBackupsReplicationExist(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -202,7 +237,12 @@ func testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx context.Context,
 	}
 }
 
-func testAccInstanceAutomatedBackupsReplicationConfig_base(rName string, storageEncrypted bool) string {
+func testAccInstanceAutomatedBackupsReplicationConfig_base(rName string, storageEncrypted, skipFinalSnapshot bool) string {
+	finalSnapshotConfig := ""
+	if !skipFinalSnapshot {
+		finalSnapshotConfig = fmt.Sprintf("final_snapshot_identifier = %q", rName)
+	}
+
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		acctest.ConfigMultipleRegionProvider(2),
@@ -265,7 +305,7 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model  = "postgresql-license"
   storage_type   = "standard"
 
-  preferred_instance_classes = [%[3]s]
+  preferred_instance_classes = [%[4]s]
 
   provider = "awsalternate"
 }
@@ -279,17 +319,18 @@ resource "aws_db_instance" "test" {
   password_wo_version     = 1
   username                = "tfacctest"
   backup_retention_period = 7
-  skip_final_snapshot     = true
-  storage_encrypted       = %[2]t
+  skip_final_snapshot     = %[3]t
+  %[2]s
+  storage_encrypted       = %[5]t
   db_subnet_group_name    = aws_db_subnet_group.test.name
 
   provider = "awsalternate"
 }
-`, rName, storageEncrypted, mainInstanceClasses))
+`, rName, finalSnapshotConfig, skipFinalSnapshot, mainInstanceClasses, storageEncrypted))
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false), `
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false, true), `
 resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
 }
@@ -297,7 +338,7 @@ resource "aws_db_instance_automated_backups_replication" "test" {
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false), `
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false, true), `
 resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   retention_period       = 14
@@ -306,7 +347,7 @@ resource "aws_db_instance_automated_backups_replication" "test" {
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, true), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, true, true), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -318,4 +359,12 @@ resource "aws_db_instance_automated_backups_replication" "test" {
   kms_key_id             = aws_kms_key.test.arn
 }
 `, rName))
+}
+
+func testAccInstanceAutomatedBackupsReplicationConfig_withFinalSnapshot(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, false, false), `
+resource "aws_db_instance_automated_backups_replication" "test" {
+  source_db_instance_arn = aws_db_instance.test.arn
+}
+`)
 }
