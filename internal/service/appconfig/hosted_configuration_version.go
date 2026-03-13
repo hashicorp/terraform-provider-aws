@@ -218,6 +218,38 @@ func findHostedConfigurationVersion(ctx context.Context, conn *appconfig.Client,
 	return output, nil
 }
 
+func findHostedConfigurationVersionSummariesByTwoPartKey(ctx context.Context, conn *appconfig.Client, applicationID, configurationProfileID string) ([]awstypes.HostedConfigurationVersionSummary, error) {
+	input := appconfig.ListHostedConfigurationVersionsInput{
+		ApplicationId:          aws.String(applicationID),
+		ConfigurationProfileId: aws.String(configurationProfileID),
+	}
+
+	return findHostedConfigurationVersionSummaries(ctx, conn, &input)
+}
+
+func findHostedConfigurationVersionSummaries(ctx context.Context, conn *appconfig.Client, input *appconfig.ListHostedConfigurationVersionsInput) ([]awstypes.HostedConfigurationVersionSummary, error) {
+	var output []awstypes.HostedConfigurationVersionSummary
+
+	pages := appconfig.NewListHostedConfigurationVersionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Items...)
+	}
+
+	return output, nil
+}
+
 func hostedConfigurationVersionARN(ctx context.Context, c *conns.AWSClient, applicationID, configurationProfileID string, versionNumber int32) string {
 	return c.RegionalARN(ctx, "appconfig", "application/"+applicationID+"/configurationprofile/"+configurationProfileID+"/hostedconfigurationversion/"+flex.Int32ValueToStringValue(versionNumber))
 }
