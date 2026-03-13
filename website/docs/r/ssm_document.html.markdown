@@ -76,7 +76,10 @@ This resource supports the following arguments:
 * `content` - (Required) The content for the SSM document in JSON or YAML format. The content of the document must not exceed 64KB. This quota also includes the content specified for input parameters at runtime. We recommend storing the contents for your new document in an external JSON or YAML file and referencing the file in a command.
 * `document_format` - (Optional, defaults to `JSON`) The format of the document. Valid values: `JSON`, `TEXT`, `YAML`.
 * `document_type` - (Required) The type of the document. For a list of valid values, see the [API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#systemsmanager-CreateDocument-request-DocumentType).
+* `force_delete` - (Optional) If `true`, will force the deletion of the document. This is required to be set to `true` for `ApplicationConfigurationSchema` in order for the document to be deleted.  
+  Defaults to `false`.
 * `permissions` - (Optional) Additional permissions to attach to the document. See [Permissions](#permissions) below for details.
+* `requires` - (Optional) A list of SSM documents required by a document. See [Requires](#requires) below for details.
 * `target_type` - (Optional) The target type which defines the kinds of resources the document can run on. For example, `/AWS::EC2::Instance`. For a list of valid resource types, see [AWS resource and property types reference](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) The version of the artifact associated with the document. For example, `12.6`. This value is unique across all versions of a document, and can't be changed.
@@ -129,6 +132,17 @@ The `parameter` configuration block provides the following attributes:
 * `description` - A description of what the parameter does, how to use it, the default value, and whether or not the parameter is optional.
 * `name` - The name of the parameter.
 * `type` - The type of parameter. Valid values: `String`, `StringList`.
+
+## Requires
+
+This parameter is used exclusively by AWS AppConfig. When a user creates an AWS AppConfig configuration in an SSM document, the user must also specify a required document for validation purposes. In this case, an `ApplicationConfiguration` document requires an `ApplicationConfigurationSchema` document for validation purposes.
+
+The `requires` block supports the following:
+
+* `name` - (Required) The name of the required SSM document. The name can be an Amazon Resource Name (ARN).
+* `require_type` - (Optional) The document type of the required SSM document.
+* `version` - (Optional) The document version required by the current document.
+* `version_name` - (Optional) An optional field specifying the version of the artifact associated with the document. For example, "Release 12, Update 6". This value is unique across all versions of a document, and can't be changed.
 
 ## Import
 
