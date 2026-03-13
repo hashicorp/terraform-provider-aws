@@ -62,6 +62,7 @@ func resourceClusterEndpoint() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"READER",
+					"WRITER",
 					"ANY",
 				}, false),
 			},
