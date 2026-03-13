@@ -73,6 +73,10 @@ const (
 	ResNameTrainingJob = "Training Job"
 )
 
+var (
+	serverlessBaseModelARNVersionRegex = regexp.MustCompile(`/\d{1,4}\.\d{1,4}\.\d{1,4}$`)
+)
+
 type resourceTrainingJob struct {
 	framework.ResourceWithModel[resourceTrainingJobModel]
 	framework.WithImportByIdentity
@@ -83,7 +87,6 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -1249,7 +1252,7 @@ func retryStrategyBlock(ctx context.Context) schema.Block {
 
 func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobServerlessJobConfigModel](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobServerlessJobConfigModel](ctx, fwtypes.WithSemanticEqualityFunc(serverlessJobConfigEqualityFunc)),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 			listvalidator.ConflictsWith(
@@ -1514,6 +1517,7 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	planAlgoSpec := plan.AlgorithmSpecification
+	planStoppingCondition := plan.StoppingCondition
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	waitOut, err := waitTrainingJobCreated(ctx, conn, plan.TrainingJobName.ValueString(), createTimeout)
@@ -1522,7 +1526,7 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, waitOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1531,6 +1535,8 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	normalizeStoppingCondition(ctx, planStoppingCondition, plan.ServerlessJobConfig, &plan.StoppingCondition)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -1559,7 +1565,8 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	stateAlgoSpec := state.AlgorithmSpecification
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	stateStoppingCondition := state.StoppingCondition
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1568,6 +1575,8 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	normalizeStoppingCondition(ctx, stateStoppingCondition, state.ServerlessJobConfig, &state.StoppingCondition)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -1680,17 +1689,6 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceTrainingJob) flatten(ctx context.Context, trainingJob *sagemaker.DescribeTrainingJobOutput, model *resourceTrainingJobModel) (diags diag.Diagnostics) {
-	diags.Append(flex.Flatten(ctx, trainingJob, model)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	model.ID = model.TrainingJobName
-
-	return diags
-}
-
 func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, securityGroupIDs, subnetIDs []string, timeout time.Duration) error {
 	networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []ec2types.Filter{
@@ -1771,6 +1769,71 @@ func normalizeAlgoSpecMetricDefinitions(
 	}
 
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
+}
+
+// AWS injects a default stopping_condition for serverless jobs when the user omitted it.
+// Only suppress that value for serverless jobs so import can still retain explicit
+// stopping_condition values for non-serverless jobs.
+func normalizeStoppingCondition(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel],
+	serverlessJobConfig fwtypes.ListNestedObjectValueOf[trainingJobServerlessJobConfigModel],
+	target *fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel],
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	if (saved.IsNull() || len(saved.Elements()) == 0) && !serverlessJobConfig.IsNull() && len(serverlessJobConfig.Elements()) > 0 {
+		*target = fwtypes.NewListNestedObjectValueOfNull[trainingJobStoppingConditionModel](ctx)
+	}
+}
+
+// SageMaker always selects the latest version of the provided model irrespective of user config
+func serverlessJobConfigEqualityFunc(
+	ctx context.Context,
+	oldValue, newValue fwtypes.NestedCollectionValue[trainingJobServerlessJobConfigModel],
+) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	oldConfig, d := oldValue.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	newConfig, d := newValue.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if oldConfig == nil || newConfig == nil {
+		return oldConfig == nil && newConfig == nil, diags
+	}
+
+	if !oldConfig.AcceptEULA.Equal(newConfig.AcceptEULA) ||
+		!oldConfig.CustomizationTechnique.Equal(newConfig.CustomizationTechnique) ||
+		!oldConfig.EvaluationType.Equal(newConfig.EvaluationType) ||
+		!oldConfig.EvaluatorARN.Equal(newConfig.EvaluatorARN) ||
+		!oldConfig.JobType.Equal(newConfig.JobType) ||
+		!oldConfig.Peft.Equal(newConfig.Peft) {
+		return false, diags
+	}
+
+	return serverlessBaseModelARNsEqual(oldConfig.BaseModelARN, newConfig.BaseModelARN), diags
+}
+
+func serverlessBaseModelARNsEqual(oldValue, newValue types.String) bool {
+	if oldValue.IsNull() || oldValue.IsUnknown() || newValue.IsNull() || newValue.IsUnknown() {
+		return oldValue.Equal(newValue)
+	}
+
+	return normalizeServerlessBaseModelARN(oldValue.ValueString()) == normalizeServerlessBaseModelARN(newValue.ValueString())
+}
+
+func normalizeServerlessBaseModelARN(v string) string {
+	return serverlessBaseModelARNVersionRegex.ReplaceAllString(v, "")
 }
 
 func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
@@ -1878,7 +1941,6 @@ type resourceTrainingJobModel struct {
 	Environment                           fwtypes.MapOfString                                                      `tfsdk:"environment"`
 	ExperimentConfig                      fwtypes.ListNestedObjectValueOf[trainingJobExperimentConfigModel]        `tfsdk:"experiment_config"`
 	HyperParameters                       fwtypes.MapOfString                                                      `tfsdk:"hyper_parameters"`
-	ID                                    types.String                                                             `tfsdk:"id"`
 	InfraCheckConfig                      fwtypes.ListNestedObjectValueOf[trainingJobInfraCheckConfigModel]        `tfsdk:"infra_check_config"`
 	InputDataConfig                       fwtypes.ListNestedObjectValueOf[trainingJobInputDataConfigModel]         `tfsdk:"input_data_config"`
 	MlflowConfig                          fwtypes.ListNestedObjectValueOf[trainingJobMlflowConfigModel]            `tfsdk:"mlflow_config"`
@@ -2119,7 +2181,7 @@ func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 
 		for _, v := range page.TrainingJobSummaries {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTrainingJob, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.TrainingJobName))),
+				sweepfw.NewAttribute("training_job_name", aws.ToString(v.TrainingJobName))),
 			)
 		}
 	}
