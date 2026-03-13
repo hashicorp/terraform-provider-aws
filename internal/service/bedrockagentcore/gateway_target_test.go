@@ -351,6 +351,8 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationAPIGateway(t *testi
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.mcp.0.api_gateway.0.rest_api_id", "aws_api_gateway_rest_api.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_configuration.0.mcp.0.api_gateway.0.stage", "aws_api_gateway_stage.test", "stage_name"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.0.api_gateway.0.api_gateway_tool_configuration.0.tool_filter.0.filter_path", "/pets"),
