@@ -241,7 +241,7 @@ func resourceInstance() *schema.Resource {
 			"delete_automated_backups": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 			},
 			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
@@ -2431,7 +2431,7 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta any)
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required.
 	d.Set("skip_final_snapshot", true)
-	d.Set("delete_automated_backups", true)
+	d.Set("delete_automated_backups", false)
 	return []*schema.ResourceData{d}, nil
 }
 
