@@ -76,7 +76,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
+					testAccCheckBucketDomainName(ctx, t, resourceName, "bucket_domain_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_namespace", "global"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_region", region),
@@ -2669,7 +2669,7 @@ func TestAccS3Bucket_Namespace_global(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2711,7 +2711,7 @@ func TestAccS3Bucket_Namespace_AccountRegional_basic(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2754,7 +2754,7 @@ func TestAccS3Bucket_Namespace_AccountRegional_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2794,7 +2794,7 @@ func TestAccS3Bucket_Namespace_AccountRegional_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3064,9 +3064,6 @@ func TestBucketNamespace(t *testing.T) {
 	}
 }
 
-//	func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
-//		return func(s *terraform.State) error { return testAccCheckBucketDestroyWithProvider(ctx)(s, acctest.Provider) }
-//	}
 func testAccCheckBucketDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
@@ -3312,9 +3309,9 @@ func testAccCheckBucketTagKeys(ctx context.Context, t *testing.T, n string, keys
 	}
 }
 
-func testAccCheckBucketDomainName(ctx context.Context, resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
+func testAccCheckBucketDomainName(ctx context.Context, t *testing.T, resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedValue := acctest.Provider.Meta().(*conns.AWSClient).PartitionHostname(ctx, fmt.Sprintf("%s.s3", bucketName))
+		expectedValue := acctest.ProviderMeta(ctx, t).PartitionHostname(ctx, fmt.Sprintf("%s.s3", bucketName))
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
 	}
