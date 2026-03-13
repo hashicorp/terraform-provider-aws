@@ -5,6 +5,7 @@ package wafv2
 
 import (
 	"context"
+	"sync"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -18,6 +19,52 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// Common reusable block builders using sync.OnceValue pattern
+
+var emptyBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
+	return func(ctx context.Context) schema.ListNestedBlock {
+		return schema.ListNestedBlock{
+			CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+			Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+			NestedObject: schema.NestedBlockObject{},
+		}
+	}
+})
+
+var nameOnlyBlock = sync.OnceValue(func() func(context.Context, string) schema.ListNestedBlock {
+	return func(ctx context.Context, description string) schema.ListNestedBlock {
+		return schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
+			Validators: []validator.List{listvalidator.SizeAtMost(1)},
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					names.AttrName: schema.StringAttribute{
+						Required:    true,
+						Description: description,
+					},
+				},
+			},
+		}
+	}
+})
+
+var jaFingerprintBlock = sync.OnceValue(func() func(context.Context) schema.ListNestedBlock {
+	return func(ctx context.Context) schema.ListNestedBlock {
+		return schema.ListNestedBlock{
+			CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
+			Validators: []validator.List{listvalidator.SizeAtMost(1)},
+			NestedObject: schema.NestedBlockObject{
+				Attributes: map[string]schema.Attribute{
+					"fallback_behavior": schema.StringAttribute{
+						CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+						Required:   true,
+					},
+				},
+			},
+		}
+	}
+})
 
 // statementBlock and related functions are generated in web_acl_rule_statement_models_gen.go
 
@@ -916,11 +963,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"all_query_arguments": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
+				"all_query_arguments": emptyBlock()(ctx),
 				"body": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBodyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -967,11 +1010,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 										},
 									},
 									Blocks: map[string]schema.Block{
-										"all": schema.ListNestedBlock{
-											CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-											Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-											NestedObject: schema.NestedBlockObject{},
-										},
+										"all": emptyBlock()(ctx),
 									},
 								},
 							},
@@ -1031,30 +1070,8 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"ja3_fingerprint": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
-					Validators: []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-								Required:   true,
-							},
-						},
-					},
-				},
-				"ja4_fingerprint": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
-					Validators: []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-								Required:   true,
-							},
-						},
-					},
-				},
+				"ja3_fingerprint": jaFingerprintBlock()(ctx),
+				"ja4_fingerprint": jaFingerprintBlock()(ctx),
 				"json_body": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJsonBodyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1100,38 +1117,10 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"method": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
-				"query_string": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
-				"single_header": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
-					Validators: []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							names.AttrName: schema.StringAttribute{
-								Required: true,
-							},
-						},
-					},
-				},
-				"single_query_argument": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleQueryArgumentModel](ctx),
-					Validators: []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							names.AttrName: schema.StringAttribute{
-								Required: true,
-							},
-						},
-					},
-				},
+				"method":                emptyBlock()(ctx),
+				"query_string":          emptyBlock()(ctx),
+				"single_header":         nameOnlyBlock()(ctx, "Header name"),
+				"single_query_argument": nameOnlyBlock()(ctx, "Query argument name"),
 				"uri_fragment": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleUriFragmentModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1145,11 +1134,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						},
 					},
 				},
-				"uri_path": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
+				"uri_path": emptyBlock()(ctx),
 			},
 		},
 	}
@@ -1183,11 +1168,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 		Validators: []validator.List{listvalidator.SizeAtMost(5)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
+				"asn": emptyBlock()(ctx),
 				"cookie": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyCookieModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1202,11 +1183,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 						},
 					},
 				},
-				"forwarded_ip": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
+				"forwarded_ip": emptyBlock()(ctx),
 				names.AttrHeader: schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyHeaderModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
@@ -1221,40 +1198,10 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 						},
 					},
 				},
-				"http_method": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
-				"ip": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
-				},
-				"ja3_fingerprint": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyJAFingerprintModel](ctx),
-					Validators: []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-								Required:   true,
-							},
-						},
-					},
-				},
-				"ja4_fingerprint": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyJAFingerprintModel](ctx),
-					Validators: []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"fallback_behavior": schema.StringAttribute{
-								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
-								Required:   true,
-							},
-						},
-					},
-				},
+				"http_method":     emptyBlock()(ctx),
+				"ip":              emptyBlock()(ctx),
+				"ja3_fingerprint": jaFingerprintBlock()(ctx),
+				"ja4_fingerprint": jaFingerprintBlock()(ctx),
 				"label_namespace": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
