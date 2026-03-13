@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix snapshot failures when the primary cache cluster is not `001`. Previously, Terraform assumed `001` was always the primary node. If a user manually promoted another node to primary, deleted `001`, and then adjusted `num_cache_clusters` accordingly and set `snapshot_retention_limit` to value other than 0, Terraform could return `CacheClusterNotFound: Specified snapshotting cluster does not exist`. Terraform now detects the current primary node before setting `snapshot_retention_limit`.
+```
