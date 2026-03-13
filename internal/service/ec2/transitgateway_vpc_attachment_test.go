@@ -979,3 +979,82 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 `, rName, transitGatewayDefaultRouteTablePropagation))
 }
+
+func testAccTransitGatewayVPCAttachment_subnetDeletion(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 awstypes.TransitGatewayVpcAttachment
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Create with 2 subnets both referenced in TGW attachment
+				Config: testAccTransitGatewayVPCAttachmentConfig_subnetDeletion2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+				),
+			},
+			{
+				// Remove one subnet entirely from config
+				// Previously caused: DependencyViolation: subnet has dependencies and cannot be deleted
+				// See https://github.com/hashicorp/terraform-provider-aws/issues/42003
+				Config: testAccTransitGatewayVPCAttachmentConfig_subnetDeletion1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayVPCAttachmentConfig_subnetDeletion2(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = aws_subnet.test[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccTransitGatewayVPCAttachmentConfig_subnetDeletion1(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = aws_subnet.test[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
