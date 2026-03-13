@@ -421,6 +421,7 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.server_protocol", "HTTP"),
+					testAccCheckAgentRuntimeProtocolConfiguration(&agentRuntime, awstypes.ServerProtocolHttp),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -446,6 +447,7 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "MCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeProtocolConfiguration(&agentRuntime, awstypes.ServerProtocolMcp),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -459,6 +461,54 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 						}),
 					})),
 				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration_A2A(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_protocolConfigurationA2A(rName, rImageUri),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.server_protocol", "A2A"),
+					testAccCheckAgentRuntimeProtocolConfiguration(&agentRuntime, awstypes.ServerProtocolA2a),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"server_protocol": tfknownvalue.StringExact(awstypes.ServerProtocolA2a),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
 			},
 		},
 	})
@@ -819,6 +869,18 @@ func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
 	}
 }
 
+func testAccCheckAgentRuntimeProtocolConfiguration(v *bedrockagentcorecontrol.GetAgentRuntimeOutput, expected awstypes.ServerProtocol) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if v.ProtocolConfiguration == nil {
+			return fmt.Errorf("expected ProtocolConfiguration to be set, but it was nil")
+		}
+		if v.ProtocolConfiguration.ServerProtocol != expected {
+			return fmt.Errorf("expected ProtocolConfiguration.ServerProtocol to be %s, got %s", expected, v.ProtocolConfiguration.ServerProtocol)
+		}
+		return nil
+	}
+}
+
 func testAccAgentRuntimeConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test_assume" {
@@ -1024,6 +1086,29 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, rImageUri, serverProtocol))
+}
+
+func testAccAgentRuntimeConfig_protocolConfigurationA2A(rName, rImageUri string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  protocol_configuration {
+    server_protocol = "A2A"
+  }
+}
+`, rName, rImageUri))
 }
 
 func testAccAgentRuntimeConfig_codeConfiguration(rName, s3Bucket, s3Key string) string {
