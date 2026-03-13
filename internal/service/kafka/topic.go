@@ -43,6 +43,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka;kafka.DescribeTopicOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdFunc="testAccTopicImportStateIDFunc")
 func newTopicResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &topicResource{}
 

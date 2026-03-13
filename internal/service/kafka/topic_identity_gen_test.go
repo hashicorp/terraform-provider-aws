@@ -69,6 +69,7 @@ func TestAccKafkaTopic_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: testAccTopicImportStateIDFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -80,9 +81,10 @@ func TestAccKafkaTopic_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccTopicImportStateIDFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
@@ -159,7 +161,7 @@ func TestAccKafkaTopic_Identity_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTopicImportStateIDFunc),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -175,7 +177,7 @@ func TestAccKafkaTopic_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccTopicImportStateIDFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),

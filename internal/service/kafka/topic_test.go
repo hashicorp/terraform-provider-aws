@@ -57,7 +57,7 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName),
+				ImportStateIdFunc:                    testAccTopicImportStateIDFunc(resourceName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIgnore:              []string{"configs"},
@@ -143,7 +143,7 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName),
+				ImportStateIdFunc:                    testAccTopicImportStateIDFunc(resourceName),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIgnore:              []string{"configs"},
@@ -172,6 +172,10 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccTopicImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", "cluster_arn", names.AttrName)
 }
 
 func testAccCheckTopicDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
