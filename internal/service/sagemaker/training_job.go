@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -1830,40 +1829,6 @@ func serverlessBaseModelARNsEqual(oldValue, newValue types.String) bool {
 
 func normalizeServerlessBaseModelARN(v string) string {
 	return serverlessBaseModelARNVersionRegex.ReplaceAllString(v, "")
-}
-
-func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.TrainingJobStatusInProgress),
-		Target:                    enum.Slice(awstypes.TrainingJobStatusCompleted, awstypes.TrainingJobStatusStopped, awstypes.TrainingJobStatusFailed),
-		Refresh:                   statusTrainingJob(conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TrainingJobStatusDeleting, awstypes.TrainingJobStatusInProgress, awstypes.TrainingJobStatusStopping),
-		Target:  []string{},
-		Refresh: statusTrainingJob(conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
 }
 
 func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc {
