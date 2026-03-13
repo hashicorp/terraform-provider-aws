@@ -18,8 +18,8 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   resource_config {
-    instance_type  = "ml.m5.large"
-    instance_count = 1
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
     volume_size_in_gb = 30
   }
 
