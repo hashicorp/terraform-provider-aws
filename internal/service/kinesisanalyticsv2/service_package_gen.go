@@ -49,6 +49,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Application Snapshot",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  resourceApplicationMaintenanceConfiguration,
+			TypeName: "aws_kinesisanalyticsv2_application_maintenance_configuration",
+			Name:     "Application Maintenance Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
