@@ -72,6 +72,11 @@ func (d *dataSourceNetworkPeeringConnection) Schema(ctx context.Context, req dat
 				Description: "Type of the odb peering connection.",
 				Computed:    true,
 			},
+			"peer_network_cidrs": schema.SetAttribute{
+				Description: "List of peered network cidrs.",
+				CustomType:  fwtypes.SetOfStringType,
+				Computed:    true,
+			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				Description: "Created time of the odb network peering connection.",
 				Computed:    true,
@@ -132,6 +137,7 @@ type odbNetworkPeeringConnectionDataSourceModel struct {
 	OdbPeeringConnectionArn  types.String                                `tfsdk:"arn"`
 	OdbNetworkArn            types.String                                `tfsdk:"odb_network_arn"`
 	PeerNetworkArn           types.String                                `tfsdk:"peer_network_arn"`
+	PeerNetworkCidrs         fwtypes.SetValueOf[types.String]            `tfsdk:"peer_network_cidrs"`
 	OdbPeeringConnectionType types.String                                `tfsdk:"odb_peering_connection_type"`
 	CreatedAt                timetypes.RFC3339                           `tfsdk:"created_at"`
 	PercentProgress          types.Float32                               `tfsdk:"percent_progress"`

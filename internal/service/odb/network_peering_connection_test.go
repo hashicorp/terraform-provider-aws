@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
@@ -36,6 +38,58 @@ var oracleDBNwkPeeringTestResource = oracleDBNwkPeeringResourceTest{
 	odbNwkDisplayNamePrefix:     "odb-net",
 }
 
+func TestOdbNetworkAddRemovePeerCIDRUnitTest(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName       string
+		OldCidrs       []string
+		NewCidrs       []string
+		AddRemoveCidrs map[string]int
+	}{
+		{
+			TestName:       "non empty new, empty old",
+			NewCidrs:       []string{"10.0.0.0/24"},
+			OldCidrs:       []string{},
+			AddRemoveCidrs: map[string]int{"10.0.0.0/24": 1},
+		},
+		{
+			TestName:       "non empty new, non empty old",
+			NewCidrs:       []string{"10.0.0.0/24"},
+			OldCidrs:       []string{"10.0.0.0/34"},
+			AddRemoveCidrs: map[string]int{"10.0.0.0/24": 1, "10.0.0.0/34": -1},
+		},
+		{
+			TestName:       "non empty new, non empty old all same",
+			NewCidrs:       []string{"10.0.0.0/24"},
+			OldCidrs:       []string{"10.0.0.0/24"},
+			AddRemoveCidrs: map[string]int{},
+		},
+		{
+			TestName:       "empty new, non empty old all ",
+			NewCidrs:       []string{},
+			OldCidrs:       []string{"10.0.0.0/24", "10.0.0.0/34"},
+			AddRemoveCidrs: map[string]int{"10.0.0.0/24": -1, "10.0.0.0/34": -1},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+			addRemoveCidrs := tfodb.ResourceNetworkPeeringConnection.FindAddRemovePeeredNetworkCIDR(testCase.NewCidrs, testCase.OldCidrs)
+			if addRemoveCidrs != nil {
+				if len(addRemoveCidrs) != len(testCase.AddRemoveCidrs) {
+					t.Fatalf("expected %d addRemoveCidrs, got %d", len(testCase.AddRemoveCidrs), len(addRemoveCidrs))
+				}
+				if !reflect.DeepEqual(addRemoveCidrs, testCase.AddRemoveCidrs) {
+					t.Fatalf("expected %v, got %v", testCase.AddRemoveCidrs, addRemoveCidrs)
+				}
+			} else {
+				t.Error("addRemoveCidrs was nil")
+			}
+		})
+	}
+}
 func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -183,6 +237,131 @@ func TestAccODBNetworkPeeringConnection_tagging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkPeeringConnection_addRemovePeeredCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var peering1, peering2, peering3 odb.GetOdbPeeringConnectionOutput
+	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	resourceName := "aws_odb_network_peering_connection.test"
+	basicConfig, removedCidr, addedCidr := oracleDBNwkPeeringTestResource.addRemovePeeredNetworkCIDRConfig(vpcName, odbNetName, odbPeeringDisplayName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: basicConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: removedCidr,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(peering1.OdbPeeringConnection.OdbPeeringConnectionId), *(peering2.OdbPeeringConnection.OdbPeeringConnectionId)) != 0 {
+							return errors.New("should not  create a new odb network peering connection")
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: addedCidr,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering3),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(peering1.OdbPeeringConnection.OdbPeeringConnectionId), *(peering3.OdbPeeringConnection.OdbPeeringConnectionId)) != 0 {
+							return errors.New("should not  create a new odb network peering connection")
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkPeeringConnection_updateTagAndRemovePeeredCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	resourceName := "aws_odb_network_peering_connection.test"
+	var peering1, peering2 odb.GetOdbPeeringConnectionOutput
+	basicConfig, removedCidr := oracleDBNwkPeeringTestResource.basicConfigWithMultiplePeerCIDR(vpcName, odbNetName, resourceName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: basicConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: removedCidr,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(peering1.OdbPeeringConnection.OdbPeeringConnectionId), *(peering2.OdbPeeringConnection.OdbPeeringConnectionId)) != 0 {
+							return errors.New("should not  create a new odb network peering connection")
+						}
+						return nil
+					}),
 				),
 			},
 			{
@@ -410,4 +589,201 @@ resource "aws_odb_network_peering_connection" "test" {
 
 }
 `, vpcName, odbNetName, odbPeeringName)
+}
+
+func (oracleDBNwkPeeringResourceTest) addRemovePeeredNetworkCIDRConfig(vpcName, odbNetName, odbPeeringName string) (string, string, string) {
+	odbPeeringBasic := fmt.Sprintf(`
+
+
+
+
+%[1]s
+
+%[2]s
+
+resource "aws_odb_network_peering_connection" "test" {
+  display_name    = %[3]q
+  depends_on      = [aws_ec2_transit_gateway_vpc_attachment.test]
+  odb_network_id  = aws_odb_network.test.id
+  peer_network_id = aws_vpc.test.id
+}
+`, oracleDBNwkPeeringTestResource.configVPCForAddRemoveCIDR(vpcName), oracleDBNwkPeeringTestResource.oracleDataBaseNetworkConfig(odbNetName), odbPeeringName)
+
+	odbPeeringRemoved := fmt.Sprintf(`
+
+
+
+
+
+
+%[1]s
+
+%[2]s
+
+resource "aws_odb_network_peering_connection" "test" {
+  display_name       = %[3]q
+  odb_network_id     = aws_odb_network.test.id
+  depends_on         = [aws_ec2_transit_gateway_vpc_attachment.test]
+  peer_network_id    = aws_vpc.test.id
+  peer_network_cidrs = ["13.0.0.0/16"]
+
+}
+`, oracleDBNwkPeeringTestResource.configVPCForAddRemoveCIDR(vpcName), oracleDBNwkPeeringTestResource.oracleDataBaseNetworkConfig(odbNetName), odbPeeringName)
+
+	odbPeeringAdded := fmt.Sprintf(`
+
+
+
+
+
+
+%[1]s
+
+%[2]s
+
+resource "aws_odb_network_peering_connection" "test" {
+  display_name       = %[3]q
+  odb_network_id     = aws_odb_network.test.id
+  depends_on         = [aws_ec2_transit_gateway_vpc_attachment.test]
+  peer_network_id    = aws_vpc.test.id
+  peer_network_cidrs = ["13.0.0.0/16", "16.1.0.0/16"]
+
+}
+`, oracleDBNwkPeeringTestResource.configVPCForAddRemoveCIDR(vpcName), oracleDBNwkPeeringTestResource.oracleDataBaseNetworkConfig(odbNetName), odbPeeringName)
+	return odbPeeringBasic, odbPeeringRemoved, odbPeeringAdded
+}
+
+func (oracleDBNwkPeeringResourceTest) configVPCForAddRemoveCIDR(vpcName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "13.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_vpc_ipv4_cidr_block_association" "secondary" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "16.1.0.0/16"
+}
+
+
+# Subnets in primary CIDR
+resource "aws_subnet" "secondary_a" {
+  depends_on = [
+    aws_vpc_ipv4_cidr_block_association.secondary
+  ]
+  vpc_id               = aws_vpc.test.id
+  cidr_block           = "16.1.1.0/24"
+  availability_zone_id = "use1-az6"
+
+  tags = {
+    Name = "secondary_a"
+  }
+}
+
+
+resource "aws_ec2_transit_gateway" "test" {
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+  subnet_ids         = [aws_subnet.secondary_a.id]
+}
+
+
+
+
+
+
+
+
+`, vpcName)
+}
+
+func (oracleDBNwkPeeringResourceTest) oracleDataBaseNetworkConfig(displayName string) string {
+	return fmt.Sprintf(`
+resource "aws_odb_network" "test" {
+  display_name         = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
+}
+`, displayName)
+}
+
+func (oracleDBNwkPeeringResourceTest) basicConfigWithMultiplePeerCIDR(vpcName, networkName, peerNetworkConnectionName string) (string, string) {
+	peeringWithTags := fmt.Sprintf(`
+ %[1]s
+
+resource "aws_vpc" "test" {
+  cidr_block = "13.0.0.0/16"
+  tags = {
+    Name = %[2]q
+  }
+}
+resource "aws_vpc_ipv4_cidr_block_association" "secondary" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "16.1.0.0/16"
+}
+resource "aws_vpc_ipv4_cidr_block_association" "tertiary" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "19.1.0.0/16"
+}
+
+resource "aws_odb_network_peering_connection" "test" {
+  odb_network_id  = aws_odb_network.test.id
+  display_name    = %[3]q
+  depends_on      = [aws_vpc_ipv4_cidr_block_association.secondary, aws_vpc_ipv4_cidr_block_association.tertiary]
+  peer_network_id = aws_vpc.test.id
+  tags = {
+    "env" = "dev"
+  }
+
+}
+
+
+
+
+`, oracleDBNwkPeeringTestResource.oracleDataBaseNetworkConfig(networkName), vpcName, peerNetworkConnectionName)
+
+	peeringWithoutTags := fmt.Sprintf(`
+ %[1]s
+
+resource "aws_vpc" "test" {
+  cidr_block = "13.0.0.0/16"
+  tags = {
+    Name = %[2]q
+  }
+}
+resource "aws_vpc_ipv4_cidr_block_association" "secondary" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "16.1.0.0/16"
+}
+resource "aws_vpc_ipv4_cidr_block_association" "tertiary" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "19.1.0.0/16"
+}
+
+resource "aws_odb_network_peering_connection" "test" {
+  odb_network_id     = aws_odb_network.test.id
+  display_name       = %[3]q
+  depends_on         = [aws_vpc_ipv4_cidr_block_association.secondary, aws_vpc_ipv4_cidr_block_association.tertiary]
+  peer_network_id    = aws_vpc.test.id
+  peer_network_cidrs = ["13.0.0.0/16", "16.1.0.0/16"]
+  tags = {
+    "env" = "dev"
+  }
+
+}
+
+
+
+
+`, oracleDBNwkPeeringTestResource.oracleDataBaseNetworkConfig(networkName), vpcName, peerNetworkConnectionName)
+
+	return peeringWithTags, peeringWithoutTags
 }
