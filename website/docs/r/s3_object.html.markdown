@@ -129,6 +129,56 @@ resource "aws_s3_object" "examplebucket_object" {
 }
 ```
 
+### Skipping Version Deletion on Destroy
+
+When managing objects in versioned buckets with policies that prevent permanent deletion of non-current versions, use `skip_version_deletion` to remove the object from Terraform state by creating a delete marker instead of permanently deleting all versions.
+
+```terraform
+resource "aws_s3_bucket" "examplebucket" {
+  bucket = "examplebuckettftest"
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DenyDeleteNonCurrentVersions"
+        Effect = "Deny"
+        Principal = "*"
+        Action = [
+          "s3:DeleteObjectVersion",
+        ]
+        Resource = "${aws_s3_bucket.examplebucket.arn}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_s3_object" "examplebucket_object" {
+  depends_on = [
+    aws_s3_bucket_versioning.example,
+    aws_s3_bucket_policy.example,
+  ]
+
+  key    = "someobject"
+  bucket = aws_s3_bucket.examplebucket.id
+  source = "important.txt"
+
+  skip_version_deletion = true
+}
+```
+
 ### Ignoring Provider `default_tags`
 
 S3 objects support a [maximum of 10 tags](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html).
@@ -178,7 +228,7 @@ The following arguments are optional:
 * `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g., application/octet-stream. All Valid MIME Types are valid for this input.
 * `content` - (Optional, conflicts with `source` and `content_base64`) Literal string value to use as the object content, which will be uploaded as UTF-8-encoded text.
 * `etag` - (Optional) Triggers updates when the value changes. The only meaningful value is `filemd5("path/to/file")` (Terraform 0.11.12 or later) or `${md5(file("path/to/file"))}` (Terraform 0.11.11 or earlier). This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"`, also if an object is larger than 16 MB, the AWS Management Console will upload or copy that object as a Multipart Upload, and therefore the ETag will not be an MD5 digest (see `source_hash` instead).
-* `force_destroy` - (Optional) Whether to allow the object to be deleted by removing any legal hold on any object version. Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
+* `force_destroy` - (Optional, conflicts with `skip_version_deletion`) Whether to allow the object to be deleted by removing any legal hold on any object version. Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
 * `kms_key_id` - (Optional) ARN of the KMS Key to use for object encryption. If the S3 Bucket has server-side encryption enabled, that value will automatically be used. If referencing the `aws_kms_key` resource, use the `arn` attribute. If referencing the `aws_kms_alias` data source or resource, use the `target_key_arn` attribute. Terraform will only perform drift detection if a configuration value is provided.
 * `metadata` - (Optional) Map of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
 * `object_lock_legal_hold_status` - (Optional) [Legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.
@@ -186,6 +236,7 @@ The following arguments are optional:
 * `object_lock_retain_until_date` - (Optional) Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
 * `override_provider` - (Optional) Override provider-level configuration options. See [Override Provider](#override-provider) below for more details.
 * `server_side_encryption` - (Optional) Server-side encryption of the object in S3. Valid values are `"AES256"`, `"aws:kms"`, `"aws:kms:dsse"`, and `"aws:fsx"`.
+* `skip_version_deletion` - (Optional, conflicts with `force_destroy`) Whether to skip deletion of object versions on destroy. When set to `true`, the object will be removed from Terraform state by creating a delete marker (for versioned buckets) or performing a standard delete (for non-versioned buckets), without permanently deleting any object versions. This is useful for compliance scenarios where bucket policies or object lock configurations prevent permanent deletion of non-current versions. Default is `false`.
 * `source_hash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `content_base64`) Path to a file that will be read and uploaded as raw bytes for the object content.
 * `storage_class` - (Optional) [Storage Class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#AmazonS3-PutObject-request-header-StorageClass) for the object. Defaults to "`STANDARD`".
