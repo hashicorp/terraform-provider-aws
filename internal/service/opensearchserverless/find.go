@@ -146,3 +146,43 @@ func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserve
 
 	return tfresource.AssertSingleValueResult(out.LifecyclePolicyDetails)
 }
+
+func findCollectionGroupByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionGroupDetail, error) {
+	in := &opensearchserverless.BatchGetCollectionGroupInput{
+		Ids: []string{id},
+	}
+	out, err := conn.BatchGetCollectionGroup(ctx, in)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(out.CollectionGroupDetails)
+}
+
+func findCollectionGroupByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionGroupDetail, error) {
+	in := &opensearchserverless.BatchGetCollectionGroupInput{
+		Names: []string{name},
+	}
+	out, err := conn.BatchGetCollectionGroup(ctx, in)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(out.CollectionGroupDetails)
+}
