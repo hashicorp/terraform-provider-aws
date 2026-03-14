@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -139,6 +140,13 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Required: true,
 				Validators: []validator.Int64{
 					int64validator.Between(1, 32),
+				},
+			},
+			"shard_instance_count": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
@@ -392,6 +400,7 @@ type clusterResourceModel struct {
 	PreferredMaintenanceWindow fwtypes.OnceAWeekWindow           `tfsdk:"preferred_maintenance_window"`
 	ShardCapacity              types.Int64                       `tfsdk:"shard_capacity"`
 	ShardCount                 types.Int64                       `tfsdk:"shard_count"`
+	ShardInstanceCount         types.Int64                       `tfsdk:"shard_instance_count"`
 	SubnetIds                  fwtypes.SetValueOf[types.String]  `tfsdk:"subnet_ids"`
 	Tags                       tftags.Map                        `tfsdk:"tags"`
 	TagsAll                    tftags.Map                        `tfsdk:"tags_all"`
