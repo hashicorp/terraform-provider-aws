@@ -156,6 +156,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  dataSourceRolePolicies,
+			TypeName: "aws_iam_role_policies",
+			Name:     "Role Policies",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  dataSourceRoles,
 			TypeName: "aws_iam_roles",
 			Name:     "Roles",
