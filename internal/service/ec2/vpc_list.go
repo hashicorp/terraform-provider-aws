@@ -204,11 +204,17 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 
 				if defaultNetworkACL, ok := defaultNetworkACLs[aws.ToString(vpc.VpcId)]; ok {
 					rd.Set("default_network_acl_id", defaultNetworkACL.NetworkAclId)
+				} else {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
 				}
 
 				if mainRouteTable, ok := mainRouteTables[aws.ToString(vpc.VpcId)]; ok {
 					rd.Set("default_route_table_id", mainRouteTable.RouteTableId)
 					rd.Set("main_route_table_id", mainRouteTable.RouteTableId)
+				} else {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
 				}
 
 				if v, ok := tags["Name"]; ok {
