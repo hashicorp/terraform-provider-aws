@@ -1723,6 +1723,17 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 	return findNetworkACL(ctx, conn, &input)
 }
 
+func batchFindVPCDefaultNetworkACLs(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.NetworkAcl, error) {
+	input := ec2.DescribeNetworkAclsInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"default": {"true"},
+			"vpc-id":  ids,
+		}),
+	}
+
+	return batchFindNetworkACLs(ctx, conn, &input)
+}
+
 func findNATGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*awstypes.NatGateway, error) {
 	output, err := findNATGateways(ctx, conn, input)
 
@@ -1850,6 +1861,21 @@ func findNetworkACL(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNe
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func batchFindNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (map[string]*awstypes.NetworkAcl, error) {
+	output, err := findNetworkACLs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.NetworkAcl, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
+}
+
 func findNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
 	var output []awstypes.NetworkAcl
 
@@ -1940,6 +1966,17 @@ func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id strin
 	return findSecurityGroup(ctx, conn, &input)
 }
 
+func batchFindVPCDefaultSecurityGroups(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.SecurityGroup, error) {
+	input := ec2.DescribeSecurityGroupsInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"group-name": {defaultSecurityGroupName},
+			"vpc-id":     ids,
+		}),
+	}
+
+	return batchFindSecurityGroups(ctx, conn, &input)
+}
+
 func findVPCDHCPOptionsAssociation(ctx context.Context, conn *ec2.Client, vpcID string, dhcpOptionsID string) error {
 	vpc, err := findVPCByID(ctx, conn, vpcID)
 
@@ -1967,6 +2004,17 @@ func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*a
 	return findRouteTable(ctx, conn, &input)
 }
 
+func batchFindVPCMainRouteTables(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.RouteTable, error) {
+	input := ec2.DescribeRouteTablesInput{
+		Filters: newMultiValueAttributeFilterList(map[string][]string{
+			"association.main": {"true"},
+			"vpc-id":           ids,
+		}),
+	}
+
+	return batchFindRouteTables(ctx, conn, &input)
+}
+
 func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
 	output, err := findRouteTables(ctx, conn, input)
 
@@ -1975,6 +2023,21 @@ func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRo
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func batchFindRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (map[string]*awstypes.RouteTable, error) {
+	output, err := findRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.RouteTable, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
 }
 
 func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
@@ -2008,6 +2071,21 @@ func findSecurityGroup(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func batchFindSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (map[string]*awstypes.SecurityGroup, error) {
+	output, err := findSecurityGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.SecurityGroup, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.VpcId)] = &output[i]
+	}
+
+	return results, nil
 }
 
 func findSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
