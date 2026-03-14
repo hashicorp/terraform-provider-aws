@@ -163,15 +163,15 @@ resource "aws_sagemaker_training_job" "example" {
 
 ```terraform
 resource "aws_sagemaker_training_job" "example" {
-  training_job_name                            = "example"
-  role_arn                                     = aws_iam_role.example.arn
-  enable_managed_spot_training                 = true
-  enable_network_isolation                     = true
-  enable_inter_container_traffic_encryption    = true
+  training_job_name                         = "example"
+  role_arn                                  = aws_iam_role.example.arn
+  enable_managed_spot_training              = true
+  enable_network_isolation                  = true
+  enable_inter_container_traffic_encryption = true
 
   algorithm_specification {
-    training_input_mode = "File"
-    training_image      = var.training_image
+    training_input_mode  = "File"
+    training_image       = var.training_image
     container_entrypoint = ["python", "/opt/ml/code/train.py"]
     container_arguments  = ["--epochs", "10", "--batch-size", "128"]
 
