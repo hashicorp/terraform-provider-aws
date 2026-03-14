@@ -28,4 +28,4 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `policy_names` - List of inline policy names associated with the role.
+* `policy_names` - Set of inline policy names associated with the role.
