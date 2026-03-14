@@ -65,6 +65,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAnycastIPListResource,
+			TypeName: "aws_cloudfront_anycast_ip_list",
+			Name:     "Anycast IP List",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newResourceConnectionFunction,
 			TypeName: "aws_cloudfront_connection_function",
 			Name:     "Connection Function",

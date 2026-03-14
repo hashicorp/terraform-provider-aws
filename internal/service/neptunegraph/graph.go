@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package neptunegraph
 
 import (
@@ -199,7 +201,7 @@ func (r *graphResource) Create(ctx context.Context, request resource.CreateReque
 			create.WithConfiguredName(data.Name.ValueString()),
 			create.WithConfiguredPrefix(data.NamePrefix.ValueString()),
 			create.WithDefaultPrefix("tf-"),
-		).Generate(),
+		).Generate(ctx),
 	)
 	input.Tags = getTagsIn(ctx)
 

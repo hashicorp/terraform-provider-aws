@@ -22,16 +22,16 @@ func TestAccSESV2EmailIdentityMailFromAttributesDataSource_basic(t *testing.T) {
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 	dataSourceName := "data.aws_sesv2_email_identity_mail_from_attributes.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityMailFromAttributesDataSourceConfig_basic(rName, string(types.BehaviorOnMxFailureRejectMessage), mailFromDomain1.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, dataSourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "email_identity", dataSourceName, "email_identity"),
 					resource.TestCheckResourceAttrPair(resourceName, "behavior_on_mx_failure", dataSourceName, "behavior_on_mx_failure"),
 					resource.TestCheckResourceAttrPair(resourceName, "mail_from_domain", dataSourceName, "mail_from_domain"),

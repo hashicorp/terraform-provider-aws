@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package eks
 
 import (
@@ -16,8 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -143,7 +144,7 @@ func resourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
 			},
 			"node_repair_config": {
 				Type:     schema.TypeList,
@@ -383,10 +384,10 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
+	nodeGroupName := create.Name(ctx, d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	input := &eks.CreateNodegroupInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
@@ -549,7 +550,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	// Do any version update first.
 	if d.HasChanges(names.AttrLaunchTemplate, "release_version", names.AttrVersion) {
 		input := &eks.UpdateNodegroupVersionInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(sdkid.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 			Force:              d.Get("force_update_version").(bool),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -601,7 +602,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
 		input := &eks.UpdateNodegroupConfigInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(sdkid.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -686,9 +687,8 @@ func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNod
 	output, err := conn.DescribeNodegroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -713,8 +713,8 @@ func findNodegroupUpdateByThreePartKey(ctx context.Context, conn *eks.Client, cl
 	return findUpdate(ctx, conn, &input)
 }
 
-func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNodegroup(conn *eks.Client, clusterName, nodeGroupName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
 		if retry.NotFound(err) {
@@ -729,8 +729,8 @@ func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGro
 	}
 }
 
-func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNodegroupUpdate(conn *eks.Client, clusterName, nodeGroupName, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNodegroupUpdateByThreePartKey(ctx, conn, clusterName, nodeGroupName, id)
 
 		if retry.NotFound(err) {
@@ -746,10 +746,10 @@ func statusNodegroupUpdate(ctx context.Context, conn *eks.Client, clusterName, n
 }
 
 func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusCreating),
 		Target:  enum.Slice(types.NodegroupStatusActive),
-		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
+		Refresh: statusNodegroup(conn, clusterName, nodeGroupName),
 		Timeout: timeout,
 	}
 
@@ -767,10 +767,10 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, no
 }
 
 func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusActive, types.NodegroupStatusDeleting),
 		Target:  []string{},
-		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
+		Refresh: statusNodegroup(conn, clusterName, nodeGroupName),
 		Timeout: timeout,
 	}
 
@@ -788,10 +788,10 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, no
 }
 
 func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
-		Refresh: statusNodegroupUpdate(ctx, conn, clusterName, nodeGroupName, id),
+		Refresh: statusNodegroupUpdate(conn, clusterName, nodeGroupName, id),
 		Timeout: timeout,
 	}
 

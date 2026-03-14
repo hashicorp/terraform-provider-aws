@@ -170,6 +170,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mgn"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaaserverless"
@@ -226,6 +227,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/savingsplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
@@ -434,6 +436,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),
 		mgn.ServicePackage(ctx),
+		mpa.ServicePackage(ctx),
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
 		mwaaserverless.ServicePackage(ctx),
@@ -490,6 +493,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		s3tables.ServicePackage(ctx),
 		s3vectors.ServicePackage(ctx),
 		sagemaker.ServicePackage(ctx),
+		savingsplans.ServicePackage(ctx),
 		scheduler.ServicePackage(ctx),
 		schemas.ServicePackage(ctx),
 		secretsmanager.ServicePackage(ctx),

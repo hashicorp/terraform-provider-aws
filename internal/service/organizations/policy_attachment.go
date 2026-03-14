@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package organizations
 
 import (
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -180,9 +181,8 @@ func findPolicyTargets(ctx context.Context, conn *organizations.Client, input *o
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -206,11 +206,11 @@ func (policyAttachmentImportID) Create(d *schema.ResourceData) string {
 	return policyAttachmentCreateResourceID(d.Get("target_id").(string), d.Get("policy_id").(string))
 }
 
-func (policyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+func (policyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		result := map[string]string{
+		result := map[string]any{
 			"target_id": parts[0],
 			"policy_id": parts[1],
 		}

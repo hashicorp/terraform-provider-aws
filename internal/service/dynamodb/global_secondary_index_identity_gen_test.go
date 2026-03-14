@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDynamoDBGlobalSecondaryIndex_Identity_Basic(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.GlobalSecondaryIndexDescription
@@ -114,7 +114,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_Identity_RegionOverride(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EXPERIMENT_dynamodb_global_secondary_index")

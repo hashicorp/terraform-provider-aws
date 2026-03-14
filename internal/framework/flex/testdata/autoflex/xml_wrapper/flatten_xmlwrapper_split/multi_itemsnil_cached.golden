@@ -1,0 +1,139 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModel",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping XML wrapper split - direct field match found",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "AllowedMethods",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModel",
+    "autoflex.target.fieldname": "AllowedMethods",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "AllowedMethods",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsModel",
+    "autoflex.target.fieldname": "AllowedMethods",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "AllowedMethods",
+    "autoflex.source.type": "*github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
+    "autoflex.target.path": "AllowedMethods",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel·160]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found XML wrapper split source",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "CachedMethods",
+    "autoflex.source.path": "AllowedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
+    "autoflex.target.fieldname": "CachedMethods",
+    "autoflex.target.path": "AllowedMethods",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel",
+    "is_nil": true
+  },
+  {
+    "@level": "trace",
+    "@message": "Handling XML wrapper split",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "AllowedMethods.CachedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.target.path": "AllowedMethods.CachedMethods",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Setting target collection field to null",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "AllowedMethods.CachedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.CachedMethods",
+    "autoflex.target.fieldname": "CachedMethods",
+    "autoflex.target.path": "AllowedMethods.CachedMethods",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "AllowedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
+    "autoflex.target.fieldname": "Items",
+    "autoflex.target.path": "AllowedMethods",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "AllowedMethods.Items",
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
+    "autoflex.target.path": "AllowedMethods.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with SetValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "AllowedMethods.Items",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "[]github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method",
+    "autoflex.target.path": "AllowedMethods.Items",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.StringEnum[github.com/aws/aws-sdk-go-v2/service/cloudfront/types.Method]]"
+  },
+  {
+    "@level": "debug",
+    "@message": "No corresponding target field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Quantity",
+    "autoflex.source.path": "AllowedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
+    "autoflex.target.path": "AllowedMethods",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping field already processed by XML wrapper split",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "CachedMethods",
+    "autoflex.source.path": "AllowedMethods",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
+    "autoflex.target.path": "AllowedMethods",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel"
+  }
+]

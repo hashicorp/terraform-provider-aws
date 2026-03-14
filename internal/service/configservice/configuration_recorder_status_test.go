@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func testAccConfigurationRecorderStatus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var crs types.ConfigurationRecorderStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
+					testAccCheckConfigurationRecorderStatusExists(ctx, t, resourceName, &crs),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -51,19 +49,19 @@ func testAccConfigurationRecorderStatus_basic(t *testing.T) {
 func testAccConfigurationRecorderStatus_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var crs types.ConfigurationRecorderStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
+					testAccCheckConfigurationRecorderStatusExists(ctx, t, resourceName, &crs),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConfigurationRecorder(), "aws_config_configuration_recorder.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,19 +73,19 @@ func testAccConfigurationRecorderStatus_disappears(t *testing.T) {
 func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var crs types.ConfigurationRecorderStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
+					testAccCheckConfigurationRecorderStatusExists(ctx, t, resourceName, &crs),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
@@ -99,14 +97,14 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 			{
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
+					testAccCheckConfigurationRecorderStatusExists(ctx, t, resourceName, &crs),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
+					testAccCheckConfigurationRecorderStatusExists(ctx, t, resourceName, &crs),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
@@ -114,14 +112,14 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationRecorderStatusExists(ctx context.Context, n string, v *types.ConfigurationRecorderStatus) resource.TestCheckFunc {
+func testAccCheckConfigurationRecorderStatusExists(ctx context.Context, t *testing.T, n string, v *types.ConfigurationRecorderStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		output, err := tfconfig.FindConfigurationRecorderStatusByName(ctx, conn, rs.Primary.ID)
 
@@ -135,9 +133,9 @@ func testAccCheckConfigurationRecorderStatusExists(ctx context.Context, n string
 	}
 }
 
-func testAccCheckConfigurationRecorderStatusDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationRecorderStatusDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_configuration_recorder_status" {

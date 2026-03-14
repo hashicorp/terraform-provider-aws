@@ -1,10 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,22 +51,14 @@ func resourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"relationship_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"disable_email_notification": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
+			},
+			names.AttrEmail: {
+				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
 			"invitation_message": {
@@ -70,7 +66,16 @@ func resourceMember() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"invite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"relationship_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Second),
 			Update: schema.DefaultTimeout(60 * time.Second),
@@ -81,45 +86,44 @@ func resourceMember() *schema.Resource {
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
-	accountID := d.Get(names.AttrAccountID).(string)
-	detectorID := d.Get("detector_id").(string)
 
+	detectorID, accountID := d.Get("detector_id").(string), d.Get(names.AttrAccountID).(string)
+	email := d.Get(names.AttrEmail).(string)
 	input := guardduty.CreateMembersInput{
 		AccountDetails: []awstypes.AccountDetail{{
 			AccountId: aws.String(accountID),
-			Email:     aws.String(d.Get(names.AttrEmail).(string)),
+			Email:     aws.String(email),
 		}},
 		DetectorId: aws.String(detectorID),
 	}
-
-	log.Printf("[DEBUG] Creating GuardDuty Member: %+v", input)
-	_, err := conn.CreateMembers(ctx, &input)
+	output, err := conn.CreateMembers(ctx, &input)
+	if err == nil {
+		err = unprocessedAccountsError(output.UnprocessedAccounts)
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating GuardDuty Member failed: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Member (%s): %s", email, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
+	d.SetId(memberCreateResourceID(detectorID, accountID))
 
-	if !d.Get("invite").(bool) {
-		return append(diags, resourceMemberRead(ctx, d, meta)...)
-	}
+	if d.Get("invite").(bool) {
+		input := guardduty.InviteMembersInput{
+			AccountIds:               []string{accountID},
+			DetectorId:               aws.String(detectorID),
+			DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
+			Message:                  aws.String(d.Get("invitation_message").(string)),
+		}
+		output, err := conn.InviteMembers(ctx, &input)
+		if err == nil {
+			err = unprocessedAccountsError(output.UnprocessedAccounts)
+		}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "inviting GuardDuty Member (%s): %s", d.Id(), err)
+		}
 
-	imi := &guardduty.InviteMembersInput{
-		DetectorId:               aws.String(detectorID),
-		AccountIds:               []string{accountID},
-		DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
-		Message:                  aws.String(d.Get("invitation_message").(string)),
-	}
-
-	log.Printf("[INFO] Inviting GuardDuty Member: %+v", input)
-	_, err = conn.InviteMembers(ctx, imi)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "inviting GuardDuty Member %q: %s", d.Id(), err)
-	}
-
-	err = inviteMemberWaiter(ctx, accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Member %q invite: %s", d.Id(), err)
+		if _, err := waitMemberInvited(ctx, conn, detectorID, accountID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Member (%s) invite: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceMemberRead(ctx, d, meta)...)
@@ -129,46 +133,33 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	accountID, detectorID, err := DecodeMemberID(d.Id())
+	detectorID, accountID, err := memberParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Member (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := guardduty.GetMembersInput{
-		AccountIds: []string{accountID},
-		DetectorId: aws.String(detectorID),
-	}
-
-	log.Printf("[DEBUG] Reading GuardDuty Member: %+v", input)
-	gmo, err := conn.GetMembers(ctx, &input)
-	if err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Member (%s): %s", d.Id(), err)
-	}
-
-	if gmo.Members == nil || (len(gmo.Members) < 1) {
-		log.Printf("[WARN] GuardDuty Member %q not found, removing from state", d.Id())
+	member, err := findMemberByTwoPartKey(ctx, conn, detectorID, accountID)
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Member (%s): %s", d.Id(), err)
+	}
 
-	member := gmo.Members[0]
-	d.Set(names.AttrAccountID, member.AccountId)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("detector_id", detectorID)
 	d.Set(names.AttrEmail, member.Email)
-
-	status := aws.ToString(member.RelationshipStatus)
-	d.Set("relationship_status", status)
-
 	// https://docs.aws.amazon.com/guardduty/latest/ug/list-members.html
-	d.Set("invite", false)
-	if status == "Disabled" || status == "Enabled" || status == "Invited" || status == "EmailVerificationInProgress" {
+	status := aws.ToString(member.RelationshipStatus)
+	switch status {
+	case memberRelationshipStatusDisabled, memberRelationshipStatusEnabled, memberRelationshipStatusInvited, memberRelationshipStatusEmailVerificationInProgress:
 		d.Set("invite", true)
+	default:
+		d.Set("invite", false)
 	}
+	d.Set("relationship_status", status)
 
 	return diags
 }
@@ -177,44 +168,41 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	accountID, detectorID, err := DecodeMemberID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Member (%s): %s", d.Id(), err)
-	}
-
 	if d.HasChange("invite") {
+		detectorID, accountID, err := memberParseResourceID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		if d.Get("invite").(bool) {
-			input := &guardduty.InviteMembersInput{
-				DetectorId:               aws.String(detectorID),
+			input := guardduty.InviteMembersInput{
 				AccountIds:               []string{accountID},
+				DetectorId:               aws.String(detectorID),
 				DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
 				Message:                  aws.String(d.Get("invitation_message").(string)),
 			}
-
-			log.Printf("[INFO] Inviting GuardDuty Member: %+v", input)
-			output, err := conn.InviteMembers(ctx, input)
+			output, err := conn.InviteMembers(ctx, &input)
+			if err == nil {
+				err = unprocessedAccountsError(output.UnprocessedAccounts)
+			}
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "inviting GuardDuty Member %q: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "inviting GuardDuty Member (%s): %s", d.Id(), err)
 			}
 
-			// {"unprocessedAccounts":[{"result":"The request is rejected because the current account has already invited or is already the GuardDuty master of the given member account ID.","accountId":"067819342479"}]}
-			if len(output.UnprocessedAccounts) > 0 {
-				return sdkdiag.AppendErrorf(diags, "inviting GuardDuty Member %q: %s", d.Id(), aws.ToString(output.UnprocessedAccounts[0].Result))
-			}
-
-			err = inviteMemberWaiter(ctx, accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Member %q invite: %s", d.Id(), err)
+			if _, err := waitMemberInvited(ctx, conn, detectorID, accountID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Member (%s) invite: %s", d.Id(), err)
 			}
 		} else {
-			input := &guardduty.DisassociateMembersInput{
+			input := guardduty.DisassociateMembersInput{
 				AccountIds: []string{accountID},
 				DetectorId: aws.String(detectorID),
 			}
-			log.Printf("[INFO] Disassociating GuardDuty Member: %+v", input)
-			_, err := conn.DisassociateMembers(ctx, input)
+			output, err := conn.DisassociateMembers(ctx, &input)
+			if err == nil {
+				err = unprocessedAccountsError(output.UnprocessedAccounts)
+			}
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "disassociating GuardDuty Member %q: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disassociating GuardDuty Member (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -226,83 +214,135 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	accountID, detectorID, err := DecodeMemberID(d.Id())
+	detectorID, accountID, err := memberParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Member (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	log.Printf("[DEBUG] Deleting GuardDuty Member: %s", d.Id())
 	input := guardduty.DeleteMembersInput{
 		AccountIds: []string{accountID},
 		DetectorId: aws.String(detectorID),
 	}
-
-	log.Printf("[DEBUG] Delete GuardDuty Member: %+v", input)
-	_, err = conn.DeleteMembers(ctx, &input)
+	output, err := conn.DeleteMembers(ctx, &input)
+	if err == nil {
+		err = unprocessedAccountsError(output.UnprocessedAccounts)
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Member (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeout time.Duration, conn *guardduty.Client) error {
-	input := guardduty.GetMembersInput{
-		DetectorId: aws.String(detectorID),
-		AccountIds: []string{accountID},
+const memberResourceIDSeparator = ":"
+
+func memberCreateResourceID(detectorID, accountID string) string {
+	parts := []string{detectorID, accountID}
+	id := strings.Join(parts, memberResourceIDSeparator)
+
+	return id
+}
+
+func memberParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, memberResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <Detector ID>%[2]s<Member AWS Account ID>", id, memberResourceIDSeparator)
 	}
 
-	// wait until e-mail verification finishes
-	var out *guardduty.GetMembersOutput
-	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
-		log.Printf("[DEBUG] Reading GuardDuty Member: %+v", input)
-		var err error
-		out, err = conn.GetMembers(ctx, &input)
+	return parts[0], parts[1], nil
+}
 
-		if err != nil {
-			return tfresource.NonRetryableError(fmt.Errorf("reading GuardDuty Member %q: %w", accountID, err))
-		}
+func findMember(ctx context.Context, conn *guardduty.Client, input *guardduty.GetMembersInput) (*awstypes.Member, error) {
+	output, err := findMembers(ctx, conn, input)
 
-		retryable, err := memberInvited(out, accountID)
-		if err != nil {
-			if retryable {
-				return tfresource.RetryableError(err)
-			}
-			return tfresource.NonRetryableError(err)
-		}
-
-		return nil
-	})
 	if err != nil {
-		return fmt.Errorf("waiting for GuardDuty email verification: %w", err)
+		return nil, err
 	}
-	return nil
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
-	if out == nil || len(out.Members) == 0 {
-		return true, fmt.Errorf("reading GuardDuty Member %q: member missing from response", accountID)
+func findMembers(ctx context.Context, conn *guardduty.Client, input *guardduty.GetMembersInput) ([]awstypes.Member, error) {
+	output, err := conn.GetMembers(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
 	}
 
-	member := out.Members[0]
-	status := aws.ToString(member.RelationshipStatus)
-
-	if status == "Disabled" || status == "Enabled" || status == "Invited" {
-		return false, nil
+	if err != nil {
+		return nil, err
 	}
 
-	if status == "Created" || status == "EmailVerificationInProgress" {
-		return true, fmt.Errorf("Expected member to be invited but was in state: %s", status)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return false, fmt.Errorf("inviting GuardDuty Member %q: invalid status: %s", accountID, status)
+	return output.Members, nil
 }
 
-func DecodeMemberID(id string) (accountID, detectorID string, err error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		err = fmt.Errorf("GuardDuty Member ID must be of the form <Detector ID>:<Member AWS Account ID>, was provided: %s", id)
-		return
+func findMemberByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, accountID string) (*awstypes.Member, error) {
+	input := guardduty.GetMembersInput{
+		AccountIds: []string{accountID},
+		DetectorId: aws.String(detectorID),
 	}
-	accountID = parts[1]
-	detectorID = parts[0]
-	return
+
+	return findMember(ctx, conn, &input)
+}
+
+func statusMember(conn *guardduty.Client, detectorID, accountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findMemberByTwoPartKey(ctx, conn, detectorID, accountID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.RelationshipStatus), nil
+	}
+}
+
+func waitMemberInvited(ctx context.Context, conn *guardduty.Client, detectorID, accountID string, timeout time.Duration) (*awstypes.Member, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{memberRelationshipStatusCreated, memberRelationshipStatusEmailVerificationInProgress},
+		Target:  []string{memberRelationshipStatusDisabled, memberRelationshipStatusEnabled, memberRelationshipStatusInvited},
+		Refresh: statusMember(conn, detectorID, accountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Member); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	memberRelationshipStatusCreated                     = "Created"
+	memberRelationshipStatusDisabled                    = "Disabled"
+	memberRelationshipStatusEnabled                     = "Enabled"
+	memberRelationshipStatusEmailVerificationInProgress = "EmailVerificationInProgress"
+	memberRelationshipStatusInvited                     = "Invited"
+)
+
+func unprocessedAccountError(apiObject awstypes.UnprocessedAccount) error {
+	return fmt.Errorf("%s: %s", aws.ToString(apiObject.AccountId), aws.ToString(apiObject.Result))
+}
+
+func unprocessedAccountsError(apiObjects []awstypes.UnprocessedAccount) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		errs = append(errs, unprocessedAccountError(apiObject))
+	}
+
+	return errors.Join(errs...)
 }

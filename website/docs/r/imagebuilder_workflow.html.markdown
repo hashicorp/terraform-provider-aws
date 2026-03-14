@@ -74,6 +74,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the workflow.
 * `arn` - Amazon Resource Name (ARN) of the workflow.
 * `date_created` - Date the workflow was created.
 * `owner` - Owner of the workflow.

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package globalaccelerator
 
 import (
@@ -16,8 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -110,7 +111,7 @@ func (r *crossAccountAttachmentResource) Create(ctx context.Context, request res
 		return
 	}
 
-	input.IdempotencyToken = aws.String(id.UniqueId())
+	input.IdempotencyToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateCrossAccountAttachment(ctx, input)
@@ -283,9 +284,8 @@ func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerato
 	output, err := conn.DescribeCrossAccountAttachment(ctx, input)
 
 	if errs.IsA[*awstypes.AttachmentNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

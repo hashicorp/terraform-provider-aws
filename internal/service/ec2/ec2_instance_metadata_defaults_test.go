@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -35,16 +34,16 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_metadata_defaults.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
+					testAccCheckInstanceMetadataDefaultsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
@@ -54,7 +53,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 			{
 				Config: testAccInstanceMetadataDefaultsConfig_partial,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
+					testAccCheckInstanceMetadataDefaultsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "no-preference"),
 					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
@@ -68,11 +67,11 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 func testAccInstanceMetadataDefaults_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceMetadataDefaultsConfig_empty,
@@ -86,16 +85,16 @@ func testAccInstanceMetadataDefaults_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_metadata_defaults.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
+					testAccCheckInstanceMetadataDefaultsExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceInstanceMetadataDefaults, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -104,9 +103,9 @@ func testAccInstanceMetadataDefaults_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_instance_metadata_defaults" {
@@ -130,14 +129,14 @@ func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
 

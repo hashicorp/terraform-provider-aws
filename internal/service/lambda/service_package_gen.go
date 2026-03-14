@@ -233,6 +233,32 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	}
 }
 
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newFunctionResourceAsListResource,
+			TypeName: "aws_lambda_function",
+			Name:     "Function",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity("function_name"),
+		},
+		{
+			Factory:  permissionResourceAsListResource,
+			TypeName: "aws_lambda_permission",
+			Name:     "Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("statement_id", true),
+				inttypes.StringIdentityAttribute("qualifier", false),
+			}),
+		},
+	})
+}
+
 func (p *servicePackage) ServicePackageName() string {
 	return names.Lambda
 }

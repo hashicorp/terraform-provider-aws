@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sagemaker
 
 import (
@@ -15,8 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -248,7 +249,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = id.UniqueId()
+		name = sdkid.UniqueId()
 	}
 	input := sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
@@ -271,10 +272,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
 		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
-			r := resourceEndpoint()
-			d := r.Data(nil)
+			d := resourceEndpoint().Data(nil)
 			d.SetId(name)
-			if diags := r.DeleteWithoutTimeout(ctx, d, meta); diags.HasError() { // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
+			if diags := resourceEndpointDelete(ctx, d, meta); diags.HasError() {
 				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
 			}
 
@@ -389,9 +389,8 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 	}
 
 	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -402,9 +401,8 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -419,8 +417,8 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpoint(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -439,10 +437,10 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
-		Refresh: statusEndpoint(ctx, conn, name),
+		Refresh: statusEndpoint(conn, name),
 		Timeout: timeout,
 	}
 
@@ -463,10 +461,10 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, name),
+		Refresh: statusEndpoint(conn, name),
 		Timeout: timeout,
 	}
 

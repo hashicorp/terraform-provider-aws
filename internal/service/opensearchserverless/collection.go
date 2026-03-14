@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package opensearchserverless
 
 import (
@@ -20,8 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -173,7 +174,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(sdkid.UniqueId())
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateCollection(ctx, in)
@@ -259,7 +260,7 @@ func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		input.ClientToken = aws.String(id.UniqueId())
+		input.ClientToken = aws.String(sdkid.UniqueId())
 
 		out, err := conn.UpdateCollection(ctx, input)
 
@@ -291,7 +292,7 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	_, err := conn.DeleteCollection(ctx, &opensearchserverless.DeleteCollectionInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		Id:          state.ID.ValueStringPointer(),
 	})
 
@@ -319,10 +320,10 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
 		Target:     enum.Slice(awstypes.CollectionStatusActive),
-		Refresh:    statusCollection(ctx, conn, id),
+		Refresh:    statusCollection(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -342,10 +343,10 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 }
 
 func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusCollection(ctx, conn, id),
+		Refresh:    statusCollection(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -364,8 +365,8 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	return nil, err
 }
 
-func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCollection(conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {

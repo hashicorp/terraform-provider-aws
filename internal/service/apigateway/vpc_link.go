@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package apigateway
 
 import (
@@ -28,8 +30,6 @@ import (
 
 // @SDKResource("aws_api_gateway_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,

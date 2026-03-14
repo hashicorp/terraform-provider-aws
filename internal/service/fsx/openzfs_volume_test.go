@@ -11,11 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,18 +23,18 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
@@ -66,18 +64,18 @@ func TestAccFSxOpenZFSVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume),
 					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceOpenZFSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -91,20 +89,20 @@ func TestAccFSxOpenZFSVolume_parentVolume(t *testing.T) {
 	var volume, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
 	resourceName2 := "aws_fsx_openzfs_volume.test2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_parent(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName2, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName2, &volume2),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName2, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName2, "parent_volume_id", resourceName, names.AttrID),
@@ -123,18 +121,18 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2, volume3 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -147,7 +145,7 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -157,7 +155,7 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume3),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume3),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume2, &volume3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -171,18 +169,18 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
@@ -201,7 +199,7 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
@@ -218,19 +216,19 @@ func TestAccFSxOpenZFSVolume_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -242,7 +240,7 @@ func TestAccFSxOpenZFSVolume_name(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
@@ -255,18 +253,18 @@ func TestAccFSxOpenZFSVolume_dataCompressionType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_dataCompression(rName, "ZSTD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "ZSTD"),
 				),
 			},
@@ -278,7 +276,7 @@ func TestAccFSxOpenZFSVolume_dataCompressionType(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_dataCompression(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
 				),
@@ -291,18 +289,18 @@ func TestAccFSxOpenZFSVolume_readOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_readOnly(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "read_only", acctest.CtFalse),
 				),
 			},
@@ -314,7 +312,7 @@ func TestAccFSxOpenZFSVolume_readOnly(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_readOnly(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "read_only", acctest.CtTrue),
 				),
@@ -327,18 +325,18 @@ func TestAccFSxOpenZFSVolume_recordSizeKib(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_recordSizeKib(rName, 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "record_size_kib", "8"),
 				),
 			},
@@ -350,7 +348,7 @@ func TestAccFSxOpenZFSVolume_recordSizeKib(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_recordSizeKib(rName, 1024),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "record_size_kib", "1024"),
 				),
@@ -363,18 +361,18 @@ func TestAccFSxOpenZFSVolume_storageCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_storageCapacity(rName, 30, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity_quota_gib", "30"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity_reservation_gib", "20"),
 				),
@@ -387,7 +385,7 @@ func TestAccFSxOpenZFSVolume_storageCapacity(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_storageCapacity(rName, 40, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity_quota_gib", "40"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity_reservation_gib", "30"),
@@ -401,18 +399,18 @@ func TestAccFSxOpenZFSVolume_nfsExports(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_nfsExports1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.clients", "10.0.1.0/24"),
@@ -429,7 +427,7 @@ func TestAccFSxOpenZFSVolume_nfsExports(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_nfsExports2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "2"),
@@ -453,18 +451,18 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_openzfs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_userAndGroupQuotas1(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
 						names.AttrID:                 "10",
@@ -481,7 +479,7 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 			{
 				Config: testAccOpenZFSVolumeConfig_userAndGroupQuotas2(rName, 128, 1024),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckOpenZFSVolumeExists(ctx, t, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
@@ -510,14 +508,14 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 	})
 }
 
-func testAccCheckOpenZFSVolumeExists(ctx context.Context, n string, v *awstypes.Volume) resource.TestCheckFunc {
+func testAccCheckOpenZFSVolumeExists(ctx context.Context, t *testing.T, n string, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FSxClient(ctx)
 
 		output, err := tffsx.FindOpenZFSVolumeByID(ctx, conn, rs.Primary.ID)
 
@@ -531,9 +529,9 @@ func testAccCheckOpenZFSVolumeExists(ctx context.Context, n string, v *awstypes.
 	}
 }
 
-func testAccCheckOpenZFSVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOpenZFSVolumeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_openzfs_volume" {

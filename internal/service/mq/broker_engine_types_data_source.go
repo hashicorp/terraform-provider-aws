@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package mq
 
 import (
@@ -10,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -84,7 +86,7 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 		input.NextToken = output.NextToken
 	}
 
-	d.SetId(id.UniqueId())
+	d.SetId(sdkid.UniqueId())
 
 	if err := d.Set("broker_engine_types", flattenBrokerList(engineTypes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting broker_engine_types: %s", err)

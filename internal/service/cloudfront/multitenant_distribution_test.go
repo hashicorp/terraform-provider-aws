@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +25,16 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
@@ -56,16 +55,16 @@ func TestAccCloudFrontMultiTenantDistribution_disappears(t *testing.T) {
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceMultiTenantDistribution, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,16 +81,16 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_comprehensive(rName, "Comprehensive multi-tenant distribution test", "index.html", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Comprehensive multi-tenant distribution test"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_object", "index.html"),
@@ -134,7 +133,7 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 			{
 				Config: testAccMultiTenantDistributionConfig_comprehensive(rName, "Updated comprehensive test", "updated.html", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comprehensive test"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_object", "updated.html"),
@@ -159,19 +158,56 @@ func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_s3OriginWithOAC(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.origin_access_control_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
+		},
+	})
+}
+
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46302
+func TestAccCloudFrontMultiTenantDistribution_customErrorResponseWithoutResponsePagePath(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_error_response.0.error_code", "404"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_code"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_error_response.0.response_page_path"),
 				),
 			},
 			{
@@ -191,16 +227,16 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey1: acctest.CtValue1}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -214,7 +250,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey1: acctest.CtValue1Updated, acctest.CtKey2: acctest.CtValue2}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -223,7 +259,7 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 			{
 				Config: testAccMultiTenantDistributionConfig_tags(map[string]string{acctest.CtKey2: acctest.CtValue2}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -239,16 +275,16 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiTenantDistributionConfig_update("Initial comment", "http1.1", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Initial comment"),
 					resource.TestCheckResourceAttr(resourceName, "http_version", "http1.1"),
@@ -257,7 +293,7 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 			{
 				Config: testAccMultiTenantDistributionConfig_update("Updated comment", "http2", "updated.html"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comment"),
 					resource.TestCheckResourceAttr(resourceName, "http_version", "http2"),
@@ -274,9 +310,9 @@ func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 	})
 }
 
-func testAccCheckMultiTenantDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMultiTenantDistributionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_multitenant_distribution" {
@@ -300,14 +336,14 @@ func testAccCheckMultiTenantDistributionDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckMultiTenantDistributionExists(ctx context.Context, n string, v *awstypes.Distribution) resource.TestCheckFunc {
+func testAccCheckMultiTenantDistributionExists(ctx context.Context, t *testing.T, n string, v *awstypes.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindDistributionByID(ctx, conn, rs.Primary.ID)
 
@@ -473,6 +509,64 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `, rName, comment, defaultRootObject, compress)
+}
+
+func testAccMultiTenantDistributionConfig_customErrorResponseWithoutResponsePagePath() string {
+	return `
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  custom_error_response {
+    error_code = 404
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`
 }
 
 func testAccMultiTenantDistributionConfig_tags(tags map[string]string) string {

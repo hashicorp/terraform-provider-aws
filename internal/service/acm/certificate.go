@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package acm
 
 import (
@@ -20,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,8 +63,6 @@ const (
 // @Testing(tlsKey=true)
 // @Testing(importIgnore="certificate_body;private_key)
 // @Testing(generator=false)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -353,7 +353,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		domainName := d.Get(names.AttrDomainName).(string)
 		input := acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
-			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
+			IdempotencyToken: aws.String(sdkid.PrefixedUniqueId("tf")), // 32 character limit
 			Tags:             getTagsIn(ctx),
 		}
 

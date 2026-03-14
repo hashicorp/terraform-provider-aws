@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
@@ -15,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,7 +84,7 @@ func resourceServerCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128-sdkid.UniqueIDSuffixLength),
 			},
 			names.AttrPath: {
 				Type:     schema.TypeString,
@@ -112,7 +113,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	sslCertName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
@@ -214,7 +215,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			oldName, newName := d.GetChange(names.AttrName)
 
 			// Handle both a name change and a switch to using a name prefix
-			newSSLCertName := create.Name(newName.(string), d.Get(names.AttrNamePrefix).(string))
+			newSSLCertName := create.Name(ctx, newName.(string), d.Get(names.AttrNamePrefix).(string))
 
 			input.ServerCertificateName = aws.String(oldName.(string))
 			input.NewServerCertificateName = aws.String(newSSLCertName)
@@ -222,7 +223,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			oldName := d.Get(names.AttrName).(string)
 
 			// Handle only a name prefix change using an empty string as name (as it hasn't been changed)
-			newSSLCertName := create.Name("", d.Get(names.AttrNamePrefix).(string))
+			newSSLCertName := create.Name(ctx, "", d.Get(names.AttrNamePrefix).(string))
 
 			input.ServerCertificateName = aws.String(oldName)
 			input.NewServerCertificateName = aws.String(newSSLCertName)
@@ -293,9 +294,8 @@ func findServerCertificate(ctx context.Context, conn *iam.Client, input *iam.Get
 	output, err := conn.GetServerCertificate(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

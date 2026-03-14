@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ecs
 
 import (
@@ -25,7 +27,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
@@ -46,6 +49,15 @@ import (
 
 // @SDKResource("aws_ecs_service", name="Service")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("cluster")
+// @IdentityAttribute("name)
+// @ImportIDHandler("serviceImportID")
+// @CustomImport
+// @Testing(preIdentityVersion="v6.33.0")
+// @Testing(idAttrDuplicates="arn")
+// @Testing(importStateIdFunc=testAccServiceImportStateIdFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.Service")
+// @Testing(importIgnore="wait_for_steady_state;task_definition")
 func resourceService() *schema.Resource {
 	// Resource with v0 schema (provider v5.58.0).
 	resourceV0 := &schema.Resource{
@@ -953,6 +965,26 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"access_log_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFormat: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectAccessLoggingFormat](),
+									},
+									"include_query_parameters": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectIncludeQueryParameters](),
+									},
+								},
+							},
+						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -1349,7 +1381,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	schedulingStrategy := awstypes.SchedulingStrategy(d.Get("scheduling_strategy").(string))
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategyItems(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set)),
-		ClientToken:              aws.String(id.UniqueId()),
+		ClientToken:              aws.String(sdkid.UniqueId()),
 		DeploymentConfiguration:  &awstypes.DeploymentConfiguration{},
 		DeploymentController:     deploymentController,
 		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),
@@ -1559,113 +1591,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, service.ServiceArn)
-	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
-	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
-	}
-	// Save cluster in the same format.
-	if arn.IsARN(cluster) {
-		d.Set("cluster", service.ClusterArn)
-	} else {
-		d.Set("cluster", clusterNameFromARN(aws.ToString(service.ClusterArn)))
-	}
-	if service.DeploymentConfiguration != nil {
-		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
-		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
-
-		if service.DeploymentConfiguration.Alarms != nil {
-			if err := d.Set("alarms", []any{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting alarms: %s", err)
-			}
-		} else {
-			d.Set("alarms", nil)
-		}
-
-		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
-			if err := d.Set("deployment_circuit_breaker", []any{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
-			}
-		} else {
-			d.Set("deployment_circuit_breaker", nil)
-		}
-
-		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
-		}
-	}
-	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
-	}
-	d.Set("desired_count", service.DesiredCount)
-	d.Set("enable_execute_command", service.EnableExecuteCommand)
-	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
-	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
-	// Save IAM role in the same format.
-	if service.RoleArn != nil {
-		if arn.IsARN(d.Get("iam_role").(string)) {
-			d.Set("iam_role", service.RoleArn)
-		} else {
-			d.Set("iam_role", roleNameFromARN(aws.ToString(service.RoleArn)))
-		}
-	}
-	d.Set("launch_type", service.LaunchType)
-	if service.LoadBalancers != nil {
-		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
-		}
-	}
-	d.Set(names.AttrName, service.ServiceName)
-	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
-	}
-	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
-	}
-	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
-	}
-	d.Set("platform_version", service.PlatformVersion)
-	d.Set(names.AttrPropagateTags, service.PropagateTags)
-	d.Set("scheduling_strategy", service.SchedulingStrategy)
-	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
-	}
-	// When creating a service that uses the EXTERNAL deployment controller,
-	// you can specify only parameters that aren't controlled at the task set level
-	// hence TaskDefinition will not be set by aws sdk
-	if service.TaskDefinition != nil {
-		// Save task definition in the same format.
-		if arn.IsARN(d.Get("task_definition").(string)) {
-			d.Set("task_definition", service.TaskDefinition)
-		} else {
-			d.Set("task_definition", familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
-		}
-	}
-	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
-	for _, deployment := range service.Deployments {
-		if aws.ToString(deployment.Status) == "PRIMARY" {
-			if v := deployment.ServiceConnectConfiguration; v != nil {
-				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(v)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
-				}
-			} else {
-				d.Set("service_connect_configuration", nil)
-			}
-			if v := deployment.VolumeConfigurations; len(v) > 0 {
-				if err := d.Set("volume_configuration", flattenServiceVolumeConfigurations(ctx, v)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
-				}
-			}
-			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
-			}
-		}
-	}
-
-	setTagsOut(ctx, service.Tags)
-
-	return diags
+	return append(diags, resourceServiceFlatten(ctx, d, service, cluster)...)
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1989,12 +1915,15 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
 	}
-	clusterName := parts[0]
-	serviceName := parts[1]
+
+	clusterName, serviceName, err := parseServiceImportID(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+
 	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", serviceName, clusterName)
 
 	region := d.Get(names.AttrRegion).(string)
@@ -2715,6 +2644,12 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{}
 
+		if v := apiObject.HookDetails; v != nil {
+			if jsonString, err := smithy.DocumentToJSONString(v); err == nil {
+				tfMap["hook_details"] = jsonString
+			}
+		}
+
 		if v := apiObject.HookTargetArn; v != nil {
 			tfMap["hook_target_arn"] = aws.ToString(v)
 		}
@@ -2724,17 +2659,7 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 		}
 
 		if v := apiObject.LifecycleStages; len(v) > 0 {
-			stages := make([]string, 0, len(v))
-			for _, stage := range v {
-				stages = append(stages, string(stage))
-			}
-			tfMap["lifecycle_stages"] = stages
-		}
-
-		if v := apiObject.HookDetails; v != nil {
-			if jsonString, err := smithy.DocumentToJSONString(v); err == nil {
-				tfMap["hook_details"] = jsonString
-			}
+			tfMap["lifecycle_stages"] = v
 		}
 
 		tfList = append(tfList, tfMap)
@@ -3068,6 +2993,9 @@ func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectCon
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ServiceConnectConfiguration{}
 
+	if v, ok := tfMap["access_log_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AccessLogConfiguration = expandServiceConnectAccessLogConfiguration(v)
+	}
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = v
 	}
@@ -3093,6 +3021,9 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
+	if v := apiObject.AccessLogConfiguration; v != nil {
+		tfMap["access_log_configuration"] = flattenServiceConnectAccessLogConfiguration(v)
+	}
 	if v := apiObject.LogConfiguration; v != nil {
 		tfMap["log_configuration"] = []any{flattenLogConfiguration(*v)}
 	}
@@ -3101,6 +3032,38 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 	}
 	if v := apiObject.Services; v != nil {
 		tfMap["service"] = flattenServiceConnectServices(v)
+	}
+
+	return []any{tfMap}
+}
+
+func expandServiceConnectAccessLogConfiguration(tfList []any) *awstypes.ServiceConnectAccessLogConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	config := &awstypes.ServiceConnectAccessLogConfiguration{}
+
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
+		config.Format = awstypes.ServiceConnectAccessLoggingFormat(v)
+	}
+
+	if v, ok := tfMap["include_query_parameters"].(string); ok && v != "" {
+		config.IncludeQueryParameters = awstypes.ServiceConnectIncludeQueryParameters(v)
+	}
+
+	return config
+}
+
+func flattenServiceConnectAccessLogConfiguration(config *awstypes.ServiceConnectAccessLogConfiguration) []any {
+	if config == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrFormat:           config.Format,
+		"include_query_parameters": config.IncludeQueryParameters,
 	}
 
 	return []any{tfMap}
@@ -3789,6 +3752,118 @@ func flattenServiceRegistries(apiObjects []awstypes.ServiceRegistry) []any {
 	return tfList
 }
 
+func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service *awstypes.Service, cluster string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, service.ServiceArn)
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
+	}
+	// Save cluster in the same format.
+	if arn.IsARN(cluster) {
+		d.Set("cluster", service.ClusterArn)
+	} else {
+		d.Set("cluster", clusterNameFromARN(aws.ToString(service.ClusterArn)))
+	}
+	if service.DeploymentConfiguration != nil {
+		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
+		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
+
+		if service.DeploymentConfiguration.Alarms != nil {
+			if err := d.Set("alarms", []any{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting alarms: %s", err)
+			}
+		} else {
+			d.Set("alarms", nil)
+		}
+
+		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
+			if err := d.Set("deployment_circuit_breaker", []any{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
+			}
+		} else {
+			d.Set("deployment_circuit_breaker", nil)
+		}
+
+		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
+		}
+	}
+	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
+	}
+	d.Set("desired_count", service.DesiredCount)
+	d.Set("enable_execute_command", service.EnableExecuteCommand)
+	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
+	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
+	// Save IAM role in the same format.
+	if service.RoleArn != nil {
+		if arn.IsARN(d.Get("iam_role").(string)) {
+			d.Set("iam_role", service.RoleArn)
+		} else {
+			d.Set("iam_role", roleNameFromARN(aws.ToString(service.RoleArn)))
+		}
+	}
+	d.Set("launch_type", service.LaunchType)
+	if service.LoadBalancers != nil {
+		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
+		}
+	}
+	d.Set(names.AttrName, service.ServiceName)
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
+	}
+	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
+	}
+	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
+	}
+	d.Set("platform_version", service.PlatformVersion)
+	d.Set(names.AttrPropagateTags, service.PropagateTags)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
+	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
+	}
+	// When creating a service that uses the EXTERNAL deployment controller,
+	// you can specify only parameters that aren't controlled at the task set level
+	// hence TaskDefinition will not be set by aws sdk
+	if service.TaskDefinition != nil {
+		// Save task definition in the same format.
+		if arn.IsARN(d.Get("task_definition").(string)) {
+			d.Set("task_definition", service.TaskDefinition)
+		} else {
+			d.Set("task_definition", familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
+		}
+	}
+	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
+	for _, deployment := range service.Deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			if v := deployment.ServiceConnectConfiguration; v != nil {
+				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(v)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
+				}
+			} else {
+				d.Set("service_connect_configuration", nil)
+			}
+			if v := deployment.VolumeConfigurations; len(v) > 0 {
+				if err := d.Set("volume_configuration", flattenServiceVolumeConfigurations(ctx, v)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
+				}
+			}
+			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
+			}
+		}
+	}
+
+	setTagsOut(ctx, service.Tags)
+
+	return diags
+}
+
 func familyAndRevisionFromTaskDefinitionARN(arn string) string {
 	return strings.Split(arn, "/")[1]
 }
@@ -3841,4 +3916,37 @@ func serviceNameFromARN(s string) string {
 	default:
 		return ""
 	}
+}
+
+func parseServiceImportID(id string) (string, string, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", id)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+type serviceImportID struct{}
+
+func (serviceImportID) Create(d *schema.ResourceData) string {
+	cluster := d.Get("cluster").(string)
+	if arn.IsARN(cluster) {
+		cluster = clusterNameFromARN(cluster)
+	}
+
+	return fmt.Sprintf("%s/%s", cluster, d.Get(names.AttrName).(string))
+}
+
+func (serviceImportID) Parse(id string) (string, map[string]any, error) {
+	cluster, service, err := parseServiceImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"cluster":      cluster,
+		names.AttrName: service,
+	}
+	return id, result, nil
 }

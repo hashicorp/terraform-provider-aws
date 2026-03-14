@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package fsx
 
 import (
@@ -12,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -82,7 +83,7 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateBackupInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -207,9 +208,8 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.BackupNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -227,8 +227,8 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 	return output, nil
 }
 
-func statusBackup(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBackup(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBackupByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -247,10 +247,10 @@ func waitBackupAvailable(ctx context.Context, conn *fsx.Client, id string) (*aws
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupLifecycleCreating, awstypes.BackupLifecyclePending, awstypes.BackupLifecycleTransferring),
 		Target:  enum.Slice(awstypes.BackupLifecycleAvailable),
-		Refresh: statusBackup(ctx, conn, id),
+		Refresh: statusBackup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -267,10 +267,10 @@ func waitBackupDeleted(ctx context.Context, conn *fsx.Client, id string) (*awsty
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusBackup(ctx, conn, id),
+		Refresh: statusBackup(conn, id),
 		Timeout: timeout,
 	}
 

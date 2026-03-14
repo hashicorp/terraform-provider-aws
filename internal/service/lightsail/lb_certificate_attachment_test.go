@@ -10,18 +10,17 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccLoadBalancerCertificateAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	cName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	lbName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	cName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -29,7 +28,7 @@ func testAccLoadBalancerCertificateAttachment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckLoadBalancerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerCertificateAttachmentConfig_basic(lbName, cName, domainName),

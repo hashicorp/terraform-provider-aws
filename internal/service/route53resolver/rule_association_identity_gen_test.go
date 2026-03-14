@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRoute53ResolverRuleAssociation_Identity_Basic(t *testing.T) {
+func TestAccRoute53ResolverRuleAssociation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResolverRuleAssociation
@@ -36,7 +36,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -47,7 +47,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_Basic(t *testing.T) {
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleAssociationExists(ctx, resourceName, &v),
+					testAccCheckRuleAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -112,7 +112,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverRuleAssociation_Identity_RegionOverride(t *testing.T) {
+func TestAccRoute53ResolverRuleAssociation_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_resolver_rule_association.test"
@@ -205,7 +205,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_RegionOverride(t *testing.T)
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource(t *testing.T) {
+func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResolverRuleAssociation
@@ -219,7 +219,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -229,7 +229,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource(t *testing.
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleAssociationExists(ctx, resourceName, &v),
+					testAccCheckRuleAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource(t *testing.
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResolverRuleAssociation
@@ -280,7 +280,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_NoRefresh_N
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -295,7 +295,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_NoRefresh_N
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleAssociationExists(ctx, resourceName, &v),
+					testAccCheckRuleAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

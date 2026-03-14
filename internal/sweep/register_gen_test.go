@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/arcregionswitch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -187,6 +188,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
@@ -208,6 +210,7 @@ func registerSweepers() {
 	apprunner.RegisterSweepers()
 	appstream.RegisterSweepers()
 	appsync.RegisterSweepers()
+	arcregionswitch.RegisterSweepers()
 	athena.RegisterSweepers()
 	auditmanager.RegisterSweepers()
 	autoscaling.RegisterSweepers()
@@ -373,6 +376,7 @@ func registerSweepers() {
 	waf.RegisterSweepers()
 	wafregional.RegisterSweepers()
 	wafv2.RegisterSweepers()
+	workmail.RegisterSweepers()
 	workspaces.RegisterSweepers()
 	xray.RegisterSweepers()
 }

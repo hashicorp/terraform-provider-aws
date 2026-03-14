@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -49,9 +49,12 @@ func validImage(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validHTTPSOrS3URI = validation.All(
-	validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`), "must be HTTPS or Amazon S3 URI"),
-	validation.StringLenBetween(0, 1024),
+var (
+	httpsOrS3URIRegexp = regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`)
+	validHTTPSOrS3URI  = validation.All(
+		validation.StringMatch(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+		validation.StringLenBetween(0, 1024),
+	)
 )
 
 func validName(v any, k string) (ws []string, errors []error) {
@@ -79,7 +82,7 @@ func validPrefix(v any, k string) (ws []string, errors []error) {
 			"only alphanumeric characters and hyphens allowed in %q: %q",
 			k, value))
 	}
-	maxLength := 63 - id.UniqueIDSuffixLength
+	maxLength := 63 - sdkid.UniqueIDSuffixLength
 	if len(value) > maxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters: %q", k, maxLength, value))

@@ -34,12 +34,12 @@ The following arguments are required:
 
 * `invoice_receiver` - (Required) AWS account ID that receives invoices for this unit. Cannot be changed after creation.
 * `name` - (Required) Unique name of the invoice unit. Cannot be changed after creation.
-* `rule` - (Required) Configuration block for invoice unit rules. See below.
+* `rule` - (Required) Configuration block for invoice unit rules. See [`rule`](#rule) below.
 
 The following arguments are optional:
 
 * `description` - (Optional) Description of the invoice unit.
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tax_inheritance_disabled` - (Optional) Whether tax inheritance is disabled for this invoice unit.
 

@@ -19,34 +19,33 @@ type Lister[T listresource.InterceptorParams | listresource.InterceptorParamsSDK
 	AppendResultInterceptor(listresource.ListResultInterceptor[T])
 }
 
-var _ Lister[listresource.InterceptorParams] = &withList[listresource.InterceptorParams]{}
-
-type WithList = withList[listresource.InterceptorParams]
+var _ Lister[listresource.InterceptorParams] = &WithList{}
 
 // WithList provides common functionality for ListResources
-type withList[T listresource.InterceptorParams] struct {
+type WithList struct {
 	withListResourceConfigSchema
-	interceptors []listresource.ListResultInterceptor[T]
+	interceptors []listresource.ListResultInterceptor[listresource.InterceptorParams]
 }
 
-type flattenFunc func()
+type FlattenFunc func()
 
-func (w *withList[T]) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[T]) {
+func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
 	w.interceptors = append(w.interceptors, interceptor)
 }
 
-func (w withList[T]) ResultInterceptors() []listresource.ListResultInterceptor[T] {
+func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
 	return w.interceptors
 }
 
-func (w *withList[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, data any, result *list.ListResult) diag.Diagnostics {
+func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
-	params := any(listresource.InterceptorParams{
-		C:      awsClient,
-		Result: result,
-		Data:   data,
-		When:   when,
-	}).(T)
+	params := listresource.InterceptorParams{
+		C:               awsClient,
+		IncludeResource: includeResource,
+		Data:            data,
+		Result:          result,
+		When:            when,
+	}
 
 	switch when {
 	case listresource.Before:
@@ -62,10 +61,10 @@ func (w *withList[T]) runResultInterceptors(ctx context.Context, when listresour
 	return diags
 }
 
-func (w *withList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, data any, result *list.ListResult, f flattenFunc) {
+func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f FlattenFunc) {
 	var diags diag.Diagnostics
 
-	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, data, result)...)
+	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, includeResource, data, result)...)
 	if diags.HasError() {
 		return
 	}
@@ -75,12 +74,14 @@ func (w *withList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient,
 		return
 	}
 
+	// TODO: The Identity interceptor currently reads values from the resource, so it needs to be populated.
+	// Technically, only the Identity attributes need to be set, but calling `Set` with uninitialized typed collections causes a panic
 	diags.Append(result.Resource.Set(ctx, data)...)
 	if diags.HasError() {
 		return
 	}
 
-	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, data, result)...)
+	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, includeResource, data, result)...)
 	if diags.HasError() {
 		return
 	}

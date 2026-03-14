@@ -165,7 +165,7 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 				result.DisplayName = aws.ToString(subnet.SubnetId)
 			}
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -189,7 +189,9 @@ func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubne
 			}
 
 			for _, subnet := range page.Subnets {
-				yield(subnet, nil)
+				if !yield(subnet, nil) {
+					return
+				}
 			}
 		}
 	}

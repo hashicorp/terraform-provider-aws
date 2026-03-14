@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreamwrite "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,18 +21,18 @@ import (
 func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
@@ -53,18 +51,18 @@ func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 func TestAccTimestreamWriteDatabase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftimestreamwrite.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,19 +74,19 @@ func TestAccTimestreamWriteDatabase_disappears(t *testing.T) {
 func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
@@ -105,26 +103,26 @@ func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
 				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
 			},
@@ -136,7 +134,7 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
@@ -147,18 +145,18 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
@@ -168,7 +166,7 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -180,7 +178,7 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
@@ -196,9 +194,9 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDatabaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_timestreamwrite_database" {
@@ -222,14 +220,14 @@ func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDatabaseExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDatabaseExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 
 		_, err := tftimestreamwrite.FindDatabaseByName(ctx, conn, rs.Primary.ID)
 
@@ -238,7 +236,7 @@ func testAccCheckDatabaseExists(ctx context.Context, n string) resource.TestChec
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 
 	input := &timestreamwrite.ListDatabasesInput{}
 

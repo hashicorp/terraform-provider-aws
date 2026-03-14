@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloud9
 
 import (
@@ -13,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9"
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -119,7 +120,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
 		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),
@@ -256,9 +257,8 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	output, err := conn.DescribeEnvironments(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -286,16 +286,14 @@ func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironmentStatus(conn *cloud9.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -314,10 +312,10 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusCreating),
 		Target:  enum.Slice(types.EnvironmentLifecycleStatusCreated),
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -338,10 +336,10 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 

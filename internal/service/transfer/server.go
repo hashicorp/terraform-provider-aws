@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package transfer
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
@@ -16,7 +18,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -904,9 +905,8 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	output, err := conn.DescribeServer(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -921,8 +921,8 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	return output.Server, nil
 }
 
-func statusServer(ctx context.Context, conn *transfer.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServer(conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServerByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -938,10 +938,10 @@ func statusServer(ctx context.Context, conn *transfer.Client, id string) sdkretr
 }
 
 func waitServerCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting),
 		Target:  enum.Slice(awstypes.StateOnline),
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -958,10 +958,10 @@ func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateOffline, awstypes.StateOnline, awstypes.StateStarting, awstypes.StateStopping, awstypes.StateStartFailed, awstypes.StateStopFailed),
 		Target:  []string{},
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -975,10 +975,10 @@ func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*
 }
 
 func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOffline, awstypes.StateStopping),
 		Target:  enum.Slice(awstypes.StateOnline),
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 
@@ -992,10 +992,10 @@ func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, ti
 }
 
 func waitServerStopped(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOnline, awstypes.StateStopping),
 		Target:  enum.Slice(awstypes.StateOffline),
-		Refresh: statusServer(ctx, conn, id),
+		Refresh: statusServer(conn, id),
 		Timeout: timeout,
 	}
 

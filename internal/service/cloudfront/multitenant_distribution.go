@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -25,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -700,7 +702,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
 
 	// Set required computed fields that AutoFlex can't handle
-	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
+	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(sdkid.UniqueId())
 
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions
@@ -1148,8 +1150,8 @@ type cacheBehaviorModel struct {
 type customErrorResponseModel struct {
 	ErrorCachingMinTtl types.Int64  `tfsdk:"error_caching_min_ttl"`
 	ErrorCode          types.Int64  `tfsdk:"error_code"`
-	ResponseCode       types.String `tfsdk:"response_code"`
-	ResponsePagePath   types.String `tfsdk:"response_page_path"`
+	ResponseCode       types.String `tfsdk:"response_code" autoflex:",omitempty"`
+	ResponsePagePath   types.String `tfsdk:"response_page_path" autoflex:",omitempty"`
 }
 
 type restrictionsModel struct {

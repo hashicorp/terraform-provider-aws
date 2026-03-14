@@ -54,7 +54,7 @@ var (
 	FindMetricsConfiguration                    = findMetricsConfiguration
 	FindObjectByBucketAndKey                    = findObjectByBucketAndKey
 	FindObjectLockConfiguration                 = findObjectLockConfiguration
-	FindOwnershipControls                       = findOwnershipControls
+	FindBucketOwnershipControls                 = findBucketOwnershipControls
 	FindPublicAccessBlockConfiguration          = findPublicAccessBlockConfiguration
 	FindReplicationConfiguration                = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration       = findServerSideEncryptionConfiguration
@@ -81,7 +81,7 @@ var (
 	CreateBucketACLResourceID = createBucketACLResourceID
 	ParseBucketACLResourceID  = parseBucketACLResourceID
 
-	DirectoryBucketNameRegex = directoryBucketNameRegex
+	DirectoryBucketNameSuffixRegexPattern = directoryBucketNameSuffixRegexPattern
 
 	LifecycleConfigEqual = lifecycleConfigEqual
 )

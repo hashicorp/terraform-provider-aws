@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -250,9 +251,8 @@ func findServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Clie
 	output, err := conn.GetServiceNetworkVpcAssociation(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -267,8 +267,8 @@ func findServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Clie
 	return output, nil
 }
 
-func statusServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServiceNetworkVPCAssociation(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceNetworkVPCAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -284,10 +284,10 @@ func statusServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Cl
 }
 
 func waitServiceNetworkVPCAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ServiceNetworkVpcAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(types.ServiceNetworkVpcAssociationStatusActive),
-		Refresh:                   statusServiceNetworkVPCAssociation(ctx, conn, id),
+		Refresh:                   statusServiceNetworkVPCAssociation(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -306,10 +306,10 @@ func waitServiceNetworkVPCAssociationCreated(ctx context.Context, conn *vpclatti
 }
 
 func waitServiceNetworkVPCAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceNetworkVpcAssociationStatusDeleteInProgress, types.ServiceNetworkVpcAssociationStatusActive),
 		Target:  []string{},
-		Refresh: statusServiceNetworkVPCAssociation(ctx, conn, id),
+		Refresh: statusServiceNetworkVPCAssociation(conn, id),
 		Timeout: timeout,
 	}
 

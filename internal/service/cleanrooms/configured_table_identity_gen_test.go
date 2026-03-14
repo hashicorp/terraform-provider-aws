@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCleanRoomsConfiguredTable_Identity_Basic(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cleanrooms.GetConfiguredTableOutput
@@ -35,7 +35,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
-		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &v),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -107,7 +107,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCleanRoomsConfiguredTable_Identity_RegionOverride(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cleanrooms_configured_table.test"
@@ -195,7 +195,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cleanrooms.GetConfiguredTableOutput
@@ -208,7 +208,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CleanRoomsServiceID),
-		CheckDestroy: testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy: testAccCheckConfiguredTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -217,7 +217,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &v),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -253,7 +253,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cleanrooms.GetConfiguredTableOutput
@@ -266,7 +266,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_NoRefresh_NoChan
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CleanRoomsServiceID),
-		CheckDestroy: testAccCheckConfiguredTableDestroy(ctx),
+		CheckDestroy: testAccCheckConfiguredTableDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfiguredTableExists(ctx, resourceName, &v),
+					testAccCheckConfiguredTableExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

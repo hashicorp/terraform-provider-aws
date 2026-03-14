@@ -12,29 +12,27 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
 func TestAccLightsailStaticIP_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_static_ip.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStaticIPDestroy(ctx),
+		CheckDestroy:             testAccCheckStaticIPDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPConfig_basic(staticIpName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStaticIPExists(ctx, resourceName),
+					testAccCheckStaticIPExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -48,10 +46,10 @@ func TestAccLightsailStaticIP_basic(t *testing.T) {
 
 func TestAccLightsailStaticIP_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(t, 5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 		_, err := conn.ReleaseStaticIp(ctx, &lightsail.ReleaseStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -63,16 +61,16 @@ func TestAccLightsailStaticIP_disappears(t *testing.T) {
 		return nil
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStaticIPDestroy(ctx),
+		CheckDestroy:             testAccCheckStaticIPDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPConfig_basic(staticIpName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStaticIPExists(ctx, "aws_lightsail_static_ip.test"),
+					testAccCheckStaticIPExists(ctx, t, "aws_lightsail_static_ip.test"),
 					staticIpDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,7 +79,7 @@ func TestAccLightsailStaticIP_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStaticIPExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckStaticIPExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -92,7 +90,7 @@ func testAccCheckStaticIPExists(ctx context.Context, n string) resource.TestChec
 			return errors.New("No Lightsail Static IP ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		resp, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -110,14 +108,14 @@ func testAccCheckStaticIPExists(ctx context.Context, n string) resource.TestChec
 	}
 }
 
-func testAccCheckStaticIPDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStaticIPDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_static_ip" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 			resp, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 				StaticIpName: aws.String(rs.Primary.ID),

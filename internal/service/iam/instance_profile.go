@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
@@ -14,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,7 +31,7 @@ import (
 
 const (
 	instanceProfileNameMaxLen       = 128
-	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - id.UniqueIDSuffixLength
+	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
@@ -96,7 +97,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get(names.AttrPath).(string)),
@@ -325,9 +326,8 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	output, err := conn.GetInstanceProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -347,8 +347,8 @@ const (
 	instanceProfileInvalidARNState = "InvalidARN"
 )
 
-func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceProfile(conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceProfileByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -368,10 +368,10 @@ func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) s
 }
 
 func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"", instanceProfileInvalidARNState},
 		Target:                    enum.Slice(instanceProfileFoundState),
-		Refresh:                   statusInstanceProfile(ctx, conn, id),
+		Refresh:                   statusInstanceProfile(conn, id),
 		Timeout:                   timeout,
 		Delay:                     5 * time.Second,
 		NotFoundChecks:            5,

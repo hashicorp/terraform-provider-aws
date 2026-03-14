@@ -27,6 +27,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAttachmentRoutingPolicyLabelResource,
+			TypeName: "aws_networkmanager_attachment_routing_policy_label",
+			Name:     "Attachment Routing Policy Label",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newDirectConnectGatewayAttachmentResource,
 			TypeName: "aws_networkmanager_dx_gateway_attachment",
 			Name:     "Direct Connect Gateway Attachment",
@@ -34,6 +40,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newPrefixListAssociationResource,
+			TypeName: "aws_networkmanager_prefix_list_association",
+			Name:     "Prefix List Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("core_network_id", true),
+				inttypes.StringIdentityAttribute("prefix_list_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      prefixListAssociationImportID{},
+			},
 		},
 	}
 }

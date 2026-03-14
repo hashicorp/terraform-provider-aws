@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sns
 
 import (
@@ -18,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -361,9 +362,8 @@ func findSubscriptionAttributes(ctx context.Context, conn *sns.Client, input *sn
 	output, err := conn.GetSubscriptionAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -407,9 +407,8 @@ func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -447,8 +446,8 @@ func waitForConfirmation(endpointAutoConfirms bool, protocol string) bool {
 	return true
 }
 
-func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSubscriptionPendingConfirmation(conn *sns.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -470,10 +469,10 @@ const (
 )
 
 func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
-		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -487,10 +486,10 @@ func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string
 }
 
 func waitSubscriptionDeleted(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"false", "true"},
 		Target:  []string{},
-		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
+		Refresh: statusSubscriptionPendingConfirmation(conn, arn),
 		Timeout: timeout,
 	}
 

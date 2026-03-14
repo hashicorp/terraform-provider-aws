@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package verifiedpermissions
 
 import (
@@ -23,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -213,7 +215,7 @@ func (r *identitySourceResource) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	clientToken := id.UniqueId()
+	clientToken := sdkid.UniqueId()
 	input.ClientToken = aws.String(clientToken)
 
 	output, err := tfresource.RetryWhenIsA[*verifiedpermissions.CreateIdentitySourceOutput, *awstypes.ResourceNotFoundException](ctx, 1*time.Minute, func(ctx context.Context) (*verifiedpermissions.CreateIdentitySourceOutput, error) {

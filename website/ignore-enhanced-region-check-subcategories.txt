@@ -1,4 +1,5 @@
 
+ARC (Application Recovery Controller) Region Switch
 Account Management
 BCM Data Exports
 Billing
@@ -9,6 +10,7 @@ Cost Optimization Hub
 Cost and Usage Report
 Global Accelerator
 IAM (Identity & Access Management)
+Invoicing
 Network Manager
 Organizations
 Pricing Calculator
@@ -18,6 +20,7 @@ Route 53 Domains
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 STS (Security Token)
+Savings Plans
 Shield
 User Notifications
 User Notifications Contacts

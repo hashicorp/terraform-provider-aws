@@ -1,12 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package elasticache
+package elasticache_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func TestValidReplicationGroupAuthToken(t *testing.T) {
@@ -37,13 +38,13 @@ func TestValidReplicationGroupAuthToken(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(129, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 129, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
+		_, errors := tfelasticache.ValidReplicationGroupAuthToken(tc.Value, "aws_elasticache_replication_group_auth_token")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the ElastiCache Replication Group AuthToken to trigger a validation error")

@@ -7,10 +7,10 @@ package arcregionswitch
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -21,11 +21,41 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newPlanDataSource,
+			TypeName: "aws_arcregionswitch_plan",
+			Name:     "Plan",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+		},
+		{
+			Factory:  newRoute53HealthChecksDataSource,
+			TypeName: "aws_arcregionswitch_route53_health_checks",
+			Name:     "Route53 Health Checks",
+			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourcePlan,
+			TypeName: "aws_arcregionswitch_plan",
+			Name:     "Plan",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+			Identity: inttypes.GlobalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -60,19 +90,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
 				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
-			}
-		},
-		func(o *arcregionswitch.Options) {
-			switch partition := config["partition"].(string); partition {
-			case endpoints.AwsPartitionID:
-				if region := endpoints.UsEast1RegionID; o.Region != region {
-					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
-						"service":         p.ServicePackageName(),
-						"original_region": o.Region,
-						"override_region": region,
-					})
-					o.Region = region
-				}
 			}
 		},
 		withExtraOptions(ctx, p, config),

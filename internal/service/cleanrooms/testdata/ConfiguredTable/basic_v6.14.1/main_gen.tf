@@ -1,8 +1,18 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_s3_bucket" "test" {
-  bucket = var.rName
+resource "aws_cleanrooms_configured_table" "test" {
+  name            = "test-name"
+  description     = "test description"
+  analysis_method = "DIRECT_QUERY"
+  allowed_columns = ["my_column_1", "my_column_2"]
+
+  table_reference {
+    database_name = var.rName
+    table_name    = var.rName
+  }
+
+  depends_on = [aws_glue_catalog_table.test]
 }
 
 resource "aws_glue_catalog_database" "test" {
@@ -28,18 +38,8 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
-resource "aws_cleanrooms_configured_table" "test" {
-  name            = "test-name"
-  description     = "test description"
-  analysis_method = "DIRECT_QUERY"
-  allowed_columns = ["my_column_1", "my_column_2"]
-
-  table_reference {
-    database_name = var.rName
-    table_name    = var.rName
-  }
-
-  depends_on = [aws_glue_catalog_table.test]
+resource "aws_s3_bucket" "test" {
+  bucket = var.rName
 }
 
 variable "rName" {

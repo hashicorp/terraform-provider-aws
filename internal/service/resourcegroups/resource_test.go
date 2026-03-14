@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresourcegroups "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,21 +20,21 @@ import (
 func TestAccResourceGroupsResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var r types.ListGroupResourcesItem
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
 	groupResourceName := "aws_resourcegroups_group.test"
 	hostResourceName := "aws_ec2_host.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceName, &r),
+					testAccCheckResourceExists(ctx, t, resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Host"),
 					resource.TestCheckResourceAttrPair(resourceName, "group_arn", groupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, hostResourceName, names.AttrARN),
@@ -57,13 +55,13 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 func TestAccResourceGroupsResource_v5_82_0_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 	var r types.ListGroupResourcesItem
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resourcegroups_resource.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
-		CheckDestroy: testAccCheckResourceDestroy(ctx),
+		CheckDestroy: testAccCheckResourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -74,7 +72,7 @@ func TestAccResourceGroupsResource_v5_82_0_upgrade(t *testing.T) {
 				},
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceName, &r),
+					testAccCheckResourceExists(ctx, t, resourceName, &r),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
@@ -82,7 +80,7 @@ func TestAccResourceGroupsResource_v5_82_0_upgrade(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceName, &r),
+					testAccCheckResourceExists(ctx, t, resourceName, &r),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
@@ -90,9 +88,9 @@ func TestAccResourceGroupsResource_v5_82_0_upgrade(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResourceGroupsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourcegroups_resource" {
@@ -116,14 +114,14 @@ func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckResourceExists(ctx context.Context, n string, v *types.ListGroupResourcesItem) resource.TestCheckFunc {
+func testAccCheckResourceExists(ctx context.Context, t *testing.T, n string, v *types.ListGroupResourcesItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResourceGroupsClient(ctx)
 
 		output, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 

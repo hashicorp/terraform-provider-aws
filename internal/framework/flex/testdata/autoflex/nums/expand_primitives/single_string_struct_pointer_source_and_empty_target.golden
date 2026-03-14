@@ -17,7 +17,7 @@
   },
   {
     "@level": "debug",
-    "@message": "No corresponding field",
+    "@message": "No corresponding target field",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Field1",
     "autoflex.source.path": "",

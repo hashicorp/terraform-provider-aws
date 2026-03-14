@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dynamodb
 
 import (
@@ -21,7 +23,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,7 +52,6 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -2158,8 +2159,16 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					}
 					ops = append(ops, update)
 				}
-				// Separating the WarmThroughput updates from the others
-				if warmThroughputChanged {
+				// Only update WarmThroughput if the user has set it in the new config (not omitted or empty)
+				newWarmThroughputOmitted := true
+				if v, ok := newMap["warm_throughput"]; ok {
+					if arr, ok := v.([]any); ok {
+						if len(arr) > 0 && arr[0] != nil {
+							newWarmThroughputOmitted = false
+						}
+					}
+				}
+				if warmThroughputChanged && !newWarmThroughputOmitted {
 					update := awstypes.GlobalSecondaryIndexUpdate{
 						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 							IndexName:      aws.String(idxName),
@@ -2915,7 +2924,7 @@ func expandLocalSecondaryIndexes(cfg []any, keySchemaM map[string]any) []awstype
 
 func expandImportTable(data map[string]any) *dynamodb.ImportTableInput {
 	a := &dynamodb.ImportTableInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := data["input_compression_type"].(string); ok {
@@ -3278,6 +3287,9 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 		return
 	}
 
+	if !gsis.IsKnown() || gsis.IsNull() {
+		return
+	}
 	for i, gsiElem := range tfcty.ValueElements(gsis) {
 		gsiElemPath := gsisPath.Index(i)
 		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
@@ -3320,6 +3332,10 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
+
+	if !keySchema.IsKnown() || keySchema.IsNull() {
+		return
+	}
 	for i, gsi := range tfcty.ValueElements(keySchema) {
 		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
 		switch keyType {
@@ -3577,7 +3593,16 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
 			case "hash_key":
-				if p.IsNull() && !s.IsNull() {
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "range_key":
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}
@@ -3590,6 +3615,17 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 				if p.LengthInt() == 0 && s.LengthInt() > 0 {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "warm_throughput":
+				// AWS automatically sets warm_throughput
+				// values for on-demand tables, but these should not cause diffs when
+				// the user hasn't explicitly configured warm_throughput.
+				if p.IsNull() || (p.IsKnown() && p.LengthInt() == 0) {
+					continue
 				}
 				if !ctyValueLegacyEquals(s, p) {
 					return nil

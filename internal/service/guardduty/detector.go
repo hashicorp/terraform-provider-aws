@@ -1,19 +1,19 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -153,7 +153,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	input := &guardduty.CreateDetectorInput{
+	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
 		Tags:   getTagsIn(ctx),
 	}
@@ -166,7 +166,7 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.FindingPublishingFrequency = awstypes.FindingPublishingFrequency(v.(string))
 	}
 
-	output, err := conn.CreateDetector(ctx, input)
+	output, err := conn.CreateDetector(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Detector: %s", err)
@@ -179,7 +179,8 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
 	gdo, err := findDetectorByID(ctx, conn, d.Id())
 
@@ -193,16 +194,8 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID(ctx))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("detector/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
-
+	d.Set(names.AttrAccountID, c.AccountID(ctx))
+	d.Set(names.AttrARN, detectorARN(ctx, c, d.Id()))
 	if gdo.DataSources != nil {
 		if err := d.Set("datasources", []any{flattenDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
@@ -223,7 +216,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &guardduty.UpdateDetectorInput{
+		input := guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),
 			FindingPublishingFrequency: awstypes.FindingPublishingFrequency(d.Get("finding_publishing_frequency").(string)),
@@ -233,7 +226,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]any)[0].(map[string]any))
 		}
 
-		_, err := conn.UpdateDetector(ctx, input)
+		_, err := conn.UpdateDetector(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s): %s", d.Id(), err)
@@ -248,10 +241,19 @@ func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting GuardDuty Detector: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, membershipPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteDetector(ctx, &guardduty.DeleteDetectorInput{
-			DetectorId: aws.String(d.Id()),
-		})
+	input := guardduty.DeleteDetectorInput{
+		DetectorId: aws.String(d.Id()),
+	}
+	const (
+		// Maximum amount of time to wait for membership to propagate
+		// When removing Organization Admin Accounts, there is eventual
+		// consistency even after the account is no longer listed.
+		// Reference error message:
+		// BadRequestException: The request is rejected because the current account cannot delete detector while it has invited or associated members.
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteDetector(ctx, &input)
 	}, "cannot delete detector while it has invited or associated members")
 
 	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
@@ -492,16 +494,19 @@ func flattenS3LogsConfigurationResult(apiObject *awstypes.S3LogsConfigurationRes
 }
 
 func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
-	input := &guardduty.GetDetectorInput{
+	input := guardduty.GetDetectorInput{
 		DetectorId: aws.String(id),
 	}
 
+	return findDetector(ctx, conn, &input)
+}
+
+func findDetector(ctx context.Context, conn *guardduty.Client, input *guardduty.GetDetectorInput) (*guardduty.GetDetectorOutput, error) {
 	output, err := conn.GetDetector(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -516,9 +521,9 @@ func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*
 	return output, nil
 }
 
-// FindDetector returns the ID of the current account's active GuardDuty detector.
-func FindDetector(ctx context.Context, conn *guardduty.Client) (*string, error) {
-	output, err := findDetectors(ctx, conn)
+// findDetectorID returns the ID of the current account's active GuardDuty detector.
+func findDetectorID(ctx context.Context, conn *guardduty.Client) (*string, error) {
+	output, err := findDetectorIDs(ctx, conn)
 
 	if err != nil {
 		return nil, err
@@ -527,12 +532,13 @@ func FindDetector(ctx context.Context, conn *guardduty.Client) (*string, error) 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDetectors(ctx context.Context, conn *guardduty.Client) ([]string, error) {
-	input := &guardduty.ListDetectorsInput{}
-	var output []string
+func findDetectorIDs(ctx context.Context, conn *guardduty.Client) ([]string, error) {
+	var (
+		input  guardduty.ListDetectorsInput
+		output []string
+	)
 
-	pages := guardduty.NewListDetectorsPaginator(conn, input)
-
+	pages := guardduty.NewListDetectorsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -544,4 +550,8 @@ func findDetectors(ctx context.Context, conn *guardduty.Client) ([]string, error
 	}
 
 	return output, nil
+}
+
+func detectorARN(ctx context.Context, c *conns.AWSClient, detectorID string) string {
+	return c.RegionalARN(ctx, "guardduty", "detector/"+detectorID)
 }

@@ -15,14 +15,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfresiliencehub "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
@@ -36,10 +34,10 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 	}
 
 	var policy resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -47,12 +45,12 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -86,12 +84,12 @@ func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
 	}
 
 	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -99,12 +97,12 @@ func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_dataLocationConstraint(rName, awstypes.DataLocationConstraintSameContinent),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", string(awstypes.DataLocationConstraintSameContinent)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -126,7 +124,7 @@ func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_dataLocationConstraint(rName, awstypes.DataLocationConstraintSameCountry),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", string(awstypes.DataLocationConstraintSameCountry)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -156,7 +154,7 @@ func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 	}
 
 	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	const (
@@ -166,7 +164,7 @@ func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -174,12 +172,12 @@ func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_description(rName, initial),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, initial),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -201,7 +199,7 @@ func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_description(rName, updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updated),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -231,13 +229,13 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 	}
 
 	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -245,12 +243,12 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -272,7 +270,7 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -302,7 +300,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 	}
 
 	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
@@ -312,7 +310,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 		updatedDuration = "24h0m0s"
 	)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -320,12 +318,12 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_policy(rName, initialDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rpo", initialDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rto", initialDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.hardware.0.rpo", initialDuration),
@@ -354,7 +352,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_policy(rName, updatedDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rpo", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rto", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.hardware.0.rpo", updatedDuration),
@@ -383,7 +381,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, updatedDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rpo", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rto", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.hardware.0.rpo", updatedDuration),
@@ -420,7 +418,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 	}
 
 	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
@@ -430,7 +428,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 		updatedDuration = "24h0m0s"
 	)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -438,12 +436,12 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, initialDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rpo", initialDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rto", initialDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.hardware.0.rpo", initialDuration),
@@ -472,7 +470,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, updatedDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rpo", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rto", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.hardware.0.rpo", updatedDuration),
@@ -501,7 +499,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_policy(rName, updatedDuration),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rpo", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.az.0.rto", updatedDuration),
 					resource.TestCheckResourceAttr(resourceName, "policy.0.hardware.0.rpo", updatedDuration),
@@ -538,12 +536,12 @@ func TestAccResilienceHubResiliencyPolicy_tier(t *testing.T) {
 	}
 
 	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -551,12 +549,12 @@ func TestAccResilienceHubResiliencyPolicy_tier(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_tier(rName, awstypes.ResiliencyPolicyTierMissionCritical),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy1),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ResiliencyPolicyTierMissionCritical)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -578,7 +576,7 @@ func TestAccResilienceHubResiliencyPolicy_tier(t *testing.T) {
 			{
 				Config: testAccResiliencyPolicyConfig_tier(rName, awstypes.ResiliencyPolicyTierCoreServices),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ResiliencyPolicyTierCoreServices)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -608,10 +606,10 @@ func TestAccResilienceHubResiliencyPolicy_disappears(t *testing.T) {
 	}
 
 	var policy resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -619,12 +617,12 @@ func TestAccResilienceHubResiliencyPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresiliencehub.ResourceResiliencyPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -645,17 +643,17 @@ func TestAccResilienceHubResiliencyPolicy_upgradeV6_0_0(t *testing.T) {
 	}
 
 	var policy resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResiliencyPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -666,7 +664,7 @@ func TestAccResilienceHubResiliencyPolicy_upgradeV6_0_0(t *testing.T) {
 				},
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -686,7 +684,7 @@ func TestAccResilienceHubResiliencyPolicy_upgradeV6_0_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
+					testAccCheckResiliencyPolicyExists(ctx, t, resourceName, &policy),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -711,9 +709,9 @@ func TestAccResilienceHubResiliencyPolicy_upgradeV6_0_0(t *testing.T) {
 	})
 }
 
-func testAccCheckResiliencyPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResiliencyPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResilienceHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResilienceHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resiliencehub_resiliency_policy" {
@@ -738,7 +736,7 @@ func testAccCheckResiliencyPolicyDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckResiliencyPolicyExists(ctx context.Context, name string, policy *resiliencehub.DescribeResiliencyPolicyOutput) resource.TestCheckFunc {
+func testAccCheckResiliencyPolicyExists(ctx context.Context, t *testing.T, name string, policy *resiliencehub.DescribeResiliencyPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -749,7 +747,7 @@ func testAccCheckResiliencyPolicyExists(ctx context.Context, name string, policy
 			return create.Error(names.ResilienceHub, create.ErrActionCheckingExistence, tfresiliencehub.ResNameResiliencyPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResilienceHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResilienceHubClient(ctx)
 		resp, err := conn.DescribeResiliencyPolicy(ctx, &resiliencehub.DescribeResiliencyPolicyInput{
 			PolicyArn: aws.String(rs.Primary.Attributes[names.AttrARN]),
 		})
@@ -765,7 +763,7 @@ func testAccCheckResiliencyPolicyExists(ctx context.Context, name string, policy
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ResilienceHubClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ResilienceHubClient(ctx)
 
 	input := &resiliencehub.ListResiliencyPoliciesInput{}
 	_, err := conn.ListResiliencyPolicies(ctx, input)

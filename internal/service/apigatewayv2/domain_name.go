@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package apigatewayv2
 
 import (
@@ -32,8 +34,6 @@ import (
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true)
 // @Testing(tlsKeyDomain=rName)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -127,6 +127,12 @@ func resourceDomainName() *schema.Resource {
 					},
 				},
 			},
+			"routing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RoutingMode](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -143,6 +149,9 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
 		MutualTlsAuthentication:  expandMutualTLSAuthenticationInput(d.Get("mutual_tls_authentication").([]any)),
 		Tags:                     getTagsIn(ctx),
+	}
+	if v, ok := d.GetOk("routing_mode"); ok {
+		input.RoutingMode = awstypes.RoutingMode(v.(string))
 	}
 
 	output, err := conn.CreateDomainName(ctx, &input)
@@ -186,6 +195,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err := d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(output.MutualTlsAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
+	d.Set("routing_mode", output.RoutingMode)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -196,7 +206,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
+	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication", "routing_mode") {
 		input := apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
 			DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
@@ -221,6 +231,10 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					TruststoreUri: aws.String(""),
 				}
 			}
+		}
+
+		if d.HasChange("routing_mode") {
+			input.RoutingMode = awstypes.RoutingMode(d.Get("routing_mode").(string))
 		}
 
 		_, err := conn.UpdateDomainName(ctx, &input)

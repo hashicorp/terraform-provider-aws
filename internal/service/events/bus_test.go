@@ -12,11 +12,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,21 +23,21 @@ import (
 func TestAccEventsBus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3, v4, v5 eventbridge.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	busNameModified := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 	description := "Test event bus"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v1),
+					testAccCheckBusExists(ctx, t, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -57,7 +55,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig_description(busName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v2),
+					testAccCheckBusExists(ctx, t, resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
@@ -65,7 +63,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v3),
+					testAccCheckBusExists(ctx, t, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
@@ -73,7 +71,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig_basic(busNameModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v4),
+					testAccCheckBusExists(ctx, t, resourceName, &v4),
 					testAccCheckBusRecreated(&v3, &v4),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -85,7 +83,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 			{
 				Config: testAccBusConfig_tags1(busNameModified, names.AttrKey, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v5),
+					testAccCheckBusExists(ctx, t, resourceName, &v5),
 					testAccCheckBusNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -99,19 +97,19 @@ func TestAccEventsBus_basic(t *testing.T) {
 func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 eventbridge.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_kmsKeyIdentifier1(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v1),
+					testAccCheckBusExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test1", names.AttrARN),
 				),
 			},
@@ -123,7 +121,7 @@ func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
 			{
 				Config: testAccBusConfig_kmsKeyIdentifier2(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v2),
+					testAccCheckBusExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test2", names.AttrARN),
 				),
 			},
@@ -134,19 +132,19 @@ func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
 func TestAccEventsBus_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_tags1(busName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v1),
+					testAccCheckBusExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -159,7 +157,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 			{
 				Config: testAccBusConfig_tags2(busName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v2),
+					testAccCheckBusExists(ctx, t, resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -169,7 +167,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 			{
 				Config: testAccBusConfig_tags1(busName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v3),
+					testAccCheckBusExists(ctx, t, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -182,11 +180,11 @@ func TestAccEventsBus_tags(t *testing.T) {
 func TestAccEventsBus_default(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBusConfig_basic("default"),
@@ -199,19 +197,19 @@ func TestAccEventsBus_default(t *testing.T) {
 func TestAccEventsBus_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v),
+					testAccCheckBusExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -231,16 +229,16 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 	var busOutput eventbridge.DescribeEventBusOutput
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_partnerSource(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &busOutput),
+					testAccCheckBusExists(ctx, t, resourceName, &busOutput),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
@@ -254,19 +252,19 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 func TestAccEventsBus_deadLetterConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 eventbridge.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_deadLetterConfig1(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v1),
+					testAccCheckBusExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", "aws_sqs_queue.test1", names.AttrARN),
 				),
@@ -279,7 +277,7 @@ func TestAccEventsBus_deadLetterConfig(t *testing.T) {
 			{
 				Config: testAccBusConfig_deadLetterConfig2(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v2),
+					testAccCheckBusExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", "aws_sqs_queue.test2", names.AttrARN),
 				),
@@ -291,19 +289,19 @@ func TestAccEventsBus_deadLetterConfig(t *testing.T) {
 func TestAccEventsBus_logConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeEventBusOutput
-	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusConfig_logConfig(busName, "FULL", "TRACE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v1),
+					testAccCheckBusExists(ctx, t, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -323,7 +321,7 @@ func TestAccEventsBus_logConfig(t *testing.T) {
 			{
 				Config: testAccBusConfig_logConfig(busName, "NONE", "OFF"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v1),
+					testAccCheckBusExists(ctx, t, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -339,9 +337,9 @@ func TestAccEventsBus_logConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBusDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_bus" {
@@ -365,14 +363,14 @@ func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.DescribeEventBusOutput) resource.TestCheckFunc {
+func testAccCheckBusExists(ctx context.Context, t *testing.T, n string, v *eventbridge.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		output, err := tfevents.FindEventBusByName(ctx, conn, rs.Primary.ID)
 

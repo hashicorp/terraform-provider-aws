@@ -37,6 +37,12 @@ func TestCanonicalRegionPatterns(t *testing.T) {
 		{"us-east", false},
 		{"1-east-1", false},
 		{"us-east-1a", false},
+
+		// S3-compatible storage regions (non-standard)
+		{"ceph-objectstore:region-premium", false},
+		{"ceph:custom-region", false},
+		{"US-EAST-1", false},
+		{"us_east_1", false},
 	}
 
 	regex := regexache.MustCompile(CanonicalRegionPattern)

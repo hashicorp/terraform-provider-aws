@@ -4,6 +4,7 @@
 package networkmanager_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,7 +14,7 @@ import (
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -30,7 +31,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_serviceInsertion(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +48,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_serviceInsertion(t
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_whenSentTo(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,7 +65,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_whenSentTo(t *test
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_via(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -81,7 +82,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_via(t *testing.T) 
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_viaCompat(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -98,7 +99,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_viaCompat(t *testi
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_routingPolicyNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1288,3 +1289,53 @@ const testAccPolicyDocumentRoutingPolicyNamesExpectedJSON = `{
     }
   ]
 }`
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_attachmentRoutingPolicyRulesEmptyAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction() string {
+	return fmt.Sprintf(`
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["64512-65534"]
+
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "test"
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 10
+
+    conditions {
+      type  = "routing-policy-label"
+      value = "test"
+    }
+
+    action {
+      associate_routing_policies = []
+    }
+  }
+}
+`, acctest.Region())
+}

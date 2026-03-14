@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package acmpca
 
 import (
@@ -68,6 +70,10 @@ func dataSourceCertificateAuthority() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"custom_cname": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"custom_path": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

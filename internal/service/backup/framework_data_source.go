@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -18,7 +20,7 @@ import (
 // @SDKDataSource("aws_backup_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
-// @Testing(generator="randomFrameworkName()")
+// @Testing(generator="randomFrameworkName(t)")
 func dataSourceFramework() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFrameworkRead,

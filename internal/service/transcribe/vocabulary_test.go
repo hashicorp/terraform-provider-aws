@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
@@ -28,10 +26,10 @@ func TestAccTranscribeVocabulary_basic(t *testing.T) {
 	}
 
 	var vocabulary transcribe.GetVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -39,12 +37,12 @@ func TestAccTranscribeVocabulary_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "vocabulary_name"),
@@ -68,10 +66,10 @@ func TestAccTranscribeVocabulary_basicPhrases(t *testing.T) {
 	}
 
 	var vocabulary transcribe.GetVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -79,12 +77,12 @@ func TestAccTranscribeVocabulary_basicPhrases(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basicPhrases(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
@@ -101,12 +99,12 @@ func TestAccTranscribeVocabulary_updateS3URI(t *testing.T) {
 	}
 
 	var vocabulary transcribe.GetVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
 	file1 := "test1.txt"
 	file2 := "test2.txt"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -114,12 +112,12 @@ func TestAccTranscribeVocabulary_updateS3URI(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_updateFile(rName, file1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
@@ -127,7 +125,7 @@ func TestAccTranscribeVocabulary_updateS3URI(t *testing.T) {
 			{
 				Config: testAccVocabularyConfig_updateFile(rName, file2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
 				),
@@ -143,10 +141,10 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 	}
 
 	var vocabulary transcribe.GetVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -154,12 +152,12 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -167,7 +165,7 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccVocabularyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -176,7 +174,7 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccVocabularyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -192,10 +190,10 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 	}
 
 	var vocabulary transcribe.GetVocabularyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
@@ -203,12 +201,12 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &vocabulary),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftranscribe.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -217,9 +215,9 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVocabularyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transcribe_vocabulary" {
@@ -243,7 +241,7 @@ func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVocabularyExists(ctx context.Context, name string, vocabulary *transcribe.GetVocabularyOutput) resource.TestCheckFunc {
+func testAccCheckVocabularyExists(ctx context.Context, t *testing.T, name string, vocabulary *transcribe.GetVocabularyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -254,7 +252,7 @@ func testAccCheckVocabularyExists(ctx context.Context, name string, vocabulary *
 			return create.Error(names.Transcribe, create.ErrActionCheckingExistence, tftranscribe.ResNameVocabulary, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 		resp, err := tftranscribe.FindVocabularyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -268,7 +266,7 @@ func testAccCheckVocabularyExists(ctx context.Context, name string, vocabulary *
 }
 
 func testAccVocabulariesPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).TranscribeClient(ctx)
 
 	input := &transcribe.ListVocabulariesInput{}
 

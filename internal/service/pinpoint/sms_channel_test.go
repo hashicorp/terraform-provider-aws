@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,16 +22,16 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 	var channel awstypes.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
+					testAccCheckSMSChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -53,7 +52,7 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 			{
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
+					testAccCheckSMSChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -69,16 +68,16 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 	shortCode := "5678"
 	newShortCode := "7890"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSChannelConfig_full(senderId, shortCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
+					testAccCheckSMSChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", shortCode),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -103,7 +102,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 			{
 				Config: testAccSMSChannelConfig_full(senderId, newShortCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
+					testAccCheckSMSChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", newShortCode),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -120,16 +119,16 @@ func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 	var channel awstypes.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
+					testAccCheckSMSChannelExists(ctx, t, resourceName, &channel),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -138,7 +137,7 @@ func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSMSChannelExists(ctx context.Context, n string, channel *awstypes.SMSChannelResponse) resource.TestCheckFunc {
+func testAccCheckSMSChannelExists(ctx context.Context, t *testing.T, n string, channel *awstypes.SMSChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,7 +148,7 @@ func testAccCheckSMSChannelExists(ctx context.Context, n string, channel *awstyp
 			return fmt.Errorf("No Pinpoint SMS Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindSMSChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
@@ -163,9 +162,9 @@ func testAccCheckSMSChannelExists(ctx context.Context, n string, channel *awstyp
 	}
 }
 
-func testAccCheckSMSChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSMSChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_sms_channel" {

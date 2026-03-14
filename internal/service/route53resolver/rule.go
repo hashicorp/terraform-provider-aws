@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53resolver
 
 import (
@@ -14,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -125,7 +126,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
 	input := &route53resolver.CreateResolverRuleInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-rule-")),
 		DomainName:       aws.String(d.Get(names.AttrDomainName).(string)),
 		RuleType:         awstypes.RuleTypeOption(d.Get("rule_type").(string)),
 		Tags:             getTagsIn(ctx),
@@ -272,9 +273,8 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	output, err := conn.GetResolverRule(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -289,8 +289,8 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	return output.ResolverRule, nil
 }
 
-func statusRule(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRule(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverRuleByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -306,9 +306,9 @@ func statusRule(ctx context.Context, conn *route53resolver.Client, id string) sd
 }
 
 func waitRuleCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRule, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  enum.Slice(awstypes.ResolverRuleStatusComplete),
-		Refresh: statusRule(ctx, conn, id),
+		Refresh: statusRule(conn, id),
 		Timeout: timeout,
 	}
 
@@ -326,10 +326,10 @@ func waitRuleCreated(ctx context.Context, conn *route53resolver.Client, id strin
 }
 
 func waitRuleUpdated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRule, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverRuleStatusUpdating),
 		Target:  enum.Slice(awstypes.ResolverRuleStatusComplete),
-		Refresh: statusRule(ctx, conn, id),
+		Refresh: statusRule(conn, id),
 		Timeout: timeout,
 	}
 
@@ -347,10 +347,10 @@ func waitRuleUpdated(ctx context.Context, conn *route53resolver.Client, id strin
 }
 
 func waitRuleDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRule, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverRuleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusRule(ctx, conn, id),
+		Refresh: statusRule(conn, id),
 		Timeout: timeout,
 	}
 

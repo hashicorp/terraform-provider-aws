@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package docdbelastic
 
 import (
@@ -23,8 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -190,7 +191,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	createOut, err := conn.CreateCluster(ctx, &input)
@@ -296,7 +297,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.ClientToken = aws.String(id.UniqueId())
+		input.ClientToken = aws.String(sdkid.UniqueId())
 		input.ClusterArn = plan.ID.ValueStringPointer()
 
 		_, err := conn.UpdateCluster(ctx, &input)
@@ -399,10 +400,10 @@ type clusterResourceModel struct {
 }
 
 func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusCreating),
 		Target:                    enum.Slice(awstypes.StatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -417,10 +418,10 @@ func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusUpdating),
 		Target:                    enum.Slice(awstypes.StatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -435,10 +436,10 @@ func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusActive, awstypes.StatusDeleting),
 		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -450,8 +451,8 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 	return nil, err
 }
 
-func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findClusterByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -472,9 +473,8 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	out, err := conn.GetCluster(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -23,7 +23,14 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newOutboundWebIdentityFederationDataSource,
+			TypeName: "aws_iam_outbound_web_identity_federation",
+			Name:     "Outbound Web Identity Federation",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
@@ -467,6 +474,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				ResourceType:        "Role",
 			}),
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  newRolePolicyResourceAsListResource,
+			TypeName: "aws_iam_role_policy",
+			Name:     "Role Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrRole, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
 		},
 		{
 			Factory:  newRolePolicyAttachmentResourceAsListResource,

@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Check for Dependency or Changelog Changes
         id: filter
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@9d7afb8d214ad99e78fbd4247752c4caed2b6e4c # v4.0.0
         with:
           filters: |
             dependencies:
@@ -42,7 +42,7 @@ jobs:
           !github.event.pull_request.draft
           && !contains(toJSON(github.event.pull_request.labels.*.name), 'no-changelog-needed')
         id: changelog-update-needed
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@9d7afb8d214ad99e78fbd4247752c4caed2b6e4c # v4.0.0
         with:
           predicate-quantifier: 'every'
           filters: |
@@ -52,7 +52,7 @@ jobs:
             has:
               - '.changelog/**'
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         id: checkout
         if: |
           steps.filter.outputs.changelog == 'true'

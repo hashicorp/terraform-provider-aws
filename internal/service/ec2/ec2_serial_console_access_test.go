@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
-			"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+			"Identity":      testAccEC2SerialConsoleAccess_identitySerial,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEC2SerialConsoleAccessDataSource_basic,
@@ -38,16 +37,16 @@ func testAccEC2SerialConsoleAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_serial_console_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSerialConsoleAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckSerialConsoleAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSerialConsoleAccessConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSerialConsoleAccess(ctx, resourceName, false),
+					testAccCheckSerialConsoleAccess(ctx, t, resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -59,7 +58,7 @@ func testAccEC2SerialConsoleAccess_basic(t *testing.T) {
 			{
 				Config: testAccSerialConsoleAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSerialConsoleAccess(ctx, resourceName, true),
+					testAccCheckSerialConsoleAccess(ctx, t, resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -67,9 +66,9 @@ func testAccEC2SerialConsoleAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSerialConsoleAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindSerialConsoleAccessStatus(ctx, conn)
 
@@ -89,14 +88,14 @@ func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckSerialConsoleAccess(ctx context.Context, n string, enabled bool) resource.TestCheckFunc {
+func testAccCheckSerialConsoleAccess(ctx context.Context, t *testing.T, n string, enabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindSerialConsoleAccessStatus(ctx, conn)
 

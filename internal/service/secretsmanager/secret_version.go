@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package secretsmanager
 
 import (
@@ -14,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -112,7 +113,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.PutSecretValueInput{
-		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken: aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
 		SecretId:           aws.String(secretID),
 	}
 
@@ -377,7 +378,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
-			return nil, &sdkretry.NotFoundError{}
+			return nil, &retry.NotFoundError{}
 		}
 
 		return output, nil
@@ -437,9 +438,8 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -492,13 +492,13 @@ func (secretVersionImportID) Create(d *schema.ResourceData) string {
 	return secretVersionCreateResourceID(secretID, versionID)
 }
 
-func (secretVersionImportID) Parse(id string) (string, map[string]string, error) {
+func (secretVersionImportID) Parse(id string) (string, map[string]any, error) {
 	secretID, versionID, err := secretVersionParseResourceID(id)
 	if err != nil {
 		return id, nil, err
 	}
 
-	results := map[string]string{
+	results := map[string]any{
 		"secret_id":  secretID,
 		"version_id": versionID,
 	}

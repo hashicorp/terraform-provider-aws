@@ -33,7 +33,7 @@ import (
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .SDKPackage }}/types package. If so, you'll
+	// using the service/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}
@@ -192,7 +192,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
 					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
 					{{- end }}
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "{{ .ARNNamespace }}", regexache.MustCompile(`{{ .ResourceLower }}:.+$`)),
 				),
 			},
 			{

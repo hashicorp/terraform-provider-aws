@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_config_configuration_recorder: Fix `InvalidRecordingGroupException: The recording group provided is not valid` errors when the `recording_group.exclusion_by_resource_type` or `recording_group.recording_strategy` argument is removed during update
+```

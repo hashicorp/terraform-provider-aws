@@ -349,7 +349,15 @@ The following arguments are optional:
 * `anonymous_auth_enabled` - (Optional) Whether Anonymous auth is enabled. Enables fine-grained access control on an existing domain. Ignored unless `advanced_security_options` are enabled. _Can only be enabled on an existing domain._
 * `enabled` - (Required, Forces new resource when changing from `true` to `false`) Whether advanced security is enabled.
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. Default is `false`.
+* `jwt_options` - (Optional) Configuration block for JWT authentication. Requires OpenSearch 2.11 or later. Detailed below.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
+
+#### jwt_options
+
+* `enabled` - (Optional) Whether JWT authentication is enabled.
+* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
+* `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
+* `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 
 #### master_user_options
 
@@ -361,6 +369,7 @@ The following arguments are optional:
 
 * `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
 * `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
+* `serverless_vector_acceleration` - (Optional) Configuration block for parameters required to enable GPU-accelerated vector search on the specified domain.
 
 #### natural_language_query_generation_options
 
@@ -369,6 +378,10 @@ The following arguments are optional:
 #### s3_vectors_engine
 
 * `enabled` - (Optional) Enables S3 vectors engine features.
+
+#### serverless_vector_acceleration
+
+* `enabled` - (Optional) Enables GPU-accelerated vector search for improved performance on vector workloads.
 
 ### auto_tune_options
 

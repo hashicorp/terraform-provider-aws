@@ -9,9 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -411,6 +416,58 @@ func TestAccAPIGatewayV2DomainName_ipAddressType(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayV2DomainName_routingMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	domainName := fmt.Sprintf("%s.example.com", rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_routingMode(rName, certificate, key, awstypes.RoutingModeRoutingRuleThenApiMapping, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("routing_mode"), tfknownvalue.StringExact(awstypes.RoutingModeRoutingRuleThenApiMapping)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainNameConfig_routingMode(rName, certificate, key, awstypes.RoutingModeApiMappingOnly, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("routing_mode"), tfknownvalue.StringExact(awstypes.RoutingModeApiMappingOnly)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDomainNameDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
@@ -442,10 +499,6 @@ func testAccCheckDomainNameExists(ctx context.Context, t *testing.T, n string, v
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 Domain Name ID is set")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
@@ -707,4 +760,22 @@ resource "aws_apigatewayv2_domain_name" "test" {
   }
 }
 `, rName, index, ipAddressType))
+}
+
+func testAccDomainNameConfig_routingMode(rName, certificate, key string, routingMode awstypes.RoutingMode, count, index int) string {
+	return acctest.ConfigCompose(
+		testAccDomainNameImportedCertsConfig(rName, certificate, key, count),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_domain_name" "test" {
+  domain_name = "%[1]s.example.com"
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate.test[%[2]d].arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+
+  routing_mode = %[3]q
+}
+`, rName, index, routingMode))
 }

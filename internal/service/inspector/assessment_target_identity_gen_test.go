@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspectorAssessmentTarget_Identity_Basic(t *testing.T) {
+func TestAccInspectorAssessmentTarget_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AssessmentTarget
@@ -38,7 +38,7 @@ func TestAccInspectorAssessmentTarget_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccInspectorAssessmentTarget_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -111,7 +111,7 @@ func TestAccInspectorAssessmentTarget_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccInspectorAssessmentTarget_Identity_RegionOverride(t *testing.T) {
+func TestAccInspectorAssessmentTarget_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_inspector_assessment_target.test"
@@ -235,7 +235,7 @@ func TestAccInspectorAssessmentTarget_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccInspectorAssessmentTarget_Identity_ExistingResource(t *testing.T) {
+func TestAccInspectorAssessmentTarget_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AssessmentTarget
@@ -251,7 +251,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx),
+		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -260,7 +260,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -294,7 +294,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccInspectorAssessmentTarget_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccInspectorAssessmentTarget_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.AssessmentTarget
@@ -310,7 +310,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource_NoRefresh_NoChan
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx),
+		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -324,7 +324,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

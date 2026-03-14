@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,23 +21,23 @@ import (
 func TestAccCloudFrontConnectionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionGroup awstypes.ConnectionGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExists(ctx, t, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, t, resourceName, &connectionGroup),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`connection-group/cg_[0-9A-Za-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -68,23 +66,23 @@ func TestAccCloudFrontConnectionGroup_basic(t *testing.T) {
 func TestAccCloudFrontConnectionGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionGroup awstypes.ConnectionGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExists(ctx, t, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, t, resourceName, &connectionGroup),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceConnectionGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,23 +94,23 @@ func TestAccCloudFrontConnectionGroup_disappears(t *testing.T) {
 func TestAccCloudFrontConnectionGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionGroup awstypes.ConnectionGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExists(ctx, t, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, t, resourceName, &connectionGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -120,8 +118,8 @@ func TestAccCloudFrontConnectionGroup_tags(t *testing.T) {
 			{
 				Config: testAccConnectionGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExists(ctx, t, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, t, resourceName, &connectionGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -130,8 +128,8 @@ func TestAccCloudFrontConnectionGroup_tags(t *testing.T) {
 			{
 				Config: testAccConnectionGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExists(ctx, t, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, t, resourceName, &connectionGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -143,23 +141,23 @@ func TestAccCloudFrontConnectionGroup_tags(t *testing.T) {
 func TestAccCloudFrontConnectionGroup_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionGroup awstypes.ConnectionGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionGroupConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionGroupExists(ctx, resourceName, &connectionGroup),
-					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExists(ctx, t, resourceName, &connectionGroup),
+					testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx, t, resourceName, &connectionGroup),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_enabled", acctest.CtFalse),
 				),
 			},
@@ -167,9 +165,9 @@ func TestAccCloudFrontConnectionGroup_ipv6(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_connection_group" {
@@ -193,14 +191,14 @@ func testAccCheckConnectionGroupDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckConnectionGroupExists(ctx context.Context, n string, v *awstypes.ConnectionGroup) resource.TestCheckFunc {
+func testAccCheckConnectionGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ConnectionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindConnectionGroupById(ctx, conn, rs.Primary.ID)
 
@@ -214,14 +212,14 @@ func testAccCheckConnectionGroupExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx context.Context, n string, v *awstypes.ConnectionGroup) resource.TestCheckFunc {
+func testAccCheckConnectionGroupExistsByRoutingEndpoint(ctx context.Context, t *testing.T, n string, v *awstypes.ConnectionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindConnectionGroupByRoutingEndpoint(ctx, conn, rs.Primary.Attributes["routing_endpoint"])
 

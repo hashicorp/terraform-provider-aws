@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,19 +26,19 @@ import (
 func TestAccRDSShardGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBShardGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_shard_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckShardGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckShardGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShardGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -73,19 +71,19 @@ func TestAccRDSShardGroup_basic(t *testing.T) {
 func TestAccRDSShardGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBShardGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_shard_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckShardGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckShardGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShardGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceShardGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,19 +95,19 @@ func TestAccRDSShardGroup_disappears(t *testing.T) {
 func TestAccRDSShardGroup_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBShardGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_shard_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckShardGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckShardGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShardGroupConfig_full(rName, 1200, 120),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -138,7 +136,7 @@ func TestAccRDSShardGroup_full(t *testing.T) {
 			{
 				Config: testAccShardGroupConfig_full(rName, 1300, 130),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -164,19 +162,19 @@ func TestAccRDSShardGroup_full(t *testing.T) {
 func TestAccRDSShardGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBShardGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_shard_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckShardGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckShardGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShardGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -199,7 +197,7 @@ func TestAccRDSShardGroup_tags(t *testing.T) {
 			{
 				Config: testAccShardGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -216,7 +214,7 @@ func TestAccRDSShardGroup_tags(t *testing.T) {
 			{
 				Config: testAccShardGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckShardGroupExists(ctx, resourceName, &v),
+					testAccCheckShardGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -233,9 +231,9 @@ func TestAccRDSShardGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckShardGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckShardGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_shard_group" {
@@ -259,14 +257,14 @@ func testAccCheckShardGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckShardGroupExists(ctx context.Context, n string, v *awstypes.DBShardGroup) resource.TestCheckFunc {
+func testAccCheckShardGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.DBShardGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBShardGroupByID(ctx, conn, rs.Primary.Attributes["db_shard_group_identifier"])
 

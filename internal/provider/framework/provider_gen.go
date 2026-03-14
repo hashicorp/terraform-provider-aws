@@ -1296,6 +1296,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mpa
+
+				"mpa": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// mq
 
 				"mq": schema.StringAttribute{
@@ -1729,6 +1736,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// sagemaker
 
 				"sagemaker": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// savingsplans
+
+				"savingsplans": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cleanrooms
 
 import (
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -160,18 +161,7 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameConfiguredTable, d.Id(), err)
 	}
 
-	configuredTable := out.ConfiguredTable
-	d.Set(names.AttrARN, configuredTable.Arn)
-	d.Set(names.AttrName, configuredTable.Name)
-	d.Set(names.AttrDescription, configuredTable.Description)
-	d.Set("allowed_columns", configuredTable.AllowedColumns)
-	d.Set("analysis_method", configuredTable.AnalysisMethod)
-	d.Set(names.AttrCreateTime, configuredTable.CreateTime.String())
-	d.Set("update_time", configuredTable.UpdateTime.String())
-
-	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting table_reference: %s", err)
-	}
+	resourceConfiguredTableFlatten(ctx, d, out)
 
 	return diags
 }
@@ -279,4 +269,16 @@ func flattenTableReference(tableReference awstypes.TableReference) []any {
 	default:
 		return nil
 	}
+}
+
+func resourceConfiguredTableFlatten(_ context.Context, d *schema.ResourceData, out *cleanrooms.GetConfiguredTableOutput) {
+	configuredTable := out.ConfiguredTable
+	d.Set(names.AttrARN, configuredTable.Arn)
+	d.Set(names.AttrName, configuredTable.Name)
+	d.Set(names.AttrDescription, configuredTable.Description)
+	d.Set("allowed_columns", configuredTable.AllowedColumns)
+	d.Set("analysis_method", configuredTable.AnalysisMethod)
+	d.Set(names.AttrCreateTime, configuredTable.CreateTime.String())
+	d.Set("update_time", configuredTable.UpdateTime.String())
+	d.Set("table_reference", flattenTableReference(configuredTable.TableReference))
 }

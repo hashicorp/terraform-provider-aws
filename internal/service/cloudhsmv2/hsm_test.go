@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,18 +21,18 @@ import (
 func testAccHSM_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMDestroy(ctx),
+		CheckDestroy:             testAccCheckHSMDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfig_subnetID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHSMExists(ctx, resourceName),
+					testAccCheckHSMExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-[0-9a-f]+$`)),
@@ -56,18 +54,18 @@ func testAccHSM_basic(t *testing.T) {
 func testAccHSM_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfig_subnetID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, "aws_cloudhsm_v2_cluster.test"),
+					testAccCheckClusterExists(ctx, t, "aws_cloudhsm_v2_cluster.test"),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudhsmv2.ResourceHSM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,18 +77,18 @@ func testAccHSM_disappears(t *testing.T) {
 func testAccHSM_AvailabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMDestroy(ctx),
+		CheckDestroy:             testAccCheckHSMDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfig_availabilityZone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHSMExists(ctx, resourceName),
+					testAccCheckHSMExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
 				),
 			},
@@ -106,18 +104,18 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 func testAccHSM_IPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_hsm.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMDestroy(ctx),
+		CheckDestroy:             testAccCheckHSMDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfig_ipAddress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHSMExists(ctx, resourceName),
+					testAccCheckHSMExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "10.0.0.5"),
 				),
 			},
@@ -130,9 +128,9 @@ func testAccHSM_IPAddress(t *testing.T) {
 	})
 }
 
-func testAccCheckHSMDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHSMDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudHSMV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudhsm_v2_hsm" {
@@ -156,14 +154,14 @@ func testAccCheckHSMDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckHSMExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckHSMExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudHSMV2Client(ctx)
 
 		_, err := tfcloudhsmv2.FindHSMByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["hsm_eni_id"])
 

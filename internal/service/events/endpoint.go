@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package events
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -311,9 +312,8 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -328,8 +328,8 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	return output, nil
 }
 
-func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpointState(conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -345,10 +345,10 @@ func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateCreating),
 		Target:  enum.Slice(types.EndpointStateActive),
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -364,10 +364,10 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateUpdating),
 		Target:  enum.Slice(types.EndpointStateActive),
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 
@@ -383,10 +383,10 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateDeleting),
 		Target:  []string{},
-		Refresh: statusEndpointState(ctx, conn, name),
+		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
 	}
 

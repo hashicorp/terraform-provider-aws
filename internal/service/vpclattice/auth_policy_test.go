@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var authpolicy vpclattice.GetAuthPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_auth_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -34,12 +32,12 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
+					testAccCheckAuthPolicyExists(ctx, t, resourceName, &authpolicy),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":"*"`)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", "aws_vpclattice_service.test", names.AttrARN),
 				),
@@ -56,10 +54,10 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var authpolicy vpclattice.GetAuthPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_auth_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -67,12 +65,12 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
+					testAccCheckAuthPolicyExists(ctx, t, resourceName, &authpolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceAuthPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,9 +79,9 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAuthPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_auth_policy" {
@@ -107,14 +105,14 @@ func testAccCheckAuthPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAuthPolicyExists(ctx context.Context, n string, v *vpclattice.GetAuthPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAuthPolicyExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetAuthPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindAuthPolicyByID(ctx, conn, rs.Primary.ID)
 

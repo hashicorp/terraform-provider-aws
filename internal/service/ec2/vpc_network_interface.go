@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -678,8 +680,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 			n = make([]string, 0)
 		}
 
-		if len(o.([]any))-1 > 0 {
-			privateIPsToUnassign := make([]any, len(o.([]any))-1)
+		if n := len(o.([]any)); n > 1 {
+			privateIPsToUnassign := make([]any, n-1)
 			idx := 0
 			for i, ip := range o.([]any) {
 				// skip primary private ip address
@@ -1088,8 +1090,22 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]any)
 
-		if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+		// Check that attachment still exists and is not already detached.
+		output, err := findNetworkInterfaceByID(ctx, conn, d.Id())
+		if retry.NotFound(err) {
+			return diags
+		}
+
+		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if output != nil && output.Attachment != nil {
+			if output.Attachment.Status != awstypes.AttachmentStatusDetached {
+				if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
 		}
 	}
 

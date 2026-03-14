@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -24,8 +26,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -49,6 +50,10 @@ const (
 	bucketPropagationTimeout = 2 * time.Minute
 )
 
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
+
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
@@ -64,9 +69,7 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -125,7 +128,7 @@ func resourceBucket() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrBucket},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
 				),
 			},
 			"bucket_region": {
@@ -724,7 +727,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	bucket := create.Name(ctx, d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
 	region := c.Region(ctx)
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
@@ -783,7 +786,8 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
 
-	if errs.Contains(err, "is not authorized to perform: s3:TagResource") {
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
+		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument) {
 		// Remove tags and try again
 		input.CreateBucketConfiguration.Tags = nil
 		tagOnCreate = false
@@ -833,10 +837,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
 	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+
+	resourceBucketFlatten(ctx, meta.(*conns.AWSClient), d.Id(), d)
 
 	//
 	// Bucket Policy.
@@ -1171,6 +1175,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
+	//
+	// Bucket Website
+	//
 	if _, ok := d.GetOk("website"); ok {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
@@ -1626,6 +1633,17 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) {
+	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
+
+	region := awsClient.Region(ctx)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+}
+
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
 	input := s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
@@ -1636,9 +1654,8 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
 	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1669,9 +1686,8 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
 
 	if errs.IsA[manager.BucketNotFound](err) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: bucket,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -2169,7 +2185,7 @@ func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.Lifec
 		if v, ok := tfMap[names.AttrID].(string); ok {
 			apiObject.ID = aws.String(v)
 		} else {
-			apiObject.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
+			apiObject.ID = aws.String(sdkid.PrefixedUniqueId("tf-s3-lifecycle-"))
 		}
 
 		if v, ok := tfMap["noncurrent_version_expiration"].([]any); ok && len(v) > 0 && v[0] != nil {

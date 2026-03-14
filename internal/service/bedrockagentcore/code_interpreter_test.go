@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,10 +27,10 @@ import (
 func TestAccBedrockAgentCoreCodeInterpreter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -40,12 +38,12 @@ func TestAccBedrockAgentCoreCodeInterpreter_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx),
+		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeInterpreterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeInterpreter),
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -72,10 +70,10 @@ func TestAccBedrockAgentCoreCodeInterpreter_basic(t *testing.T) {
 func TestAccBedrockAgentCoreCodeInterpreter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var codeinterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -83,12 +81,12 @@ func TestAccBedrockAgentCoreCodeInterpreter_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx),
+		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeInterpreterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeinterpreter),
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeinterpreter),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceCodeInterpreter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,10 +106,10 @@ func TestAccBedrockAgentCoreCodeInterpreter_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -119,12 +117,12 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx),
+		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeInterpreterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeInterpreter),
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -147,7 +145,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 			{
 				Config: testAccCodeInterpreterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeInterpreter),
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -164,7 +162,7 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 			{
 				Config: testAccCodeInterpreterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeInterpreter),
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -184,10 +182,10 @@ func TestAccBedrockAgentCoreCodeInterpreter_tags(t *testing.T) {
 func TestAccBedrockAgentCoreCodeInterpreter_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var codeInterpreter bedrockagentcorecontrol.GetCodeInterpreterOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_code_interpreter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -195,12 +193,12 @@ func TestAccBedrockAgentCoreCodeInterpreter_full(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx),
+		CheckDestroy:             testAccCheckCodeInterpreterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodeInterpreterConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCodeInterpreterExists(ctx, resourceName, &codeInterpreter),
+					testAccCheckCodeInterpreterExists(ctx, t, resourceName, &codeInterpreter),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -219,9 +217,9 @@ func TestAccBedrockAgentCoreCodeInterpreter_full(t *testing.T) {
 	})
 }
 
-func testAccCheckCodeInterpreterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCodeInterpreterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_code_interpreter" {
@@ -244,14 +242,14 @@ func testAccCheckCodeInterpreterDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckCodeInterpreterExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetCodeInterpreterOutput) resource.TestCheckFunc {
+func testAccCheckCodeInterpreterExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetCodeInterpreterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindCodeInterpreterByID(ctx, conn, rs.Primary.Attributes["code_interpreter_id"])
 		if err != nil {
@@ -265,7 +263,7 @@ func testAccCheckCodeInterpreterExists(ctx context.Context, n string, v *bedrock
 }
 
 func testAccPreCheckCodeInterpreters(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListCodeInterpretersInput{}
 

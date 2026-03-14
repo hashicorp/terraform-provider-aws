@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssmincidents
 
 import (
@@ -17,7 +19,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -276,9 +277,8 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	output, err := conn.GetReplicationSet(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -293,8 +293,8 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	return output.ReplicationSet, nil
 }
 
-func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationSet(conn *ssmincidents.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationSetByID(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -310,10 +310,10 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn st
 }
 
 func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusCreating),
 		Target:     enum.Slice(awstypes.ReplicationSetStatusActive),
-		Refresh:    statusReplicationSet(ctx, conn, arn),
+		Refresh:    statusReplicationSet(conn, arn),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,
@@ -329,10 +329,10 @@ func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, a
 }
 
 func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusUpdating),
 		Target:     enum.Slice(awstypes.ReplicationSetStatusActive),
-		Refresh:    statusReplicationSet(ctx, conn, arn),
+		Refresh:    statusReplicationSet(conn, arn),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,
@@ -348,10 +348,10 @@ func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, a
 }
 
 func waitReplicationSetDeleted(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusReplicationSet(ctx, conn, arn),
+		Refresh:    statusReplicationSet(conn, arn),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,

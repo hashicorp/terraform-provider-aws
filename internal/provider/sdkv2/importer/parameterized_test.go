@@ -626,7 +626,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -783,7 +783,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -892,7 +892,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalMultipleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -985,7 +985,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -1036,7 +1036,7 @@ func (t testImportID) Create(d *schema.ResourceData) string {
 	return result
 }
 
-func (t testImportID) Parse(id string) (string, map[string]string, error) {
+func (t testImportID) Parse(id string) (string, map[string]any, error) {
 	t.t.Helper()
 
 	parts, err := flex.ExpandResourceId(id, 2, false)
@@ -1044,7 +1044,7 @@ func (t testImportID) Parse(id string) (string, map[string]string, error) {
 		t.t.Fatalf("Parsing test Import ID: %s", err)
 	}
 
-	return id, map[string]string{
+	return id, map[string]any{
 		"name": parts[0],
 		"type": parts[1],
 	}, nil

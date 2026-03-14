@@ -1,17 +1,19 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -111,8 +113,10 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrPolicy, policy)
+	err = resourceBucketPolicyFlatten(ctx, policy, d)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -158,9 +162,8 @@ func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (stri
 	output, err := conn.GetBucketPolicy(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -173,4 +176,13 @@ func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (stri
 	}
 
 	return aws.ToString(output.Policy), nil
+}
+
+func resourceBucketPolicyFlatten(_ context.Context, policy string, d *schema.ResourceData) error {
+	policy, err := structure.NormalizeJsonString(policy)
+	if err != nil {
+		return fmt.Errorf("could not normalize policy JSON: %w", err)
+	}
+	d.Set(names.AttrPolicy, policy)
+	return nil
 }

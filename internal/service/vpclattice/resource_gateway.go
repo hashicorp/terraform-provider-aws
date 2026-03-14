@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -24,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -304,9 +305,8 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 	output, err := conn.GetResourceGateway(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -321,8 +321,8 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 	return output, nil
 }
 
-func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceGateway(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourceGatewayByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -338,10 +338,10 @@ func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id stri
 }
 
 func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceGatewayOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceGatewayStatusCreateInProgress, awstypes.ResourceGatewayStatusUpdateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceGatewayStatusActive),
-		Refresh:                   statusResourceGateway(ctx, conn, id),
+		Refresh:                   statusResourceGateway(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -356,10 +356,10 @@ func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id 
 }
 
 func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceGatewayOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceGatewayStatusDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusResourceGateway(ctx, conn, id),
+		Refresh: statusResourceGateway(conn, id),
 		Timeout: timeout,
 	}
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package timestreaminfluxdb
 
 import (
@@ -48,8 +50,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbClusterResource{}
 

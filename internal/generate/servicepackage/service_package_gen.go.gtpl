@@ -10,6 +10,31 @@ inttypes.StringIdentityAttributeWithMappedName(
 	{{- if .Optional }}false{{ else }}true{{ end -}},
 	{{- .ResourceAttributeName -}}
 ),
+{{- else if and .ValueType (or (eq .ValueType "int") (eq .ValueType "int32")) -}}
+inttypes.IntIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (eq .ValueType "int64") -}}
+inttypes.Int64IdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (or (eq .ValueType "float") (eq .ValueType "float32")) -}}
+inttypes.FloatIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (eq .ValueType "float64") -}}
+inttypes.Float64IdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
+{{- else if and .ValueType (eq .ValueType "bool") -}}
+inttypes.BoolIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
 {{- else -}}
 inttypes.StringIdentityAttribute(
 	{{- .Name }},
@@ -26,6 +51,9 @@ inttypes.StringIdentityAttribute(
 {{- end }}
 
 {{ define "CommonIdentityOpts" -}}
+{{- if .HasIdentityDuplicateAttrs -}}
+	inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
+{{- end -}}
 {{- if .MutableIdentity }}
 	inttypes.WithMutableIdentity(),
 {{ end -}}
@@ -138,7 +166,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 				{{- end }}
 			}),
 			{{- end }}
-	{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+	{{- if $value.RegionOverrideDeprecated }}
+			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+	{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 	{{- else if not $regionOverrideEnabled }}
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
@@ -171,7 +201,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				{{- end }}
 			}),
 			{{- end }}
-	{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+	{{- if $value.RegionOverrideDeprecated }}
+			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+	{{- else if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 	{{- else if not $regionOverrideEnabled }}
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
@@ -206,15 +238,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
-							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- end }}
+							{{ template "CommonIdentityOpts" . }}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
-							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- end }}
+							{{ template "CommonIdentityOpts" . }}
 						),
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
@@ -239,24 +271,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{- end }}
 						{{- end }}
 					{{- end }}
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- else }}
 						inttypes.RegionalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
@@ -336,15 +359,15 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 						inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
-							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- end }}
+							{{ template "CommonIdentityOpts" . -}}
 						),
 					{{- else }}
 						inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
 								{{ .Name }},
-							{{- end -}}
-							{{- template "CommonIdentityOpts" . -}}
+							{{- end }}
+							{{ template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
@@ -369,24 +392,15 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 							{{- end }}
 						{{- end }}
 					{{- end }}
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- else }}
 						inttypes.RegionalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
@@ -633,24 +647,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- end }}
 						{{- end }}
 					{{- end }}
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{ else -}}
 						inttypes.RegionalSingletonIdentity(
-							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
-							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}

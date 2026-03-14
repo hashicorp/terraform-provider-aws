@@ -8,7 +8,6 @@ resource "aws_connect_instance" "test" {
   outbound_calls_enabled   = true
 }
 
-
 variable "rName" {
   description = "Name for resource"
   type        = string

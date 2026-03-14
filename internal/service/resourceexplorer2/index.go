@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package resourceexplorer2
 
 import (
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -256,9 +257,8 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	output, err := conn.GetIndex(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -271,17 +271,16 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	}
 
 	if state := output.State; state == awstypes.IndexStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIndex(conn *resourceexplorer2.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIndex(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -297,10 +296,10 @@ func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkretry.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateCreating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
-		Refresh: statusIndex(ctx, conn),
+		Refresh: statusIndex(conn),
 		Timeout: timeout,
 	}
 
@@ -314,10 +313,10 @@ func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateUpdating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
-		Refresh: statusIndex(ctx, conn),
+		Refresh: statusIndex(conn),
 		Timeout: timeout,
 	}
 
@@ -331,10 +330,10 @@ func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateDeleting),
 		Target:  []string{},
-		Refresh: statusIndex(ctx, conn),
+		Refresh: statusIndex(conn),
 		Timeout: timeout,
 	}
 

@@ -9,15 +9,13 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,19 +24,19 @@ import (
 func TestAccPinpointApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "mobiletargeting", "apps/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrApplicationID),
@@ -83,19 +81,19 @@ func TestAccPinpointApp_basic(t *testing.T) {
 func TestAccPinpointApp_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,18 +107,18 @@ func TestAccPinpointApp_nameGenerated(t *testing.T) {
 	var application awstypes.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_nameGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, sdkid.UniqueIdPrefix),
 				),
 			},
 		},
@@ -132,16 +130,16 @@ func TestAccPinpointApp_namePrefix(t *testing.T) {
 	var application awstypes.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -153,19 +151,19 @@ func TestAccPinpointApp_namePrefix(t *testing.T) {
 func TestAccPinpointApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -178,7 +176,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 			{
 				Config: testAccAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -187,7 +185,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 			{
 				Config: testAccAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -199,19 +197,19 @@ func TestAccPinpointApp_tags(t *testing.T) {
 func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_campaignHookLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrPair(resourceName, "campaign_hook.0.lambda_function_name", "aws_lambda_function.test", names.AttrARN),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -236,19 +234,19 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 func TestAccPinpointApp_campaignHookEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_campaignHookEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{
@@ -272,19 +270,19 @@ func TestAccPinpointApp_campaignHookEmpty(t *testing.T) {
 func TestAccPinpointApp_limits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_limits(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
@@ -309,19 +307,19 @@ func TestAccPinpointApp_limits(t *testing.T) {
 func TestAccPinpointApp_limitsEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_limitsEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
@@ -346,19 +344,19 @@ func TestAccPinpointApp_limitsEmpty(t *testing.T) {
 func TestAccPinpointApp_quietTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_quietTime(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{
@@ -381,19 +379,19 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 func TestAccPinpointApp_quietTimeEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application awstypes.ApplicationResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpoint_app.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_quietTimeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
+					testAccCheckAppExists(ctx, t, resourceName, &application),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{
@@ -418,9 +416,9 @@ func testAccPreCheckApp(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPinpointApp(ctx, t)
 }
 
-func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAppDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_app" {
@@ -444,14 +442,14 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAppExists(ctx context.Context, n string, v *awstypes.ApplicationResponse) resource.TestCheckFunc {
+func testAccCheckAppExists(ctx context.Context, t *testing.T, n string, v *awstypes.ApplicationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindAppByID(ctx, conn, rs.Primary.ID)
 

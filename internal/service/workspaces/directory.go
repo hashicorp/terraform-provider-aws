@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package workspaces
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -723,9 +724,8 @@ func findDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) 
 	}
 
 	if state := output.State; state == types.WorkspaceDirectoryStateDeregistered {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -759,8 +759,8 @@ func findDirectories(ctx context.Context, conn *workspaces.Client, input *worksp
 	return output, nil
 }
 
-func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDirectory(conn *workspaces.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -779,10 +779,10 @@ func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, direc
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceDirectoryStateRegistering),
 		Target:  enum.Slice(types.WorkspaceDirectoryStateRegistered),
-		Refresh: statusDirectory(ctx, conn, directoryID),
+		Refresh: statusDirectory(conn, directoryID),
 		Timeout: timeout,
 	}
 
@@ -801,14 +801,14 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.WorkspaceDirectoryStateRegistering,
 			types.WorkspaceDirectoryStateRegistered,
 			types.WorkspaceDirectoryStateDeregistering,
 		),
 		Target:  []string{},
-		Refresh: statusDirectory(ctx, conn, directoryID),
+		Refresh: statusDirectory(conn, directoryID),
 		Timeout: timeout,
 	}
 
