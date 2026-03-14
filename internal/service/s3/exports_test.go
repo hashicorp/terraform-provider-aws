@@ -54,7 +54,7 @@ var (
 	FindMetricsConfiguration                    = findMetricsConfiguration
 	FindObjectByBucketAndKey                    = findObjectByBucketAndKey
 	FindObjectLockConfiguration                 = findObjectLockConfiguration
-	FindOwnershipControls                       = findOwnershipControls
+	FindBucketOwnershipControls                 = findBucketOwnershipControls
 	FindPublicAccessBlockConfiguration          = findPublicAccessBlockConfiguration
 	FindReplicationConfiguration                = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration       = findServerSideEncryptionConfiguration
