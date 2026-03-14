@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -219,6 +220,63 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 											listplanmodifier.RequiresReplace(),
 										},
 									},
+									"partition_spec": schema.ListNestedBlock{
+										Description: "Partition specification for the Iceberg table.",
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												names.AttrField: schema.ListNestedBlock{
+													Description: "List of partition fields.",
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"field_id": schema.Int32Attribute{
+																Optional:    true,
+																Computed:    true,
+																Description: "Unique identifier for this partition field. Auto-assigned if not specified.",
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.RequiresReplace(),
+																	int32planmodifier.UseStateForUnknown(),
+																},
+															},
+															names.AttrName: schema.StringAttribute{
+																Required:    true,
+																Description: "The name for this partition field.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"source_id": schema.Int32Attribute{
+																Required:    true,
+																Description: "The ID of the source schema field to partition by.",
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.RequiresReplace(),
+																},
+															},
+															"transform": schema.StringAttribute{
+																Required:    true,
+																Description: "The partition transform. Valid values: identity, year, month, day, hour, bucket, truncate.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+									},
 								},
 							},
 							Validators: []validator.List{
@@ -275,8 +333,16 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 		}
 	}
 
-	_, err := conn.CreateTable(ctx, &input)
+	if input.Metadata != nil {
+		if icebergMeta, ok := input.Metadata.(*awstypes.TableMetadataMemberIceberg); ok && icebergMeta.Value.PartitionSpec != nil {
+			response.Diagnostics.Append(resolvePartitionFieldIDs(ctx, icebergMeta, &data)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
 
+	_, err := conn.CreateTable(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Table (%s)", name), err.Error())
 
@@ -1014,7 +1080,19 @@ type tableMetadataModel struct {
 }
 
 type icebergMetadataModel struct {
-	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+	PartitionSpec fwtypes.ListNestedObjectValueOf[icebergPartitionSpecModel] `tfsdk:"partition_spec"`
+	Schema        fwtypes.ListNestedObjectValueOf[icebergSchemaModel]        `tfsdk:"schema"`
+}
+
+type icebergPartitionSpecModel struct {
+	Fields fwtypes.ListNestedObjectValueOf[icebergPartitionFieldModel] `tfsdk:"field"`
+}
+
+type icebergPartitionFieldModel struct {
+	FieldId   types.Int32  `tfsdk:"field_id"`
+	Name      types.String `tfsdk:"name"`
+	SourceId  types.Int32  `tfsdk:"source_id"`
+	Transform types.String `tfsdk:"transform"`
 }
 
 type icebergSchemaModel struct {
@@ -1025,6 +1103,62 @@ type icebergSchemaFieldModel struct {
 	Name     types.String `tfsdk:"name"`
 	Required types.Bool   `tfsdk:"required"`
 	Type     types.String `tfsdk:"type"`
+}
+
+// resolvePartitionFieldIDs auto-assigns field IDs starting from 1000 for any
+// partition fields without one, and syncs the values back into the model.
+func resolvePartitionFieldIDs(ctx context.Context, icebergMeta *awstypes.TableMetadataMemberIceberg, data *tableResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Auto-assign field IDs on the API input (Iceberg convention: starting from 1000).
+	for i := range icebergMeta.Value.PartitionSpec.Fields {
+		if icebergMeta.Value.PartitionSpec.Fields[i].FieldId == nil {
+			fieldId := int32(1000 + i)
+			icebergMeta.Value.PartitionSpec.Fields[i].FieldId = &fieldId
+		}
+	}
+
+	// Sync assigned values back into the Terraform model.
+	metadataModel, d := data.Metadata.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	icebergModel, d := metadataModel.Iceberg.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if icebergModel.PartitionSpec.IsNull() || icebergModel.PartitionSpec.IsUnknown() {
+		return diags
+	}
+
+	partSpecModel, d := icebergModel.PartitionSpec.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	fields, d := partSpecModel.Fields.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	for i, f := range fields {
+		if f.FieldId.IsUnknown() && i < len(icebergMeta.Value.PartitionSpec.Fields) {
+			fields[i].FieldId = types.Int32Value(*icebergMeta.Value.PartitionSpec.Fields[i].FieldId)
+		}
+	}
+
+	partSpecModel.Fields = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, fields)
+	icebergModel.PartitionSpec = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, partSpecModel)
+	metadataModel.Iceberg = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, icebergModel)
+	data.Metadata = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, metadataModel)
+
+	return diags
 }
 
 var (
