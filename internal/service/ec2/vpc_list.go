@@ -66,7 +66,7 @@ func (l *vpcListResource) ListResourceConfigSchema(ctx context.Context, _ list.L
 						names.AttrName: listschema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
-								notIsDefaultValidator{},
+								vpcListFilterValidator{},
 							},
 						},
 						names.AttrValues: listschema.ListAttribute{
@@ -81,32 +81,41 @@ func (l *vpcListResource) ListResourceConfigSchema(ctx context.Context, _ list.L
 	}
 }
 
-var _ validator.String = notIsDefaultValidator{}
+var _ validator.String = vpcListFilterValidator{}
 
-type notIsDefaultValidator struct{}
+type vpcListFilterValidator struct{}
 
-func (v notIsDefaultValidator) Description(ctx context.Context) string {
+func (v vpcListFilterValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v notIsDefaultValidator) MarkdownDescription(_ context.Context) string {
+func (v vpcListFilterValidator) MarkdownDescription(_ context.Context) string {
 	return ""
 }
 
-func (v notIsDefaultValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+func (v vpcListFilterValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
 
 	value := request.ConfigValue
 
-	if value.ValueString() == "is-default" {
+	switch value.ValueString() {
+	case "is-default":
 		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
 			request.Path,
 			"Invalid Attribute Value",
 			`The filter "is-default" is not supported. To list default VPCs, use the resource type "aws_default_vpc".`,
 		))
+
+	case "owner-id":
+		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
+			request.Path,
+			"Invalid Attribute Value",
+			`The filter "owner-id" is not supported. To list VPCs from another account, configure the provider for that account.`,
+		))
 	}
+
 }
 
 func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
