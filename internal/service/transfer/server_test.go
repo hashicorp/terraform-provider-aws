@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-
 	"github.com/YakDriver/regexache"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
@@ -112,6 +111,48 @@ func testAccServer_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccTransferServer_identityProviderTypeUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_identityProviderType(rName, "SERVICE_MANAGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+				),
+			},
+			{
+				Config: testAccServerConfig_identityProviderType(rName, "AWS_DIRECTORY_SERVICE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_DIRECTORY_SERVICE"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServerConfig_identityProviderType(rName, identityProviderType string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  identity_provider_type = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, identityProviderType)
 }
 
 func testAccServer_disappears(t *testing.T) {

@@ -1,0 +1,1 @@
+resource/aws_transfer_server: Allow in-place updates to `identity_provider_type` without resource replacement
