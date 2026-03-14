@@ -179,6 +179,16 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 			}
 
+			var defaultSecurityGroups map[string]*awstypes.SecurityGroup
+			if request.IncludeResource {
+				defaultSecurityGroups, err = batchFindVPCDefaultSecurityGroups(ctx, conn, vpcIDs)
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+			}
+
 			for _, vpc := range page.Vpcs {
 				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
 
@@ -212,6 +222,13 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				if mainRouteTable, ok := mainRouteTables[aws.ToString(vpc.VpcId)]; ok {
 					rd.Set("default_route_table_id", mainRouteTable.RouteTableId)
 					rd.Set("main_route_table_id", mainRouteTable.RouteTableId)
+				} else {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+
+				if defaultSecurityGroup, ok := defaultSecurityGroups[aws.ToString(vpc.VpcId)]; ok {
+					rd.Set("default_security_group_id", defaultSecurityGroup.GroupId)
 				} else {
 					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
 					continue
