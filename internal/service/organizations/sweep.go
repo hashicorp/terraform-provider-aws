@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,6 +33,8 @@ func RegisterSweepers() {
 
 	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
 		"aws_organizations_account")
+
+	awsv2.Register("aws_organizations_aws_service_access", sweepAwsServiceAccesss)
 }
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -234,6 +238,28 @@ func sweepListOrganizationalUnits(ctx context.Context, client *conns.AWSClient, 
 			d.SetId(aws.ToString(ou.Id))
 
 			sweepResources = append(sweepResources, newOrganizationalUnitSweeper(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAwsServiceAccesss(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := organizations.ListAWSServiceAccessForOrganizationInput{}
+	conn := client.OrganizationsClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, service := range page.EnabledServicePrincipals {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAwsServiceAccessResource, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(service.ServicePrincipal))),
+			)
 		}
 	}
 
