@@ -43,7 +43,58 @@ func TestAccODBAssociateDisassociateIAMRole_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(),
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "composite_arn",
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					rs, ok := state.RootModule().Resources[resourceName]
+					if !ok {
+						return "", errors.New("resource not found in state")
+					}
+
+					iamRoleARN, ok := rs.Primary.Attributes["composite_arn.0.iam_role_arn"]
+					if !ok || iamRoleARN == "" {
+						return "", errors.New("missing composite_arn.0.iam_role_arn in state")
+					}
+
+					resourceARN, ok := rs.Primary.Attributes["composite_arn.0.resource_arn"]
+					if !ok || resourceARN == "" {
+						return "", errors.New("missing composite_arn.0.resource_arn in state")
+					}
+
+					return "iam_role_arn=" + iamRoleARN + ",resource_arn=" + resourceARN, nil
+				},
+			},
+		},
+	})
+}
+
+func TestAccODBAssociateDisassociateIAMRole_avmc(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var associateDisassociateIAMRole odbtypes.IamRole
+	resourceName := "aws_odb_associate_disassociate_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
 				),
@@ -95,7 +146,7 @@ func TestAccODBAssociateDisassociateIAMRole_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(),
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &iamRole),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.AssociateDisassociateIAMRole, resourceName),
@@ -173,6 +224,26 @@ func testAccCheckAssociateDisassociateIAMRoleExists(ctx context.Context, name st
 
 		return nil
 	}
+}
+
+func (test iamRoleAssociationDisassociationTest) associateIAMRoleToAutonomousCloudVMCluster() string {
+	return `
+data "aws_iam_role" "test" {
+  name = "OracleDBKMS_avmc_hvlokll3j2"
+}
+
+data "aws_odb_cloud_autonomous_vm_cluster" "test" {
+  id = "avmc_hvlokll3j2"
+}
+
+resource "aws_odb_associate_disassociate_iam_role" "test" {
+  aws_integration = "KmsTde"
+  composite_arn {
+    iam_role_arn = data.aws_iam_role.test.arn
+    resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
+  }
+}
+`
 }
 
 func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster() string {

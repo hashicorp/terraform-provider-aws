@@ -6,6 +6,7 @@ package odb
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -123,7 +124,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 		iamRolesList := out.CloudVmCluster.IamRoles
 
 		for _, element := range iamRolesList {
-			if *element.IamRoleArn == roleARN {
+			if aws.ToString(element.IamRoleArn) == roleARN {
 				//we found the correct role
 				return &element, nil
 			}
@@ -143,7 +144,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 			return nil, err
 		}
 		for _, element := range out.CloudAutonomousVmCluster.IamRoles {
-			if *element.IamRoleArn == roleARN {
+			if aws.ToString(element.IamRoleArn) == roleARN {
 				//We found a match
 				return &element, nil
 			}

@@ -6,10 +6,10 @@ package odb
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
@@ -69,6 +69,9 @@ func (r *resourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req r
 				Computed:   true,
 			},
 			names.AttrStatusReason: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrID: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -162,6 +165,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	}
 	plan.Status = fwtypes.StringEnumValue(iamRoleOut.Status)
 	plan.StatusReason = types.StringPointerValue(iamRoleOut.StatusReason)
+	plan.ComputedId = types.StringValue(plan.CompositeARN.String())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -217,6 +221,7 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 		return
 	}
 	state.CompositeARN = compositeARN
+	state.ComputedId = types.StringValue(state.CompositeARN.String())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -448,6 +453,7 @@ type resourceAssociateDisassociateIAMRoleResourceModel struct {
 	AWSIntegration types.String                                               `tfsdk:"aws_integration"`
 	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                 `tfsdk:"status"`
 	StatusReason   types.String                                               `tfsdk:"status_reason"`
+	ComputedId     types.String                                               `tfsdk:"id" noflatten:"true"`
 	Timeouts       timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
