@@ -27,12 +27,12 @@ This resource supports the following arguments:
 
 * `domain_name` - (Required) Mail domain name to register. Changing this forces a new resource.
 * `organization_id` - (Required) Identifier of the WorkMail organization. Changing this forces a new resource.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Composite ID in the form `organization_id,domain_name`.
 * `dkim_verification_status` - DKIM verification status. Values: `PENDING`, `VERIFIED`, `FAILED`.
 * `is_default` - Whether this domain is the default mail domain for the organization.
 * `is_test_domain` - Whether this is the auto-provisioned test domain.

@@ -195,13 +195,11 @@ func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, d
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
-		}
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		} else if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
-		}
-		if errs.IsA[*awstypes.OrganizationStateException](err) {
+		} else if errs.IsA[*awstypes.OrganizationStateException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})

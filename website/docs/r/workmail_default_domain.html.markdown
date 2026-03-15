@@ -33,12 +33,7 @@ This resource supports the following arguments:
 
 * `domain_name` - (Required) Mail domain name to set as the default.
 * `organization_id` - (Required) Identifier of the WorkMail organization. Changing this forces a new resource.
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - WorkMail organization ID.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Import
 
