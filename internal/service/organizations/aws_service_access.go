@@ -1,40 +1,11 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
-
 package organizations
 
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/organizations/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 
 	"github.com/YakDriver/smarterr"
@@ -63,19 +34,7 @@ import (
 // 4. Create, read, update, delete methods (in that order)
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_organizations_aws_service_access", name="Aws Service Access")
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-//
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
 // @IdentityAttribute("service_principal")
 //
 // TIP: ==== GENERATED ACCEPTANCE TESTS ====
@@ -91,15 +50,6 @@ import (
 func newAwsServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &awsServiceAccessResource{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
-	// r.SetDefaultCreateTimeout(30 * time.Minute)
-	// r.SetDefaultUpdateTimeout(30 * time.Minute)
-	// r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -109,51 +59,9 @@ const (
 
 type awsServiceAccessResource struct {
 	framework.ResourceWithModel[awsServiceAccessResourceModel]
-	// framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
-// Optional: true,
-//
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
-// Computed: true,
-//
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *awsServiceAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -163,34 +71,6 @@ func (r *awsServiceAccessResource) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// names.AttrARN: framework.ARNAttributeComputedOnly(),
-			// names.AttrDescription: schema.StringAttribute{
-			// 	Optional: true,
-			// },
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "AwsServiceAccessId"
-			// names.AttrID: framework.IDAttribute(),
-			// names.AttrName: schema.StringAttribute{
-			// 	Required: true,
-			// 	// TIP: ==== PLAN MODIFIERS ====
-			// 	// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-			// 	// for adjusting planned changes prior to apply. The planmodifier subpackage
-			// 	// provides built-in modifiers for many common use cases such as
-			// 	// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-			// 	// resources).
-			// 	//
-			// 	// See more:
-			// 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.RequiresReplace(),
-			// 	},
-			// },
-			// "type": schema.StringAttribute{
-			// 	Required: true,
-			// },
 		},
 	}
 }
@@ -373,7 +253,6 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 // 	// Set needed attribute values here
 // }
 
-
 // TIP: ==== FINDERS ====
 // The find function is not strictly necessary. You could do the API
 // request from the status function. However, we have found that find often
@@ -423,21 +302,3 @@ func findAwsServiceAccessByID(ctx context.Context, conn *organizations.Client, s
 type awsServiceAccessResourceModel struct {
 	ServicePrincipal types.String `tfsdk:"service_principal"`
 }
-
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//  awsv2.Register("aws_organizations_aws_service_access", sweepAwsServiceAccesss)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
