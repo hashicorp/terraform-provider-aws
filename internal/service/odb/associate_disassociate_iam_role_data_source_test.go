@@ -113,7 +113,7 @@ data "aws_iam_role" "test" {
   name = "OracleDBKMS_vmc_fh3d42fmeu"
 }
 
-data "aws_odb_cloud_autonomous_vm_cluster" "test" {
+data "aws_odb_cloud_vm_cluster" "test" {
   id = "vmc_fh3d42fmeu"
 }
 
@@ -121,7 +121,7 @@ data "aws_odb_cloud_autonomous_vm_cluster" "test" {
 data "aws_odb_associate_disassociate_iam_role" "test" {
   composite_arn {
     iam_role_arn = data.aws_iam_role.test.arn
-    resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
+    resource_arn = data.aws_odb_cloud_vm_cluster.test.arn
   }
 }
 `
