@@ -6,9 +6,9 @@ package odb
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"

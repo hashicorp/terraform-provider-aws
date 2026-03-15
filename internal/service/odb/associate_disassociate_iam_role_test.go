@@ -249,18 +249,18 @@ resource "aws_odb_associate_disassociate_iam_role" "test" {
 func (test iamRoleAssociationDisassociationTest) associateIAMRoleToCloudVMCluster() string {
 	return `
 data "aws_iam_role" "test" {
-  name = "OracleDBKMS_avmc_hvlokll3j2"
+  name = "OracleDBKMS_vmc_fh3d42fmeu"
 }
 
-data "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  id = "avmc_hvlokll3j2"
+data "aws_odb_cloud_vm_cluster" "test" {
+  id = "vmc_fh3d42fmeu"
 }
 
 resource "aws_odb_associate_disassociate_iam_role" "test" {
   aws_integration = "KmsTde"
   composite_arn {
     iam_role_arn = data.aws_iam_role.test.arn
-    resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
+    resource_arn = data.aws_odb_cloud_vm_cluster.test.arn
   }
 }
 `
