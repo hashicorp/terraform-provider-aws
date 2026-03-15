@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,16 +28,16 @@ func testAccNetworkFirewallProxyRuleGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRuleGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRuleGroupExists(ctx, resourceName, &v),
+					testAccCheckProxyRuleGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`proxy-rule-group/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -63,16 +62,16 @@ func testAccNetworkFirewallProxyRuleGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRuleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyRuleGroupExists(ctx, resourceName, &v),
+					testAccCheckProxyRuleGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceProxyRuleGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,16 +93,16 @@ func testAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRuleGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyRuleGroupExists(ctx, resourceName, &v),
+					testAccCheckProxyRuleGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -117,7 +116,7 @@ func testAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
 			{
 				Config: testAccProxyRuleGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyRuleGroupExists(ctx, resourceName, &v),
+					testAccCheckProxyRuleGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -126,7 +125,7 @@ func testAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
 			{
 				Config: testAccProxyRuleGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyRuleGroupExists(ctx, resourceName, &v),
+					testAccCheckProxyRuleGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -135,9 +134,9 @@ func testAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckProxyRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProxyRuleGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_proxy_rule_group" {
@@ -165,14 +164,14 @@ func testAccCheckProxyRuleGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckProxyRuleGroupExists(ctx context.Context, n string, v *networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
+func testAccCheckProxyRuleGroupExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindProxyRuleGroupByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 

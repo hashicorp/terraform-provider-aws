@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -152,7 +152,7 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Read(ctx conte
 	proxyConfigArn := state.ID.ValueString()
 
 	out, err := findProxyConfigurationByARN(ctx, conn, proxyConfigArn)
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -299,12 +299,11 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Update(ctx con
 			UpdateToken:           updateToken,
 		}
 
-		priorityOut, err := conn.UpdateProxyRuleGroupPriorities(ctx, priorityInput)
+		_, err = conn.UpdateProxyRuleGroupPriorities(ctx, priorityInput)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, proxyConfigArn)
 			return
 		}
-		updateToken = priorityOut.UpdateToken
 	}
 
 	// Read back the update token from AWS
@@ -334,7 +333,7 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Delete(ctx con
 
 	// Get current state to retrieve update token
 	out, err := findProxyConfigurationByARN(ctx, conn, proxyConfigArn)
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {

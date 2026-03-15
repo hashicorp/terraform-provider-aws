@@ -156,6 +156,7 @@ The following arguments are optional:
 * `listener_properties` - (Optional) One or more listener properties blocks defining the ports and protocols the proxy listens on. See [Listener Properties](#listener-properties) below.
 * `proxy_configuration_arn` - (Optional, Forces new resource) ARN of the proxy configuration to use. Exactly one of `proxy_configuration_arn` or `proxy_configuration_name` must be provided.
 * `proxy_configuration_name` - (Optional, Forces new resource) Name of the proxy configuration to use. Exactly one of `proxy_configuration_arn` or `proxy_configuration_name` must be provided.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### TLS Intercept Properties

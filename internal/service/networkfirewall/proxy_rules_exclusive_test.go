@@ -14,8 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,16 +28,16 @@ func testAccNetworkFirewallProxyRulesExclusive_basic(t *testing.T) {
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 	ruleGroupResourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "proxy_rule_group_arn", ruleGroupResourceName, names.AttrARN),
 					// Pre-DNS phase
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.#", "1"),
@@ -86,16 +85,16 @@ func testAccNetworkFirewallProxyRulesExclusive_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceProxyRulesExclusive, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -117,16 +116,16 @@ func testAccNetworkFirewallProxyRulesExclusive_updateAdd(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRulesExclusiveConfig_single(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v1),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "pre_request.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "post_response.#", "0"),
@@ -140,7 +139,7 @@ func testAccNetworkFirewallProxyRulesExclusive_updateAdd(t *testing.T) {
 			{
 				Config: testAccProxyRulesExclusiveConfig_add(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v2),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "pre_request.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "post_response.#", "1"),
@@ -160,16 +159,16 @@ func testAccNetworkFirewallProxyRulesExclusive_updateModify(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v1),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.action", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.conditions.0.condition_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.conditions.0.condition_values.0", "amazonaws.com"),
@@ -183,7 +182,7 @@ func testAccNetworkFirewallProxyRulesExclusive_updateModify(t *testing.T) {
 			{
 				Config: testAccProxyRulesExclusiveConfig_modified(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v2),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.action", "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.conditions.0.condition_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.conditions.0.condition_values.0", "example.com"),
@@ -202,16 +201,16 @@ func testAccNetworkFirewallProxyRulesExclusive_updateRemove(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRulesExclusiveConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v1),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "pre_request.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "post_response.#", "1"),
@@ -225,7 +224,7 @@ func testAccNetworkFirewallProxyRulesExclusive_updateRemove(t *testing.T) {
 			{
 				Config: testAccProxyRulesExclusiveConfig_single(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v2),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "pre_request.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "post_response.#", "0"),
@@ -243,16 +242,16 @@ func testAccNetworkFirewallProxyRulesExclusive_multipleRulesPerPhase(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyRulesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyRulesExclusiveConfig_multiplePerPhase(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyRulesExclusiveExists(ctx, resourceName, &v),
+					testAccCheckProxyRulesExclusiveExists(ctx, t, resourceName, &v),
 					// Pre-DNS phase - 2 rules
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "pre_dns.0.proxy_rule_name", fmt.Sprintf("%s-predns-1", rName)),
@@ -289,9 +288,9 @@ func testAccNetworkFirewallProxyRulesExclusive_multipleRulesPerPhase(t *testing.
 	})
 }
 
-func testAccCheckProxyRulesExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProxyRulesExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_proxy_rules_exclusive" {
@@ -301,7 +300,7 @@ func testAccCheckProxyRulesExclusiveDestroy(ctx context.Context) resource.TestCh
 			// The resource ID is the proxy rule group ARN
 			out, err := tfnetworkfirewall.FindProxyRuleGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfretry.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -322,14 +321,14 @@ func testAccCheckProxyRulesExclusiveDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckProxyRulesExclusiveExists(ctx context.Context, n string, v *networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
+func testAccCheckProxyRulesExclusiveExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindProxyRuleGroupByARN(ctx, conn, rs.Primary.Attributes["proxy_rule_group_arn"])
 

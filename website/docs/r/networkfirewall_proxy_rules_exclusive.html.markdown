@@ -126,6 +126,7 @@ The following arguments are optional:
 * `pre_request` - (Optional) Rules to apply during the PRE_REQUEST phase. See [Rule Configuration](#rule-configuration) below.
 * `proxy_rule_group_arn` - (Optional) ARN of the proxy rule group. Conflicts with `proxy_rule_group_name`. Required if `proxy_rule_group_name` is not specified.
 * `proxy_rule_group_name` - (Optional) Name of the proxy rule group. Conflicts with `proxy_rule_group_arn`. Required if `proxy_rule_group_arn` is not specified.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### Rule Configuration
 

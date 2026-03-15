@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -169,7 +169,7 @@ func (r *resourceProxyRulesExclusive) Read(ctx context.Context, req resource.Rea
 	}
 
 	out, err := findProxyRulesByGroupARN(ctx, conn, state.ProxyRuleGroupArn.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -199,12 +199,12 @@ func (r *resourceProxyRulesExclusive) Update(ctx context.Context, req resource.U
 
 	// Get current state to obtain update token and existing rules from AWS
 	currentRules, err := findProxyRulesByGroupARN(ctx, conn, state.ProxyRuleGroupArn.ValueString())
-	if err != nil && !tfretry.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 
-	updateToken := currentRules.UpdateToken
+	var updateToken *string
 
 	// Extract rules from AWS for each phase
 	var statePostRESPONSE, statePreDNS, statePreREQUEST []proxyRuleModel
@@ -266,8 +266,6 @@ func (r *resourceProxyRulesExclusive) Update(ctx context.Context, req resource.U
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
-		updateToken = currentRules.UpdateToken
-
 		// Verify that the deleted rules are actually gone
 		if currentRules.ProxyRuleGroup != nil && currentRules.ProxyRuleGroup.Rules != nil {
 			existingRuleNames := proxyCollectRuleNames(currentRules.ProxyRuleGroup.Rules)
@@ -415,7 +413,7 @@ func (r *resourceProxyRulesExclusive) Delete(ctx context.Context, req resource.D
 
 	// Get all rule names for this group
 	out, err := findProxyRulesByGroupARN(ctx, conn, state.ID.ValueString())
-	if err != nil && !tfretry.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
@@ -454,7 +452,7 @@ func findProxyRulesByGroupARN(ctx context.Context, conn *networkfirewall.Client,
 	out, err := conn.DescribeProxyRuleGroup(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &tfretry.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
 		}
@@ -463,7 +461,7 @@ func findProxyRulesByGroupARN(ctx context.Context, conn *networkfirewall.Client,
 	}
 
 	if out == nil || out.ProxyRuleGroup == nil {
-		return nil, &tfretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: "proxy rule group not found",
 		}
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,16 +28,16 @@ func testAccNetworkFirewallProxy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyExists(ctx, resourceName, &v),
+					testAccCheckProxyExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`proxy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "nat_gateway_id"),
@@ -48,7 +47,7 @@ func testAccNetworkFirewallProxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "listener_properties.1.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "listener_properties.1.type", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "tls_intercept_properties.0.tls_intercept_mode", "DISABLED"),
-					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -71,16 +70,16 @@ func testAccNetworkFirewallProxy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyExists(ctx, resourceName, &v),
+					testAccCheckProxyExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceProxy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,16 +102,16 @@ func testAccNetworkFirewallProxy_tlsInterceptEnabled(t *testing.T) {
 	resourceName := "aws_networkfirewall_proxy.test"
 	pcaResourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyConfig_tlsInterceptEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProxyExists(ctx, resourceName, &v),
+					testAccCheckProxyExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`proxy/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "nat_gateway_id"),
@@ -124,7 +123,7 @@ func testAccNetworkFirewallProxy_tlsInterceptEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tls_intercept_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_intercept_properties.0.tls_intercept_mode", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "tls_intercept_properties.0.pca_arn", pcaResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -145,18 +144,18 @@ func testAccNetworkFirewallProxy_logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyConfig_logging(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// CloudWatch Logs delivery source
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_source.cwl", "log_type", "ALERT_LOGS"),
-					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery_source.cwl", "resource_arn", "aws_networkfirewall_proxy.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery_source.cwl", names.AttrResourceARN, "aws_networkfirewall_proxy.test", names.AttrARN),
 					// CloudWatch Logs delivery destination
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_destination.cwl", "delivery_destination_type", "CWL"),
 					// CloudWatch Logs delivery
@@ -165,7 +164,7 @@ func testAccNetworkFirewallProxy_logging(t *testing.T) {
 					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery.cwl", "delivery_destination_arn", "aws_cloudwatch_log_delivery_destination.cwl", names.AttrARN),
 					// S3 delivery source
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_source.s3", "log_type", "ALLOW_LOGS"),
-					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery_source.s3", "resource_arn", "aws_networkfirewall_proxy.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery_source.s3", names.AttrResourceARN, "aws_networkfirewall_proxy.test", names.AttrARN),
 					// S3 delivery destination
 					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_destination.s3", "delivery_destination_type", "S3"),
 					// S3 delivery
@@ -178,9 +177,9 @@ func testAccNetworkFirewallProxy_logging(t *testing.T) {
 	})
 }
 
-func testAccCheckProxyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProxyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_proxy" {
@@ -208,14 +207,14 @@ func testAccCheckProxyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProxyExists(ctx context.Context, n string, v *networkfirewall.DescribeProxyOutput) resource.TestCheckFunc {
+func testAccCheckProxyExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindProxyByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
