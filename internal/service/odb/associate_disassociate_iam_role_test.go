@@ -25,7 +25,7 @@ type iamRoleAssociationDisassociationTest struct {
 
 var iamRoleAssociationDisassociationTestEntity = iamRoleAssociationDisassociationTest{}
 
-func TestAccODBAssociateDisassociateIAMRole_basic(t *testing.T) {
+func TestAccODBAssociateDisassociateIAMRole_vmc(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -43,7 +43,7 @@ func TestAccODBAssociateDisassociateIAMRole_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociateDisassociateIAMRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToAutonomousCloudVMCluster(),
+				Config: iamRoleAssociationDisassociationTestEntity.associateIAMRoleToCloudVMCluster(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociateDisassociateIAMRoleExists(ctx, resourceName, &associateDisassociateIAMRole),
 				),
