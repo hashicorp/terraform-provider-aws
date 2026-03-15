@@ -159,19 +159,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Proxy Rules Exclusive using the `proxy_rule_group_arn,rule_name1[,rule_name2,...]`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Proxy Rules Exclusive using the `proxy_rule_group_arn`. For example:
 
 ```terraform
 import {
   to = aws_networkfirewall_proxy_rules_exclusive.example
-  id = "arn:aws:network-firewall:us-west-2:123456789012:proxy-rule-group/example,allow-example-com,block-malicious-domains"
+  id = "arn:aws:network-firewall:us-west-2:123456789012:proxy-rule-group/example"
 }
 ```
 
-Using `terraform import`, import Network Firewall Proxy Rules Exclusive using the `proxy_rule_group_arn,rule_name1[,rule_name2,...]`. For example:
+Using `terraform import`, import Network Firewall Proxy Rules Exclusive using the `proxy_rule_group_arn`. For example:
 
 ```console
-% terraform import aws_networkfirewall_proxy_rules_exclusive.example "arn:aws:network-firewall:us-west-2:123456789012:proxy-rule-group/example,allow-example-com,block-malicious-domains"
+% terraform import aws_networkfirewall_proxy_rules_exclusive.example arn:aws:network-firewall:us-west-2:123456789012:proxy-rule-group/example
 ```
-
-~> **NOTE:** When importing, specify the proxy rule group ARN followed by a comma-separated list of rule names to import. The import will fetch only the specified rules from the rule group.

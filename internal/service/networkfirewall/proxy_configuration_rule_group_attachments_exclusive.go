@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -34,23 +34,16 @@ import (
 // @FrameworkResource("aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive", name="Proxy Configuration Rule Group Attachments Exclusive")
 // @ArnIdentity("proxy_configuration_arn",identityDuplicateAttributes="id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourceProxyConfigurationRuleGroupAttachmentsExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProxyConfigurationRuleGroupAttachmentsExclusive{}
 
 	return r, nil
 }
 
-const (
-	ResNameProxyConfigurationRuleGroupAttachmentsExclusive = "Proxy Configuration Rule Group Attachments Exclusive"
-)
-
 type resourceProxyConfigurationRuleGroupAttachmentsExclusive struct {
 	framework.ResourceWithModel[proxyConfigurationRuleGroupAttachmentModel]
 	framework.WithImportByIdentity
-}
-
-func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive"
 }
 
 func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

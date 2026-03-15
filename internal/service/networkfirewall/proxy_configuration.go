@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -36,6 +36,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("proxy-configuration/{name}")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourceProxyConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProxyConfiguration{}
 
@@ -180,7 +181,7 @@ func (r *resourceProxyConfiguration) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("Tags"), flex.WithIgnoredField("TagsAll"))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return

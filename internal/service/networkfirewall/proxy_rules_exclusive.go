@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -33,23 +33,16 @@ import (
 // @ArnIdentity("proxy_rule_group_arn",identityDuplicateAttributes="id")
 // @ArnFormat("proxy-rule-group/{name}")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourceProxyRulesExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProxyRulesExclusive{}
 
 	return r, nil
 }
 
-const (
-	ResNameProxyRulesExclusive = "Proxy Rules Exclusive"
-)
-
 type resourceProxyRulesExclusive struct {
 	framework.ResourceWithModel[resourceProxyRulesExclusiveModel]
 	framework.WithImportByIdentity
-}
-
-func (r *resourceProxyRulesExclusive) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_proxy_rules_exclusive"
 }
 
 func (r *resourceProxyRulesExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

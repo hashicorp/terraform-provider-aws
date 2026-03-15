@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -20,14 +20,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFirewallProxyRulesExclusive_basic(t *testing.T) {
+func testAccNetworkFirewallProxyRulesExclusive_basic(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 	ruleGroupResourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,13 +78,15 @@ func TestAccNetworkFirewallProxyRulesExclusive_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRulesExclusive_disappears(t *testing.T) {
+func testAccNetworkFirewallProxyRulesExclusive_disappears(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -105,13 +109,15 @@ func TestAccNetworkFirewallProxyRulesExclusive_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRulesExclusive_updateAdd(t *testing.T) {
+func testAccNetworkFirewallProxyRulesExclusive_updateAdd(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -146,13 +152,15 @@ func TestAccNetworkFirewallProxyRulesExclusive_updateAdd(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRulesExclusive_updateModify(t *testing.T) {
+func testAccNetworkFirewallProxyRulesExclusive_updateModify(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -186,13 +194,15 @@ func TestAccNetworkFirewallProxyRulesExclusive_updateModify(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRulesExclusive_updateRemove(t *testing.T) {
+func testAccNetworkFirewallProxyRulesExclusive_updateRemove(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -225,13 +235,15 @@ func TestAccNetworkFirewallProxyRulesExclusive_updateRemove(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRulesExclusive_multipleRulesPerPhase(t *testing.T) {
+func testAccNetworkFirewallProxyRulesExclusive_multipleRulesPerPhase(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

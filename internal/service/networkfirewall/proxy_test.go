@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -21,17 +21,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFirewallProxy_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccNetworkFirewallProxy_basic(t *testing.T) {
+	t.Helper()
 
+	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,17 +63,15 @@ func TestAccNetworkFirewallProxy_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxy_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccNetworkFirewallProxy_disappears(t *testing.T) {
+	t.Helper()
 
+	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -98,18 +94,16 @@ func TestAccNetworkFirewallProxy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxy_tlsInterceptEnabled(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccNetworkFirewallProxy_tlsInterceptEnabled(t *testing.T) {
+	t.Helper()
 
+	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 	pcaResourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -140,6 +134,45 @@ func TestAccNetworkFirewallProxy_tlsInterceptEnabled(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"update_token"},
+			},
+		},
+	})
+}
+
+func testAccNetworkFirewallProxy_logging(t *testing.T) {
+	t.Helper()
+
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxyConfig_logging(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// CloudWatch Logs delivery source
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_source.cwl", "log_type", "ALERT_LOGS"),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery_source.cwl", "resource_arn", "aws_networkfirewall_proxy.test", names.AttrARN),
+					// CloudWatch Logs delivery destination
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_destination.cwl", "delivery_destination_type", "CWL"),
+					// CloudWatch Logs delivery
+					resource.TestCheckResourceAttrSet("aws_cloudwatch_log_delivery.cwl", names.AttrID),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery.cwl", "delivery_source_name", "aws_cloudwatch_log_delivery_source.cwl", names.AttrName),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery.cwl", "delivery_destination_arn", "aws_cloudwatch_log_delivery_destination.cwl", names.AttrARN),
+					// S3 delivery source
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_source.s3", "log_type", "ALLOW_LOGS"),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery_source.s3", "resource_arn", "aws_networkfirewall_proxy.test", names.AttrARN),
+					// S3 delivery destination
+					resource.TestCheckResourceAttr("aws_cloudwatch_log_delivery_destination.s3", "delivery_destination_type", "S3"),
+					// S3 delivery
+					resource.TestCheckResourceAttrSet("aws_cloudwatch_log_delivery.s3", names.AttrID),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery.s3", "delivery_source_name", "aws_cloudwatch_log_delivery_source.s3", names.AttrName),
+					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_delivery.s3", "delivery_destination_arn", "aws_cloudwatch_log_delivery_destination.s3", names.AttrARN),
+				),
 			},
 		},
 	})
@@ -343,6 +376,85 @@ resource "aws_networkfirewall_proxy" "test" {
     port = 443
     type = "HTTPS"
   }
+}
+`, rName))
+}
+
+func testAccProxyConfig_logging(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProxyConfig_baseVPC(rName),
+		testAccProxyConfig_baseProxyConfiguration(rName),
+		fmt.Sprintf(`
+resource "aws_networkfirewall_proxy" "test" {
+  name                    = %[1]q
+  nat_gateway_id          = aws_nat_gateway.test.id
+  proxy_configuration_arn = aws_networkfirewall_proxy_configuration.test.arn
+
+  tls_intercept_properties {
+    tls_intercept_mode = "DISABLED"
+  }
+
+  listener_properties {
+    port = 8080
+    type = "HTTP"
+  }
+
+  listener_properties {
+    port = 443
+    type = "HTTPS"
+  }
+}
+
+# CloudWatch Logs delivery
+
+resource "aws_cloudwatch_log_group" "test" {
+  name              = %[1]q
+  retention_in_days = 7
+}
+
+resource "aws_cloudwatch_log_delivery_source" "cwl" {
+  name         = "%[1]s-cwl"
+  log_type     = "ALERT_LOGS"
+  resource_arn = aws_networkfirewall_proxy.test.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "cwl" {
+  name = "%[1]s-cwl"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.test.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "cwl" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.cwl.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.cwl.arn
+}
+
+# S3 delivery
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_delivery_source" "s3" {
+  name         = "%[1]s-s3"
+  log_type     = "ALLOW_LOGS"
+  resource_arn = aws_networkfirewall_proxy.test.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "s3" {
+  name = "%[1]s-s3"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.test.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "s3" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.s3.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.s3.arn
 }
 `, rName))
 }

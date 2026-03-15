@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -31,23 +31,16 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("proxy-rule-group/{name}")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourceProxyRuleGroup(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProxyRuleGroup{}
 
 	return r, nil
 }
 
-const (
-	ResNameProxyRuleGroup = "Proxy Rule Group"
-)
-
 type resourceProxyRuleGroup struct {
 	framework.ResourceWithModel[resourceProxyRuleGroupModel]
 	framework.WithImportByIdentity
-}
-
-func (r *resourceProxyRuleGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_proxy_rule_group"
 }
 
 func (r *resourceProxyRuleGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -158,6 +151,17 @@ func (r *resourceProxyRuleGroup) Read(ctx context.Context, req resource.ReadRequ
 	setTagsOut(ctx, out.ProxyRuleGroup.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceProxyRuleGroup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan resourceProxyRuleGroupModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Tags are updated via the service package framework; only state sync is needed here.
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceProxyRuleGroup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

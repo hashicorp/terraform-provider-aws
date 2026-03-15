@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -21,13 +21,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFirewallProxyRuleGroup_basic(t *testing.T) {
+func testAccNetworkFirewallProxyRuleGroup_basic(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,13 +55,15 @@ func TestAccNetworkFirewallProxyRuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRuleGroup_disappears(t *testing.T) {
+func testAccNetworkFirewallProxyRuleGroup_disappears(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,13 +86,15 @@ func TestAccNetworkFirewallProxyRuleGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
+func testAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

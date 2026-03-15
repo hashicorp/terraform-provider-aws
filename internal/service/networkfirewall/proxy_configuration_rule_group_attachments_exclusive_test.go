@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -23,7 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_basic(t *testing.T) {
+func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_basic(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -31,7 +33,7 @@ func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_basic
 	proxyConfigResourceName := "aws_networkfirewall_proxy_configuration.test"
 	ruleGroup1ResourceName := "aws_networkfirewall_proxy_rule_group.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,13 +60,15 @@ func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_basic
 	})
 }
 
-func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_disappears(t *testing.T) {
+func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_disappears(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,14 +86,16 @@ func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_disap
 	})
 }
 
-func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updateAdd(t *testing.T) {
+func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updateAdd(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 	ruleGroup3ResourceName := "aws_networkfirewall_proxy_rule_group.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -120,13 +126,15 @@ func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updat
 	})
 }
 
-func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updateRemove(t *testing.T) {
+func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updateRemove(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -156,7 +164,9 @@ func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updat
 	})
 }
 
-func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updateReorder(t *testing.T) {
+func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updateReorder(t *testing.T) {
+	t.Helper()
+
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -164,7 +174,7 @@ func TestAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updat
 	ruleGroup1ResourceName := "aws_networkfirewall_proxy_rule_group.test1"
 	ruleGroup2ResourceName := "aws_networkfirewall_proxy_rule_group.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

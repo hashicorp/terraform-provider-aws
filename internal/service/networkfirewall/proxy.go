@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -40,6 +40,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourceProxy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProxy{}
 
