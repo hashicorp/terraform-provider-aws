@@ -140,7 +140,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				// Disable the schedule by setting status to DISABLED
 				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusDisabled)),
@@ -150,7 +150,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				// Re-enable the schedule by setting status to ENABLED
 				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskExists(ctx, resourceName, &task1),
+					testAccCheckTaskExists(ctx, t, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
