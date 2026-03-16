@@ -245,6 +245,12 @@ func sweepListOrganizationalUnits(ctx context.Context, client *conns.AWSClient, 
 }
 
 func sweepAwsServiceAccesss(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	if skip, err := sweepPreCheck(ctx, client); err != nil {
+		return nil, err
+	} else if skip {
+		return nil, nil
+	}
+
 	input := organizations.ListAWSServiceAccessForOrganizationInput{}
 	conn := client.OrganizationsClient(ctx)
 	var sweepResources []sweep.Sweepable
