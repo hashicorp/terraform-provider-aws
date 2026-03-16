@@ -895,8 +895,8 @@ type dataLocationOptIn struct {
 
 type lfTagOptIn struct {
 	CatalogID types.String                     `tfsdk:"catalog_id"`
-	Key       types.String                     `tfsdk:"key"`
-	Values    fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+	TagKey    types.String                     `tfsdk:"key"`
+	TagValues fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type lfTagExpressionOptIn struct {
