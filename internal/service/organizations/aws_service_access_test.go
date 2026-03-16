@@ -4,18 +4,6 @@
 package organizations_test
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the service/organizations/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
@@ -30,36 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance tests access AWS and cost money to run.
 func TestAccOrganizationsAwsServiceAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -82,6 +46,7 @@ func TestAccOrganizationsAwsServiceAccess_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsServiceAccessExists(ctx, t, resourceName, &awsserviceaccess),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
+					resource.TestCheckResourceAttrSet(resourceName, "date_enabled"),
 				),
 			},
 			{
@@ -116,12 +81,6 @@ func TestAccOrganizationsAwsServiceAccess_disappears(t *testing.T) {
 				Config: testAccAwsServiceAccessConfig_basic(servicePrincipal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsServiceAccessExists(ctx, t, resourceName, &awsserviceaccess),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceAwsServiceAccess = newAwsServiceAccessResource
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tforganizations.ResourceAwsServiceAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
