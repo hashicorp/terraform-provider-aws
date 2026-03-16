@@ -207,8 +207,8 @@ github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.11 h1:wpXG2W7GcvebiM3lILdt
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.11/go.mod h1:taEvOEYqM0ajWIUST+KGMyvlNhmkKdjTLX40l5vayY8=
 github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.14 h1:ikGt5kTzRE0+ehjewNLHjEO9pgAjdLv2IiwUuIdWagw=
 github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.14/go.mod h1:WnsYjhq0txJK9bw4UeVijF1zG0Iuz6FdzwxNihVGcxI=
-github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.14 h1:T9azqsazMkSi1eyKlQCRxS8u0g/Nl3l6g3u5G8EdKfU=
-github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.14/go.mod h1:2WbAFVNv/M6/g3G68q684SWw+M0tvzEnc/nNC9GpO0g=
+github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.15 h1:Gr8OsR/2npUrGl3c/gcex+G/HNhK/mYZPFm1Ew/8tH8=
+github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.15/go.mod h1:jjuT+RTfsh4PsC0AG3z3iXaeJrgZjO4cPWdRCMyMLpA=
 github.com/aws/aws-sdk-go-v2/service/dlm v1.35.14 h1:FCz0IaiI0e6SAqNxWGZTkFqMGfy9lywyk9fJ5874pHA=
 github.com/aws/aws-sdk-go-v2/service/dlm v1.35.14/go.mod h1:et6FYrW7KsU5Yw213yqVMMneCR+9JjvZBmvumOCSQ2Q=
 github.com/aws/aws-sdk-go-v2/service/docdb v1.48.11 h1:7D5G4fCH+ZE14P0sZdSkQQjIWnCZzB05kggmPWW0Gss=
