@@ -487,8 +487,8 @@ github.com/aws/aws-sdk-go-v2/service/sagemaker v1.236.1 h1:IxE2S/0VBMpZfv8b6qA7L
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.236.1/go.mod h1:isB1qPK5Nms0/Mseyx9sibaps51bu9nk01c6ltFGUoA=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.1 h1:9xDeRBCHBE7EDhAP77L1U4nuiyZ/oXxJql0zbnXUk3Y=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.1/go.mod h1:KYceQDSsfUXeLVRrYUGrKMYD5vrRBbb5Glc52N3Etpo=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.20 h1:26W5e36ZRz5Lxag1aVBxv2ZHBPBMOTxxSVqPENob56Q=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.20/go.mod h1:AMTsHJXHLunksmCqfzhBLLyUQcxZ7d5zPbSIr839kbg=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.21 h1:PXsWg8Shok6JwNQ2ImU9kQbsj4PkE3FH/7v86XxJftQ=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.21/go.mod h1:RXpd3Unqzl4PxmAur766LbHn2pZHK+gtf5ElvIFf+ik=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.34.10 h1:hxI+rXSfifuEW7du4mTYEjgK43fiVJTJBpMLXxncuFA=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.34.10/go.mod h1:XUavYcdH1gUw3XNWsgrhg0HEqyFGwJfdqUl1DhwcyXM=
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3 h1:9bb0dEq1WzA0ZxIGG2EmwEgxfMAJpHyusxwbVN7f6iM=
