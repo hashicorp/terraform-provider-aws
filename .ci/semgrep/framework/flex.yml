@@ -86,9 +86,9 @@ rules:
         - "/internal/service/bedrockagentcore/gateway_target.go"
     patterns:
       - pattern: func $FUNC(ctx context.Context, ...)
-      - metavariable-comparison:
+      - metavariable-regex:
           metavariable: $FUNC
-          comparison: re.match("flatten\w+", str($FUNC))
+          regex: 'flatten\w+(?<!Resource)$'
       - pattern-not-inside: |
           import ("github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema")
           ...

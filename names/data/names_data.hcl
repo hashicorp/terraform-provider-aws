@@ -58,8 +58,9 @@ service "acm" {
   }
 
   names {
-    provider_name_upper = "ACM"
-    human_friendly      = "ACM (Certificate Manager)"
+    provider_name_upper  = "ACM"
+    human_friendly       = "ACM (Certificate Manager)"
+    human_friendly_short = "ACM"
   }
 
   endpoint_info {
@@ -3367,13 +3368,14 @@ service "elbv2" {
 
   sdk {
     id            = "Elastic Load Balancing v2"
-    arn_namespace = "elbv2"
+    arn_namespace = "elasticloadbalancing"
   }
 
   names {
-    aliases             = ["elasticloadbalancingv2"]
-    provider_name_upper = "ELBV2"
-    human_friendly      = "ELB (Elastic Load Balancing)"
+    aliases              = ["elasticloadbalancingv2"]
+    provider_name_upper  = "ELBV2"
+    human_friendly       = "ELB (Elastic Load Balancing)"
+    human_friendly_short = "ELB"
   }
 
   endpoint_info {
@@ -3397,7 +3399,7 @@ service "elb" {
 
   sdk {
     id            = "Elastic Load Balancing"
-    arn_namespace = "elb"
+    arn_namespace = "elasticloadbalancing"
   }
 
   names {
@@ -4201,8 +4203,9 @@ service "iam" {
   }
 
   names {
-    provider_name_upper = "IAM"
-    human_friendly      = "IAM (Identity & Access Management)"
+    provider_name_upper  = "IAM"
+    human_friendly       = "IAM (Identity & Access Management)"
+    human_friendly_short = "IAM"
   }
 
   env_var {
@@ -7500,9 +7503,10 @@ service "s3" {
   }
 
   names {
-    aliases             = ["s3api"]
-    provider_name_upper = "S3"
-    human_friendly      = "S3 (Simple Storage)"
+    aliases              = ["s3api"]
+    provider_name_upper  = "S3"
+    human_friendly       = "S3 (Simple Storage)"
+    human_friendly_short = "S3"
   }
 
   env_var {
@@ -9358,8 +9362,9 @@ service "ec2" {
   }
 
   names {
-    provider_name_upper = "EC2"
-    human_friendly      = "EC2 (Elastic Compute Cloud)"
+    provider_name_upper  = "EC2"
+    human_friendly       = "EC2 (Elastic Compute Cloud)"
+    human_friendly_short = "EC2"
   }
 
   endpoint_info {
@@ -9367,7 +9372,7 @@ service "ec2" {
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|secondary_network|secondary_subnet|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
@@ -9523,8 +9528,9 @@ service "ec2" {
     }
 
     names {
-      provider_name_upper = "VPC"
-      human_friendly      = "VPC (Virtual Private Cloud)"
+      provider_name_upper  = "VPC"
+      human_friendly       = "VPC (Virtual Private Cloud)"
+      human_friendly_short = "VPC"
     }
 
     resource_prefix {
@@ -9677,7 +9683,7 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_secondary_network", "ec2_secondary_subnet", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }
 

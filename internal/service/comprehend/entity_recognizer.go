@@ -22,7 +22,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -504,7 +504,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		RecognizerName:     aws.String(d.Get(names.AttrName).(string)),
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		Tags:               getTagsIn(ctx),
 	}
 

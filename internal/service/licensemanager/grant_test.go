@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
@@ -59,19 +57,19 @@ func testAccGrant_basic(t *testing.T) {
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGrantDestroy(ctx),
+		CheckDestroy:             testAccCheckGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGrantConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGrantExists(ctx, resourceName),
+					testAccCheckGrantExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`grant:g-.+`)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ListPurchasedLicenses"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckoutLicense"),
@@ -100,19 +98,19 @@ func testAccGrant_disappears(t *testing.T) {
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGrantDestroy(ctx),
+		CheckDestroy:             testAccCheckGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGrantConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGrantExists(ctx, resourceName),
+					testAccCheckGrantExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -126,20 +124,20 @@ func testAccGrant_name(t *testing.T) {
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_grant.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGrantDestroy(ctx),
+		CheckDestroy:             testAccCheckGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGrantConfig_basic(licenseARN, rName1, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGrantExists(ctx, resourceName),
+					testAccCheckGrantExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
@@ -151,7 +149,7 @@ func testAccGrant_name(t *testing.T) {
 			{
 				Config: testAccGrantConfig_basic(licenseARN, rName2, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGrantExists(ctx, resourceName),
+					testAccCheckGrantExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -159,14 +157,14 @@ func testAccGrant_name(t *testing.T) {
 	})
 }
 
-func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckGrantExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LicenseManagerClient(ctx)
 
 		_, err := tflicensemanager.FindGrantByARN(ctx, conn, rs.Primary.ID)
 
@@ -174,9 +172,9 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGrantDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LicenseManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant" {

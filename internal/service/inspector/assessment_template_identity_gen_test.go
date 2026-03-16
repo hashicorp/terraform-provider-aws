@@ -38,7 +38,7 @@ func TestAccInspectorAssessmentTemplate_Identity_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTemplateDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccInspectorAssessmentTemplate_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -251,7 +251,7 @@ func TestAccInspectorAssessmentTemplate_Identity_ExistingResource_basic(t *testi
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy: testAccCheckAssessmentTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -260,7 +260,7 @@ func TestAccInspectorAssessmentTemplate_Identity_ExistingResource_basic(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -310,7 +310,7 @@ func TestAccInspectorAssessmentTemplate_Identity_ExistingResource_noRefreshNoCha
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckAssessmentTemplateDestroy(ctx),
+		CheckDestroy: testAccCheckAssessmentTemplateDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -324,7 +324,7 @@ func TestAccInspectorAssessmentTemplate_Identity_ExistingResource_noRefreshNoCha
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTemplateExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTemplateExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

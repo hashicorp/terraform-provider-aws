@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -103,7 +102,7 @@ func resourceClassificationJob() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 500-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 500-sdkid.UniqueIDSuffixLength),
 			},
 			"s3_job_definition": {
 				Type:     schema.TypeList,
@@ -653,7 +652,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateClassificationJobInput{
-		ClientToken:     aws.String(id.UniqueId()),
+		ClientToken:     aws.String(sdkid.UniqueId()),
 		JobType:         awstypes.JobType(d.Get("job_type").(string)),
 		Name:            aws.String(name),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]any)),
@@ -801,9 +800,8 @@ func findClassificationJob(ctx context.Context, conn *macie2.Client, input *maci
 	output, err := conn.DescribeClassificationJob(ctx, input)
 
 	if isClassificationJobNotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

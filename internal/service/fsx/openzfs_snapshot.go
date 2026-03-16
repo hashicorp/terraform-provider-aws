@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,7 +80,7 @@ func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateSnapshotInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		Tags:               getTagsIn(ctx),
 		VolumeId:           aws.String(d.Get("volume_id").(string)),
@@ -135,7 +134,7 @@ func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateSnapshotInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(sdkid.UniqueId()),
 			SnapshotId:         aws.String(d.Id()),
 		}
 
@@ -207,9 +206,8 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SnapshotNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -227,8 +225,8 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshot(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -244,10 +242,10 @@ func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) sdkretry.S
 }
 
 func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecycleCreating, awstypes.SnapshotLifecyclePending),
 		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -266,10 +264,10 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeo
 }
 
 func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecyclePending),
 		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
@@ -288,10 +286,10 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeo
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecyclePending, awstypes.SnapshotLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}

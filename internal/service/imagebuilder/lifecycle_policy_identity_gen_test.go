@@ -33,7 +33,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "imagebuilder", "lifecycle-policy/{name}"),
@@ -240,7 +240,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource_basic(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -249,7 +249,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource_basic(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -263,7 +263,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource_basic(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -319,7 +319,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource_noRefreshNoCha
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -333,7 +333,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource_noRefreshNoCha
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

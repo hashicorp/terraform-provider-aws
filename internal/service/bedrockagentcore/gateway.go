@@ -137,6 +137,10 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
 									},
+									"allowed_scopes": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
+									},
 									"discovery_url": schema.StringAttribute{
 										Required: true,
 									},

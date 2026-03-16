@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_docdb_cluster_snapshot", name="Cluster Snapshot")
-func ResourceClusterSnapshot() *schema.Resource {
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
@@ -235,8 +235,8 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 	return output, nil
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusClusterSnapshot(conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -255,7 +255,7 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *docdb.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
-		Refresh:    statusClusterSnapshot(ctx, conn, id),
+		Refresh:    statusClusterSnapshot(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,

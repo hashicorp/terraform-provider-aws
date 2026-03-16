@@ -62,7 +62,7 @@ func testAccGuardDutyDetector_tags(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +73,7 @@ func testAccGuardDutyDetector_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -115,7 +115,7 @@ func testAccGuardDutyDetector_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -161,7 +161,7 @@ func testAccGuardDutyDetector_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -200,7 +200,7 @@ func testAccGuardDutyDetector_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -241,7 +241,7 @@ func testAccGuardDutyDetector_Tags_null(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -252,7 +252,7 @@ func testAccGuardDutyDetector_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -310,7 +310,7 @@ func testAccGuardDutyDetector_Tags_emptyMap(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -319,7 +319,7 @@ func testAccGuardDutyDetector_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -375,7 +375,7 @@ func testAccGuardDutyDetector_Tags_addOnUpdate(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -384,7 +384,7 @@ func testAccGuardDutyDetector_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -407,7 +407,7 @@ func testAccGuardDutyDetector_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -458,7 +458,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_onCreate(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -469,7 +469,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -507,7 +507,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -548,7 +548,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -559,7 +559,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -590,7 +590,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -634,7 +634,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -685,7 +685,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckDetectorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -696,7 +696,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -726,7 +726,7 @@ func testAccGuardDutyDetector_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -776,7 +776,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_providerOnly(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -788,7 +788,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -830,7 +830,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -874,7 +874,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -912,7 +912,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -954,7 +954,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -968,7 +968,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1020,7 +1020,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1071,7 +1071,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1113,7 +1113,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_overlapping(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1127,7 +1127,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1178,7 +1178,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1233,7 +1233,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1288,7 +1288,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_updateToProviderOnly(t *testing.T
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1299,7 +1299,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_updateToProviderOnly(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1331,7 +1331,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_updateToProviderOnly(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1380,7 +1380,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_updateToResourceOnly(t *testing.T
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1392,7 +1392,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_updateToResourceOnly(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1419,7 +1419,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_updateToResourceOnly(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1471,7 +1471,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1485,7 +1485,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1539,7 +1539,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1551,7 +1551,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1599,7 +1599,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nullOverlappingResourceTag(t *tes
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1613,7 +1613,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nullOverlappingResourceTag(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1664,7 +1664,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nullNonOverlappingResourceTag(t *
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1678,7 +1678,7 @@ func testAccGuardDutyDetector_Tags_DefaultTags_nullNonOverlappingResourceTag(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1729,7 +1729,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_onCreate(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1738,7 +1738,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1787,7 +1787,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1798,7 +1798,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1829,7 +1829,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1886,7 +1886,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1897,7 +1897,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1926,7 +1926,7 @@ func testAccGuardDutyDetector_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1975,7 +1975,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1993,7 +1993,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2041,7 +2041,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2089,7 +2089,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2139,7 +2139,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) 
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2155,7 +2155,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2217,7 +2217,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2279,7 +2279,7 @@ func testAccGuardDutyDetector_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDetectorExists(ctx, resourceName),
+					testAccCheckDetectorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

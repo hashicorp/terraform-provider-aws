@@ -36,6 +36,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const filterExpressionDepth = 3
+
 // @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
@@ -49,6 +51,8 @@ func resourceBudget() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: validateFilterExpressionDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
@@ -109,9 +113,10 @@ func resourceBudget() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.BudgetType](),
 			},
 			"cost_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"filter_expression"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrName: {
@@ -302,7 +307,138 @@ func resourceBudget() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
 			},
+			"filter_expression": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"cost_filter"},
+				// AWS Budgets API enforces: "Expression nested depth cannot be more than 2" which is not mentioned in docs
+				// Schema level 3 = AWS depth 2 (because operators added when level > 1)
+				Elem: filterExpressionElem(filterExpressionDepth),
+			},
 		},
+	}
+}
+
+func filterExpressionElem(level int) *schema.Resource {
+	// This is the non-recursive part of the schema.
+	expressionSchema := map[string]*schema.Schema{
+		"cost_categories": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrKey: {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"match_options": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					names.AttrValues: {
+						Type:     schema.TypeList,
+						Optional: true,
+						MinItems: 1,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+		"dimensions": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrKey: {
+						Type:             schema.TypeString,
+						Required:         true,
+						ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
+					},
+					"match_options": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					names.AttrValues: {
+						Type:     schema.TypeList,
+						Required: true,
+						MinItems: 1,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+		names.AttrTags: {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrKey: {
+						Type:         schema.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringLenBetween(0, 1024),
+					},
+					"match_options": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					names.AttrValues: {
+						Type:     schema.TypeList,
+						Optional: true,
+						MinItems: 1,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if level > 1 {
+		// Add in the recursive part of the schema
+		expressionSchema["and"] = &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     filterExpressionElem(level - 1),
+		}
+		expressionSchema["not"] = &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem:     filterExpressionElem(level - 1),
+		}
+		expressionSchema["or"] = &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     filterExpressionElem(level - 1),
+		}
+	}
+
+	return &schema.Resource{
+		Schema: expressionSchema,
 	}
 }
 
@@ -408,6 +544,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set("time_unit", budget.TimeUnit)
+
+	if err := d.Set("filter_expression", flattenFilterExpression(budget.FilterExpression)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting filter_expression: %s", err)
+	}
 
 	notifications, err := findNotificationsByTwoPartKey(ctx, conn, accountID, budgetName)
 
@@ -834,13 +974,105 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]awstypes.Spe
 	return convertedPlannedBudgetLimits
 }
 
+func flattenFilterExpression(apiObject *awstypes.Expression) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]any)
+
+	if apiObject.And != nil {
+		tfMap["and"] = flattenFilterExpressions(apiObject.And)
+	}
+	if apiObject.CostCategories != nil {
+		tfMap["cost_categories"] = []map[string]any{flattenCostCategoryValues(apiObject.CostCategories)}
+	}
+	if apiObject.Dimensions != nil {
+		tfMap["dimensions"] = []map[string]any{flattenExpressionDimensionValues(apiObject.Dimensions)}
+	}
+	if apiObject.Not != nil {
+		tfMap["not"] = flattenFilterExpression(apiObject.Not)
+	}
+	if apiObject.Or != nil {
+		tfMap["or"] = flattenFilterExpressions(apiObject.Or)
+	}
+	if apiObject.Tags != nil {
+		tfMap[names.AttrTags] = []map[string]any{flattenTagValues(apiObject.Tags)}
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func flattenFilterExpressions(apiObjects []awstypes.Expression) []map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	result := make([]map[string]any, 0, len(apiObjects))
+	for i := range apiObjects {
+		result = append(result, flattenFilterExpression(&apiObjects[i])[0])
+	}
+
+	return result
+}
+
+func flattenCostCategoryValues(apiObject *awstypes.CostCategoryValues) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := make(map[string]any)
+	if apiObject.Key != nil {
+		tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+	}
+	if apiObject.MatchOptions != nil {
+		tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
+	}
+	if apiObject.Values != nil {
+		tfMap[names.AttrValues] = apiObject.Values
+	}
+	return tfMap
+}
+
+func flattenExpressionDimensionValues(apiObject *awstypes.ExpressionDimensionValues) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := make(map[string]any)
+	tfMap[names.AttrKey] = string(apiObject.Key)
+	if apiObject.MatchOptions != nil {
+		tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
+	}
+	if apiObject.Values != nil {
+		tfMap[names.AttrValues] = apiObject.Values
+	}
+	return tfMap
+}
+
+func flattenTagValues(apiObject *awstypes.TagValues) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := make(map[string]any)
+	if apiObject.Key != nil {
+		tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+	}
+	if apiObject.MatchOptions != nil {
+		tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
+	}
+	if apiObject.Values != nil {
+		tfMap[names.AttrValues] = apiObject.Values
+	}
+	return tfMap
+}
+
 func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 	budgetName := d.Get(names.AttrName).(string)
 	budgetType := d.Get("budget_type").(string)
 	budgetTimeUnit := d.Get("time_unit").(string)
-	budgetCostFilters := make(map[string][]string)
+	var budgetCostFilters map[string][]string
 
 	if costFilter, ok := d.GetOk("cost_filter"); ok {
+		budgetCostFilters = make(map[string][]string)
 		for _, v := range costFilter.(*schema.Set).List() {
 			element := v.(map[string]any)
 			key := element[names.AttrName].(string)
@@ -869,8 +1101,11 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 			End:   budgetTimePeriodEnd,
 			Start: budgetTimePeriodStart,
 		},
-		TimeUnit:    awstypes.TimeUnit(budgetTimeUnit),
-		CostFilters: budgetCostFilters,
+		TimeUnit: awstypes.TimeUnit(budgetTimeUnit),
+	}
+
+	if budgetCostFilters != nil {
+		budget.CostFilters = budgetCostFilters
 	}
 
 	if v, ok := d.GetOk("auto_adjust_data"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -904,6 +1139,10 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 
 	if v, ok := d.GetOk("cost_types"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		budget.CostTypes = expandCostTypes(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("filter_expression"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		budget.FilterExpression = expandFilterExpression(v.([]any)[0].(map[string]any))
 	}
 
 	return budget, nil
@@ -982,6 +1221,130 @@ func expandCostTypes(tfMap map[string]any) *awstypes.CostTypes {
 	}
 	if v, ok := tfMap["use_blended"].(bool); ok {
 		apiObject.UseBlended = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandFilterExpression(tfMap map[string]any) *awstypes.Expression {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.Expression{}
+
+	if v, ok := tfMap["dimensions"].([]any); ok && len(v) > 0 {
+		apiObject.Dimensions = expandExpressionDimensionValues(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap[names.AttrTags].([]any); ok && len(v) > 0 {
+		apiObject.Tags = expandTagValues(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["cost_categories"].([]any); ok && len(v) > 0 {
+		apiObject.CostCategories = expandCostCategoryValues(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["and"].([]any); ok && len(v) > 0 {
+		apiObject.And = make([]awstypes.Expression, 0, len(v))
+		for _, sub := range v {
+			apiObject.And = append(apiObject.And, *expandFilterExpression(sub.(map[string]any)))
+		}
+	}
+
+	if v, ok := tfMap["or"].([]any); ok && len(v) > 0 {
+		apiObject.Or = make([]awstypes.Expression, 0, len(v))
+		for _, sub := range v {
+			apiObject.Or = append(apiObject.Or, *expandFilterExpression(sub.(map[string]any)))
+		}
+	}
+
+	if v, ok := tfMap["not"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Not = expandFilterExpression(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandCostCategoryValues(tfMap map[string]any) *awstypes.CostCategoryValues {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CostCategoryValues{}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap["match_options"].([]any); ok && len(v) > 0 {
+		apiObject.MatchOptions = make([]awstypes.MatchOption, len(v))
+		for i, option := range v {
+			apiObject.MatchOptions[i] = awstypes.MatchOption(option.(string))
+		}
+	}
+
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = make([]string, len(v))
+		for i, value := range v {
+			apiObject.Values[i] = value.(string)
+		}
+	}
+
+	return apiObject
+}
+
+func expandExpressionDimensionValues(tfMap map[string]any) *awstypes.ExpressionDimensionValues {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ExpressionDimensionValues{}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = awstypes.Dimension(v)
+	}
+
+	if v, ok := tfMap["match_options"].([]any); ok && len(v) > 0 {
+		apiObject.MatchOptions = make([]awstypes.MatchOption, len(v))
+		for i, option := range v {
+			apiObject.MatchOptions[i] = awstypes.MatchOption(option.(string))
+		}
+	}
+
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = make([]string, len(v))
+		for i, value := range v {
+			apiObject.Values[i] = value.(string)
+		}
+	}
+
+	return apiObject
+}
+
+func expandTagValues(tfMap map[string]any) *awstypes.TagValues {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TagValues{}
+
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap["match_options"].([]any); ok && len(v) > 0 {
+		apiObject.MatchOptions = make([]awstypes.MatchOption, len(v))
+		for i, option := range v {
+			apiObject.MatchOptions[i] = awstypes.MatchOption(option.(string))
+		}
+	}
+
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
+		apiObject.Values = make([]string, len(v))
+		for i, value := range v {
+			apiObject.Values[i] = value.(string)
+		}
 	}
 
 	return apiObject
@@ -1120,6 +1483,91 @@ func validTimePeriodTimestamp(v any, k string) (ws []string, errors []error) {
 	}
 
 	return
+}
+
+func validateFilterExpressionDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	if v, ok := diff.GetOk("filter_expression"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if err := validateFilterExpressionForAbsent(v.([]any)[0].(map[string]any), "filter_expression"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateFilterExpressionForAbsent(expr map[string]any, path string) error {
+	// AWS error WITHOUT 'values' in combination with ABSENT : Missing required parameter "Values"
+	// AWS error WITH 'values' in combination with ABSENT : [Dimensions|Tags|CostCategories] expression must not have values set when ABSENT is provided
+	if dims, ok := expr["dimensions"].([]any); ok {
+		for i, dim := range dims {
+			if dimMap, ok := dim.(map[string]any); ok {
+				if matchOpts, ok := dimMap["match_options"].([]any); ok {
+					for _, opt := range matchOpts {
+						if opt.(string) == string(awstypes.MatchOptionAbsent) {
+							return fmt.Errorf("%s.dimensions[%d]: ABSENT match_option is not supported", path, i)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if tags, ok := expr[names.AttrTags].([]any); ok {
+		for i, tag := range tags {
+			if tagMap, ok := tag.(map[string]any); ok {
+				if matchOpts, ok := tagMap["match_options"].([]any); ok {
+					for _, opt := range matchOpts {
+						if opt.(string) == string(awstypes.MatchOptionAbsent) {
+							return fmt.Errorf("%s.tags[%d]: ABSENT match_option is not supported", path, i)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if costCats, ok := expr["cost_categories"].([]any); ok {
+		for i, cc := range costCats {
+			if ccMap, ok := cc.(map[string]any); ok {
+				if matchOpts, ok := ccMap["match_options"].([]any); ok {
+					for _, opt := range matchOpts {
+						if opt.(string) == string(awstypes.MatchOptionAbsent) {
+							return fmt.Errorf("%s.cost_categories[%d]: ABSENT match_option is not supported", path, i)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if andExprs, ok := expr["and"].([]any); ok {
+		for i, andExpr := range andExprs {
+			if andMap, ok := andExpr.(map[string]any); ok {
+				if err := validateFilterExpressionForAbsent(andMap, fmt.Sprintf("%s.and[%d]", path, i)); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if orExprs, ok := expr["or"].([]any); ok {
+		for i, orExpr := range orExprs {
+			if orMap, ok := orExpr.(map[string]any); ok {
+				if err := validateFilterExpressionForAbsent(orMap, fmt.Sprintf("%s.or[%d]", path, i)); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if notExprs, ok := expr["not"].([]any); ok && len(notExprs) > 0 {
+		if notMap, ok := notExprs[0].(map[string]any); ok {
+			if err := validateFilterExpressionForAbsent(notMap, fmt.Sprintf("%s.not", path)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func budgetARN(ctx context.Context, c *conns.AWSClient, accountID, budgetName string) string {

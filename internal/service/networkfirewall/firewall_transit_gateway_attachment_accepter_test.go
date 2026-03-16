@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
@@ -28,10 +26,10 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_basic(t *tes
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_transit_gateway_attachment_accepter.test"
 	var v ec2types.TransitGatewayAttachment
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -39,12 +37,12 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_basic(t *tes
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallTransitGatewayAttachmentAccepterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, resourceName, &v),
+					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
@@ -66,22 +64,22 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 		t.Skip("skipping long-running test in short mode")
 	}
 	var v ec2types.TransitGatewayAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_transit_gateway_attachment_accepter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallTransitGatewayAttachmentAccepterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, resourceName, &v),
+					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,9 +93,9 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 	})
 }
 
-func testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" {
@@ -125,14 +123,14 @@ func testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx context.Con
 	}
 }
 
-func testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx context.Context, n string, v *ec2types.TransitGatewayAttachment) resource.TestCheckFunc {
+func testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx context.Context, t *testing.T, n string, v *ec2types.TransitGatewayAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 

@@ -38,7 +38,7 @@ func TestAccInspectorAssessmentTarget_Identity_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckAssessmentTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccInspectorAssessmentTarget_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -251,7 +251,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource_basic(t *testing
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx),
+		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -260,7 +260,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource_basic(t *testing
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -310,7 +310,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource_noRefreshNoChang
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx),
+		CheckDestroy: testAccCheckAssessmentTargetDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -324,7 +324,7 @@ func TestAccInspectorAssessmentTarget_Identity_ExistingResource_noRefreshNoChang
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssessmentTargetExists(ctx, resourceName, &v),
+					testAccCheckAssessmentTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

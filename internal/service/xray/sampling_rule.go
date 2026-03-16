@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +27,6 @@ import (
 // @SDKResource("aws_xray_sampling_rule", name="Sampling Rule")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.SamplingRule")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSamplingRuleCreate,
@@ -261,5 +259,5 @@ func findSamplingRuleByName(ctx context.Context, conn *xray.Client, name string)
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }

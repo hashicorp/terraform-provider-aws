@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,7 +29,6 @@ import (
 // @ArnIdentity("secret_arn")
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.GetResourcePolicyOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretPolicyCreate,
@@ -180,7 +178,7 @@ func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if aws.ToString(output.ResourcePolicy) == "" {
-			return nil, &sdkretry.NotFoundError{}
+			return nil, &retry.NotFoundError{}
 		}
 
 		return output, nil
@@ -201,9 +199,8 @@ func findSecretPolicyByID(ctx context.Context, conn *secretsmanager.Client, id s
 	output, err := conn.GetResourcePolicy(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,7 +32,7 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_basic(t *testing.T) {
 			}
 		}
 	} `
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -41,12 +40,12 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsAssociationConfig_basic(browserPolicy1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsAssociationExists(ctx, t, resourceName, &browserSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "browser_settings_arn", browserSettingsResourceName, "browser_settings_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
@@ -87,7 +86,7 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_disappears(t *testing.T) {
 			}
 		}
 	} `
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -95,12 +94,12 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckBrowserSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrowserSettingsAssociationConfig_basic(browserPolicy1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings),
+					testAccCheckBrowserSettingsAssociationExists(ctx, t, resourceName, &browserSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceBrowserSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,9 +108,9 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBrowserSettingsAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBrowserSettingsAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_browser_settings_association" {
@@ -139,14 +138,14 @@ func testAccCheckBrowserSettingsAssociationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckBrowserSettingsAssociationExists(ctx context.Context, n string, v *awstypes.BrowserSettings) resource.TestCheckFunc {
+func testAccCheckBrowserSettingsAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.BrowserSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindBrowserSettingsByARN(ctx, conn, rs.Primary.Attributes["browser_settings_arn"])
 

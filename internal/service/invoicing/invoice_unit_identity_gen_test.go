@@ -48,7 +48,7 @@ func testAccInvoicingInvoiceUnit_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
-		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccInvoicingInvoiceUnit_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &v),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -134,7 +134,7 @@ func testAccInvoicingInvoiceUnit_Identity_regionOverride(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
-		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -205,7 +205,7 @@ func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.InvoicingServiceID),
-		CheckDestroy: testAccCheckInvoiceUnitDestroy(ctx),
+		CheckDestroy: testAccCheckInvoiceUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -214,7 +214,7 @@ func testAccInvoicingInvoiceUnit_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &v),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -262,7 +262,7 @@ func testAccInvoicingInvoiceUnit_Identity_ExistingResource_noRefreshNoChange(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.InvoicingServiceID),
-		CheckDestroy: testAccCheckInvoiceUnitDestroy(ctx),
+		CheckDestroy: testAccCheckInvoiceUnitDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -276,7 +276,7 @@ func testAccInvoicingInvoiceUnit_Identity_ExistingResource_noRefreshNoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInvoiceUnitExists(ctx, resourceName, &v),
+					testAccCheckInvoiceUnitExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

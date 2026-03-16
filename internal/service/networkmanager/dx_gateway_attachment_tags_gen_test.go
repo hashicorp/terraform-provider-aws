@@ -33,7 +33,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -92,7 +92,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -143,7 +143,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -187,7 +187,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -233,7 +233,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_null(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +245,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_null(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -300,7 +300,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_emptyMap(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -310,7 +310,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_emptyMap(t *testin
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -355,7 +355,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_addOnUpdate(t *tes
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -365,7 +365,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_addOnUpdate(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -388,7 +388,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_addOnUpdate(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -444,7 +444,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_onCreate(
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -456,7 +456,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_onCreate(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -500,7 +500,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_onCreate(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -546,7 +546,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -558,7 +558,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -590,7 +590,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -641,7 +641,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -697,7 +697,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -709,7 +709,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -740,7 +740,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_EmptyTag_OnUpdate_
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -794,7 +794,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_provid
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -807,7 +807,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_provid
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -854,7 +854,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_provid
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -903,7 +903,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_provid
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -946,7 +946,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_provid
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -991,7 +991,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nonOve
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1006,7 +1006,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nonOve
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1063,7 +1063,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nonOve
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1119,7 +1119,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nonOve
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1164,7 +1164,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_overla
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1179,7 +1179,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_overla
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1235,7 +1235,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_overla
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1295,7 +1295,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_overla
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1353,7 +1353,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_update
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1365,7 +1365,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_update
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1398,7 +1398,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_update
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1450,7 +1450,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_update
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1463,7 +1463,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_update
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1491,7 +1491,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_update
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1548,7 +1548,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_emptyR
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1563,7 +1563,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_emptyR
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1623,7 +1623,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_emptyP
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1636,7 +1636,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_emptyP
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1690,7 +1690,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nullOv
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1705,7 +1705,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nullOv
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1766,7 +1766,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nullNo
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1781,7 +1781,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_DefaultTags_nullNo
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1842,7 +1842,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_onCrea
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1852,7 +1852,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_onCrea
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1904,7 +1904,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_OnUpda
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1916,7 +1916,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_OnUpda
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1948,7 +1948,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_OnUpda
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2008,7 +2008,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_OnUpda
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2020,7 +2020,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_OnUpda
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2050,7 +2050,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_ComputedTag_OnUpda
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2102,7 +2102,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2121,7 +2121,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2170,7 +2170,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2219,7 +2219,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2268,7 +2268,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2285,7 +2285,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2343,7 +2343,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2400,7 +2400,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_Tags_IgnoreTags_Overlap
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &v),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

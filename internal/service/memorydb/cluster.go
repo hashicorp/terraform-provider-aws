@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -107,6 +106,12 @@ func resourceCluster() *schema.Resource {
 					Optional:     true,
 					ValidateFunc: validateResourceName(snapshotNameMaxLength),
 				},
+				"ip_discovery": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
+				},
 				names.AttrKMSKeyARN: {
 					// The API will accept an ID, but return the ARN on every read.
 					// For the sake of consistency, force everyone to use ARN-s.
@@ -137,7 +142,14 @@ func resourceCluster() *schema.Resource {
 					Computed:      true,
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrName},
-					ValidateFunc:  validateResourceNamePrefix(clusterNameMaxLength - id.UniqueIDSuffixLength),
+					ValidateFunc:  validateResourceNamePrefix(clusterNameMaxLength - sdkid.UniqueIDSuffixLength),
+				},
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 				},
 				"node_type": {
 					Type:     schema.TypeString,
@@ -322,6 +334,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.EngineVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		input.IpDiscovery = awstypes.IpDiscovery(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -332,6 +348,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
 		input.MultiRegionClusterName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = awstypes.NetworkType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
@@ -430,10 +450,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("multi_region_cluster_name", cluster.MultiRegionClusterName)
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
+	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
 	d.Set(names.AttrName, cluster.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(cluster.Name)))
+	d.Set("network_type", cluster.NetworkType)
 	d.Set("node_type", cluster.NodeType)
 	if v, err := deriveClusterNumReplicasPerShard(cluster); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -487,6 +509,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+		}
+
+		if d.HasChange("ip_discovery") {
+			input.IpDiscovery = awstypes.IpDiscovery(d.Get("ip_discovery").(string))
 		}
 
 		if d.HasChange("maintenance_window") {
@@ -634,9 +660,8 @@ func findClusters(ctx context.Context, conn *memorydb.Client, input *memorydb.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -650,8 +675,8 @@ func findClusters(ctx context.Context, conn *memorydb.Client, input *memorydb.De
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -666,8 +691,8 @@ func statusCluster(ctx context.Context, conn *memorydb.Client, name string) sdkr
 	}
 }
 
-func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterParameterGroup(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -682,8 +707,8 @@ func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, nam
 	}
 }
 
-func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterSecurityGroups(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -707,10 +732,10 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, nam
 }
 
 func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:  []string{clusterStatusAvailable},
-		Refresh: statusCluster(ctx, conn, name),
+		Refresh: statusCluster(conn, name),
 		Timeout: timeout,
 	}
 
@@ -724,10 +749,10 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name strin
 }
 
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{clusterStatusDeleting},
 		Target:       []string{},
-		Refresh:      statusCluster(ctx, conn, name),
+		Refresh:      statusCluster(conn, name),
 		Timeout:      timeout,
 		Delay:        5 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -746,10 +771,10 @@ func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client,
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterParameterGroupStatusApplying},
 		Target:  []string{clusterParameterGroupStatusInSync},
-		Refresh: statusClusterParameterGroup(ctx, conn, name),
+		Refresh: statusClusterParameterGroup(conn, name),
 		Timeout: timeout,
 	}
 
@@ -766,10 +791,10 @@ func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client,
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterSecurityGroupStatusModifying},
 		Target:  []string{clusterSecurityGroupStatusActive},
-		Refresh: statusClusterSecurityGroups(ctx, conn, name),
+		Refresh: statusClusterSecurityGroups(conn, name),
 		Timeout: timeout,
 	}
 

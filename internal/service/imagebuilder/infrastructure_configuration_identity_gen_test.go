@@ -33,7 +33,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_basic(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_basic(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					testAccCheckInfrastructureConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -239,7 +239,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_ExistingResource_ba
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckInfrastructureConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckInfrastructureConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -248,7 +248,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_ExistingResource_ba
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					testAccCheckInfrastructureConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -294,7 +294,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_ExistingResource_no
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckInfrastructureConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckInfrastructureConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -308,7 +308,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_ExistingResource_no
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					testAccCheckInfrastructureConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

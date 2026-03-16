@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -194,7 +192,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
-		RequestId: aws.String(id.UniqueId()),
+		RequestId: aws.String(sdkid.UniqueId()),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Tags:      getTagsIn(ctx),
 		Type:      types.InputType(d.Get(names.AttrType).(string)),
@@ -381,10 +379,10 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
-		Refresh:                   statusInput(ctx, conn, id),
+		Refresh:                   statusInput(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -400,10 +398,10 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
-		Refresh:                   statusInput(ctx, conn, id),
+		Refresh:                   statusInput(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -419,10 +417,10 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.InputStateDeleting),
 		Target:  enum.Slice(types.InputStateDeleted),
-		Refresh: statusInput(ctx, conn, id),
+		Refresh: statusInput(conn, id),
 		Timeout: timeout,
 	}
 
@@ -434,8 +432,8 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 	return nil, err
 }
 
-func statusInput(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInput(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findInputByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -457,9 +455,8 @@ func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,22 +30,22 @@ func TestAccIAMUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.User
 
-	name1 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
-	name2 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
+	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
+	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
 	path1 := "/"
 	path2 := "/path2/"
 	resourceName := "aws_iam_user.user"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(name1, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
 					testAccCheckUserAttributes(&conf, name1, "/"),
 				),
 			},
@@ -61,7 +59,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name2, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
 					testAccCheckUserAttributes(&conf, name2, "/path2/"),
 				),
 			},
@@ -73,19 +71,19 @@ func TestAccIAMUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.user"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,20 +96,20 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserCreatesAccessKey(ctx, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserCreatesAccessKey(ctx, t, &user),
 				),
 			},
 			{
@@ -129,20 +127,20 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserCreatesLoginProfile(ctx, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserCreatesLoginProfile(ctx, t, &user),
 				),
 			},
 			{
@@ -160,20 +158,20 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserCreatesMFADevice(ctx, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserCreatesMFADevice(ctx, t, &user),
 				),
 			},
 			{
@@ -191,20 +189,20 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserUploadsSSHKey(ctx, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserUploadsSSHKey(ctx, t, &user),
 				),
 			},
 			{
@@ -221,20 +219,20 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserServiceSpecificCredential(ctx, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserServiceSpecificCredential(ctx, t, &user),
 				),
 			},
 			{
@@ -251,19 +249,19 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					testAccCheckUserUploadSigningCertificate(ctx, t, &user),
 				),
 			},
@@ -282,20 +280,20 @@ func TestAccIAMUser_ForceDestroy_policyAttached(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserAttachPolicy(ctx, &user), // externally attach a policy
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserAttachPolicy(ctx, t, &user), // externally attach a policy
 				),
 			},
 		},
@@ -306,20 +304,20 @@ func TestAccIAMUser_ForceDestroy_policyInline(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserInlinePolicy(ctx, &user), // externally put an inline policy
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserInlinePolicy(ctx, t, &user), // externally put an inline policy
 				),
 			},
 		},
@@ -330,21 +328,21 @@ func TestAccIAMUser_ForceDestroy_policyInlineAttached(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserInlinePolicy(ctx, &user), // externally put an inline policy
-					testAccCheckUserAttachPolicy(ctx, &user), // externally attach a policy
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					testAccCheckUserInlinePolicy(ctx, t, &user), // externally put an inline policy
+					testAccCheckUserAttachPolicy(ctx, t, &user), // externally attach a policy
 				),
 			},
 		},
@@ -355,21 +353,21 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.User
 
-	name1 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
-	name2 := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
+	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
+	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
 	path := "/"
 	resourceName := "aws_iam_user.user"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(name1, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
 				),
 			},
 			{
@@ -382,7 +380,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name2, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
 				),
 			},
 		},
@@ -393,21 +391,21 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.User
 
-	name := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
+	name := fmt.Sprintf("test-user-%d", acctest.RandInt(t))
 	path1 := "/"
 	path2 := "/updated/"
 	resourceName := "aws_iam_user.user"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(name, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
 				),
 			},
 			{
@@ -420,7 +418,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(name, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &conf),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &conf),
 				),
 			},
 		},
@@ -431,23 +429,23 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.user"
 
 	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
 	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Test creation
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
@@ -463,7 +461,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary2),
 				),
@@ -479,7 +477,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
 					testAccCheckUserPermissionsBoundary(&user, ""),
 				),
@@ -488,7 +486,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
@@ -497,7 +495,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				PreConfig: func() {
 					// delete the boundary manually
-					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 					input := &iam.DeleteUserPermissionsBoundaryInput{
 						UserName: user.UserName,
 					}
@@ -509,7 +507,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary1),
 				// check the boundary was restored
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
@@ -518,7 +516,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
 					testAccCheckUserPermissionsBoundary(&user, ""),
 				),
@@ -532,20 +530,20 @@ func TestAccIAMUser_nameAndTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var u awstypes.User
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := rName + "-updated"
 	resourceName := "aws_iam_user.user"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_nameAndTags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &u),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &u),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -566,7 +564,7 @@ func TestAccIAMUser_nameAndTags(t *testing.T) {
 			{
 				Config: testAccUserConfig_nameAndTags(rNameUpdated, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, "aws_iam_user.user", &u),
+					testAccCheckUserExists(ctx, t, "aws_iam_user.user", &u),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -588,9 +586,9 @@ func TestAccIAMUser_nameAndTags(t *testing.T) {
 	})
 }
 
-func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_user" {
@@ -614,7 +612,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, t *testing.T, n string, v *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -625,7 +623,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) res
 			return fmt.Errorf("No IAM User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		output, err := tfiam.FindUserByName(ctx, conn, rs.Primary.ID)
 
@@ -669,9 +667,9 @@ func testAccCheckUserPermissionsBoundary(user *awstypes.User, expectedPermission
 	}
 }
 
-func testAccCheckUserCreatesAccessKey(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserCreatesAccessKey(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: user.UserName,
@@ -685,9 +683,9 @@ func testAccCheckUserCreatesAccessKey(ctx context.Context, user *awstypes.User) 
 	}
 }
 
-func testAccCheckUserCreatesLoginProfile(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserCreatesLoginProfile(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 		password, err := tfiam.GeneratePassword(32)
 		if err != nil {
 			return err
@@ -705,9 +703,9 @@ func testAccCheckUserCreatesLoginProfile(ctx context.Context, user *awstypes.Use
 	}
 }
 
-func testAccCheckUserCreatesMFADevice(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserCreatesMFADevice(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 user.Path,
@@ -745,14 +743,14 @@ func testAccCheckUserCreatesMFADevice(ctx context.Context, user *awstypes.User) 
 }
 
 // Creates an IAM User SSH Key outside of Terraform to verify that it is deleted when `force_destroy` is set
-func testAccCheckUserUploadsSSHKey(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserUploadsSSHKey(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		publicKey, _, err := RandSSHKeyPairSize(2048, acctest.DefaultEmailAddress)
 		if err != nil {
 			return fmt.Errorf("error generating random SSH key: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         user.UserName,
@@ -769,9 +767,9 @@ func testAccCheckUserUploadsSSHKey(ctx context.Context, user *awstypes.User) res
 }
 
 // Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
-func testAccCheckUserServiceSpecificCredential(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserServiceSpecificCredential(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		input := &iam.CreateServiceSpecificCredentialInput{
 			UserName:    user.UserName,
@@ -789,7 +787,7 @@ func testAccCheckUserServiceSpecificCredential(ctx context.Context, user *awstyp
 
 func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -807,9 +805,9 @@ func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T,
 	}
 }
 
-func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserAttachPolicy(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		doc := `{"Version":"2012-10-17","Statement":[{"Action":["iam:ChangePassword"],"Resource":"*","Effect":"Allow"}]}`
 
@@ -838,9 +836,9 @@ func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) reso
 	}
 }
 
-func testAccCheckUserInlinePolicy(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserInlinePolicy(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		doc := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":["ec2:DescribeElasticGpus","ec2:DescribeFastSnapshotRestores","ec2:DescribeScheduledInstances","ec2:DescribeScheduledInstanceAvailability"],"Resource":"*"}}`
 

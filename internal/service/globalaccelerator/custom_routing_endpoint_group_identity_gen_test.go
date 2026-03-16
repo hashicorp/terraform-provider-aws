@@ -35,7 +35,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_basic(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_basic(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -119,7 +119,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_ExistingResourc
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy: testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy: testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -128,7 +128,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_ExistingResourc
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -175,7 +175,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_ExistingResourc
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy: testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy: testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -189,7 +189,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_ExistingResourc
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

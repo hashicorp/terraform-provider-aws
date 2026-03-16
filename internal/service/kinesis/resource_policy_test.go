@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,18 +19,18 @@ import (
 func TestAccKinesisResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_resource_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
@@ -49,18 +47,18 @@ func TestAccKinesisResourcePolicy_basic(t *testing.T) {
 func TestAccKinesisResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_resource_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkinesis.ResourceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -69,14 +67,14 @@ func TestAccKinesisResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
 
 		_, err := tfkinesis.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -84,9 +82,9 @@ func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.Te
 	}
 }
 
-func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesis_resource_policy" {

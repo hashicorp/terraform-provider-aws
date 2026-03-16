@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,22 +27,22 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
-					testAccCheckIntentNotExists(ctx, testIntentName, "1"),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
+					testAccCheckIntentNotExists(ctx, t, testIntentName, "1"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lex", "intent:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
@@ -78,22 +77,22 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
-					testAccCheckIntentNotExists(ctx, testIntentName, "1"),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
+					testAccCheckIntentNotExists(ctx, t, testIntentName, "1"),
 				),
 			},
 			{
@@ -105,8 +104,8 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 			{
 				Config: testAccIntentConfig_createVersion(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
-					testAccCheckIntentExistsWithVersion(ctx, resourceName, "1", &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
+					testAccCheckIntentExistsWithVersion(ctx, t, resourceName, "1", &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
@@ -124,21 +123,21 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_conclusionStatement(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.0.content", "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"),
@@ -159,7 +158,7 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 			{
 				Config: testAccIntentConfig_conclusionStatementUpdate(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.0.content", "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"),
 					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.0.content_type", "PlainText"),
@@ -187,21 +186,21 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_confirmationPromptAndRejectionStatement(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.max_attempts", "1"),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.message.#", "1"),
@@ -228,7 +227,7 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 			{
 				Config: testAccIntentConfig_confirmationPromptAndRejectionStatementUpdate(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.max_attempts", "2"),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.message.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.message.0.content", "Okay, your {FlowerType} will be ready for pickup by {PickupTime} on {PickupDate}. Does this sound okay?"),
@@ -264,16 +263,16 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -281,7 +280,7 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 					testAccIntentConfig_dialogCodeHook(testIntentName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.message_version", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "dialog_code_hook.0.uri"),
@@ -301,21 +300,21 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_followUpPrompt(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 
 					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.#", "1"),
 
@@ -346,7 +345,7 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 			{
 				Config: testAccIntentConfig_followUpPromptUpdate(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 
 					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.prompt.0.max_attempts", "2"),
 					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.prompt.0.message.#", "2"),
@@ -384,16 +383,16 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -401,7 +400,7 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 					testAccIntentConfig_fulfillmentActivity(testIntentName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.0.code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.0.code_hook.0.message_version", "1"),
@@ -423,21 +422,21 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_sampleUtterances(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "sample_utterances.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sample_utterances.0", "I would like to pick up flowers"),
 				),
@@ -451,7 +450,7 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 			{
 				Config: testAccIntentConfig_sampleUtterancesUpdate(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "sample_utterances.#", "2"),
 				),
 			},
@@ -469,21 +468,21 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_slots(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "slot.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "slot.0.description", "The date to pick up the flowers"),
 					resource.TestCheckResourceAttr(resourceName, "slot.0.name", "PickupDate"),
@@ -511,7 +510,7 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 			{
 				Config: testAccIntentConfig_slotsUpdate(testIntentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "slot.#", "2"),
 				),
 			},
@@ -533,16 +532,16 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -550,7 +549,7 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 					testAccIntentConfig_slotsCustom(testIntentName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "slot.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "slot.0.description", "Types of flowers to pick up"),
 					resource.TestCheckResourceAttr(resourceName, "slot.0.name", "FlowerType"),
@@ -584,21 +583,21 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceIntent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -611,7 +610,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
@@ -650,19 +649,19 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 		}
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 					testAccCheckAWSLexIntentUpdateDescription(acctest.Provider, tflexmodels.ResourceIntent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -670,7 +669,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 			{
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &v),
+					testAccCheckIntentExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
@@ -684,16 +683,16 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 
 	intentResourceName := "aws_lex_intent.test"
 	botResourceName := "aws_lex_bot.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -701,11 +700,11 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 					testAccBotConfig_createVersion(testIntentName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, "1", &v1),
+					testAccCheckIntentExistsWithVersion(ctx, t, intentResourceName, "1", &v1),
 					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
-					testAccCheckBotExistsWithVersion(ctx, botResourceName, "1", &v2),
+					testAccCheckBotExistsWithVersion(ctx, t, botResourceName, "1", &v2),
 					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", "1"),
 				),
@@ -716,11 +715,11 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 					testAccBotConfig_createVersion(testIntentName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, "2", &v1),
+					testAccCheckIntentExistsWithVersion(ctx, t, intentResourceName, "2", &v1),
 					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would not like to pick up flowers"),
-					testAccCheckBotExistsWithVersion(ctx, botResourceName, "2", &v2),
+					testAccCheckBotExistsWithVersion(ctx, t, botResourceName, "2", &v2),
 					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", "2"),
 				),
@@ -729,7 +728,7 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckIntentExistsWithVersion(ctx context.Context, resourceName, intentVersion string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
+func testAccCheckIntentExistsWithVersion(ctx context.Context, t *testing.T, resourceName, intentVersion string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -741,7 +740,7 @@ func testAccCheckIntentExistsWithVersion(ctx context.Context, resourceName, inte
 		}
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		output, err = conn.GetIntent(ctx, &lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(rs.Primary.ID),
@@ -758,13 +757,13 @@ func testAccCheckIntentExistsWithVersion(ctx context.Context, resourceName, inte
 	}
 }
 
-func testAccCheckIntentExists(ctx context.Context, resourceName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
-	return testAccCheckIntentExistsWithVersion(ctx, resourceName, tflexmodels.IntentVersionLatest, output)
+func testAccCheckIntentExists(ctx context.Context, t *testing.T, resourceName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
+	return testAccCheckIntentExistsWithVersion(ctx, t, resourceName, tflexmodels.IntentVersionLatest, output)
 }
 
-func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion string) resource.TestCheckFunc {
+func testAccCheckIntentNotExists(ctx context.Context, t *testing.T, intentName, intentVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		_, err := conn.GetIntent(ctx, &lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(intentName),
@@ -781,9 +780,9 @@ func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion 
 	}
 }
 
-func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIntentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_intent" {

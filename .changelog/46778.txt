@@ -1,0 +1,11 @@
+```release-note:bug
+provider: Fix regression causing "Incompatible Types" errors during flattening
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Fix "Incompatible Types" errors during schema definition flattening
+```
+
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Fix "Incompatible Types" errors for `LifecycleRuleAndOperator` while flattening configuration
+```

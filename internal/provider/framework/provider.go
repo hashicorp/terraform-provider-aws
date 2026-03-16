@@ -14,6 +14,7 @@ import (
 	"sync"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
@@ -32,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -236,7 +236,7 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"duration": schema.StringAttribute{
-							CustomType:  fwtypes.DurationType,
+							CustomType:  timetypes.GoDurationType{},
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 						},
@@ -285,7 +285,7 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"duration": schema.StringAttribute{
-							CustomType:  fwtypes.DurationType,
+							CustomType:  timetypes.GoDurationType{},
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 						},

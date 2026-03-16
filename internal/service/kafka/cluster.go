@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1129,9 +1128,8 @@ func findCluster(ctx context.Context, conn *kafka.Client, input *kafka.DescribeC
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1158,9 +1156,8 @@ func findClusterV2(ctx context.Context, conn *kafka.Client, input *kafka.Describ
 	output, err := conn.DescribeClusterV2(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1187,9 +1184,8 @@ func findClusterOperation(ctx context.Context, conn *kafka.Client, input *kafka.
 	output, err := conn.DescribeClusterOperation(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1216,9 +1212,8 @@ func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.
 	output, err := conn.GetBootstrapBrokers(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1233,8 +1228,8 @@ func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.
 	return output, nil
 }
 
-func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterV2ByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1249,8 +1244,8 @@ func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) sdk
 	}
 }
 
-func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterOperationState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterOperationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1266,10 +1261,10 @@ func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn st
 }
 
 func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateCreating),
 		Target:  enum.Slice(types.ClusterStateActive),
-		Refresh: statusClusterState(ctx, conn, arn),
+		Refresh: statusClusterState(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1287,10 +1282,10 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, tim
 }
 
 func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateDeleting),
 		Target:  []string{},
-		Refresh: statusClusterState(ctx, conn, arn),
+		Refresh: statusClusterState(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1308,10 +1303,10 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, tim
 }
 
 func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.ClusterOperationInfo, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterOperationStatePending, clusterOperationStateUpdateInProgress},
 		Target:  []string{clusterOperationStateUpdateComplete},
-		Refresh: statusClusterOperationState(ctx, conn, arn),
+		Refresh: statusClusterOperationState(conn, arn),
 		Timeout: timeout,
 	}
 

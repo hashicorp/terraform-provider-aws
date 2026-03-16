@@ -13,11 +13,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -145,19 +143,19 @@ func TestParameterChanges(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "parametergroup/"+rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -187,19 +185,19 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -210,19 +208,19 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_none(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
@@ -234,7 +232,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "0"), // 0 is the default value
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
@@ -253,7 +251,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
@@ -269,7 +267,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_multiple(rName, names.AttrTimeout, "20", "activerehashing", "no"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
@@ -289,7 +287,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
@@ -305,7 +303,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_none(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
@@ -320,19 +318,19 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -345,7 +343,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
@@ -362,7 +360,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags1(rName, "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
@@ -377,7 +375,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName),
+					testAccCheckParameterGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -391,9 +389,9 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckParameterGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_parameter_group" {
@@ -417,7 +415,7 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckParameterGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -428,7 +426,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No MemoryDB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindParameterGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -37,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -67,6 +69,151 @@ func jsonAttribute(conflictWith string) schema.StringAttribute {
 		Validators: []validator.String{
 			stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName(conflictWith)),
 		},
+	}
+}
+
+// headerNameValidators returns validators for HTTP header names in metadata_configuration.
+// Header names must contain only alphanumeric characters, hyphens, and underscores.
+// Certain restricted headers cannot be configured for propagation.
+// Headers starting with X-Amzn- are prohibited except X-Amzn-Bedrock-AgentCore-Runtime-Custom-*.
+// See: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-headers.html
+func headerNameValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.RegexMatches(
+			regexache.MustCompile(`^[a-zA-Z0-9_-]+$`),
+			"header names must contain only alphanumeric characters, hyphens, and underscores",
+		),
+		tfstringvalidator.NoneOfCaseInsensitive(restrictedHeaders()...),
+		tfstringvalidator.PrefixNoneOfCaseInsensitive(
+			[]string{"X-Amzn-"},
+			[]string{"X-Amzn-Bedrock-AgentCore-Runtime-Custom-"},
+		),
+	}
+}
+
+// restrictedHeaders returns the full list of restricted HTTP headers that cannot be
+// configured for propagation in metadata_configuration.
+func restrictedHeaders() []string {
+	return []string{
+		// Authentication & Authorization
+		"Authorization",
+		"Proxy-Authorization",
+		"WWW-Authenticate",
+		// Content Negotiation
+		"Accept",
+		"Accept-Charset",
+		"Accept-Encoding",
+		"Accept-Language",
+		// Content Headers
+		"Content-Type",
+		"Content-Length",
+		"Content-Encoding",
+		"Content-Language",
+		"Content-Location",
+		"Content-Range",
+		// Caching
+		"Cache-Control",
+		"ETag",
+		"Expires",
+		"If-Match",
+		"If-Modified-Since",
+		"If-None-Match",
+		"If-Range",
+		"If-Unmodified-Since",
+		"Last-Modified",
+		"Pragma",
+		"Vary",
+		// Connection Management
+		"Connection",
+		"Keep-Alive",
+		"Proxy-Connection",
+		"Upgrade",
+		// Request Context
+		"Host",
+		"User-Agent",
+		"Referer",
+		"From",
+		// Range Requests
+		"Range",
+		"Accept-Ranges",
+		// Transfer
+		"Transfer-Encoding",
+		"TE",
+		"Trailer",
+		// Response
+		"Server",
+		"Date",
+		"Location",
+		"Retry-After",
+		// Cookies
+		"Set-Cookie",
+		"Cookie",
+		// Security
+		"Content-Security-Policy",
+		"Content-Security-Policy-Report-Only",
+		"Strict-Transport-Security",
+		"X-Content-Type-Options",
+		"X-Frame-Options",
+		"X-XSS-Protection",
+		"Referrer-Policy",
+		"Permissions-Policy",
+		// Cross-Origin
+		"Cross-Origin-Embedder-Policy",
+		"Cross-Origin-Opener-Policy",
+		"Cross-Origin-Resource-Policy",
+		// CORS
+		"Access-Control-Allow-Origin",
+		"Access-Control-Allow-Methods",
+		"Access-Control-Allow-Headers",
+		"Access-Control-Allow-Credentials",
+		"Access-Control-Expose-Headers",
+		"Access-Control-Max-Age",
+		"Access-Control-Request-Method",
+		"Access-Control-Request-Headers",
+		"Origin",
+		// Client Hints
+		"Accept-CH",
+		"Accept-CH-Lifetime",
+		"DPR",
+		"Width",
+		"Viewport-Width",
+		"Downlink",
+		"ECT", //nolint:misspell // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ECT
+		"RTT",
+		"Save-Data",
+		// Other Security
+		"Clear-Site-Data",
+		"Feature-Policy",
+		"Expect-CT",
+		"Public-Key-Pins",
+		"Public-Key-Pins-Report-Only",
+		// Proxy & Forwarding
+		"X-Forwarded-For",
+		"X-Forwarded-Host",
+		"X-Forwarded-Proto",
+		"X-Real-IP",
+		"X-Requested-With",
+		"X-CSRF-Token",
+		// CDN & Infrastructure
+		"CF-Ray",
+		"CF-Connecting-IP",
+		"X-Amz-Cf-Id",
+		"X-Cache",
+		"X-Served-By",
+		// HTTP/2 Pseudo-Headers
+		":method",
+		":path",
+		":scheme",
+		":authority",
+		":status",
+		// Misc
+		"Link",
+		// WebSocket
+		"Sec-WebSocket-Key",
+		"Sec-WebSocket-Accept",
+		"Sec-WebSocket-Version",
+		"Sec-WebSocket-Protocol",
+		"Sec-WebSocket-Extensions",
 	}
 }
 
@@ -271,6 +418,15 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 									"custom_parameters": schema.MapAttribute{
 										CustomType: fwtypes.MapOfStringType,
 										Optional:   true,
+									},
+									"default_return_url": schema.StringAttribute{
+										Optional:    true,
+										Description: "The URL where the end user's browser is redirected after obtaining the authorization code. Required when grant_type is AUTHORIZATION_CODE.",
+									},
+									"grant_type": schema.StringAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.StringEnumType[awstypes.OAuthGrantType](),
+										Description: "The OAuth grant type. Valid values are AUTHORIZATION_CODE and CLIENT_CREDENTIALS.",
 									},
 									"provider_arn": schema.StringAttribute{
 										Required: true,
@@ -488,6 +644,42 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
+			"metadata_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[metadataConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"allowed_query_parameters": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
+							Description: "A list of URL query parameters that are allowed to be propagated from incoming gateway URL to the target.",
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(10),
+							},
+						},
+						"allowed_request_headers": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
+							Description: "A list of HTTP headers that are allowed to be propagated from incoming client requests to the target.",
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(10),
+								setvalidator.ValueStringsAre(headerNameValidators()...),
+							},
+						},
+						"allowed_response_headers": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
+							Description: "A list of HTTP headers that are allowed to be propagated from the target response back to the client.",
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(10),
+								setvalidator.ValueStringsAre(headerNameValidators()...),
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -516,7 +708,24 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
 
-	out, err := conn.CreateGatewayTarget(ctx, &input)
+	var (
+		out *bedrockagentcorecontrol.CreateGatewayTargetOutput
+		err error
+	)
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		out, err = conn.CreateGatewayTarget(ctx, &input)
+
+		// IAM propagation.
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Gateway execution role lacks permission") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return
@@ -774,10 +983,17 @@ type gatewayTargetResourceModel struct {
 	CredentialProviderConfiguration fwtypes.ListNestedObjectValueOf[credentialProviderConfigurationModel] `tfsdk:"credential_provider_configuration"`
 	Description                     types.String                                                          `tfsdk:"description"`
 	GatewayIdentifier               types.String                                                          `tfsdk:"gateway_identifier"`
+	MetadataConfiguration           fwtypes.ListNestedObjectValueOf[metadataConfigurationModel]           `tfsdk:"metadata_configuration"`
 	Name                            types.String                                                          `tfsdk:"name"`
 	TargetConfiguration             fwtypes.ListNestedObjectValueOf[targetConfigurationModel]             `tfsdk:"target_configuration"`
 	TargetID                        types.String                                                          `tfsdk:"target_id"`
 	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
+}
+
+type metadataConfigurationModel struct {
+	AllowedQueryParameters fwtypes.SetOfString `tfsdk:"allowed_query_parameters"`
+	AllowedRequestHeaders  fwtypes.SetOfString `tfsdk:"allowed_request_headers"`
+	AllowedResponseHeaders fwtypes.SetOfString `tfsdk:"allowed_response_headers"`
 }
 
 type credentialProviderConfigurationModel struct {
@@ -1076,9 +1292,11 @@ type apiKeyCredentialProviderModel struct {
 }
 
 type oauthCredentialProviderModel struct {
-	CustomParameters fwtypes.MapOfString `tfsdk:"custom_parameters"`
-	ProviderARN      fwtypes.ARN         `tfsdk:"provider_arn"`
-	Scopes           fwtypes.SetOfString `tfsdk:"scopes"`
+	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
+	DefaultReturnURL types.String                                `tfsdk:"default_return_url"`
+	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
+	ProviderARN      fwtypes.ARN                                 `tfsdk:"provider_arn"`
+	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
 }
 
 type gatewayIAMRoleProviderModel struct {

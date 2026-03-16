@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -175,7 +175,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(environmentID),
 		AutoUpdate:    d.Get("auto_update").(bool),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -267,7 +267,7 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("changeset_id"); ok && d.HasChange("changeset_id") && !d.Get("auto_update").(bool) {
@@ -297,7 +297,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 	})
 
 	if err != nil {

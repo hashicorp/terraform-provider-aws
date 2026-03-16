@@ -26,7 +26,7 @@ func testAccEventConfigurations_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iot_event_configurations.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

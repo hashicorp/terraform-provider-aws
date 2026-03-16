@@ -170,7 +170,7 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("growth_factor") {
-			input.GrowthFactor = aws.Float32(d.Get("growth_factor").(float32))
+			input.GrowthFactor = aws.Float32(float32(d.Get("growth_factor").(float64)))
 		}
 
 		if d.HasChange("growth_type") {

@@ -16,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -385,11 +385,9 @@ func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 // statusMLTransform fetches the MLTransform and its Status
-func statusMLTransform(ctx context.Context, conn *glue.Client, transformId string) sdkretry.StateRefreshFunc {
-	const (
-		mlTransformStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusMLTransform(conn *glue.Client, transformId string) retry.StateRefreshFunc {
+	const mlTransformStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		input := &glue.GetMLTransformInput{
 			TransformId: aws.String(transformId),
 		}
@@ -413,10 +411,10 @@ func waitMLTransformDeleted(ctx context.Context, conn *glue.Client, transformId 
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransformStatusTypeNotReady, awstypes.TransformStatusTypeReady, awstypes.TransformStatusTypeDeleting),
 		Target:  []string{},
-		Refresh: statusMLTransform(ctx, conn, transformId),
+		Refresh: statusMLTransform(conn, transformId),
 		Timeout: timeout,
 	}
 

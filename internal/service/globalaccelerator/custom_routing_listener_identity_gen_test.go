@@ -35,7 +35,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_Identity_basic(t *testing.T) 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy:             testAccCheckCustomRoutingListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingListenerDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_Identity_basic(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -119,7 +119,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_Identity_ExistingResource_bas
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy: testAccCheckCustomRoutingListenerDestroy(ctx),
+		CheckDestroy: testAccCheckCustomRoutingListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -128,7 +128,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_Identity_ExistingResource_bas
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -175,7 +175,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_Identity_ExistingResource_noR
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy: testAccCheckCustomRoutingListenerDestroy(ctx),
+		CheckDestroy: testAccCheckCustomRoutingListenerDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -189,7 +189,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_Identity_ExistingResource_noR
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

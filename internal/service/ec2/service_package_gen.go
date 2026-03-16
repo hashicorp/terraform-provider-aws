@@ -133,6 +133,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newSecondaryNetworkResource,
+			TypeName: "aws_ec2_secondary_network",
+			Name:     "SecondaryNetwork",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newSecondarySubnetResource,
+			TypeName: "aws_ec2_secondary_subnet",
+			Name:     "SecondarySubnet",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTransitGatewayDefaultRouteTableAssociationResource,
 			TypeName: "aws_ec2_transit_gateway_default_route_table_association",
 			Name:     "Transit Gateway Default Route Table Association",
@@ -142,6 +168,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTransitGatewayDefaultRouteTablePropagationResource,
 			TypeName: "aws_ec2_transit_gateway_default_route_table_propagation",
 			Name:     "Transit Gateway Default Route Table Propagation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newTransitGatewayMeteringPolicyResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy",
+			Name:     "Transit Gateway Metering Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "transit_gateway_metering_policy_id",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("transit_gateway_metering_policy_id"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTransitGatewayMeteringPolicyEntryResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy_entry",
+			Name:     "Transit Gateway Metering Policy Entry",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -301,6 +346,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newSecondaryNetworkResourceAsListResource,
+			TypeName: "aws_ec2_secondary_network",
+			Name:     "SecondaryNetwork",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newSecondarySubnetResourceAsListResource,
+			TypeName: "aws_ec2_secondary_subnet",
+			Name:     "SecondarySubnet",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newTransitGatewayMeteringPolicyResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_metering_policy",
+			Name:     "Transit Gateway Metering Policy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "transit_gateway_metering_policy_id",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("transit_gateway_metering_policy_id"),
+		},
 		{
 			Factory:  newSecurityGroupEgressRuleResourceAsListResource,
 			TypeName: "aws_vpc_security_group_egress_rule",

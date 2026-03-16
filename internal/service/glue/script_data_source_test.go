@@ -16,7 +16,7 @@ func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,7 +35,7 @@ func TestAccGlueScriptDataSource_Language_scala(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

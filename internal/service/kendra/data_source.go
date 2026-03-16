@@ -22,8 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -616,7 +615,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateDataSourceInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
@@ -856,11 +855,11 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusCreating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
-		Refresh:                   statusDataSource(ctx, conn, id, indexId),
+		Refresh:                   statusDataSource(conn, id, indexId),
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -878,11 +877,11 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusUpdating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
-		Refresh:                   statusDataSource(ctx, conn, id, indexId),
+		Refresh:                   statusDataSource(conn, id, indexId),
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -900,11 +899,11 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DataSourceStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusDataSource(ctx, conn, id, indexId),
+		Refresh: statusDataSource(conn, id, indexId),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -918,8 +917,8 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return nil, err
 }
 
-func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataSource(conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 
 		if retry.NotFound(err) {

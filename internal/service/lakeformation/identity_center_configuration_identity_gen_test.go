@@ -47,7 +47,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_basic(t *testing.T
 			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
-		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -55,7 +55,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_basic(t *testing.T
 				ConfigDirectory: config.StaticDirectory("testdata/IdentityCenterConfiguration/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityCenterConfigurationExists(ctx, resourceName, &v),
+					testAccCheckIdentityCenterConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

@@ -48,7 +48,7 @@ func testAccResourceExplorer2View_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccResourceExplorer2View_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -254,7 +254,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource_basic(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
-		CheckDestroy: testAccCheckViewDestroy(ctx),
+		CheckDestroy: testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -263,7 +263,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource_basic(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -277,7 +277,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource_basic(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -334,7 +334,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource_noRefreshNoChange(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
-		CheckDestroy: testAccCheckViewDestroy(ctx),
+		CheckDestroy: testAccCheckViewDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -348,7 +348,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource_noRefreshNoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

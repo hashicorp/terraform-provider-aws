@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -620,7 +619,7 @@ func TestAccElastiCacheReplicationGroup_authToRBACMigration(t *testing.T) {
 	var rg awstypes.ReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
-	token1 := sdkacctest.RandString(16)
+	token1 := acctest.RandString(t, 16)
 	userGroup := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	userId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -767,8 +766,8 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 	var rg awstypes.ReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
-	token1 := sdkacctest.RandString(16)
-	token2 := sdkacctest.RandString(16)
+	token1 := acctest.RandString(t, 16)
+	token2 := acctest.RandString(t, 16)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -818,6 +817,39 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_authToken_fromResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		CheckDestroy: testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"random": {
+						Source: "hashicorp/random",
+					},
+				},
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccReplicationGroupConfig_authTokenFromResource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				),
 			},
@@ -1879,7 +1911,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryptionWithAuthToken(t *testin
 	var rg awstypes.ReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
-	authToken := sdkacctest.RandString(16)
+	authToken := acctest.RandString(t, 16)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -5864,4 +5896,48 @@ resource "aws_elasticache_replication_group" "test" {
 }
 `, rName),
 	)
+}
+
+func testAccReplicationGroupConfig_authTokenFromResource(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "random_password" "auth" {
+  length  = 30
+  special = false
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis5.0"
+  engine_version             = "5.0.6"
+  transit_encryption_enabled = true
+  auth_token                 = random_password.auth.result
+  auth_token_update_strategy = "SET"
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName))
 }

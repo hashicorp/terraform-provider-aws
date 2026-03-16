@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,7 +31,6 @@ import (
 // @Tags
 // @Testing(skipEmptyTags=true, importIgnore="accept_language;provisioning_artifact_parameters.0.disable_template_validation")
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Product")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
@@ -173,7 +172,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreateProductInput{
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(sdkid.UniqueId()),
 		Name:             aws.String(name),
 		Owner:            aws.String(d.Get(names.AttrOwner).(string)),
 		ProductType:      awstypes.ProductType(d.Get(names.AttrType).(string)),

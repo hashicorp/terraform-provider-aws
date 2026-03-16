@@ -33,7 +33,7 @@ func TestAccGlobalAcceleratorAccelerator_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccGlobalAcceleratorAccelerator_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -116,7 +116,7 @@ func TestAccGlobalAcceleratorAccelerator_Identity_ExistingResource_basic(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy: testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy: testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -125,7 +125,7 @@ func TestAccGlobalAcceleratorAccelerator_Identity_ExistingResource_basic(t *test
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -171,7 +171,7 @@ func TestAccGlobalAcceleratorAccelerator_Identity_ExistingResource_noRefreshNoCh
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		CheckDestroy: testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy: testAccCheckAcceleratorDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -185,7 +185,7 @@ func TestAccGlobalAcceleratorAccelerator_Identity_ExistingResource_noRefreshNoCh
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

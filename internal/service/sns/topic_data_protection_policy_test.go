@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,18 +21,18 @@ func TestAccSNSTopicDataProtectionPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_data_protection_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
+					testAccCheckTopicExists(ctx, t, "aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_sns_topic.test", names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
@@ -52,18 +50,18 @@ func TestAccSNSTopicDataProtectionPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_data_protection_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
+					testAccCheckTopicExists(ctx, t, "aws_sns_topic.test", &attributes),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopicDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,9 +70,9 @@ func TestAccSNSTopicDataProtectionPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTopicDataProtectionPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTopicDataProtectionPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SNSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic_data_protection_policy" {
@@ -134,14 +132,14 @@ resource "aws_sns_topic_data_protection_policy" "test" {
 `, rName)
 }
 
-func testAccCheckTopicDataProtectionPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTopicDataProtectionPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SNSClient(ctx)
 		_, err := tfsns.FindDataProtectionPolicyByARN(ctx, conn, rs.Primary.ID)
 
 		return err

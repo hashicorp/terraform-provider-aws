@@ -31,7 +31,6 @@ import (
 // @FrameworkResource("aws_sesv2_tenant", name="Tenant")
 // @Tags(identifierAttribute="tenant_arn")
 // @Testing(importStateIdAttribute="tenant_name")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTenantResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tenantResource{}
 	return r, nil

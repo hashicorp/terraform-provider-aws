@@ -34,7 +34,7 @@ func TestAccIVSChannel_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -42,7 +42,7 @@ func TestAccIVSChannel_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Channel/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &v),
+					testAccCheckChannelExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -225,14 +225,14 @@ func TestAccIVSChannel_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IVSServiceID),
-		CheckDestroy: testAccCheckChannelDestroy(ctx),
+		CheckDestroy: testAccCheckChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Channel/basic_v6.7.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &v),
+					testAccCheckChannelExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -276,7 +276,7 @@ func TestAccIVSChannel_Identity_ExistingResource_noRefreshNoChange(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IVSServiceID),
-		CheckDestroy: testAccCheckChannelDestroy(ctx),
+		CheckDestroy: testAccCheckChannelDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -288,7 +288,7 @@ func TestAccIVSChannel_Identity_ExistingResource_noRefreshNoChange(t *testing.T)
 				ConfigDirectory: config.StaticDirectory("testdata/Channel/basic_v6.7.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &v),
+					testAccCheckChannelExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -281,7 +281,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
 	input := &ecs.CreateTaskSetInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(sdkid.UniqueId()),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
 		Tags:           getTagsIn(ctx),

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -140,7 +140,7 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateIpamInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpam),
 	}

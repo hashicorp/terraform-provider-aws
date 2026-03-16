@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSet")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
@@ -409,9 +407,8 @@ func findDataSet(ctx context.Context, conn *quicksight.Client, input *quicksight
 	output, err := conn.DescribeDataSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -439,9 +436,8 @@ func findDataSetRefreshProperties(ctx context.Context, conn *quicksight.Client, 
 	output, err := conn.DescribeDataSetRefreshProperties(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "not a SPICE dataset") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -469,9 +465,8 @@ func findDataSetPermissions(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeDataSetPermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

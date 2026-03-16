@@ -46,7 +46,7 @@ func testAccGlueResourcePolicy_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -227,7 +227,7 @@ func testAccGlueResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -293,7 +293,7 @@ func testAccGlueResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,

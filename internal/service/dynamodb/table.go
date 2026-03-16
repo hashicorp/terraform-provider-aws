@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2924,7 +2924,7 @@ func expandLocalSecondaryIndexes(cfg []any, keySchemaM map[string]any) []awstype
 
 func expandImportTable(data map[string]any) *dynamodb.ImportTableInput {
 	a := &dynamodb.ImportTableInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := data["input_compression_type"].(string); ok {
@@ -3593,7 +3593,16 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
 			case "hash_key":
-				if p.IsNull() && !s.IsNull() {
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "range_key":
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}

@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -45,7 +44,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
@@ -388,9 +386,8 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	output, err := conn.GetView(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.UnauthorizedException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
