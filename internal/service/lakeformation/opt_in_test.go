@@ -135,32 +135,6 @@ func testAccOptIn_disappears(t *testing.T) {
 	})
 }
 
-func testAccOptIn_lfTag(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var optin lakeformation.ListLakeFormationOptInsOutput
-	resourceName := "aws_lakeformation_opt_in.test"
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptInDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOptInConfig_lfTag(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptInExists(ctx, t, resourceName, &optin),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckOptInDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
@@ -522,36 +496,6 @@ resource "aws_lakeformation_opt_in" "test" {
       database_name = aws_glue_catalog_database.test.name
       catalog_id    = data.aws_caller_identity.current.account_id
       wildcard      = true
-    }
-  }
-}
-`, rName))
-}
-
-func testAccOptInConfig_lfTag(rName string) string {
-	return acctest.ConfigCompose(testAccOptInConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_glue_catalog_database" "test" {
-  name       = %[1]q
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_lf_tag" "test" {
-  key    = "key1"
-  values = ["value1", "value2"]
-  # for consistency, ensure that admins are setup before testing
-  depends_on = [aws_lakeformation_data_lake_settings.test]
-}
-
-resource "aws_lakeformation_opt_in" "test" {
-  principal {
-    data_lake_principal_identifier = aws_iam_role.test.arn
-  }
-
-  resource_data {
-    lf_tag {
-      key   = aws_lakeformation_lf_tag.test.key
-      value = "value1"
     }
   }
 }

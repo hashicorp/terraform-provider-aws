@@ -74,9 +74,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### LF-Tag
 
-* `key` - Key name for the LF-Tag.
+* `key` - (Required) Key name for the LF-Tag.
 * `values` - (Required) Set of tag values for the LF-Tag key. At least one value is required. Each value can be 1-255 characters.
-* `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
 ### LF-Tag Expression
 
