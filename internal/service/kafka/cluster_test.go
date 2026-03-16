@@ -855,19 +855,19 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 func TestAccKafkaCluster_ClientAuthentication_SASL_enabledToUnset(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1 types.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_clientAuthenticationSASLIAM(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", acctest.CtTrue),
@@ -891,7 +891,7 @@ func TestAccKafkaCluster_ClientAuthentication_SASL_enabledToUnset(t *testing.T) 
 			{
 				Config: testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", acctest.CtFalse),
