@@ -529,8 +529,8 @@ github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.31.13 h1:Hm6by6dHEiv6jlvN2Gv
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.31.13/go.mod h1:Qym21SCZnQOf5QHl3RLA96sNNs4ge81QRedFpk/KwOs=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.19 h1:FDfCniPcE4WmCRPSIcLephK9YPIypygwccQgW+iG0Do=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.19/go.mod h1:rLT6+YwVt8QoKKG3GqWDkFUNEJeAfeTXKBCOH4ctONE=
-github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.19 h1:VTHRjHOwweT495A/1f0g5c/K+OIqcVDM10UYjKmebys=
-github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.19/go.mod h1:FItQvr7uJ/lNa+pnOaI319CGTyvwsyJ2FtrlacQZeb0=
+github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.20 h1:IJmkcyOBdgMJrH+4nWaNJt7WssC78LwdriO8Qqv2CFk=
+github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.20/go.mod h1:4xYj4MyV6b1t4nhu+njTNe4P93aoMtga9lRdd87LfhY=
 github.com/aws/aws-sdk-go-v2/service/ssmsap v1.26.3 h1:ncDQ3zzoLqEtHHY9x89vsjfoJ9e44QDHA0HAw1M1hFI=
 github.com/aws/aws-sdk-go-v2/service/ssmsap v1.26.3/go.mod h1:UNmrepKi29XH9i+mmVlvPhTEszCCg+SPzQ/kEc9Nc8E=
 github.com/aws/aws-sdk-go-v2/service/sso v1.30.13 h1:kiIDLZ005EcKomYYITtfsjn7dtOwHDOFy7IbPXKek2o=
