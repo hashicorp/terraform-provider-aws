@@ -35,6 +35,10 @@ This resource supports the following arguments:
 * `organization_id` - (Required) Identifier of the WorkMail organization. Changing this forces a new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
+## Attribute Reference
+
+This resource does not export any additional attributes.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkMail Default Domain using the organization ID. For example:
