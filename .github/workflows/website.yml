@@ -17,6 +17,7 @@ on:
       - .ci/.tflint.hcl
       - .ci/tools/go.mod
       - .markdownlint.yml
+      - tools/website-placeholder-check/**
       - website/docs/**
 
 ## NOTE: !!!
@@ -101,6 +102,21 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
       - run: make website-misspell
+
+  placeholder-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: .go-version
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: go run tools/website-placeholder-check/main.go website/docs/r
 
   terrafmt:
     runs-on: ubuntu-latest

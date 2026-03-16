@@ -192,6 +192,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `website-lint-fix` | Fix website linter findings |  | ✔️ |  |
 | `website-markdown-lint` | Website Checks / markdown-lint | ✔️ |  |  |
 | `website-misspell` | Website Checks / misspell | ✔️ |  |  |
+| `website-placeholder-check` | Website Checks / misspell | ✔️ |  |  |
 | `website-terrafmt` | Website Checks / terrafmt | ✔️ |  |  |
 | `website-tflint` | Website Checks / tflint | ✔️ |  |  |
 | `yamllint` | `YAML` Linting / yamllint | ✔️ |  |  |
