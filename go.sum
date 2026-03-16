@@ -553,8 +553,8 @@ github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.18.4 h1:NHzvD/HEQGYdq
 github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.18.4/go.mod h1:o631MqYdH3vCQ13Te6ysN7IAzceU4uoUqegj7LsjybA=
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.13 h1:Iu9ue+m7Ff/7S/QckPSB2kqkKHziyCwr/4DNuVvsCaE=
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.13/go.mod h1:CL79M20C9MGo2r0/MT7i9OcM/RY25wfNz043aG2fBvw=
-github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.18 h1:DBfY5W2ToKP7un6+yGXASdYizVPmd/5MbbHsw9V5pxw=
-github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.18/go.mod h1:lLyc9054UJfVChPbErlh151Zybxw/BdqPO0CyNmRaZE=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.19 h1:XkeqlcNouQtmViM1iIwmcpI3aQQYvBGzWLWEmK428eM=
+github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.19/go.mod h1:wkELVGpfMlCbGh0codwFhQCkiunnDZiUkkGdydvHJwM=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.2 h1:eUNEi1Uy07BPhTpfYCVE/dxNQBgmUq+BXik0Jccj+oU=
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.2/go.mod h1:zDpxwgEo31F2BEiSu3yDkP/Qql0ImEQwrgfLXZiGrVU=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.69.3 h1:MiqPvPpWRucGZf6Ljg6Wu7TTKtLrXsLGDl38SyfZhMM=
