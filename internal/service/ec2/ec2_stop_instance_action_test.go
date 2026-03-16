@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,7 +25,7 @@ func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -40,8 +39,8 @@ func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 			{
 				Config: testAccStopInstanceActionConfig_force(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsLocal(ctx, resourceName, &v),
-					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameRunning),
+					testAccCheckInstanceExistsLocal(ctx, t, resourceName, &v),
+					testAccCheckInstanceState(ctx, t, resourceName, awstypes.InstanceStateNameRunning),
 				),
 			},
 			{
@@ -56,7 +55,7 @@ func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 				},
 				Config: testAccStopInstanceActionConfig_force(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
+					testAccCheckInstanceState(ctx, t, resourceName, awstypes.InstanceStateNameStopped),
 				),
 			},
 		},
@@ -69,7 +68,7 @@ func TestAccEC2StopInstanceAction_trigger(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -83,15 +82,15 @@ func TestAccEC2StopInstanceAction_trigger(t *testing.T) {
 			{
 				Config: testAccStopInstanceActionConfig_trigger(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsLocal(ctx, resourceName, &v),
-					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
+					testAccCheckInstanceExistsLocal(ctx, t, resourceName, &v),
+					testAccCheckInstanceState(ctx, t, resourceName, awstypes.InstanceStateNameStopped),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckInstanceExistsLocal(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceExistsLocal(ctx context.Context, t *testing.T, n string, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -102,7 +101,7 @@ func testAccCheckInstanceExistsLocal(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		instance, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -115,7 +114,7 @@ func testAccCheckInstanceExistsLocal(ctx context.Context, n string, v *awstypes.
 	}
 }
 
-func testAccCheckInstanceState(ctx context.Context, n string, expectedState awstypes.InstanceStateName) resource.TestCheckFunc {
+func testAccCheckInstanceState(ctx context.Context, t *testing.T, n string, expectedState awstypes.InstanceStateName) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -126,7 +125,7 @@ func testAccCheckInstanceState(ctx context.Context, n string, expectedState awst
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		instance, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

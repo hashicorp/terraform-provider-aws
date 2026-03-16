@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,18 +17,18 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		CheckDestroy:             testAccCheckENIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, "aws_network_interface.test", &conf),
+					testAccCheckENIExists(ctx, t, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -55,18 +54,18 @@ func TestAccVPCNetworkInterfaceAttachment_networkCardIndex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		CheckDestroy:             testAccCheckENIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, "aws_network_interface.test", &conf),
+					testAccCheckENIExists(ctx, t, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),

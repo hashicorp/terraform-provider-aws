@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +19,7 @@ import (
 func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -55,7 +54,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -82,7 +81,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -113,7 +112,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

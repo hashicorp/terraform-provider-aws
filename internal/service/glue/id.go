@@ -21,20 +21,8 @@ func readPartitionID(id string) (string, string, string, []string, error) {
 	return idParts[0], idParts[1], idParts[2], vals, nil
 }
 
-func readPartitionIndexID(id string) (string, string, string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 4 {
-		return "", "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name:index-name, received: %s", id)
-	}
-	return idParts[0], idParts[1], idParts[2], idParts[3], nil
-}
-
 func createPartitionID(catalogID, dbName, tableName string, values []any) string {
 	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyPartition(values))
-}
-
-func createPartitionIndexID(catalogID, dbName, tableName, indexName string) string {
-	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, indexName)
 }
 
 func stringifyPartition(partValues []any) string {

@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -67,8 +66,8 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rAccountID1 := sdkacctest.RandStringFromCharSet(12, "012346789")
-	rAccountID2 := sdkacctest.RandStringFromCharSet(12, "012346789")
+	rAccountID1 := acctest.RandStringFromCharSet(t, 12, "012346789")
+	rAccountID2 := acctest.RandStringFromCharSet(t, 12, "012346789")
 	var v awstypes.Attachment
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

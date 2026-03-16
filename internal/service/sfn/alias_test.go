@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +24,7 @@ func TestAccSFNAlias_basic(t *testing.T) {
 	}
 
 	var alias sfn.DescribeStateMachineAliasOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	stateMachineName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	resourceName := "aws_sfn_alias.test"
@@ -63,7 +62,7 @@ func TestAccSFNAlias_disappears(t *testing.T) {
 	}
 
 	var alias sfn.DescribeStateMachineAliasOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	stateMachineName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	resourceName := "aws_sfn_alias.test"

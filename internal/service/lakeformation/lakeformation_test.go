@@ -40,6 +40,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtBasic:      testAccOptIn_basic,
 			acctest.CtDisappears: testAccOptIn_disappears,
 			"table":              testAccOptIn_table,
+			"lfTag":              testAccOptIn_lfTag,
 		},
 		"PermissionsBasic": {
 			acctest.CtBasic:         testAccPermissions_basic,
