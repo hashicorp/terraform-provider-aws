@@ -536,16 +536,15 @@ Use `metric_definitions` when you need to parse custom metrics from your trainin
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Training Job.
-* `id` - Name of the Training Job.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `25m`)
+* `update` - (Default `25m`)
+* `delete` - (Default `25m`)
 
 ## Import
 
