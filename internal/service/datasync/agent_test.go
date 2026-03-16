@@ -5,16 +5,21 @@ package datasync_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +27,7 @@ import (
 
 func TestAccDataSyncAgent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var agent1 datasync.DescribeAgentOutput
+	var agent datasync.DescribeAgentOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
@@ -35,15 +40,22 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 			{
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent1),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`agent/agent-.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
-					resource.TestCheckResourceAttr(resourceName, "private_link_endpoint", ""),
-					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`agent/agent-.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("private_link_endpoint"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_arns"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_arns"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCEndpointID), knownvalue.StringExact("")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -57,7 +69,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 
 func TestAccDataSyncAgent_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var agent1 datasync.DescribeAgentOutput
+	var agent datasync.DescribeAgentOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
@@ -70,10 +82,18 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 			{
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent1),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -81,7 +101,7 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 
 func TestAccDataSyncAgent_agentName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var agent1, agent2 datasync.DescribeAgentOutput
+	var agent datasync.DescribeAgentOutput
 	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
@@ -95,16 +115,32 @@ func TestAccDataSyncAgent_agentName(t *testing.T) {
 			{
 				Config: testAccAgentConfig_name(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent1),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName1)),
+				},
 			},
 			{
 				Config: testAccAgentConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent2),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName2)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -118,7 +154,7 @@ func TestAccDataSyncAgent_agentName(t *testing.T) {
 
 func TestAccDataSyncAgent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var agent1, agent2, agent3 datasync.DescribeAgentOutput
+	var agent datasync.DescribeAgentOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
 
@@ -131,10 +167,18 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 			{
 				Config: testAccAgentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -145,21 +189,35 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 			{
 				Config: testAccAgentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent2),
-					testAccCheckAgentNotRecreated(&agent1, &agent2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccAgentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentExists(ctx, t, resourceName, &agent3),
-					testAccCheckAgentNotRecreated(&agent2, &agent3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -184,18 +242,61 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 				Config: testAccAgentConfig_vpcEndpointID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, t, resourceName, &agent),
-					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_arns.*", securityGroupResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_arns.*", subnetResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCEndpointID, vpcEndpointResourceName, names.AttrID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_arns"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("security_group_arns").AtSliceIndex(0), securityGroupResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_arns"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("subnet_arns").AtSliceIndex(0), subnetResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("names.AttrVPCEndpointID"), vpcEndpointResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress, "private_link_ip"},
+			},
+		},
+	})
+}
+
+func TestAccDataSyncAgent_advancedMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agent datasync.DescribeAgentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_agent.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_advancedMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`agent/agent-.+`))),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 		},
 	})
@@ -248,25 +349,15 @@ func testAccCheckAgentExists(ctx context.Context, t *testing.T, n string, v *dat
 	}
 }
 
-func testAccCheckAgentNotRecreated(i, j *datasync.DescribeAgentOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
-			return errors.New("DataSync Agent was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccAgentAgentConfig_base(rName string) string {
+func testAccAgentAgentConfig_base(rName, ssmParameterName string, preferredInstanceTypes ...string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		// See https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html#ec2-instance-types.
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.2xlarge", "m5.4xlarge"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", preferredInstanceTypes...),
 		fmt.Sprintf(`
 # Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
 data "aws_ssm_parameter" "aws_service_datasync_ami" {
-  name = "/aws/service/datasync/ami"
+  name = %[2]q
 }
 
 resource "aws_internet_gateway" "test" {
@@ -334,11 +425,19 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, ssmParameterName))
+}
+
+func testAccAgentAgentConfig_baseBasicMode(rName string) string {
+	return testAccAgentAgentConfig_base(rName, "/aws/service/datasync/ami", "m5.2xlarge", "m5.4xlarge")
+}
+
+func testAccAgentAgentConfig_baseAdvancedMode(rName string) string {
+	return testAccAgentAgentConfig_base(rName, "/aws/service/datasync/ami/v3", "m6a.2xlarge")
 }
 
 func testAccAgentConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), `
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), `
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 }
@@ -346,7 +445,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_name(rName, agentName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q
@@ -355,7 +454,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 
@@ -367,7 +466,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 
@@ -380,7 +479,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccAgentConfig_vpcEndpointID(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   name                  = %[1]q
   security_group_arns   = [aws_security_group.test.arn]
@@ -408,4 +507,12 @@ data "aws_network_interface" "test" {
   id = tolist(aws_vpc_endpoint.test.network_interface_ids)[0]
 }
 `, rName))
+}
+
+func testAccAgentConfig_advancedMode(rName string) string {
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseAdvancedMode(rName), `
+resource "aws_datasync_agent" "test" {
+  ip_address = aws_instance.test.public_ip
+}
+`)
 }
