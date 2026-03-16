@@ -37,7 +37,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource does not export any additional attributes.
+This resource exports no additional attributes.
 
 ## Import
 
