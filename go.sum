@@ -191,8 +191,8 @@ github.com/aws/aws-sdk-go-v2/service/databrew v1.39.13 h1:3oSnD5TeqnjV8gi+aG1Icu
 github.com/aws/aws-sdk-go-v2/service/databrew v1.39.13/go.mod h1:AvZfcznxnVE9Z5GL5xZ0PgF0C08zMpMjSIREbs49bdg=
 github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.13 h1:GHXtqvDpJldqgOnnfUDhhi+8RdpJa5f8IMN4kOZ1RLM=
 github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.13/go.mod h1:lqM70DPuQCDBz0JurqTaLTgRyl8i+IUZLv+0fAldNK8=
-github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.18 h1:R7OeAXlqOfxvWspAxuirPLyERtMrzWsl251l3vNtUkE=
-github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.18/go.mod h1:hevITK2Oay66bG/gpZp96Hk9mZTX6WUqMPOh6obI7co=
+github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.19 h1:arO0auiZeotAllG3EKYk3XSyFcPk4JbusJF2hHvXSAg=
+github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.19/go.mod h1:w2paQXDFGLdINfePP/2zl4kYHqZktn5tj5NMETovMnc=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.58.0 h1:t8ImjVA9IqeHjM34p0b5HLjmEEPkLXk5OrUOiXFdGiA=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.58.0/go.mod h1:8n+ObXN+QPH8LQAw7/FuQJ135RWh2hfpfrFNMzcKWcQ=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.54.0 h1:zZTnwvmTMf4469K2nXEb03YE/7s+eDXzeIBfSbtrM5M=
