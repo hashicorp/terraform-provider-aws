@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_lakeformation_opt_in: Fix `lf_tag` block to use `values` as a set of strings instead of `value` as a single string to align with AWS API specification
+resource/aws_lakeformation_opt_in: Rename `resource_data.lf_tag.value` to `resource_data.lf_tag.values` and change to a set of string values. Previously, attempting to use `resource_data.lf_tag.value` would result in `missing required field` errors
 ```
