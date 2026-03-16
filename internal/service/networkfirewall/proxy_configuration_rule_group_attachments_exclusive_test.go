@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,7 +26,7 @@ func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_basic
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 	proxyConfigResourceName := "aws_networkfirewall_proxy_configuration.test"
 	ruleGroup1ResourceName := "aws_networkfirewall_proxy_rule_group.test1"
@@ -64,7 +63,7 @@ func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_disap
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -90,7 +89,7 @@ func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updat
 
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 	ruleGroup3ResourceName := "aws_networkfirewall_proxy_rule_group.test3"
 
@@ -130,7 +129,7 @@ func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updat
 
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -168,7 +167,7 @@ func testAccNetworkFirewallProxyConfigurationRuleGroupAttachmentsExclusive_updat
 
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive.test"
 	ruleGroup1ResourceName := "aws_networkfirewall_proxy_rule_group.test1"
 	ruleGroup2ResourceName := "aws_networkfirewall_proxy_rule_group.test2"
@@ -232,7 +231,7 @@ func testAccCheckProxyConfigurationRuleGroupAttachmentsExclusiveDestroy(ctx cont
 	}
 }
 
-func testAccCheckProxyConfigurationRuleGroupAttachmentsExclusiveExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckProxyConfigurationRuleGroupAttachmentsExclusiveExists(ctx context.Context, t *testing.T, n string, v ...*networkfirewall.DescribeProxyConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -247,7 +246,9 @@ func testAccCheckProxyConfigurationRuleGroupAttachmentsExclusiveExists(ctx conte
 			return err
 		}
 
-		*v = *output
+		if len(v) > 0 {
+			*v[0] = *output
+		}
 
 		return nil
 	}
@@ -264,7 +265,7 @@ func proxyConfigurationRuleGroupAttachmentsExclusiveDisappearsStateFunc(ctx cont
 	// Set the rule_group nested block from the instance state
 	ruleGroupCount := 0
 	if v, ok := is.Attributes["rule_group.#"]; ok {
-		fmt.Sscanf(v, "%d", &ruleGroupCount)
+		_, _ = fmt.Sscanf(v, "%d", &ruleGroupCount)
 	}
 
 	if ruleGroupCount > 0 {

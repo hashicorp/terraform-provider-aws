@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ func testAccNetworkFirewallProxyRuleGroup_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -59,7 +58,7 @@ func testAccNetworkFirewallProxyRuleGroup_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -90,7 +89,7 @@ func testAccNetworkFirewallProxyRuleGroup_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rule_group.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -164,7 +163,7 @@ func testAccCheckProxyRuleGroupDestroy(ctx context.Context, t *testing.T) resour
 	}
 }
 
-func testAccCheckProxyRuleGroupExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
+func testAccCheckProxyRuleGroupExists(ctx context.Context, t *testing.T, n string, v ...*networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -179,7 +178,9 @@ func testAccCheckProxyRuleGroupExists(ctx context.Context, t *testing.T, n strin
 			return err
 		}
 
-		*v = *output
+		if len(v) > 0 {
+			*v[0] = *output
+		}
 
 		return nil
 	}

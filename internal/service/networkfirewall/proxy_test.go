@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ func testAccNetworkFirewallProxy_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -67,7 +66,7 @@ func testAccNetworkFirewallProxy_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -98,7 +97,7 @@ func testAccNetworkFirewallProxy_tlsInterceptEnabled(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy.test"
 	pcaResourceName := "aws_acmpca_certificate_authority.test"
 
@@ -142,7 +141,7 @@ func testAccNetworkFirewallProxy_logging(t *testing.T) {
 	t.Helper()
 
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -207,7 +206,7 @@ func testAccCheckProxyDestroy(ctx context.Context, t *testing.T) resource.TestCh
 	}
 }
 
-func testAccCheckProxyExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyOutput) resource.TestCheckFunc {
+func testAccCheckProxyExists(ctx context.Context, t *testing.T, n string, v ...*networkfirewall.DescribeProxyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -222,7 +221,9 @@ func testAccCheckProxyExists(ctx context.Context, t *testing.T, n string, v *net
 			return err
 		}
 
-		*v = *output
+		if len(v) > 0 {
+			*v[0] = *output
+		}
 
 		return nil
 	}
@@ -358,12 +359,12 @@ func testAccProxyConfig_basic(rName string) string {
 		testAccProxyConfig_baseProxyConfiguration(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_proxy" "test" {
-  name                     = %[1]q
-  nat_gateway_id           = aws_nat_gateway.test.id
+  name                    = %[1]q
+  nat_gateway_id          = aws_nat_gateway.test.id
   proxy_configuration_arn = aws_networkfirewall_proxy_configuration.test.arn
 
   tls_intercept_properties {
-     tls_intercept_mode = "DISABLED"
+    tls_intercept_mode = "DISABLED"
   }
 
   listener_properties {
@@ -471,7 +472,7 @@ data "aws_region" "current" {}
 
 # Create a root CA for TLS interception
 resource "aws_acmpca_certificate_authority" "test" {
-  type       = "ROOT"
+  type = "ROOT"
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_2048"
@@ -508,7 +509,6 @@ resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate       = aws_acmpca_certificate.test.certificate
   certificate_chain = aws_acmpca_certificate.test.certificate_chain
 }
-
 
 # Grant Network Firewall proxy permission to use the PCA
 resource "aws_acmpca_policy" "test" {
@@ -564,13 +564,13 @@ resource "aws_acmpca_policy" "test" {
 resource "aws_ram_resource_share" "test" {
   name                      = %[1]q
   allow_external_principals = true
-  permission_arns = ["arn:aws:ram::aws:permission/AWSRAMSubordinateCACertificatePathLen0IssuanceCertificateAuthority"]
+  permission_arns           = ["arn:${data.aws_partition.current.partition}:ram::aws:permission/AWSRAMSubordinateCACertificatePathLen0IssuanceCertificateAuthority"]
 
   tags = {
     Name = %[1]q
   }
 }
-  
+
 # Associate the PCA with the RAM share
 resource "aws_ram_resource_share_associations_exclusive" "test" {
   principals         = ["proxy.network-firewall.amazonaws.com"]
@@ -580,17 +580,17 @@ resource "aws_ram_resource_share_associations_exclusive" "test" {
 
   lifecycle {
     ignore_changes = [
-       resource_arns
+      resource_arns
     ]
     replace_triggered_by = [
-       aws_acmpca_certificate_authority.test
+      aws_acmpca_certificate_authority.test
     ]
   }
 }
 
 resource "aws_networkfirewall_proxy" "test" {
-  name                     = %[1]q
-  nat_gateway_id           = aws_nat_gateway.test.id
+  name                    = %[1]q
+  nat_gateway_id          = aws_nat_gateway.test.id
   proxy_configuration_arn = aws_networkfirewall_proxy_configuration.test.arn
 
   tls_intercept_properties {

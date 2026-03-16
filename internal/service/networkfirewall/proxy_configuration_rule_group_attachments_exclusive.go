@@ -4,16 +4,16 @@
 package networkfirewall
 
 import (
+	"cmp"
 	"context"
 	"errors"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -107,7 +107,7 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Create(ctx con
 
 	for i, rg := range planRuleGroups {
 		ruleGroups = append(ruleGroups, awstypes.ProxyRuleGroupAttachment{
-			ProxyRuleGroupName: aws.String(rg.ProxyRuleGroupName.ValueString()),
+			ProxyRuleGroupName: rg.ProxyRuleGroupName.ValueStringPointer(),
 			InsertPosition:     aws.Int32(int32(i)),
 		})
 	}
@@ -169,10 +169,7 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Read(ctx conte
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenProxyConfigurationRuleGroups(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	setProxyConfigurationRuleGroupsState(ctx, out, &state)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -251,7 +248,7 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Update(ctx con
 	for i, rg := range planRuleGroups {
 		if !stateRuleGroupNames[rg.ProxyRuleGroupName.ValueString()] {
 			ruleGroupsToAttach = append(ruleGroupsToAttach, awstypes.ProxyRuleGroupAttachment{
-				ProxyRuleGroupName: aws.String(rg.ProxyRuleGroupName.ValueString()),
+				ProxyRuleGroupName: rg.ProxyRuleGroupName.ValueStringPointer(),
 				InsertPosition:     aws.Int32(int32(i)),
 			})
 		}
@@ -288,7 +285,7 @@ func (r *resourceProxyConfigurationRuleGroupAttachmentsExclusive) Update(ctx con
 		var ruleGroupPriorities []awstypes.ProxyRuleGroupPriority
 		for i, rg := range planRuleGroups {
 			ruleGroupPriorities = append(ruleGroupPriorities, awstypes.ProxyRuleGroupPriority{
-				ProxyRuleGroupName: aws.String(rg.ProxyRuleGroupName.ValueString()),
+				ProxyRuleGroupName: rg.ProxyRuleGroupName.ValueStringPointer(),
 				NewPosition:        aws.Int32(int32(i)),
 			})
 		}
@@ -399,20 +396,18 @@ func (data *proxyConfigurationRuleGroupAttachmentModel) setID() {
 	data.ID = data.ProxyConfigurationArn.StringValue
 }
 
-func flattenProxyConfigurationRuleGroups(ctx context.Context, out *networkfirewall.DescribeProxyConfigurationOutput, model *proxyConfigurationRuleGroupAttachmentModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func setProxyConfigurationRuleGroupsState(ctx context.Context, out *networkfirewall.DescribeProxyConfigurationOutput, model *proxyConfigurationRuleGroupAttachmentModel) {
 	if out.ProxyConfiguration == nil || out.ProxyConfiguration.RuleGroups == nil {
 		model.RuleGroups = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []RuleGroupAttachmentModel{})
 		model.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
-		return diags
+		return
 	}
 
 	// Sort by Priority to maintain order (lower priority number = higher priority = first in list)
 	sortedRuleGroups := make([]awstypes.ProxyConfigRuleGroup, len(out.ProxyConfiguration.RuleGroups))
 	copy(sortedRuleGroups, out.ProxyConfiguration.RuleGroups)
-	sort.SliceStable(sortedRuleGroups, func(i, j int) bool {
-		return aws.ToInt32(sortedRuleGroups[i].Priority) < aws.ToInt32(sortedRuleGroups[j].Priority)
+	slices.SortStableFunc(sortedRuleGroups, func(a, b awstypes.ProxyConfigRuleGroup) int {
+		return cmp.Compare(aws.ToInt32(a.Priority), aws.ToInt32(b.Priority))
 	})
 
 	var ruleGroups []RuleGroupAttachmentModel
@@ -424,6 +419,4 @@ func flattenProxyConfigurationRuleGroups(ctx context.Context, out *networkfirewa
 
 	model.RuleGroups = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, ruleGroups)
 	model.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
-
-	return diags
 }

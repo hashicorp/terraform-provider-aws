@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ func testAccNetworkFirewallProxyConfiguration_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -63,7 +62,7 @@ func testAccNetworkFirewallProxyConfiguration_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -94,7 +93,7 @@ func testAccNetworkFirewallProxyConfiguration_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_configuration.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -168,7 +167,7 @@ func testAccCheckProxyConfigurationDestroy(ctx context.Context, t *testing.T) re
 	}
 }
 
-func testAccCheckProxyConfigurationExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckProxyConfigurationExists(ctx context.Context, t *testing.T, n string, v ...*networkfirewall.DescribeProxyConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -183,7 +182,9 @@ func testAccCheckProxyConfigurationExists(ctx context.Context, t *testing.T, n s
 			return err
 		}
 
-		*v = *output
+		if len(v) > 0 {
+			*v[0] = *output
+		}
 
 		return nil
 	}

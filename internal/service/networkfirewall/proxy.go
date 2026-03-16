@@ -143,7 +143,7 @@ func (r *resourceProxy) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"port": schema.Int32Attribute{
+						names.AttrPort: schema.Int32Attribute{
 							Required: true,
 						},
 						names.AttrType: schema.StringAttribute{

@@ -143,8 +143,8 @@ Each rule block (`post_response`, `pre_dns`, `pre_request`) supports the followi
 Each `conditions` block supports the following:
 
 * `condition_key` - (Required) Attribute to evaluate. Valid values include:
-  - Request-based: `request:SourceAccount`, `request:SourceVpc`, `request:SourceVpce`, `request:Time`, `request:SourceIp`, `request:DestinationIp`, `request:SourcePort`, `request:DestinationPort`, `request:Protocol`, `request:DestinationDomain`, `request:Http:Uri`, `request:Http:Method`, `request:Http:UserAgent`, `request:Http:ContentType`, `request:Http:Header/<CustomHeaderName>`
-  - Response-based: `response:Http:StatusCode`, `response:Http:ContentType`, `response:Http:Header/<CustomHeaderName>`
+    - Request-based: `request:SourceAccount`, `request:SourceVpc`, `request:SourceVpce`, `request:Time`, `request:SourceIp`, `request:DestinationIp`, `request:SourcePort`, `request:DestinationPort`, `request:Protocol`, `request:DestinationDomain`, `request:Http:Uri`, `request:Http:Method`, `request:Http:UserAgent`, `request:Http:ContentType`, `request:Http:Header/<CustomHeaderName>`
+    - Response-based: `response:Http:StatusCode`, `response:Http:ContentType`, `response:Http:Header/<CustomHeaderName>`
 
   ~> **NOTE:** HTTP field matching for HTTPS requests requires TLS decryption to be enabled. Without TLS decryption, only IP-based filtering is available in the pre-request phase.
 * `condition_operator` - (Required) Comparison operator. Valid values: `StringEquals`, `NumericGreaterThan`, `NumericGreaterThanEquals`.

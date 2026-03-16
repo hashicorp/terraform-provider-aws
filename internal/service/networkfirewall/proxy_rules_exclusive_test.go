@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +23,7 @@ func testAccNetworkFirewallProxyRulesExclusive_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 	ruleGroupResourceName := "aws_networkfirewall_proxy_rule_group.test"
 
@@ -82,7 +81,7 @@ func testAccNetworkFirewallProxyRulesExclusive_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -113,7 +112,7 @@ func testAccNetworkFirewallProxyRulesExclusive_updateAdd(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -156,7 +155,7 @@ func testAccNetworkFirewallProxyRulesExclusive_updateModify(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -198,7 +197,7 @@ func testAccNetworkFirewallProxyRulesExclusive_updateRemove(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var v1, v2 networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -239,7 +238,7 @@ func testAccNetworkFirewallProxyRulesExclusive_multipleRulesPerPhase(t *testing.
 
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeProxyRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_proxy_rules_exclusive.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -321,7 +320,7 @@ func testAccCheckProxyRulesExclusiveDestroy(ctx context.Context, t *testing.T) r
 	}
 }
 
-func testAccCheckProxyRulesExclusiveExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
+func testAccCheckProxyRulesExclusiveExists(ctx context.Context, t *testing.T, n string, v ...*networkfirewall.DescribeProxyRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -336,7 +335,9 @@ func testAccCheckProxyRulesExclusiveExists(ctx context.Context, t *testing.T, n 
 			return err
 		}
 
-		*v = *output
+		if len(v) > 0 {
+			*v[0] = *output
+		}
 
 		return nil
 	}
@@ -354,7 +355,7 @@ resource "aws_networkfirewall_proxy_rules_exclusive" "test" {
   pre_dns {
     proxy_rule_name = "%[1]s-predns"
     action          = "ALLOW"
-	description     = "%[1]s-predns-description"
+    description     = "%[1]s-predns-description"
 
     conditions {
       condition_key      = "request:DestinationDomain"
@@ -378,7 +379,7 @@ resource "aws_networkfirewall_proxy_rules_exclusive" "test" {
   post_response {
     proxy_rule_name = "%[1]s-postresponse"
     action          = "ALERT"
-	description     = "%[1]s-postresponse-description"
+    description     = "%[1]s-postresponse-description"
 
     conditions {
       condition_key      = "response:Http:StatusCode"
@@ -425,7 +426,7 @@ resource "aws_networkfirewall_proxy_rules_exclusive" "test" {
   pre_dns {
     proxy_rule_name = "%[1]s-predns"
     action          = "ALLOW"
-	description     = "%[1]s-predns-description"
+    description     = "%[1]s-predns-description"
 
     conditions {
       condition_key      = "request:DestinationDomain"
@@ -448,7 +449,7 @@ resource "aws_networkfirewall_proxy_rules_exclusive" "test" {
   post_response {
     proxy_rule_name = "%[1]s-postresponse"
     action          = "ALERT"
-	description     = "%[1]s-postresponse-description"
+    description     = "%[1]s-postresponse-description"
 
     conditions {
       condition_key      = "response:Http:StatusCode"

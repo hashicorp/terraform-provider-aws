@@ -70,7 +70,7 @@ func proxyRuleSchemaBlock(ctx context.Context) schema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[proxyRuleModel](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"action": schema.StringAttribute{
+				names.AttrAction: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.ProxyRulePhaseAction](),
 					Required:   true,
 				},
@@ -151,7 +151,7 @@ func (r *resourceProxyRulesExclusive) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenProxyRules(ctx, readOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, setProxyRulesState(ctx, readOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -179,7 +179,7 @@ func (r *resourceProxyRulesExclusive) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenProxyRules(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, setProxyRulesState(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -339,13 +339,11 @@ func (r *resourceProxyRulesExclusive) Update(ctx context.Context, req resource.U
 			return
 		}
 
-		out, err := conn.UpdateProxyRule(ctx, &updateInput)
+		_, err = conn.UpdateProxyRule(ctx, &updateInput)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
-
-		updateToken = out.UpdateToken
 	}
 
 	// Step 3: Create/recreate rules
@@ -392,7 +390,7 @@ func (r *resourceProxyRulesExclusive) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenProxyRules(ctx, readOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, setProxyRulesState(ctx, readOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -469,7 +467,7 @@ func findProxyRulesByGroupARN(ctx context.Context, conn *networkfirewall.Client,
 	return out, nil
 }
 
-func flattenProxyRules(ctx context.Context, out *networkfirewall.DescribeProxyRuleGroupOutput, model *resourceProxyRulesExclusiveModel) diag.Diagnostics {
+func setProxyRulesState(ctx context.Context, out *networkfirewall.DescribeProxyRuleGroupOutput, model *resourceProxyRulesExclusiveModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out.ProxyRuleGroup == nil || out.ProxyRuleGroup.Rules == nil {

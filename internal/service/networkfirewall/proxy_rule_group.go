@@ -82,12 +82,12 @@ func (r *resourceProxyRuleGroup) Create(ctx context.Context, req resource.Create
 	}
 
 	input := &networkfirewall.CreateProxyRuleGroupInput{
-		ProxyRuleGroupName: aws.String(plan.ProxyRuleGroupName.ValueString()),
+		ProxyRuleGroupName: plan.ProxyRuleGroupName.ValueStringPointer(),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
-		input.Description = aws.String(plan.Description.ValueString())
+		input.Description = plan.Description.ValueStringPointer()
 	}
 
 	out, err := conn.CreateProxyRuleGroup(ctx, input)
@@ -174,7 +174,7 @@ func (r *resourceProxyRuleGroup) Delete(ctx context.Context, req resource.Delete
 	}
 
 	input := &networkfirewall.DeleteProxyRuleGroupInput{
-		ProxyRuleGroupArn: aws.String(state.ID.ValueString()),
+		ProxyRuleGroupArn: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteProxyRuleGroup(ctx, input)
