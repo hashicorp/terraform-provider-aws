@@ -977,7 +977,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				input.ClientAuthentication = expandClientAuthentication(v.([]any)[0].(map[string]any))
 			}
 
-			if o, n := d.GetChange("client_authentication.0.sasl"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+			if o, n := d.GetChange("client_authentication.0.sasl"); len(o.([]any)) > 0 && len(n.([]any)) == 0 {
 				// Disable when a previously configured sasl block is removed
 				input.ClientAuthentication.Sasl = &types.Sasl{
 					Iam:   &types.Iam{Enabled: aws.Bool(false)},
@@ -985,7 +985,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				}
 			}
 
-			if o, n := d.GetChange("client_authentication.0.tls"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+			if o, n := d.GetChange("client_authentication.0.tls"); len(o.([]any)) > 0 && len(n.([]any)) == 0 {
 				// Disable when a previously configured tls block is removed
 				input.ClientAuthentication.Tls = &types.Tls{Enabled: aws.Bool(false)}
 			}
