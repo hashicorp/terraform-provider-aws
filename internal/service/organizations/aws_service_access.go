@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,10 +44,12 @@ import (
 // https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
 //
 // Some common annotations are included below:
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations;organizations.DescribeAwsServiceAccessResponse")
-// @Testing(preCheck="testAccPreCheck")
-// @Testing(importIgnore="...;...")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.EnabledServicePrincipal")
+// @Testing(serialize=true)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(generator=false)
 func newAwsServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &awsServiceAccessResource{}
 
@@ -163,7 +166,7 @@ func (r *awsServiceAccessResource) Read(ctx context.Context, req resource.ReadRe
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := findAwsServiceAccessByID(ctx, conn, state.ServicePrincipal.String())
+	out, err := findAwsServiceAccessByServicePrincipal(ctx, conn, state.ServicePrincipal.String())
 	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -258,7 +261,7 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findAwsServiceAccessByID(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) {
+func findAwsServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) {
 	var enabledServices []awstypes.EnabledServicePrincipal
 
 	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, nil)
@@ -300,5 +303,6 @@ func findAwsServiceAccessByID(ctx context.Context, conn *organizations.Client, s
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type awsServiceAccessResourceModel struct {
-	ServicePrincipal types.String `tfsdk:"service_principal"`
+	ServicePrincipal types.String      `tfsdk:"service_principal"`
+	DateEnabled      timetypes.RFC3339 `tfsdk:"date_enabled"`
 }

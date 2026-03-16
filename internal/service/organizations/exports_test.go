@@ -13,11 +13,13 @@ var (
 	ResourcePolicyAttachment       = resourcePolicyAttachment
 	ResourceResourcePolicy         = resourceResourcePolicy
 	ResourceTag                    = resourceTag
+	ResourceAwsServiceAccess       = newAwsServiceAccessResource
 
-	FindAccountByID                  = findAccountByID
-	FindOrganizationalUnitByID       = findOrganizationalUnitByID
-	FindPolicyAttachmentByTwoPartKey = findPolicyAttachmentByTwoPartKey
-	FindPolicyByID                   = findPolicyByID
-	FindResourcePolicy               = findResourcePolicy
-	FindTag                          = findTag
+	FindAccountByID                        = findAccountByID
+	FindOrganizationalUnitByID             = findOrganizationalUnitByID
+	FindPolicyAttachmentByTwoPartKey       = findPolicyAttachmentByTwoPartKey
+	FindPolicyByID                         = findPolicyByID
+	FindResourcePolicy                     = findResourcePolicy
+	FindTag                                = findTag
+	FindAwsServiceAccessByServicePrincipal = findAwsServiceAccessByServicePrincipal
 )
