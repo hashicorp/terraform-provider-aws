@@ -34,7 +34,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -44,8 +43,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1484,22 +1481,14 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
 	}, func(err error) (bool, error) {
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not assume role") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Unauthorized to List objects under S3 URL") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied to OutputDataConfig S3 bucket") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "no identity-based policy allows the s3:ListBucket action") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied to hub content") {
-			return true, err
-		}
-		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied for repository") {
+		if errMessageContainsAny(err, ErrCodeValidationException, []string{
+			"Could not assume role",
+			"Unauthorized to List objects under S3 URL",
+			"Access denied to OutputDataConfig S3 bucket",
+			"no identity-based policy allows the s3:ListBucket action",
+			"Access denied to hub content",
+			"Access denied for repository",
+		}) {
 			return true, err
 		}
 		return false, err
@@ -1624,11 +1613,38 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
+	job, err := findTrainingJobByName(ctx, conn, state.TrainingJobName.ValueString())
+	if err != nil {
+		if retry.NotFound(err) {
+			return
+		}
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
+		return
+	}
+
+	if job.TrainingJobStatus == awstypes.TrainingJobStatusInProgress {
+		stopInput := &sagemaker.StopTrainingJobInput{
+			TrainingJobName: aws.String(state.TrainingJobName.ValueString()),
+		}
+		_, err := conn.StopTrainingJob(ctx, stopInput)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
+			return
+		}
+
+		stopTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+		_, err = waitTrainingJobStopped(ctx, conn, state.TrainingJobName.ValueString(), stopTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
+			return
+		}
+	}
+
 	input := sagemaker.DeleteTrainingJobInput{
 		TrainingJobName: state.TrainingJobName.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteTrainingJob(ctx, &input)
+	_, err = conn.DeleteTrainingJob(ctx, &input)
 
 	if err != nil {
 		if errs.Contains(err, "ResourceNotFound") || errs.Contains(err, "Requested resource not found") {
@@ -1819,6 +1835,15 @@ func serverlessJobConfigEqualityFunc(
 	return serverlessBaseModelARNsEqual(oldConfig.BaseModelARN, newConfig.BaseModelARN), diags
 }
 
+func errMessageContainsAny(err error, code string, messages []string) bool {
+	for _, message := range messages {
+		if tfawserr.ErrMessageContains(err, code, message) {
+			return true
+		}
+	}
+	return false
+}
+
 func serverlessBaseModelARNsEqual(oldValue, newValue types.String) bool {
 	if oldValue.IsNull() || oldValue.IsUnknown() || newValue.IsNull() || newValue.IsUnknown() {
 		return oldValue.Equal(newValue)
@@ -1873,8 +1898,6 @@ type resourceTrainingJobModel struct {
 	framework.WithRegionModel
 	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
 	TrainingJobARN                        types.String                                                             `tfsdk:"arn"`
-	Tags                                  tftags.Map                                                               `tfsdk:"tags"`
-	TagsAll                               tftags.Map                                                               `tfsdk:"tags_all"`
 	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[trainingJobCheckpointConfigModel]        `tfsdk:"checkpoint_config"`
 	DebugHookConfig                       fwtypes.ListNestedObjectValueOf[trainingJobDebugHookConfigModel]         `tfsdk:"debug_hook_config"`
 	DebugRuleConfigurations               fwtypes.ListNestedObjectValueOf[trainingJobDebugRuleConfigurationModel]  `tfsdk:"debug_rule_configurations"`
@@ -1898,6 +1921,8 @@ type resourceTrainingJobModel struct {
 	ServerlessJobConfig                   fwtypes.ListNestedObjectValueOf[trainingJobServerlessJobConfigModel]     `tfsdk:"serverless_job_config"`
 	SessionChainingConfig                 fwtypes.ListNestedObjectValueOf[trainingJobSessionChainingConfigModel]   `tfsdk:"session_chaining_config"`
 	StoppingCondition                     fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel]       `tfsdk:"stopping_condition" autoflex:",omitempty"`
+	Tags                                  tftags.Map                                                               `tfsdk:"tags"`
+	TagsAll                               tftags.Map                                                               `tfsdk:"tags_all"`
 	TensorBoardOutputConfig               fwtypes.ListNestedObjectValueOf[trainingJobTensorBoardOutputConfigModel] `tfsdk:"tensor_board_output_config"`
 	Timeouts                              timeouts.Value                                                           `tfsdk:"timeouts"`
 	TrainingJobName                       types.String                                                             `tfsdk:"training_job_name"`
@@ -2108,26 +2133,4 @@ type trainingJobSessionChainingConfigModel struct {
 type trainingJobTensorBoardOutputConfigModel struct {
 	LocalPath    types.String `tfsdk:"local_path"`
 	S3OutputPath types.String `tfsdk:"s3_output_path"`
-}
-
-func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := sagemaker.ListTrainingJobsInput{}
-	conn := client.SageMakerClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := sagemaker.NewListTrainingJobsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.TrainingJobSummaries {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTrainingJob, client,
-				sweepfw.NewAttribute("training_job_name", aws.ToString(v.TrainingJobName))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

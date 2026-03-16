@@ -732,3 +732,25 @@ func sweepModelCards(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 
 	return sweepResources, nil
 }
+
+func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := sagemaker.ListTrainingJobsInput{}
+	conn := client.SageMakerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := sagemaker.NewListTrainingJobsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.TrainingJobSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceTrainingJob, client,
+				framework.NewAttribute("training_job_name", aws.ToString(v.TrainingJobName))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}

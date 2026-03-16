@@ -40,7 +40,7 @@ func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -90,7 +90,7 @@ func TestAccSageMakerTrainingJob_disappears(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -121,7 +121,7 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -174,7 +174,7 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -227,7 +227,7 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -279,7 +279,7 @@ func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -335,7 +335,7 @@ func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -385,7 +385,7 @@ func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -435,7 +435,7 @@ func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -487,7 +487,7 @@ func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -539,7 +539,7 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -592,7 +592,7 @@ func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -640,7 +640,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -703,7 +703,7 @@ func TestAccSageMakerTrainingJob_tags(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -782,7 +782,7 @@ func TestAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -832,7 +832,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -886,7 +886,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -935,7 +935,7 @@ func TestAccSageMakerTrainingJob_sessionChainingConfig(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1029,7 +1029,7 @@ func testAccCheckTrainingJobExists(ctx context.Context, t *testing.T, name strin
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckTrainingJobs(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 	input := &sagemaker.ListTrainingJobsInput{}

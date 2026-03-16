@@ -37,7 +37,7 @@ func TestAccSageMakerTrainingJob_List_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
@@ -95,7 +95,7 @@ func TestAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
@@ -165,7 +165,7 @@ func TestAccSageMakerTrainingJob_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckTrainingJobs(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
