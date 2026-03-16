@@ -206,7 +206,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.105.0
-	github.com/aws/aws-sdk-go-v2/service/ram v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/ram v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/rds v1.116.2
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.19
