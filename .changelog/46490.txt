@@ -5,3 +5,11 @@ aws_msk_topic
 ```release-note:new-data-source
 aws_msk_topic
 ```
+
+```release-note:new-list-resource
+aws_msk_cluster
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Add resource identity support
+```
