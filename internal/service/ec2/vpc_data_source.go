@@ -142,12 +142,12 @@ func dataSourceVPC() *schema.Resource {
 			},
 			"ipv6_cidr_block": {
 				Type:       schema.TypeString,
-				Deprecated: "ipv6_cidr_block can be accessed in the first element of ipv6_cidr_block_associations instead.",
+				Deprecated: "ipv6_cidr_block is deprecated. It can be accessed in the first element of ipv6_cidr_block_associations instead.",
 				Computed:   true,
 			},
 			"ipv6_association_id": {
 				Type:       schema.TypeString,
-				Deprecated: "ipv6_association_id can be accessed in the first element of ipv6_cidr_block_associations instead.",
+				Deprecated: "ipv6_association_id is deprecated. It can be accessed in the first element of ipv6_cidr_block_associations instead.",
 				Computed:   true,
 			},
 			"main_route_table_id": {
