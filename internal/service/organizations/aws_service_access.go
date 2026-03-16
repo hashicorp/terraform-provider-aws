@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -47,7 +48,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.EnabledServicePrincipal")
 // @Testing(serialize=true)
-// @Testing(useAlternateAccount=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
 func newAwsServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -73,6 +73,10 @@ func (r *awsServiceAccessResource) Schema(ctx context.Context, req resource.Sche
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"date_enabled": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 		},
 	}
@@ -106,17 +110,17 @@ func (r *awsServiceAccessResource) Create(ctx context.Context, req resource.Crea
 	// TIP: -- 3. Populate a Create input structure
 	var input organizations.EnableAWSServiceAccessInput
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `AwsServiceAccessId`
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AwsServiceAccess")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// TIP: -- 4. Call the AWS Create function
-	out, err := conn.EnableAWSServiceAccess(ctx, &input)
+	_, err := conn.EnableAWSServiceAccess(ctx, &input)
 	if err != nil {
 		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
 		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServicePrincipal.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServicePrincipal.ValueString())
 		return
 	}
 	// if out == nil || out.AwsServiceAccess == nil {
@@ -124,8 +128,14 @@ func (r *awsServiceAccessResource) Create(ctx context.Context, req resource.Crea
 	// 	return
 	// }
 
+	enabledServicePrincipal, err := findAwsServiceAccessByServicePrincipal(ctx, conn, plan.ServicePrincipal.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServicePrincipal.ValueString())
+		return
+	}
+
 	// TIP: -- 5. Using the output from the create function, set attributes
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, enabledServicePrincipal, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -166,7 +176,7 @@ func (r *awsServiceAccessResource) Read(ctx context.Context, req resource.ReadRe
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := findAwsServiceAccessByServicePrincipal(ctx, conn, state.ServicePrincipal.String())
+	out, err := findAwsServiceAccessByServicePrincipal(ctx, conn, state.ServicePrincipal.ValueString())
 	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -174,7 +184,7 @@ func (r *awsServiceAccessResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ServicePrincipal.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ServicePrincipal.ValueString())
 		return
 	}
 
@@ -228,7 +238,7 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 		// 	return
 		// }
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ServicePrincipal.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ServicePrincipal.ValueString())
 		return
 	}
 
@@ -239,7 +249,6 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 	// 	smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 	// 	return
 	// }
-	return
 }
 
 // TIP: ==== TERRAFORM IMPORTING ====
@@ -272,7 +281,7 @@ func findAwsServiceAccessByServicePrincipal(ctx context.Context, conn *organizat
 		}
 
 		for _, sp := range page.EnabledServicePrincipals {
-			if sp.ServicePrincipal == &servicePrincipal {
+			if aws.ToString(sp.ServicePrincipal) == servicePrincipal {
 				enabledServices = append(enabledServices, sp)
 			}
 		}
