@@ -851,6 +851,64 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 	})
 }
 
+// Ref:https://github.com/hashicorp/terraform-provider-aws/issues/30752
+func TestAccKafkaCluster_ClientAuthentication_SASL_enabledToUnset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1 types.ClusterInfo
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_clientAuthenticationSASLIAM(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_sasl_iam"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				Config: testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccKafkaCluster_Info_revision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 types.ClusterInfo
@@ -2060,6 +2118,32 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, saslEnabled, !saslEnabled))
+}
+
+func testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.t3.small"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+
+  client_authentication {
+    unauthenticated = true
+  }
+}
+`, rName))
 }
 
 func testAccClusterConfig_configurationInfoRevision1(rName string) string {
