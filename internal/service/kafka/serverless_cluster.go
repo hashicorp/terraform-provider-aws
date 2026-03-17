@@ -7,6 +7,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -163,7 +164,8 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.KafkaClient(ctx)
 
 	cluster, err := findServerlessClusterByARN(ctx, conn, d.Id())
 
@@ -177,20 +179,8 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading MSK Serverless Cluster (%s): %s", d.Id(), err)
 	}
 
-	clusterARN := aws.ToString(cluster.ClusterArn)
-	d.Set(names.AttrARN, clusterARN)
-	if cluster.Serverless.ClientAuthentication != nil {
-		if err := d.Set("client_authentication", []any{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
-		}
-	} else {
-		d.Set("client_authentication", nil)
-	}
-	d.Set(names.AttrClusterName, cluster.ClusterName)
-	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
-	d.Set("cluster_uuid", clusterUUID)
-	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	if err := resourceServerlessClusterFlatten(ctx, c, cluster, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
@@ -199,12 +189,10 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	case errs.IsA[*types.ForbiddenException](err):
 		d.Set("bootstrap_brokers_sasl_iam", nil)
 	case err != nil:
-		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", clusterARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	default:
 		d.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
 	}
-
-	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
@@ -215,6 +203,28 @@ func resourceServerlessClusterUpdate(ctx context.Context, d *schema.ResourceData
 	// Tags only.
 
 	return append(diags, resourceServerlessClusterRead(ctx, d, meta)...)
+}
+
+func resourceServerlessClusterFlatten(ctx context.Context, awsClient *conns.AWSClient, cluster *types.Cluster, d *schema.ResourceData) error {
+	clusterARN := aws.ToString(cluster.ClusterArn)
+	d.Set(names.AttrARN, clusterARN)
+	if cluster.Serverless.ClientAuthentication != nil {
+		if err := d.Set("client_authentication", []any{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
+			return fmt.Errorf("setting client_authentication: %s", err)
+		}
+	} else {
+		d.Set("client_authentication", nil)
+	}
+	d.Set(names.AttrClusterName, cluster.ClusterName)
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
+	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
+		return fmt.Errorf("setting vpc_config: %s", err)
+	}
+
+	setTagsOut(ctx, cluster.Tags)
+
+	return nil
 }
 
 func findServerlessClusterByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.Cluster, error) {

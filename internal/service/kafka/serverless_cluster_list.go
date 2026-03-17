@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -20,23 +21,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKListResource("aws_msk_cluster")
-func newClusterResourceAsListResource() inttypes.ListResourceForSDK {
-	l := clusterListResource{}
-	l.SetResourceSchema(resourceCluster())
+// @SDKListResource("aws_msk_serverless_cluster")
+func newServerlessClusterResourceAsListResource() inttypes.ListResourceForSDK {
+	l := serverlessClusterListResource{}
+	l.SetResourceSchema(resourceServerlessCluster())
 	return &l
 }
 
-var _ list.ListResource = &clusterListResource{}
+var _ list.ListResource = &serverlessClusterListResource{}
 
-type clusterListResource struct {
+type serverlessClusterListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-func (l *clusterListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *serverlessClusterListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().KafkaClient(ctx)
 
-	var query listClusterModel
+	var query listServerlessClusterModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
@@ -45,8 +46,10 @@ func (l *clusterListResource) List(ctx context.Context, request list.ListRequest
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input kafka.ListClustersInput
-		for item, err := range listClusters(ctx, conn, &input) {
+		input := kafka.ListClustersV2Input{
+			ClusterTypeFilter: aws.String("SERVERLESS"),
+		}
+		for item, err := range listServerlessClusters(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -63,20 +66,25 @@ func (l *clusterListResource) List(ctx context.Context, request list.ListRequest
 			rd.Set(names.AttrARN, arn)
 
 			if request.IncludeResource {
-				outputGBB, err := findBootstrapBrokersByARN(ctx, conn, arn)
-
-				if err != nil {
-					tflog.Error(ctx, "Reading MSK Cluster bootstrap brokers", map[string]any{
+				if err := resourceServerlessClusterFlatten(ctx, l.Meta(), &item, rd); err != nil {
+					tflog.Error(ctx, "Flattening MSK Serverless Cluster", map[string]any{
 						"error": err.Error(),
 					})
 					continue
 				}
 
-				if err := resourceClusterFlatten(ctx, l.Meta(), &item, outputGBB, rd); err != nil {
-					tflog.Error(ctx, "Flattening MSK Cluster", map[string]any{
+				output, err := findBootstrapBrokersByARN(ctx, conn, arn)
+
+				switch {
+				case errs.IsA[*awstypes.ForbiddenException](err):
+					rd.Set("bootstrap_brokers_sasl_iam", nil)
+				case err != nil:
+					tflog.Error(ctx, "Reading MSK Cluster bootstrap brokers", map[string]any{
 						"error": err.Error(),
 					})
 					continue
+				default:
+					rd.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
 				}
 			}
 
@@ -95,17 +103,17 @@ func (l *clusterListResource) List(ctx context.Context, request list.ListRequest
 	}
 }
 
-type listClusterModel struct {
+type listServerlessClusterModel struct {
 	framework.WithRegionModel
 }
 
-func listClusters(ctx context.Context, conn *kafka.Client, input *kafka.ListClustersInput) iter.Seq2[awstypes.ClusterInfo, error] {
-	return func(yield func(awstypes.ClusterInfo, error) bool) {
-		pages := kafka.NewListClustersPaginator(conn, input)
+func listServerlessClusters(ctx context.Context, conn *kafka.Client, input *kafka.ListClustersV2Input) iter.Seq2[awstypes.Cluster, error] {
+	return func(yield func(awstypes.Cluster, error) bool) {
+		pages := kafka.NewListClustersV2Paginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.ClusterInfo](), fmt.Errorf("listing MSK Clusters: %w", err))
+				yield(inttypes.Zero[awstypes.Cluster](), fmt.Errorf("listing MSK Serverless Clusters: %w", err))
 				return
 			}
 

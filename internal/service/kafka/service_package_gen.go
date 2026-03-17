@@ -184,6 +184,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
+		{
+			Factory:  newServerlessClusterResourceAsListResource,
+			TypeName: "aws_msk_serverless_cluster",
+			Name:     "Serverless Cluster",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 	})
 }
 
