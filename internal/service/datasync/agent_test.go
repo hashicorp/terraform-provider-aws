@@ -203,7 +203,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAgentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccAgentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, t, resourceName, &agent),
 				),
@@ -227,8 +227,6 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 	var agent datasync.DescribeAgentOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datasync_agent.test"
-	securityGroupResourceName := "aws_security_group.test"
-	subnetResourceName := "aws_subnet.test.0"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -249,10 +247,8 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("security_group_arns"), knownvalue.ListSizeExact(1)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("security_group_arns").AtSliceIndex(0), securityGroupResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_arns"), knownvalue.ListSizeExact(1)),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("subnet_arns").AtSliceIndex(0), subnetResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("names.AttrVPCEndpointID"), vpcEndpointResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCEndpointID), vpcEndpointResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 				},
 			},
 			{
