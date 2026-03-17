@@ -32,7 +32,7 @@ func TestAccOrganizationsAwsServiceAccess_basic(t *testing.T) {
 	servicePrincipal := "tagpolicies.tag.amazonaws.com"
 	resourceName := "aws_organizations_aws_service_access.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -68,7 +68,7 @@ func TestAccOrganizationsAwsServiceAccess_disappears(t *testing.T) {
 	servicePrincipal := "tagpolicies.tag.amazonaws.com"
 	resourceName := "aws_organizations_aws_service_access.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -103,15 +103,17 @@ func testAccCheckAwsServiceAccessDestroy(ctx context.Context, t *testing.T) reso
 				continue
 			}
 
-			_, err := tforganizations.FindAwsServiceAccessByServicePrincipal(ctx, conn, rs.Primary.ID)
+			servicePrincipal := rs.Primary.Attributes["service_principal"]
+			_, err := tforganizations.FindAwsServiceAccessByServicePrincipal(ctx, conn, servicePrincipal)
 			if retry.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
-				return create.Error(names.Organizations, create.ErrActionCheckingDestroyed, tforganizations.ResNameAwsServiceAccess, rs.Primary.ID, err)
+				return create.Error(names.Organizations, create.ErrActionCheckingDestroyed, tforganizations.ResNameAwsServiceAccess, servicePrincipal, err)
 			}
 
-			return create.Error(names.Organizations, create.ErrActionCheckingDestroyed, tforganizations.ResNameAwsServiceAccess, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Organizations, create.ErrActionCheckingDestroyed, tforganizations.ResNameAwsServiceAccess, servicePrincipal, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -125,15 +127,15 @@ func testAccCheckAwsServiceAccessExists(ctx context.Context, t *testing.T, name 
 			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameAwsServiceAccess, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		servicePrincipal := rs.Primary.Attributes["service_principal"]
+		if servicePrincipal == "" {
 			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameAwsServiceAccess, name, errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
-
-		resp, err := tforganizations.FindAwsServiceAccessByServicePrincipal(ctx, conn, rs.Primary.ID)
+		resp, err := tforganizations.FindAwsServiceAccessByServicePrincipal(ctx, conn, servicePrincipal)
 		if err != nil {
-			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameAwsServiceAccess, rs.Primary.ID, err)
+			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameAwsServiceAccess, servicePrincipal, err)
 		}
 
 		*awsserviceaccess = *resp
