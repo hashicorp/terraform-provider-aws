@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.61.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.56.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.3 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.56.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.73.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.74.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.81.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.12 // indirect

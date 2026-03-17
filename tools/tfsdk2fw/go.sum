@@ -99,8 +99,8 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.61.2 h1:0PZZHRCD+loUufL2bawAiyWCRa
 github.com/aws/aws-sdk-go-v2/service/batch v1.61.2/go.mod h1:nzRjG8jjDCzXiP3nuQuqdFGazWCRcZIFtnnE2UxiGFs=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1 h1:GE259ZH+W1bwAjuq1bX+s0jf+Xc2+nOxiXnPmlo85+M=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1/go.mod h1:K1pJMpg6gkOrgIyywnAQuZURtkMIrCm5Sa9Jq9B92Xw=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.56.1 h1:0peImwbahEWbssTHbT2b3Kr20BLVx81zpqcZq8VCxt8=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.56.1/go.mod h1:C/1NPMi8p0/I4HKgDqXYl7WdcQvWrKBq5PqwGQjMz8U=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0 h1:DCONGOKen9tTc35KrPbMGEr9KjIMY0eYLkFdeYSzW4c=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0/go.mod h1:C/1NPMi8p0/I4HKgDqXYl7WdcQvWrKBq5PqwGQjMz8U=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6 h1:NuFq27qHpFuEEJBU9g4TWTjebw4A8R6Fg4rgsKq7SuI=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6/go.mod h1:/km2uZARrg9SotWJ1RIodg08j//vsgvUf8E8+vNAywk=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.1 h1:D2Ry8w3jqgtDV1gRYOVGCfuEMObeJ1T38yUN+deiYxo=
@@ -227,8 +227,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.56.1 h1:aVrtUrtZN2aGNuI+Pt1XR9ofsoch
 github.com/aws/aws-sdk-go-v2/service/ecr v1.56.1/go.mod h1:j2lU1Ko0NlsZRXXQ8rSs561bhAC+HN2ob+UREFuSfIA=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.12 h1:BRbWTsLEZasXhaRFF34kxopPk4yJmagffFs8lITm0xY=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.12/go.mod h1:XHvafUELNAPTUGhyx06BVyraFMazvwFHyNPuGOiDSL0=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.73.2 h1:ENHzo6/jTaaNgaetLNujQsiZIYSQtnbDWJn48H7mEaQ=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.73.2/go.mod h1:10kBgdaNJz0FO/+JWDUH+0rtSjkn5yafgavDDmmhFzs=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.74.0 h1:YS5TXaEvzDb+sV+wdQFUtuCAk0GeFR9Ai6HFdxpz6q8=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.74.0/go.mod h1:10kBgdaNJz0FO/+JWDUH+0rtSjkn5yafgavDDmmhFzs=
 github.com/aws/aws-sdk-go-v2/service/efs v1.41.13 h1:C11r13KfnzxlLuILWOjBNdSJDRsJ2HDqc8kTNGc6VcM=
 github.com/aws/aws-sdk-go-v2/service/efs v1.41.13/go.mod h1:YP65UYTCBf/NQKrZH+jfX/EHD5zFWLwioLpNoioIscU=
 github.com/aws/aws-sdk-go-v2/service/eks v1.81.1 h1:wMMZ6vc0xljHGxZB4Hz3kVX9wSLTUau8RiaZAZtszCA=
