@@ -6,6 +6,7 @@ package kafka_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -132,17 +133,18 @@ func TestAccKafkaCluster_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_kafka_cluster.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						// TIP: Add checks for _all_ resource attributes, including "region".
-						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("kafka", "cluster:"+rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("bootstrap_brokers_tls"), knownvalue.StringRegexp(clusterBoostrapBrokersTLSRegexp)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("zookeeper_connect_string"), knownvalue.StringRegexp(clusterZookeeperConnectStringRegexp)),
 					}),
 				},
 			},
