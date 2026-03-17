@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -13,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,7 +69,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -105,7 +107,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 
 	firewallDomainList, err := findFirewallDomainListByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Domain List (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -213,8 +215,7 @@ func findFirewallDomainListByID(ctx context.Context, conn *route53resolver.Clien
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -223,17 +224,17 @@ func findFirewallDomainListByID(ctx context.Context, conn *route53resolver.Clien
 	}
 
 	if output == nil || output.FirewallDomainList == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FirewallDomainList, nil
 }
 
-func statusFirewallDomainList(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewallDomainList(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallDomainListByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -254,7 +255,7 @@ func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallDomainListStatusUpdating, awstypes.FirewallDomainListStatusImporting),
 		Target:  enum.Slice(awstypes.FirewallDomainListStatusComplete, awstypes.FirewallDomainListStatusCompleteImportFailed),
-		Refresh: statusFirewallDomainList(ctx, conn, id),
+		Refresh: statusFirewallDomainList(conn, id),
 		Timeout: firewallDomainListUpdatedTimeout,
 	}
 
@@ -262,7 +263,7 @@ func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Cl
 
 	if output, ok := outputRaw.(*awstypes.FirewallDomainList); ok {
 		if status := output.Status; status == awstypes.FirewallDomainListStatusCompleteImportFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -275,7 +276,7 @@ func waitFirewallDomainListDeleted(ctx context.Context, conn *route53resolver.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallDomainListStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFirewallDomainList(ctx, conn, id),
+		Refresh: statusFirewallDomainList(conn, id),
 		Timeout: firewallDomainListDeletedTimeout,
 	}
 

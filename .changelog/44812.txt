@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_bedrockagentcore_gateway: Change `authorizer_configuration` block from `Required` to `Optional`
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_gateway: Mark `authorizer_type` argument as `ForceNew`
+```

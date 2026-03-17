@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -40,16 +40,18 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_basic":                  testAccOrganizationDataSource_basic,
 			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
-			"Identity":                          testAccOrganizationsOrganization_IdentitySerial,
+			"Identity":                          testAccOrganizationsOrganization_identitySerial,
+			"DataSource_returnOrganizationOnly": testAccOrganizationDataSource_returnOrganizationOnly,
 		},
 		"Account": {
-			acctest.CtBasic:   testAccAccount_basic,
-			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
-			"ParentId":        testAccAccount_ParentID,
-			"tags":            testAccAccount_Tags,
-			"GovCloud":        testAccAccount_govCloud,
-			"AccountUpdate":   testAccAccount_AccountUpdate,
-			"Identity":        testAccOrganizationsAccount_IdentitySerial,
+			acctest.CtBasic:    testAccAccount_basic,
+			"DataSource_basic": testAccAccountDataSource_basic,
+			"CloseOnDeletion":  testAccAccount_CloseOnDeletion,
+			"ParentId":         testAccAccount_ParentID,
+			"tags":             testAccAccount_Tags,
+			"GovCloud":         testAccAccount_govCloud,
+			"AccountUpdate":    testAccAccount_AccountUpdate,
+			"Identity":         testAccOrganizationsAccount_identitySerial,
 		},
 		"OrganizationalUnit": {
 			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
@@ -61,7 +63,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,
-			"Identity":                           testAccOrganizationsOrganizationalUnit_IdentitySerial,
+			"Identity":                           testAccOrganizationsOrganizationalUnit_identitySerial,
 		},
 		"Policy": {
 			acctest.CtBasic:          testAccPolicy_basic,
@@ -74,8 +76,13 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_Backup":            testAccPolicy_type_Backup,
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
+			"Type_SecurityHub":       testAccPolicy_type_SecurityHub,
+			"Type_Inspector":         testAccPolicy_type_Inspector,
+			"Type_UpgradeRollout":    testAccPolicy_type_UpgradeRollout,
+			"Type_S3":                testAccPolicy_type_S3,
+			"Type_Bedrock":           testAccPolicy_type_Bedrock,
 			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
-			"Identity":               testAccOrganizationsPolicy_IdentitySerial,
+			"Identity":               testAccOrganizationsPolicy_identitySerial,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccPolicyAttachment_Account,
@@ -83,7 +90,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Root":               testAccPolicyAttachment_Root,
 			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
 			acctest.CtDisappears: testAccPolicyAttachment_disappears,
-			"Identity":           testAccOrganizationsPolicyAttachment_IdentitySerial,
+			"Identity":           testAccOrganizationsPolicyAttachment_identitySerial,
 		},
 		"PolicyDataSource": {
 			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
@@ -92,12 +99,12 @@ func TestAccOrganizations_serial(t *testing.T) {
 			acctest.CtBasic:      testAccResourcePolicy_basic,
 			acctest.CtDisappears: testAccResourcePolicy_disappears,
 			"tags":               testAccOrganizationsResourcePolicy_tagsSerial,
-			"Identity":           testAccOrganizationsResourcePolicy_IdentitySerial,
+			"Identity":           testAccOrganizationsResourcePolicy_identitySerial,
 		},
 		"DelegatedAdministrator": {
 			acctest.CtBasic:      testAccDelegatedAdministrator_basic,
 			acctest.CtDisappears: testAccDelegatedAdministrator_disappears,
-			"Identity":           testAccOrganizationsDelegatedAdministrator_IdentitySerial,
+			"Identity":           testAccOrganizationsDelegatedAdministrator_identitySerial,
 		},
 		"DelegatedAdministrators": {
 			acctest.CtBasic: testAccDelegatedAdministratorsDataSource_basic,

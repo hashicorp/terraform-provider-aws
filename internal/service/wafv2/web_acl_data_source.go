@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package wafv2
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -169,7 +170,7 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 
 	webACLARN := aws.ToString(output.Distribution.DistributionConfig.WebACLId)
 	if webACLARN == "" {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: fmt.Sprintf("no WebACL associated with CloudFront distribution: %s", distributionID),
 		}
 	}
@@ -197,7 +198,7 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 		return nil, fmt.Errorf("finding WAFv2 WebACL (%s): %w", webACLARN, err)
 	}
 	if webACLOut == nil {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: fmt.Sprintf("no WAFv2 WebACL found: %s", webACLARN),
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -8,32 +8,30 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMPatchGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_patch_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckPatchGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(ctx, resourceName),
+					testAccCheckPatchGroupExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -42,10 +40,10 @@ func TestAccSSMPatchGroup_basic(t *testing.T) {
 
 func TestAccSSMPatchGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_patch_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,8 +52,8 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 			{
 				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
+					testAccCheckPatchGroupExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,23 +63,23 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 
 func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName1 := "aws_ssm_patch_group.test1"
 	resourceName2 := "aws_ssm_patch_group.test2"
 	resourceName3 := "aws_ssm_patch_group.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckPatchGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_multipleBaselines(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(ctx, resourceName1),
-					testAccCheckPatchGroupExists(ctx, resourceName2),
-					testAccCheckPatchGroupExists(ctx, resourceName3),
+					testAccCheckPatchGroupExists(ctx, t, resourceName1),
+					testAccCheckPatchGroupExists(ctx, t, resourceName2),
+					testAccCheckPatchGroupExists(ctx, t, resourceName3),
 				),
 			},
 		},
@@ -91,14 +89,14 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/37622.
 func TestAccSSMPatchGroup_defaultPatchBaselines(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName1 := "aws_ssm_patch_group.test1"
 	resourceName2 := "aws_ssm_patch_group.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckPatchGroupDestroy(ctx),
+		CheckDestroy: testAccCheckPatchGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -109,8 +107,8 @@ func TestAccSSMPatchGroup_defaultPatchBaselines(t *testing.T) {
 				},
 				Config: testAccPatchGroupConfig_defaultPatchBaselines(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchGroupExists(ctx, resourceName1),
-					testAccCheckPatchGroupExists(ctx, resourceName2),
+					testAccCheckPatchGroupExists(ctx, t, resourceName1),
+					testAccCheckPatchGroupExists(ctx, t, resourceName2),
 				),
 			},
 			{
@@ -126,9 +124,9 @@ func TestAccSSMPatchGroup_defaultPatchBaselines(t *testing.T) {
 	})
 }
 
-func testAccCheckPatchGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPatchGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_patch_group" {
@@ -137,7 +135,7 @@ func testAccCheckPatchGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfssm.FindPatchGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["patch_group"], rs.Primary.Attributes["baseline_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -152,14 +150,14 @@ func testAccCheckPatchGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPatchGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPatchGroupExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		_, err := tfssm.FindPatchGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["patch_group"], rs.Primary.Attributes["baseline_id"])
 

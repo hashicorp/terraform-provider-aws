@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,13 +9,11 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,18 +21,18 @@ func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var res awstypes.SubnetCidrReservation
 	resourceName := "aws_ec2_subnet_cidr_reservation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
+					testAccCheckSubnetCIDRReservationExists(ctx, t, resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.1.16/28"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", names.AttrPrefix),
@@ -55,18 +53,18 @@ func TestAccVPCSubnetCIDRReservation_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var res awstypes.SubnetCidrReservation
 	resourceName := "aws_ec2_subnet_cidr_reservation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetCIDRReservationConfig_testIPv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
+					testAccCheckSubnetCIDRReservationExists(ctx, t, resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "explicit"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 				),
@@ -85,19 +83,19 @@ func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var res awstypes.SubnetCidrReservation
 	resourceName := "aws_ec2_subnet_cidr_reservation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnetCIDRReservation(), resourceName),
+					testAccCheckSubnetCIDRReservationExists(ctx, t, resourceName, &res),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnetCIDRReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,7 +103,7 @@ func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *awstypes.SubnetCidrReservation) resource.TestCheckFunc {
+func testAccCheckSubnetCIDRReservationExists(ctx context.Context, t *testing.T, n string, v *awstypes.SubnetCidrReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -116,7 +114,7 @@ func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *a
 			return fmt.Errorf("No EC2 Subnet CIDR Reservation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes[names.AttrSubnetID], rs.Primary.ID)
 
@@ -130,9 +128,9 @@ func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *a
 	}
 }
 
-func testAccCheckSubnetCIDRReservationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSubnetCIDRReservationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_subnet_cidr_reservation" {
@@ -141,7 +139,7 @@ func testAccCheckSubnetCIDRReservationDestroy(ctx context.Context) resource.Test
 
 			_, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes[names.AttrSubnetID], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

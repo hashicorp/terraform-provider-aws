@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sqs
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -194,10 +196,12 @@ var (
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @IdentityVersion(1)
+// @CustomInherentRegionIdentity("url", "parseQueueURL")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
-// @IdentityAttribute("url")
 // @Testing(preIdentityVersion="v6.9.0")
-// @Testing(idAttrDuplicates="url")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -221,7 +225,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	name := queueName(d)
+	name := queueName(ctx, d)
 	input := &sqs.CreateQueueInput{
 		QueueName: aws.String(name),
 		Tags:      getTagsIn(ctx),
@@ -285,7 +289,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -374,14 +378,14 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+func resourceQueueCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 	sqsManagedSSEEnabled := diff.Get("sqs_managed_sse_enabled").(bool)
 
 	if diff.Id() == "" {
 		// Create.
-		name := queueName(diff)
+		name := queueName(ctx, diff)
 		var re *regexp.Regexp
 
 		if fifoQueue {
@@ -416,12 +420,12 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d sdkv2.ResourceDiffer) string {
+func queueName(ctx context.Context, d sdkv2.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
-	return create.NewNameGenerator(optFns...).Generate()
+	return create.NewNameGenerator(optFns...).Generate(ctx)
 }
 
 // queueNameFromURL returns the SQS queue name from the specified URL.
@@ -473,7 +477,7 @@ func findQueueAttributeByTwoPartKey(ctx context.Context, conn *sqs.Client, url s
 		return &v, nil
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQueueAttributesInput) (map[types.QueueAttributeName]string, error) {
@@ -481,8 +485,7 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -491,7 +494,7 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfmaps.ApplyToAllKeys(output.Attributes, func(v string) types.QueueAttributeName {
@@ -515,11 +518,11 @@ const (
 	queueAttributeStateEqual    = "equal"
 )
 
-func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQueueState(conn *sqs.Client, url string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findQueueAttributesByURL(ctx, conn, url)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -531,8 +534,8 @@ func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.S
 	}
 }
 
-func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQueueAttributeState(conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		attributesMatch := func(got map[types.QueueAttributeName]string) string {
 			for k, e := range expected {
 				g, ok := got[k]
@@ -586,7 +589,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 		got, err := findQueueAttributesByURL(ctx, conn, url)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -604,7 +607,7 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
-		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
+		Refresh:                   statusQueueAttributeState(conn, url, expected),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
@@ -620,7 +623,7 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
-		Refresh:                   statusQueueState(ctx, conn, url),
+		Refresh:                   statusQueueState(conn, url),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
@@ -630,4 +633,16 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func parseQueueURL(u string) (result inttypes.BaseIdentity, err error) {
+	re := regexache.MustCompile(`^https://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
+	match := re.FindStringSubmatch(u)
+	if match == nil {
+		return inttypes.BaseIdentity{}, fmt.Errorf("could not parse %q as SQS URL", u)
+	}
+	return inttypes.BaseIdentity{
+		AccountID: match[2],
+		Region:    match[1],
+	}, nil
 }

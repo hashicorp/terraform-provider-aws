@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding a Newly Released AWS Region
 
 New regions can typically be used immediately with the provider, with two important caveats:

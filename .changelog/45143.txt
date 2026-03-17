@@ -1,0 +1,6 @@
+```release-note:new-guide
+Tag Policy Compliance
+```
+```release-note:enhancement
+provider: Add support for enforcing tag policy compliance. This opt-in feature can be enabled via the new `tag_policy_compliance` provider argument, or the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable. When enabled, the principal executing Terraform must have the `tags:ListRequiredTags` IAM permission.
+```

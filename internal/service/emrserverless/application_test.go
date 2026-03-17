@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrserverless_test
@@ -17,6 +17,39 @@ import (
 	tfemrserverless "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfemrserverless.PrometheusRemoteWriteURLPattern)
+
+	validURLs := []string{
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",     //lintignore:AWSAT003
+		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write", //lintignore:AWSAT003
+		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write", //lintignore:AWSAT003
+	}
+
+	for _, url := range validURLs {
+		if !regex.MatchString(url) {
+			t.Errorf("Expected %q to be valid", url)
+		}
+	}
+
+	invalidURLs := []string{
+		"https://aps-workspaces.invalid-region.amazonaws.com/workspaces/test/api/v1/remote_write",
+		"http://aps-workspaces.us-east-1.amazonaws.com/workspaces/test/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces//api/v1/remote_write",      //lintignore:AWSAT003
+		"https://aps-workspaces.us--east-1.amazonaws.com/workspaces/test/api/v1/remote_write", // double dash
+		"https://aps-workspaces.us-east-.amazonaws.com/workspaces/test/api/v1/remote_write",   // trailing dash
+	}
+
+	for _, url := range invalidURLs {
+		if regex.MatchString(url) {
+			t.Errorf("Expected %q to be invalid", url)
+		}
+	}
+}
 
 func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -46,6 +79,8 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -369,8 +404,8 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -418,6 +453,61 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEMRServerlessApplication_runtimeConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_applicationConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.classification", "spark-defaults"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.cores", "2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.executor.cores", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.memory", "4G"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.executor.memory", "4G"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.classification", "spark-executor-log4j2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.rootLogger.level", "error"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.logger.IdentifierForClass.name", "classpathForSettingLogger"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.logger.IdentifierForClass.level", "info"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.2.classification", "spark-driver-log4j2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.2.properties.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_applicationConfigurationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.classification", "spark-defaults"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.cores", "4"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.properties.spark.driver.memory", "8G"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.classification", "hive-site"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.1.properties.hive.metastore.client.factory.class", "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"),
 				),
 			},
 		},
@@ -532,6 +622,49 @@ func TestAccEMRServerlessApplication_schedulerConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "15"),
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "180"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEMRServerlessApplication_jobLevelCostAllocationConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_jobLevelCostAllocationConfiguration(rName, "emr-6.6.0", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_jobLevelCostAllocationConfiguration(rName, "emr-6.6.0", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -906,6 +1039,141 @@ resource "aws_emrserverless_application" "test" {
 `, rName, selectedVersionResourceName, firstImageVersion, secondImageVersion), nil
 }
 
+func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_monitoringConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.log_group_name", "/aws/emr-serverless/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.0.log_uri"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_monitoringConfigurationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.prometheus_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.prometheus_monitoring_configuration.0.remote_write_url"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.0.log_uri"),
+				),
+			},
+		},
+	})
+}
+
+func testAccApplicationConfig_monitoringConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/emr-serverless/%[1]s"
+}
+
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "spark"
+
+  monitoring_configuration {
+    cloudwatch_logging_configuration {
+      enabled                = true
+      log_group_name         = aws_cloudwatch_log_group.test.name
+      log_stream_name_prefix = "spark-logs"
+
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_EXECUTOR"
+        values = ["STDOUT"]
+      }
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = true
+    }
+
+    s3_monitoring_configuration {
+      log_uri = "s3://${aws_s3_bucket.test.bucket}/logs/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccApplicationConfig_monitoringConfigurationUpdated(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test_updated" {
+  bucket        = "%[1]s-updated"
+  force_destroy = true
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/emr-serverless/%[1]s"
+}
+
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-7.1.0"
+  type          = "spark"
+
+  monitoring_configuration {
+    cloudwatch_logging_configuration {
+      enabled        = false
+      log_group_name = aws_cloudwatch_log_group.test.name
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = false
+    }
+
+    prometheus_monitoring_configuration {
+      remote_write_url = "https://aps-workspaces.${data.aws_region.current.name}.amazonaws.com/workspaces/ws-12345678-1234-1234-1234-123456789012/api/v1/remote_write"
+    }
+
+    s3_monitoring_configuration {
+      log_uri = "s3://${aws_s3_bucket.test_updated.bucket}/logs/"
+    }
+  }
+}
+`, rName)
+}
+
 func testAccApplicationConfig_schedulerConfiguration(rName string, maxConcurrentRuns, queueTimeoutMinutes int) string {
 	return fmt.Sprintf(`
 resource "aws_emrserverless_application" "test" {
@@ -955,4 +1223,81 @@ resource "aws_emrserverless_application" "test" {
   }
 }
 `, rName, queueTimeoutMinutes)
+}
+
+func testAccApplicationConfig_applicationConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.8.0"
+  type          = "spark"
+
+  runtime_configuration {
+    classification = "spark-defaults"
+
+    properties = {
+      "spark.driver.cores"    = "2"
+      "spark.executor.cores"  = "1"
+      "spark.driver.memory"   = "4G"
+      "spark.executor.memory" = "4G"
+    }
+  }
+
+  runtime_configuration {
+    classification = "spark-executor-log4j2"
+
+    properties = {
+      "rootLogger.level"                = "error"
+      "logger.IdentifierForClass.name"  = "classpathForSettingLogger"
+      "logger.IdentifierForClass.level" = "info"
+    }
+  }
+
+  runtime_configuration {
+    classification = "spark-driver-log4j2"
+    properties     = {}
+  }
+}
+`, rName)
+}
+
+func testAccApplicationConfig_applicationConfigurationUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.8.0"
+  type          = "spark"
+
+  runtime_configuration {
+    classification = "spark-defaults"
+
+    properties = {
+      "spark.driver.cores"  = "4"
+      "spark.driver.memory" = "8G"
+    }
+  }
+
+  runtime_configuration {
+    classification = "hive-site"
+
+    properties = {
+      "hive.metastore.client.factory.class" = "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccApplicationConfig_jobLevelCostAllocationConfiguration(rName, releaseLabel string, jobLevelCostAllocationConfiguration bool) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = %[2]q
+  type          = "hive"
+
+  job_level_cost_allocation_configuration {
+    enabled = %[3]t
+  }
+}
+`, rName, releaseLabel, jobLevelCostAllocationConfiguration)
 }

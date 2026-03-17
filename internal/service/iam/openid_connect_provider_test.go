@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -8,33 +8,31 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	url := "accounts.testle.com/" + rString
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -52,7 +50,7 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderConfig_modified(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
@@ -72,16 +70,16 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_none(t *testing.T) {
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.Test(t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -100,16 +98,16 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.Test(t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_thumbprint(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -123,7 +121,7 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withToWithout(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -145,16 +143,16 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 	url := "accounts.google.com"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.Test(t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
+	acctest.Test(ctx, t, resource.TestCase{ // can't run in parallel b/c of google URL, needed for no thumbprints
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -168,7 +166,7 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderConfig_thumbprint(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -185,20 +183,20 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOpenIDConnectProvider(), resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceOpenIDConnectProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -208,19 +206,19 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_first(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -231,7 +229,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_second(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 				),
 				// Expect an empty plan as only the order has been changed
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -249,19 +247,19 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_first(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -272,7 +270,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_add(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "abc.testle.com"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.3", "xyz.testle.com"),
@@ -286,7 +284,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderConfig_clientIDList_remove(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "def.testle.com"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.2", "xyz.testle.com"),
@@ -296,9 +294,9 @@ func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 	})
 }
 
-func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_openid_connect_provider" {
@@ -307,7 +305,7 @@ func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.Test
 
 			_, err := tfiam.FindOpenIDConnectProviderByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -322,7 +320,7 @@ func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckOpenIDConnectProviderExists(ctx context.Context, n string /*, v *iam.GetOpenIDConnectProviderOutput*/) resource.TestCheckFunc {
+func testAccCheckOpenIDConnectProviderExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -333,7 +331,7 @@ func testAccCheckOpenIDConnectProviderExists(ctx context.Context, n string /*, v
 			return fmt.Errorf("No IAM OIDC Provider ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		_, err := tfiam.FindOpenIDConnectProviderByARN(ctx, conn, rs.Primary.ID)
 

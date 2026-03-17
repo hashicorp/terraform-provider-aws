@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes
@@ -13,12 +13,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// secretsManagerARNPattern validates Secrets Manager ARNs for Pipes source parameters.
+// Original pattern (before ESC support): ^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2}):(\d{12}):secret:.+)$
+// Updated to use canonical region pattern to support ESC regions like eusc-de-east-1.
+var secretsManagerARNPattern = `^(^arn:aws([a-z]|\-)*:secretsmanager:(` + inttypes.CanonicalRegionPatternNoAnchors + `):(\d{12}):secret:.+)$`
+
 func sourceParametersSchema() *schema.Schema {
-	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2}):(\d{12}):secret:.+)$`), "")
+	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(secretsManagerARNPattern), "")
 
 	return &schema.Schema{
 		Type:     schema.TypeList,

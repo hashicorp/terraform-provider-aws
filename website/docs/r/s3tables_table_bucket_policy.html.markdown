@@ -26,7 +26,7 @@ data "aws_iam_policy_document" "example" {
   }
 }
 
-resource "aws_s3tables_table_bucket" "test" {
+resource "aws_s3tables_table_bucket" "example" {
   name = "example-bucket"
 }
 ```

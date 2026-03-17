@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -37,15 +39,28 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,11 +116,15 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrID: {
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -113,8 +132,21 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
+			},
+			"return_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"roots": {
 				Type:     schema.TypeList,
@@ -173,6 +205,10 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("master_account_email", org.MasterAccountEmail)
 	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
+
+	if _, ok := d.GetOk("return_organization_only"); ok {
+		return diags
+	}
 
 	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID(ctx)
 	isDelegatedAdministrator := true

@@ -1,0 +1,43 @@
+```release-note:bug
+resource/aws_redshift_cluster: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_cluster_snapshot: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_event_subscription: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_hsm_client_certificate: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_hsm_configuration: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_integration: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_parameter_group: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_snapshot_copy_grant: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_snapshot_schedule: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_subnet_group: Prevents errors with empty tag values.
+```
+
+```release-note:bug
+resource/aws_redshift_usage_limit: Prevents errors with empty tag values.
+```

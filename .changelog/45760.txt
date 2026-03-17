@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_subscription_filter: Add `emit_system_fields` argument
+```

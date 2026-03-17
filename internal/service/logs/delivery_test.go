@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -23,10 +23,6 @@ import (
 )
 
 func testAccDelivery_basic(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -38,13 +34,7 @@ func testAccDelivery_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_basic(rName),
@@ -76,10 +66,6 @@ func testAccDelivery_basic(t *testing.T) {
 }
 
 func testAccDelivery_disappears(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -91,19 +77,13 @@ func testAccDelivery_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDelivery, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDelivery, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,10 +92,6 @@ func testAccDelivery_disappears(t *testing.T) {
 }
 
 func testAccDelivery_tags(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -127,13 +103,7 @@ func testAccDelivery_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -198,10 +168,6 @@ func testAccDelivery_tags(t *testing.T) {
 }
 
 func testAccDelivery_update(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var v awstypes.Delivery
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -213,13 +179,7 @@ func testAccDelivery_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckDeliveryDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryConfig_allAttributes(rName, " ", "{region}/{yyyy}/{MM}/"),
@@ -237,6 +197,10 @@ func testAccDelivery_update(t *testing.T) {
 						knownvalue.StringExact("event_timestamp"),
 						knownvalue.StringExact("event"),
 					})),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("s3_delivery_configuration").AtSliceIndex(0).AtMapKey("suffix_path"),
+						knownvalue.StringExact("{region}/{yyyy}/{MM}/")),
 				},
 			},
 			{
@@ -264,6 +228,10 @@ func testAccDelivery_update(t *testing.T) {
 						knownvalue.StringExact("event_timestamp"),
 						knownvalue.StringExact("event"),
 					})),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("s3_delivery_configuration").AtSliceIndex(0).AtMapKey("suffix_path"),
+						knownvalue.StringExact("{region}/{yyyy}/{MM}/{dd}/")),
 				},
 			},
 			{
@@ -296,7 +264,7 @@ func testAccDelivery_cloudFrontDistribution(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryConfig_cloudFrontDistribution(rName),
+				Config: testAccDeliveryConfig_cloudFrontDistribution(rName, "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
 				),
@@ -309,6 +277,21 @@ func testAccDelivery_cloudFrontDistribution(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_delivery_configuration").AtSliceIndex(0).AtMapKey("suffix_path"), knownvalue.StringExact("/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}")),
+				},
+			},
+			{
+				Config: testAccDeliveryConfig_cloudFrontDistribution(rName, "/987654321098/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_delivery_configuration").AtSliceIndex(0).AtMapKey("suffix_path"), knownvalue.StringExact("/987654321098/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}")),
 				},
 			},
 		},
@@ -430,7 +413,7 @@ resource "aws_cloudwatch_log_delivery" "test" {
 `, rName, fieldDelimiter, suffixPath))
 }
 
-func testAccDeliveryConfig_cloudFrontDistribution(rName string) string {
+func testAccDeliveryConfig_cloudFrontDistribution(rName, suffixPath string) string {
 	return acctest.ConfigCompose(testAccDeliverySourceConfig_baseCloudFrontDistribution(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_delivery_source" "test" {
   name         = %[1]q
@@ -457,8 +440,8 @@ resource "aws_cloudwatch_log_delivery" "test" {
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
 
   s3_delivery_configuration {
-    suffix_path = "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
+    suffix_path = %[2]q
   }
 }
-`, rName))
+`, rName, suffixPath))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -10,16 +10,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/datasourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,25 +35,29 @@ func validateInContextRegionInPartition(ctx context.Context, c awsClient) diag.D
 	return diags
 }
 
-type dataSourceInjectRegionAttributeInterceptor struct{}
+type dataSourceInjectRegionAttributeInterceptor struct {
+	isDeprecated bool
+}
 
 func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[datasource.SchemaRequest, datasource.SchemaResponse]) {
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: names.ResourceTopLevelRegionAttributeDescription,
+			if r.isDeprecated {
+				response.Schema.Attributes[names.AttrRegion] = datasourceattribute.RegionDeprecated()
+			} else {
+				response.Schema.Attributes[names.AttrRegion] = datasourceattribute.Region()
 			}
 		}
 	}
 }
 
 // dataSourceInjectRegionAttribute injects a top-level "region" attribute into a data source's schema.
-func dataSourceInjectRegionAttribute() dataSourceSchemaInterceptor {
-	return &dataSourceInjectRegionAttributeInterceptor{}
+func dataSourceInjectRegionAttribute(isDeprecated bool) dataSourceSchemaInterceptor {
+	return &dataSourceInjectRegionAttributeInterceptor{
+		isDeprecated: isDeprecated,
+	}
 }
 
 type dataSourceValidateRegionInterceptor struct{}
@@ -167,21 +173,29 @@ func ephemeralResourceValidateRegion() ephemeralResourceORCInterceptor {
 	return &ephemeralResourceValidateRegionInterceptor{}
 }
 
-type resourceInjectRegionAttributeInterceptor struct{}
+type resourceInjectRegionAttributeInterceptor struct {
+	isDeprecated bool
+}
 
 func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) {
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			if r.isDeprecated {
+				response.Schema.Attributes[names.AttrRegion] = resourceattribute.RegionDeprecated()
+			} else {
+				response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			}
 		}
 	}
 }
 
 // resourceInjectRegionAttribute injects a top-level "region" attribute into a resource's schema.
-func resourceInjectRegionAttribute() resourceSchemaInterceptor {
-	return &resourceInjectRegionAttributeInterceptor{}
+func resourceInjectRegionAttribute(isDeprecated bool) resourceSchemaInterceptor {
+	return &resourceInjectRegionAttributeInterceptor{
+		isDeprecated: isDeprecated,
+	}
 }
 
 type resourceValidateRegionInterceptor struct{}
@@ -328,7 +342,7 @@ func (r resourceImportRegionInterceptor) importState(ctx context.Context, opts i
 	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		// Import ID optionally ends with "@<region>".
-		if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
+		if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(request.ID); len(matches) == 3 {
 			request.ID = matches[1]
 			opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
 			if opts.response.Diagnostics.HasError() {
@@ -354,7 +368,7 @@ func (r resourceImportRegionNoDefaultInterceptor) importState(ctx context.Contex
 	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		// Import ID optionally ends with "@<region>".
-		if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
+		if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(request.ID); len(matches) == 3 {
 			request.ID = matches[1]
 			opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
 			if opts.response.Diagnostics.HasError() {
@@ -415,6 +429,10 @@ func (r listResourceInjectRegionAttributeInterceptor) schema(ctx context.Context
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+			if response.Schema.Attributes == nil {
+				// Initialize the attributes map if a custom ConfigSchema method has omitted it
+				response.Schema.Attributes = map[string]listschema.Attribute{}
+			}
 			// Inject a top-level "region" attribute.
 			response.Schema.Attributes[names.AttrRegion] = listresourceattribute.Region()
 		}

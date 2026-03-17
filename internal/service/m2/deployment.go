@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package m2
 
@@ -19,13 +21,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -157,7 +159,7 @@ func (r *deploymentResource) Read(ctx context.Context, request resource.ReadRequ
 
 	outputGD, err := findDeploymentByTwoPartKey(ctx, conn, data.ApplicationID.ValueString(), data.DeploymentID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -353,8 +355,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -363,17 +364,17 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDeployment(conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -389,14 +390,14 @@ func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentLifecycleDeploying),
 		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
-		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
+		Refresh: statusDeployment(conn, applicationID, deploymentID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -408,14 +409,14 @@ func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentLifecycleDeployUpdate),
 		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
-		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
+		Refresh: statusDeployment(conn, applicationID, deploymentID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

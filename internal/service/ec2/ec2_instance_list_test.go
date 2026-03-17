@@ -1,14 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -21,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2Instance_List_Basic(t *testing.T) {
+func TestAccEC2Instance_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_instance.test[0]"
@@ -34,14 +32,14 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_basic/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrWith("aws_instance.test.0", names.AttrID, getter(&id1)),
 					resource.TestCheckResourceAttrWith("aws_instance.test.1", names.AttrID, getter(&id2)),
@@ -56,26 +54,25 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_basic/"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
 					}),
 				},
 			},
@@ -83,7 +80,7 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
+func TestAccEC2Instance_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_instance.test[0]"
@@ -96,14 +93,14 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -121,9 +118,8 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -131,19 +127,19 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
 					}),
 				},
 			},
@@ -151,7 +147,7 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_Filtered(t *testing.T) {
+func TestAccEC2Instance_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_instance.expected[0]"
@@ -165,14 +161,14 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_filtered/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrWith("aws_instance.expected.0", names.AttrID, getter(&id1)),
 					resource.TestCheckResourceAttrWith("aws_instance.expected.1", names.AttrID, getter(&id2)),
@@ -187,20 +183,19 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_filtered/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_filtered/"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 				},
 			},
@@ -208,25 +203,25 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
+func TestAccEC2Instance_List_excludeAutoScaled(t *testing.T) {
 	t.Skip("Skipping because zero-result queries cause a failure now")
 
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_exclude_autoscaled/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_exclude_autoscaled/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -235,9 +230,8 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Instance/list_exclude_autoscaled/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Instance/list_exclude_autoscaled/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -255,16 +249,6 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 func getter(s *string) resource.CheckResourceAttrWithFunc {
 	return func(v string) error {
 		*s = v
-		return nil
-	}
-}
-
-// TODO: Temporary until there is more testing support
-func checker(s *string) func(string) error {
-	return func(v string) error {
-		if v != *s {
-			return fmt.Errorf("expected %q, got %q", *s, v)
-		}
 		return nil
 	}
 }
