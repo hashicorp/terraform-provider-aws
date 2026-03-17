@@ -89,8 +89,9 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"offering_id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The ID of the offering.",
+				Computed:           true,
+				DeprecationMessage: "offering_id is deprecated. Use savings_plan_offering_id instead.",
+				Description:        "The ID of the offering.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
