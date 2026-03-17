@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKListResource("aws_kafka_cluster")
+// @SDKListResource("aws_msk_cluster")
 func newClusterResourceAsListResource() inttypes.ListResourceForSDK {
 	l := clusterListResource{}
 	l.SetResourceSchema(resourceCluster())
@@ -65,14 +65,14 @@ func (l *clusterListResource) List(ctx context.Context, request list.ListRequest
 				outputGBB, err := findBootstrapBrokersByARN(ctx, conn, arn)
 
 				if err != nil {
-					tflog.Error(ctx, "Reading Managed Streaming for Kafka Cluster", map[string]any{
+					tflog.Error(ctx, "Reading MSK Cluster", map[string]any{
 						"error": err.Error(),
 					})
 					continue
 				}
 
 				if err := resourceClusterFlatten(ctx, l.Meta(), &item, outputGBB, rd); err != nil {
-					tflog.Error(ctx, "Reading Managed Streaming for Kafka Cluster", map[string]any{
+					tflog.Error(ctx, "Flattening MSK Cluster", map[string]any{
 						"error": err.Error(),
 					})
 					continue
