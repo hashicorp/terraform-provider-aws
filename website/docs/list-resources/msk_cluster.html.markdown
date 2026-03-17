@@ -1,19 +1,19 @@
 ---
 subcategory: "Managed Streaming for Kafka"
 layout: "aws"
-page_title: "AWS: aws_kafka_cluster"
+page_title: "AWS: aws_msk_cluster"
 description: |-
   Lists Managed Streaming for Kafka Cluster resources.
 ---
 
-# List Resource: aws_kafka_cluster
+# List Resource: aws_msk_cluster
 
 Lists Managed Streaming for Kafka Cluster resources.
 
 ## Example Usage
 
 ```terraform
-list "aws_kafka_cluster" "example" {
+list "aws_msk_cluster" "example" {
   provider = aws
 }
 ```
