@@ -24,11 +24,9 @@ import (
 
 func TestAccKafkaCluster_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	resourceName1 := "aws_kafka_cluster.test[0]"
-	resourceName2 := "aws_kafka_cluster.test[1]"
+	resourceName1 := "aws_msk_cluster.test[0]"
+	resourceName2 := "aws_msk_cluster.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -53,10 +51,10 @@ func TestAccKafkaCluster_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("kafka", "cluster:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("kafka", "cluster:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
 				},
 			},
 
@@ -69,13 +67,13 @@ func TestAccKafkaCluster_List_basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_kafka_cluster.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					tfquerycheck.ExpectNoResourceObject("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_msk_cluster.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_msk_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_msk_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
-					tfquerycheck.ExpectIdentityFunc("aws_kafka_cluster.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
-					tfquerycheck.ExpectNoResourceObject("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+					tfquerycheck.ExpectIdentityFunc("aws_msk_cluster.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_msk_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_msk_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
 		},
@@ -84,10 +82,8 @@ func TestAccKafkaCluster_List_basic(t *testing.T) {
 
 func TestAccKafkaCluster_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	resourceName1 := "aws_kafka_cluster.test[0]"
+	resourceName1 := "aws_msk_cluster.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -114,7 +110,7 @@ func TestAccKafkaCluster_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("kafka", "cluster:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
 				},
 			},
 
@@ -130,12 +126,12 @@ func TestAccKafkaCluster_List_includeResource(t *testing.T) {
 					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_kafka_cluster.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
-					querycheck.ExpectResourceKnownValues("aws_kafka_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_msk_cluster.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_msk_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_msk_cluster.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("bootstrap_brokers_tls"), knownvalue.StringRegexp(clusterBoostrapBrokersTLSRegexp)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrClusterName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -154,11 +150,9 @@ func TestAccKafkaCluster_List_includeResource(t *testing.T) {
 
 func TestAccKafkaCluster_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	resourceName1 := "aws_kafka_cluster.test[0]"
-	resourceName2 := "aws_kafka_cluster.test[1]"
+	resourceName1 := "aws_msk_cluster.test[0]"
+	resourceName2 := "aws_msk_cluster.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -185,10 +179,10 @@ func TestAccKafkaCluster_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("kafka", "cluster:"+rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("kafka", "cluster:"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(`cluster/.+$`))),
 				},
 			},
 
@@ -202,9 +196,9 @@ func TestAccKafkaCluster_List_regionOverride(t *testing.T) {
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_kafka_cluster.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_msk_cluster.test", identity1.Checks()),
 
-					tfquerycheck.ExpectIdentityFunc("aws_kafka_cluster.test", identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_msk_cluster.test", identity2.Checks()),
 				},
 			},
 		},

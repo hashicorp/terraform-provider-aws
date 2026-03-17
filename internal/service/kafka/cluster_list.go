@@ -60,6 +60,7 @@ func (l *clusterListResource) List(ctx context.Context, request list.ListRequest
 
 			rd := l.ResourceData()
 			rd.SetId(arn)
+			rd.Set(names.AttrARN, arn)
 
 			if request.IncludeResource {
 				outputGBB, err := findBootstrapBrokersByARN(ctx, conn, arn)
