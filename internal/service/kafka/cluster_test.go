@@ -858,7 +858,7 @@ func TestAccKafkaCluster_ClientAuthentication_SASL_enabledToUnset(t *testing.T) 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -889,7 +889,7 @@ func TestAccKafkaCluster_ClientAuthentication_SASL_enabledToUnset(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName, false),
+				Config: testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
@@ -2115,11 +2115,11 @@ resource "aws_msk_cluster" "test" {
 `, rName, saslEnabled, !saslEnabled))
 }
 
-func testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName string, saslEnabled bool) string {
+func testAccClusterConfig_clientAuthenticationSASLIAM_Unset(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -2135,10 +2135,10 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-    unauthenticated = %[2]t
+    unauthenticated = true
   }
 }
-`, rName, !saslEnabled))
+`, rName))
 }
 
 func testAccClusterConfig_configurationInfoRevision1(rName string) string {
