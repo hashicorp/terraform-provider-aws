@@ -9,11 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +20,20 @@ import (
 func TestAccEC2EIPDomainName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_eip_domain_name.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPDomainNameConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPDomainNameExists(ctx, resourceName),
+					testAccCheckEIPDomainNameExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "ptr_record"),
 				),
 			},
@@ -60,20 +58,20 @@ func TestAccEC2EIPDomainName_basic(t *testing.T) {
 func TestAccEC2EIPDomainName_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_eip_domain_name.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPDomainNameConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPDomainNameExists(ctx, resourceName),
+					testAccCheckEIPDomainNameExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceEIPDomainName, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,28 +83,28 @@ func TestAccEC2EIPDomainName_disappears(t *testing.T) {
 func TestAccEC2EIPDomainName_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_eip_domain_name.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain1 := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	domain2 := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckEIPDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPDomainNameConfig_original(rName, rootDomain, domain1, domain2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPDomainNameExists(ctx, resourceName),
+					testAccCheckEIPDomainNameExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "ptr_record"),
 				),
 			},
 			{
 				Config: testAccEIPDomainNameConfig_updated(rName, rootDomain, domain1, domain2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPDomainNameExists(ctx, resourceName),
+					testAccCheckEIPDomainNameExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "ptr_record"),
 				),
 			},
@@ -114,14 +112,14 @@ func TestAccEC2EIPDomainName_update(t *testing.T) {
 	})
 }
 
-func testAccCheckEIPDomainNameExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEIPDomainNameExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindEIPDomainNameAttributeByAllocationID(ctx, conn, rs.Primary.ID)
 
@@ -129,9 +127,9 @@ func testAccCheckEIPDomainNameExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccCheckEIPDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEIPDomainNameDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eip_domain_name" {

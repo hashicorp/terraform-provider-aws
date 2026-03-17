@@ -3372,9 +3372,10 @@ service "elbv2" {
   }
 
   names {
-    aliases             = ["elasticloadbalancingv2"]
-    provider_name_upper = "ELBV2"
-    human_friendly      = "ELB (Elastic Load Balancing)"
+    aliases              = ["elasticloadbalancingv2"]
+    provider_name_upper  = "ELBV2"
+    human_friendly       = "ELB (Elastic Load Balancing)"
+    human_friendly_short = "ELB"
   }
 
   endpoint_info {
@@ -4202,8 +4203,9 @@ service "iam" {
   }
 
   names {
-    provider_name_upper = "IAM"
-    human_friendly      = "IAM (Identity & Access Management)"
+    provider_name_upper  = "IAM"
+    human_friendly       = "IAM (Identity & Access Management)"
+    human_friendly_short = "IAM"
   }
 
   env_var {

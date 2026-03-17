@@ -21,6 +21,7 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -199,6 +200,10 @@ func main() {
 		break
 	}
 }
+
+var (
+	v5_100_0 = version.Must(version.NewVersion("5.100.0"))
+)
 
 type arnFormatState uint
 
@@ -457,6 +462,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				}
+				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0NullValuesError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0RefreshError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
 
 			default:
 				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
@@ -475,6 +500,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if len(d.IdentityAttributes) < 2 {
 				v.errs = append(v.errs, fmt.Errorf("%s.%s: \"@ImportIDHandler\" should only be specified for Resource Identities with multiple attributes", v.packageName, v.functionName))
 			}
+		}
+		if d.HasV6_0NullValuesError {
+			d.PreIdentityVersion = v5_100_0
+		}
+		if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
 		}
 	} else {
 		if d.HasNoPreExistingResource {
@@ -612,10 +643,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkResources[typeName] = d
-				}
-
-				if d.HasV6_0NullValuesError {
-					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				if d.IdentityVersion > 0 {

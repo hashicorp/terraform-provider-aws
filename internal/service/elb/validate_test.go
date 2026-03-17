@@ -1,14 +1,15 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package elb
+package elb_test
 
 import (
 	"fmt"
 	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Test code generating random test data
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +21,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range validNames {
-		_, errors := validName(s, names.AttrName)
+		_, errors := tfelb.ValidName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name: %v", s, errors)
 		}
@@ -34,7 +35,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := validName(s, names.AttrName)
+		_, errors := tfelb.ValidName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name: %v", s, errors)
 		}
@@ -45,7 +46,7 @@ func TestValidLoadBalancerNameCannotBeginWithHyphen(t *testing.T) {
 	t.Parallel()
 
 	var n = "-Testing123"
-	_, errors := validName(n, "SampleKey")
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -56,7 +57,7 @@ func TestValidLoadBalancerNameCanBeAnEmptyString(t *testing.T) {
 	t.Parallel()
 
 	var n = ""
-	_, errors := validName(n, "SampleKey")
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 0 {
 		t.Fatalf("Expected the ELB Name to pass validation")
@@ -67,7 +68,7 @@ func TestValidLoadBalancerNameCannotBeLongerThan32Characters(t *testing.T) {
 	t.Parallel()
 
 	var n = "Testing123dddddddddddddddddddvvvv"
-	_, errors := validName(n, "SampleKey")
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -78,7 +79,7 @@ func TestValidLoadBalancerNameCannotHaveSpecialCharacters(t *testing.T) {
 	t.Parallel()
 
 	var n = "Testing123%%"
-	_, errors := validName(n, "SampleKey")
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -89,7 +90,7 @@ func TestValidLoadBalancerNameCannotEndWithHyphen(t *testing.T) {
 	t.Parallel()
 
 	var n = "Testing123-"
-	_, errors := validName(n, "SampleKey")
+	_, errors := tfelb.ValidName(n, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -104,7 +105,7 @@ func TestValidNamePrefix(t *testing.T) {
 	}
 
 	for _, s := range validNamePrefixes {
-		_, errors := validNamePrefix(s, names.AttrNamePrefix)
+		_, errors := tfelb.ValidNamePrefix(s, names.AttrNamePrefix)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name prefix: %v", s, errors)
 		}
@@ -117,7 +118,7 @@ func TestValidNamePrefix(t *testing.T) {
 	}
 
 	for _, s := range invalidNamePrefixes {
-		_, errors := validNamePrefix(s, names.AttrNamePrefix)
+		_, errors := tfelb.ValidNamePrefix(s, names.AttrNamePrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name prefix: %v", s, errors)
 		}
@@ -148,7 +149,7 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validAccessLogsInterval(tc.Value, names.AttrInterval)
+		_, errors := tfelb.ValidAccessLogsInterval(tc.Value, names.AttrInterval)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -198,7 +199,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := validHeathCheckTarget(tc.Value, names.AttrTarget)
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
@@ -239,13 +240,13 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 		},
 		{
 			Value: fmt.Sprintf("HTTP:8080/%s%s",
-				sdkacctest.RandStringFromCharSet(512, sdkacctest.CharSetAlpha), randomRunes(512)),
+				acctest.RandStringFromCharSet(t, 512, acctest.CharSetAlpha), randomRunes(512)),
 			ErrCount: 1,
 		},
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validHeathCheckTarget(tc.Value, names.AttrTarget)
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}

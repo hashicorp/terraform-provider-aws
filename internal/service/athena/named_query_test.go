@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,7 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedQueryConfig_basic(acctest.RandInt(t), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(ctx, t, resourceName),
 				),
@@ -53,7 +52,7 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedQueryConfig_workGroup(acctest.RandInt(t), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_workGroup(acctest.RandInt(t), acctest.RandString(t, 5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(ctx, t, resourceName),
 				),
