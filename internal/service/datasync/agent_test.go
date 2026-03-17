@@ -302,6 +302,42 @@ func TestAccDataSyncAgent_advancedMode(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncAgent_AdvancedMode_vpcEndpointID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agent datasync.DescribeAgentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_agent.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_advancedModeVPCEndpointID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAgentExists(ctx, t, resourceName, &agent),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`agent/agent-.+`))),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
+			},
+		},
+	})
+}
+
 func testAccCheckAgentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
@@ -515,4 +551,35 @@ resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
 }
 `)
+}
+
+func testAccAgentConfig_advancedModeVPCEndpointID(rName string) string {
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseAdvancedMode(rName), fmt.Sprintf(`
+resource "aws_datasync_agent" "test" {
+  name                  = %[1]q
+  security_group_arns   = [aws_security_group.test.arn]
+  subnet_arns           = [aws_subnet.test[0].arn]
+  vpc_endpoint_id       = aws_vpc_endpoint.test.id
+  ip_address            = aws_instance.test.public_ip
+  private_link_endpoint = data.aws_network_interface.test.private_ip
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  service_name       = "com.amazonaws.${data.aws_region.current.region}.datasync"
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test[0].id]
+  vpc_endpoint_type  = "Interface"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_network_interface" "test" {
+  id = tolist(aws_vpc_endpoint.test.network_interface_ids)[0]
+}
+`, rName))
 }
