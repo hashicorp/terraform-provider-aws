@@ -536,6 +536,46 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_Cluster_warmOI2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName(t)
+	resourceName := "aws_opensearch_domain.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_clusterWarmOI2(rName, "oi2.large.search", true, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "oi2.large.search"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_clusterWarmOI2(rName, "oi2.xlarge.search", true, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "oi2.xlarge.search"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
@@ -3293,6 +3333,48 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, enabled, warmConfig)
+}
+
+func testAccDomainConfig_clusterWarmOI2(rName, warmType string, enabled bool, warmCnt int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_3.3"
+
+  cluster_config {
+    zone_awareness_enabled   = true
+    instance_type            = "or2.large.search"
+    instance_count           = "3"
+    dedicated_master_enabled = true
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "m6g.large.search"
+    warm_enabled             = %[2]t
+    warm_count               = %[3]d
+    warm_type                = %[4]q
+
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 11
+  }
+}
+`, rName, enabled, warmCnt, warmType)
 }
 
 func testAccDomainConfig_dedicatedClusterMaster(rName string, enabled bool) string {
