@@ -1596,16 +1596,15 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 
 	job, err := findTrainingJobByName(ctx, conn, state.TrainingJobName.ValueString())
 	if err != nil {
-		if retry.NotFound(err) {
-			return
+		if !retry.NotFound(err) {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 		return
 	}
 
 	if job.TrainingJobStatus == awstypes.TrainingJobStatusInProgress {
 		stopInput := &sagemaker.StopTrainingJobInput{
-			TrainingJobName: aws.String(state.TrainingJobName.ValueString()),
+			TrainingJobName: state.TrainingJobName.ValueStringPointer(),
 		}
 		_, err := conn.StopTrainingJob(ctx, stopInput)
 		if err != nil {
@@ -1628,7 +1627,7 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 	_, err = conn.DeleteTrainingJob(ctx, &input)
 
 	if err != nil {
-		if errs.Contains(err, "ResourceNotFound") || errs.Contains(err, "Requested resource not found") {
+		if errs.Contains(err, "Requested resource not found") {
 			return
 		}
 
@@ -1881,7 +1880,7 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 
 	out, err := conn.DescribeTrainingJob(ctx, &input)
 	if err != nil {
-		if errs.Contains(err, "ResourceNotFound") || errs.Contains(err, "Requested resource not found") {
+		if errs.Contains(err, "Requested resource not found") {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
