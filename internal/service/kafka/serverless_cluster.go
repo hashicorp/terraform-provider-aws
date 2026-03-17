@@ -28,17 +28,17 @@ import (
 
 // @SDKResource("aws_msk_serverless_cluster", name="Serverless Cluster")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.36.0")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka/types;awstypes;awstypes.Cluster")
+// @Testing(preCheck="testAccPreCheck")
 func resourceServerlessCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerlessClusterCreate,
 		ReadWithoutTimeout:   resourceServerlessClusterRead,
 		UpdateWithoutTimeout: resourceServerlessClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(120 * time.Minute),
