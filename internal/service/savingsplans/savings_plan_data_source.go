@@ -52,8 +52,9 @@ func (d *savingsPlanDataSource) Schema(ctx context.Context, req datasource.Schem
 				Description: "The end time of the Savings Plan.",
 			},
 			"offering_id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The ID of the offering.",
+				Computed:           true,
+				Description:        "The ID of the offering.",
+				DeprecationMessage: "offering_id is deprecated. Use savings_plan_offering_id instead.",
 			},
 			"payment_option": schema.StringAttribute{
 				Computed:    true,
