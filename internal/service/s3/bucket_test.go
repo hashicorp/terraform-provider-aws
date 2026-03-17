@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -31,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -74,7 +76,8 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
+					testAccCheckBucketDomainName(ctx, t, resourceName, "bucket_domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_namespace", "global"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_region", region),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
@@ -2661,10 +2664,182 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 	})
 }
 
-func TestBucketName(t *testing.T) {
+func TestAccS3Bucket_Namespace_global(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_global/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(bucketName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceGlobal)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_global/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(bucketName),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Namespace_AccountRegional_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(bucketName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(regexache.MustCompile(`^`+bucketName+`-`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(bucketName),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Namespace_AccountRegional_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_generated/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrBucket, fmt.Sprintf("-%s-%s-an", acctest.AccountID(ctx), acctest.Region()))(s)
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact(sdkid.UniqueIdPrefix)),
+				},
+			},
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_generated/"),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Namespace_AccountRegional_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_prefix/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable("tf-prefix-"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrBucket, "tf-prefix-", fmt.Sprintf("-%s-%s-an", acctest.AccountID(ctx), acctest.Region()))(s)
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("tf-prefix-")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_prefix/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable("tf-prefix-"),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestValidBucketName(t *testing.T) {
 	t.Parallel()
 
-	validDnsNames := []string{
+	validUsWest2GlobalNames := []string{
 		"foobar",
 		"foo.bar",
 		"foo.bar.baz",
@@ -2673,13 +2848,13 @@ func TestBucketName(t *testing.T) {
 		strings.Repeat("x", 63),
 	}
 
-	for _, v := range validDnsNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err != nil {
+	for _, v := range validUsWest2GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceGlobal); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
 
-	invalidDnsNames := []string{
+	invalidUsWest2GlobalNames := []string{
 		"foo..bar",
 		"Foo.Bar",
 		"192.168.0.1",
@@ -2688,15 +2863,16 @@ func TestBucketName(t *testing.T) {
 		"bar.",
 		"foo_bar",
 		strings.Repeat("x", 64),
+		"test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
 	}
 
-	for _, v := range invalidDnsNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err == nil {
+	for _, v := range invalidUsWest2GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceGlobal); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
 
-	validEastNames := []string{
+	validUsEast1GlobalNames := []string{
 		"foobar",
 		"foo_bar",
 		"127.0.0.1",
@@ -2707,19 +2883,40 @@ func TestBucketName(t *testing.T) {
 		strings.Repeat("x", 255),
 	}
 
-	for _, v := range validEastNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err != nil {
+	for _, v := range validUsEast1GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID, types.BucketNamespaceGlobal); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
 
-	invalidEastNames := []string{
+	invalidUsEast1GlobalNames := []string{
 		"foo;bar",
 		strings.Repeat("x", 256),
 	}
 
-	for _, v := range invalidEastNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err == nil {
+	for _, v := range invalidUsEast1GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID, types.BucketNamespaceGlobal); err == nil {
+			t.Fatalf("%q should not be a valid S3 bucket name", v)
+		}
+	}
+
+	validUsWest2AccountRegionalNames := []string{
+		"test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
+	}
+
+	for _, v := range validUsWest2AccountRegionalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceAccountRegional); err != nil {
+			t.Fatalf("%q should be a valid S3 bucket name", v)
+		}
+	}
+
+	invalidUsWest2AccountRegionalNames := []string{
+		"test-bucket",
+		"test-bucket-123456789012-usw2-an",
+	}
+
+	for _, v := range invalidUsWest2AccountRegionalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceAccountRegional); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
@@ -2814,6 +3011,55 @@ func TestWebsiteEndpoint(t *testing.T) {
 		got, _ := tfs3.BucketWebsiteEndpointAndDomain("bucket-name", testCase.LocationConstraint)
 		if got != testCase.Expected {
 			t.Errorf("BucketWebsiteEndpointAndDomain(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got, testCase.Expected)
+		}
+	}
+}
+
+func TestBucketNamespace(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		BucketName string
+		Expect     bool
+	}{
+		{
+			BucketName: "test-bucket",
+		},
+		{
+			BucketName: "test-bucket-an",
+		},
+		{
+			BucketName: "test-bucket-123456789012-an",
+		},
+		{
+			BucketName: "test-bucket-us-west-2-an", //lintignore:AWSAT003
+		},
+		{
+			BucketName: "test-bucket-123456789012-us-west-2", //lintignore:AWSAT003
+		},
+		{
+			BucketName: "test-bucket-1234567890123-us-west-2-an", //lintignore:AWSAT003
+		},
+		{
+			BucketName: "test-bucket-123456789012-us-west-2-an", //lintignore:AWSAT003
+			Expect:     true,
+		},
+		{
+			BucketName: "test-bucket-123456789012-eusc-de-east-1-an", //lintignore:AWSAT003
+			Expect:     true,
+		},
+		{
+			BucketName: "test-bucket-123456789012-us-gov-east-1-an", //lintignore:AWSAT003
+			Expect:     true,
+		},
+		{
+			BucketName: "test-bucket-123456789012-usw2-an",
+		},
+	}
+
+	for _, tc := range testCases {
+		if got, want := tfs3.AccountRegionalBucketNameRegex.MatchString(tc.BucketName), tc.Expect; got != want {
+			t.Errorf("MatchString(%q) = %v, want %v", tc.BucketName, got, want)
 		}
 	}
 }
@@ -3063,9 +3309,9 @@ func testAccCheckBucketTagKeys(ctx context.Context, t *testing.T, n string, keys
 	}
 }
 
-func testAccCheckBucketDomainName(ctx context.Context, resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
+func testAccCheckBucketDomainName(ctx context.Context, t *testing.T, resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedValue := acctest.Provider.Meta().(*conns.AWSClient).PartitionHostname(ctx, fmt.Sprintf("%s.s3", bucketName))
+		expectedValue := acctest.ProviderMeta(ctx, t).PartitionHostname(ctx, fmt.Sprintf("%s.s3", bucketName))
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
 	}
