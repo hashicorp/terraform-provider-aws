@@ -899,6 +899,11 @@ func TestAccKafkaCluster_ClientAuthentication_SASL_enabledToUnset(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
