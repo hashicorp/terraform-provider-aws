@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package quicksight
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -251,7 +253,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 
 	out, err := findAccountSubscriptionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Account Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -307,7 +309,7 @@ func waitAccountSubscriptionCreated(ctx context.Context, conn *quicksight.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{accountSubscriptionStatusSignupAttemptInProgress},
 		Target:  []string{accountSubscriptionStatusCreated, accountSubscriptionStatusOK},
-		Refresh: statusAccountSubscription(ctx, conn, id),
+		Refresh: statusAccountSubscription(conn, id),
 		Timeout: timeout,
 	}
 
@@ -324,7 +326,7 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{accountSubscriptionStatusCreated, accountSubscriptionStatusOK, accountSubscriptionStatusUnsuscribeInProgress},
 		Target:  []string{},
-		Refresh: statusAccountSubscription(ctx, conn, id),
+		Refresh: statusAccountSubscription(conn, id),
 		Timeout: timeout,
 	}
 
@@ -337,11 +339,11 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client
 	return nil, err
 }
 
-func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccountSubscription(conn *quicksight.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccountSubscriptionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -366,8 +368,7 @@ func findAccountSubscriptionByID(ctx context.Context, conn *quicksight.Client, i
 
 	if status := aws.ToString(output.AccountSubscriptionStatus); status == accountSubscriptionStatusUnsuscribed {
 		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+			Message: status,
 		}
 	}
 
@@ -379,8 +380,7 @@ func findAccountSubscription(ctx context.Context, conn *quicksight.Client, input
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -389,7 +389,7 @@ func findAccountSubscription(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil || output.AccountInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountInfo, nil

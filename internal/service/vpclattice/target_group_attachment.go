@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -113,7 +115,7 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	targetPort := aws.ToInt32(target.Port)
 	output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Lattice Target Group Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,8 +210,7 @@ func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -223,11 +224,11 @@ func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice
 	return output, nil
 }
 
-func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTarget(conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -243,7 +244,7 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetStatusInitial),
 		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy, types.TargetStatusUnused, types.TargetStatusUnavailable),
-		Refresh:                   statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
+		Refresh:                   statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -251,7 +252,7 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.TargetSummary); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
 
 		return output, err
 	}
@@ -263,14 +264,14 @@ func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
-		Refresh: statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
+		Refresh: statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.TargetSummary); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
 
 		return output, err
 	}

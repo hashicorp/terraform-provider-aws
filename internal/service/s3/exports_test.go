@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
 
 // Exports for use in tests only.
 var (
+	ResourceBucketABAC                              = newResourceBucketABAC
 	ResourceBucketAccelerateConfiguration           = resourceBucketAccelerateConfiguration
 	ResourceBucketACL                               = resourceBucketACL
 	ResourceBucketAnalyticsConfiguration            = resourceBucketAnalyticsConfiguration
@@ -36,6 +37,7 @@ var (
 	EmptyBucket                                 = emptyBucket
 	FindAnalyticsConfiguration                  = findAnalyticsConfiguration
 	FindBucket                                  = findBucket
+	FindBucketABAC                              = findBucketABAC
 	FindBucketACL                               = findBucketACL
 	FindBucketAccelerateConfiguration           = findBucketAccelerateConfiguration
 	FindBucketLifecycleConfiguration            = findBucketLifecycleConfiguration
@@ -52,7 +54,7 @@ var (
 	FindMetricsConfiguration                    = findMetricsConfiguration
 	FindObjectByBucketAndKey                    = findObjectByBucketAndKey
 	FindObjectLockConfiguration                 = findObjectLockConfiguration
-	FindOwnershipControls                       = findOwnershipControls
+	FindBucketOwnershipControls                 = findBucketOwnershipControls
 	FindPublicAccessBlockConfiguration          = findPublicAccessBlockConfiguration
 	FindReplicationConfiguration                = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration       = findServerSideEncryptionConfiguration
@@ -79,7 +81,8 @@ var (
 	CreateBucketACLResourceID = createBucketACLResourceID
 	ParseBucketACLResourceID  = parseBucketACLResourceID
 
-	DirectoryBucketNameRegex = directoryBucketNameRegex
+	AccountRegionalBucketNameRegex        = accountRegionalBucketNameRegex
+	DirectoryBucketNameSuffixRegexPattern = directoryBucketNameSuffixRegexPattern
 
 	LifecycleConfigEqual = lifecycleConfigEqual
 )

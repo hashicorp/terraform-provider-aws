@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,11 +48,11 @@ const (
 
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
 // @Testing(plannableImportAction="NoOp")
-// @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
 func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
@@ -256,6 +258,53 @@ func resourceListenerRule() *schema.Resource {
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      1,
 													Optional:     true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"jwt_validation": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrIssuer: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"jwks_endpoint": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"additional_claim": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFormat: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													MaxItems: 10,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
 												},
 											},
 										},
@@ -631,7 +680,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return findListenerRuleByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -641,17 +690,25 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.RuleArn)
-
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", listenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
+
+	if err := resourceListenerRuleFlatten(ctx, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceListenerRuleFlatten(_ context.Context, rule *awstypes.Rule, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, rule.RuleArn)
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if v := aws.ToString(rule.Priority); v == "default" {
 		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if v, err := strconv.Atoi(v); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return err
 		} else {
 			d.Set(names.AttrPriority, v)
 		}
@@ -660,7 +717,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sortListenerActions(rule.Actions)
 
 	if err := d.Set(names.AttrAction, flattenListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
+		return fmt.Errorf("setting action: %w", err)
 	}
 
 	conditions := make([]any, len(rule.Conditions))
@@ -705,14 +762,14 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		conditions[i] = conditionMap
 	}
 	if err := d.Set(names.AttrCondition, conditions); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
+		return fmt.Errorf("setting condition: %w", err)
 	}
 
 	if err := d.Set("transform", flattenRuleTransforms(rule.Transforms)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting transform: %s", err)
+		return fmt.Errorf("setting transform: %w", err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -848,8 +905,7 @@ func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client,
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*awstypes.RuleNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 		if err != nil {

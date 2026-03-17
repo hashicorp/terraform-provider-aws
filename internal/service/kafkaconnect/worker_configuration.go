@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafkaconnect
 
@@ -12,16 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -112,7 +114,7 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	config, err := findWorkerConfigurationByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Worker Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,8 +180,7 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -188,17 +189,17 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusWorkerConfiguration(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkerConfiguration(conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkerConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -214,7 +215,7 @@ func waitWorkerConfigurationDeleted(ctx context.Context, conn *kafkaconnect.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkerConfigurationStateDeleting),
 		Target:  []string{},
-		Refresh: statusWorkerConfiguration(ctx, conn, arn),
+		Refresh: statusWorkerConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -228,7 +229,7 @@ func waitWorkerConfigurationDeleted(ctx context.Context, conn *kafkaconnect.Clie
 }
 
 func decodePropertiesFileContent(content string) string {
-	v, err := itypes.Base64Decode(content)
+	v, err := inttypes.Base64Decode(content)
 	if err != nil {
 		return content
 	}

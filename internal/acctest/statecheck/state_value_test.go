@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package statecheck
@@ -13,14 +13,15 @@ import (
 	r "github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestStateValue_ValuesSame(t *testing.T) {
-	t.Parallel()
+func TestStateValue_ValuesSame(t *testing.T) { //nolint:paralleltest // false positive
+	ctx := acctest.Context(t)
 
 	stateValue := StateValue()
 
-	r.Test(t, r.TestCase{
+	acctest.ParallelTest(ctx, t, r.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
 			"test": func() (*schema.Provider, error) { //nolint:unparam // required signature
 				return testProvider(), nil
@@ -29,8 +30,8 @@ func TestStateValue_ValuesSame(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "same"
-				}
+  string_attribute = "same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					stateValue.GetStateValue("test_resource.one", tfjsonpath.New("string_attribute")),
@@ -38,8 +39,8 @@ func TestStateValue_ValuesSame(t *testing.T) {
 			},
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "same"
-				}
+  string_attribute = "same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
@@ -49,12 +50,12 @@ func TestStateValue_ValuesSame(t *testing.T) {
 	})
 }
 
-func TestStateValue_ValuesNotSame(t *testing.T) {
-	t.Parallel()
+func TestStateValue_ValuesNotSame(t *testing.T) { //nolint:paralleltest // false positive
+	ctx := acctest.Context(t)
 
 	stateValue := StateValue()
 
-	r.Test(t, r.TestCase{
+	acctest.ParallelTest(ctx, t, r.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
 			"test": func() (*schema.Provider, error) { //nolint:unparam // required signature
 				return testProvider(), nil
@@ -63,8 +64,8 @@ func TestStateValue_ValuesNotSame(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "same"
-				}
+  string_attribute = "same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					stateValue.GetStateValue("test_resource.one", tfjsonpath.New("string_attribute")),
@@ -72,8 +73,8 @@ func TestStateValue_ValuesNotSame(t *testing.T) {
 			},
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "not same"
-				}
+  string_attribute = "not same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
@@ -84,12 +85,12 @@ func TestStateValue_ValuesNotSame(t *testing.T) {
 	})
 }
 
-func TestStateValue_NotInitialized(t *testing.T) {
-	t.Parallel()
+func TestStateValue_NotInitialized(t *testing.T) { //nolint:paralleltest // false positive
+	ctx := acctest.Context(t)
 
 	stateValue := StateValue()
 
-	r.Test(t, r.TestCase{
+	acctest.ParallelTest(ctx, t, r.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
 			"test": func() (*schema.Provider, error) { //nolint:unparam // required signature
 				return testProvider(), nil
@@ -98,8 +99,8 @@ func TestStateValue_NotInitialized(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "value"
-				}
+  string_attribute = "value"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),

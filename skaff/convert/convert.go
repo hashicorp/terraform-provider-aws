@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package convert
@@ -50,4 +50,10 @@ func ToLowercasePrefix(s string) string {
 		splitIdx++
 	}
 	return strings.ToLower(s[:splitIdx]) + s[splitIdx:]
+}
+
+// AWS API structs use different capitalization than the provider standards
+func ToAWSCapitalization(s string) string {
+	// TODO: This is incomplete
+	return strings.ReplaceAll(s, "VPC", "Vpc")
 }

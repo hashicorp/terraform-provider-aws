@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -156,8 +156,12 @@ func (ps *iamPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 				out = append(out, iamPolicyStatementPrincipal{Type: key, Identifiers: value.(string)})
 			case []any:
 				values := []string{}
-				for _, v := range value.([]any) {
-					values = append(values, v.(string))
+				for i, v := range value.([]any) {
+					s, ok := v.(string)
+					if !ok {
+						return fmt.Errorf("Unsupported element type %T for IAMPolicyStatementPrincipalSet.Identifiers[%d] (principal type %q): must be string", v, i, key)
+					}
+					values = append(values, s)
 				}
 				slices.Sort(values)
 				out = append(out, iamPolicyStatementPrincipal{Type: key, Identifiers: values})

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -13,7 +13,6 @@ package flex
 //   go test -v -update-golden .
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,6 +24,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/google/go-cmp/cmp"
+	testingiface "github.com/mitchellh/go-testing-interface"
 )
 
 var updateGolden = flag.Bool("update-golden", false, "update golden files")
@@ -106,51 +107,65 @@ func compareWithGolden(t *testing.T, goldenPath string, got any) {
 
 	// Read and compare with existing golden file
 	want := readGolden(t, goldenPath)
-	if bytes.Equal(bytes.TrimSpace(want), bytes.TrimSpace(data)) {
-		return // Files match, test passes
-	}
 
-	// Files differ, fail the test with detailed output
-	t.Fatalf("comparison failed for golden file %s\nExpected content from: %s\nActual content:\n%s",
-		goldenPath, goldenPath, string(data))
+	if diff := cmp.Diff(data, want); diff != "" {
+		t.Fatalf("comparison failed for golden file %s\n%s", goldenPath, diff)
+	}
 }
 
 // autoGenerateGoldenPath creates a golden file path from test name and case description.
 // Automatically determines subdirectory from the test function name:
 // TestExpandLogging_collections -> searches for it in autoflex_*_test.go files
-func autoGenerateGoldenPath(t *testing.T, fullTestName, testCaseName string) string {
+func autoGenerateGoldenPath(t testingiface.T, fullTestName string) string {
 	t.Helper()
 	// Extract the base test function name from the full path
 	// fullTestName might be "TestExpandLogging_collections/Collection_of_primitive_types_Source_and_slice_or_map_of_primtive_types_Target"
 	// We want to extract "TestExpandLogging_collections"
-	baseName := fullTestName
-	if slashIndex := strings.Index(fullTestName, "/"); slashIndex != -1 {
-		baseName = fullTestName[:slashIndex]
+	parts := strings.Split(fullTestName, "/")
+	baseName := parts[0]
+
+	cleanTestName := normalizeTestName(baseName)
+
+	var cleanTestCases []string
+	if len(parts) > 1 {
+		testCases := parts[1:]
+		cleanTestCases = make([]string, len(testCases))
+
+		for i, testCase := range testCases {
+			cleanTestCases[i] = normalizeTestCaseName(testCase)
+		}
 	}
-
-	// Convert TestExpandLogging_collections -> expand_logging_collections
-	cleanTestName := strings.TrimPrefix(baseName, "Test")
-	cleanTestName = camelToSnake(cleanTestName)
-
-	// Clean case name: first replace '*' with "pointer " to handle cases like "*struct" -> "pointer struct"
-	cleanCaseName := strings.ReplaceAll(testCaseName, "*", "pointer ")
-	// Then replace spaces with underscores and convert to lowercase
-	cleanCaseName = strings.ReplaceAll(cleanCaseName, " ", "_")
-	cleanCaseName = strings.ToLower(cleanCaseName)
-	// Remove special characters but keep underscores and alphanumeric
-	cleanCaseName = regexache.MustCompile(`[^a-z0-9_]`).ReplaceAllString(cleanCaseName, "")
 
 	// Determine subdirectory from test function name
 	subdirectory := determineSubdirectoryFromTestName(t, baseName)
 
 	// Build hierarchical path using filepath.Join for cross-OS compatibility
 	// Creates: autoflex/subdirectory/test_name/case_name.golden
-	return filepath.Join("autoflex", subdirectory, cleanTestName, cleanCaseName+".golden")
+	pathParts := []string{"autoflex", subdirectory, cleanTestName}
+	pathParts = append(pathParts, cleanTestCases...)
+	return filepath.Join(pathParts...) + ".golden"
+}
+
+func normalizeTestName(name string) string {
+	// e.g. Convert TestExpandLogging_collections -> expand_logging_collections
+	name = strings.TrimPrefix(name, "Test")
+	return camelToSnake(name)
+}
+
+func normalizeTestCaseName(name string) string {
+	// Clean case name: first replace '*' with "pointer " to handle cases like "*struct" -> "pointer_struct"
+	name = strings.ReplaceAll(name, "*", "pointer_")
+	// Then replace spaces with underscores and convert to lowercase
+	name = strings.ReplaceAll(name, " ", "_")
+	name = strings.ToLower(name)
+	// Remove special characters but keep underscores and alphanumeric
+	name = regexache.MustCompile(`[^a-z0-9_]`).ReplaceAllString(name, "")
+	return name
 }
 
 // determineSubdirectoryFromTestName determines the subdirectory based on which test file contains the test function.
 // Returns the subdirectory name (e.g., "dispatch", "maps") or "unknown" if not found.
-func determineSubdirectoryFromTestName(t *testing.T, testFunctionName string) string {
+func determineSubdirectoryFromTestName(t testingiface.T, testFunctionName string) string {
 	t.Helper()
 
 	files, err := filepath.Glob("autoflex_*_test.go")
@@ -170,7 +185,7 @@ func determineSubdirectoryFromTestName(t *testing.T, testFunctionName string) st
 
 // extractSubdirectoryFromFile attempts to find the test function in the given file
 // and returns the subdirectory name if found, empty string otherwise.
-func extractSubdirectoryFromFile(t *testing.T, filename, testFunctionName string) string {
+func extractSubdirectoryFromFile(t testingiface.T, filename, testFunctionName string) string {
 	t.Helper()
 
 	content, err := os.ReadFile(filename)
@@ -187,7 +202,7 @@ func extractSubdirectoryFromFile(t *testing.T, filename, testFunctionName string
 }
 
 // containsTestFunction checks if the file content contains the specified test function definition.
-func containsTestFunction(t *testing.T, content []byte, testFunctionName string) bool {
+func containsTestFunction(t testingiface.T, content []byte, testFunctionName string) bool {
 	t.Helper()
 
 	pattern := fmt.Sprintf(`func\s+%s\s*\(`, regexp.QuoteMeta(testFunctionName))

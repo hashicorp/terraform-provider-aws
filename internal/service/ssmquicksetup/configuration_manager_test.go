@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmquicksetup_test
@@ -85,7 +85,7 @@ func TestAccSSMQuickSetupConfigurationManager_disappears(t *testing.T) {
 				Config: testAccConfigurationManagerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmquicksetup.ResourceConfigurationManager, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmquicksetup.ResourceConfigurationManager, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

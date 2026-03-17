@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -12,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -109,7 +111,7 @@ func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := findVPCConnectionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MSK VPC Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -167,7 +169,7 @@ func waitVPCConnectionCreated(ctx context.Context, conn *kafka.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.VpcConnectionStateCreating),
 		Target:                    enum.Slice(types.VpcConnectionStateAvailable),
-		Refresh:                   statusVPCConnection(ctx, conn, id),
+		Refresh:                   statusVPCConnection(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -185,7 +187,7 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn strin
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcConnectionStateAvailable, types.VpcConnectionStateInactive, types.VpcConnectionStateDeactivating, types.VpcConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusVPCConnection(ctx, conn, arn),
+		Refresh: statusVPCConnection(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -197,11 +199,11 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn strin
 	return nil, err
 }
 
-func statusVPCConnection(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCConnection(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCConnectionByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -222,8 +224,7 @@ func findVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -232,7 +233,7 @@ func findVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

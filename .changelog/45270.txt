@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `target_control_port` argument to support the ALB Target Optimizer
+```
+
+```release-note:enhancement
+data-source/aws_lb_target_group: Add `target_control_port` attribute
+```

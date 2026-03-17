@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,20 +18,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCRouteServerPeer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RouteServerPeer
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpc_route_server_peer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -40,12 +38,12 @@ func TestAccVPCRouteServerPeer_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteServerPeerConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
+					testAccCheckVPCRouteServerPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -83,24 +81,24 @@ func TestAccVPCRouteServerPeer_basic(t *testing.T) {
 func TestAccVPCRouteServerPeer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RouteServerPeer
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpc_route_server_peer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteServerPeerConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCRouteServerPeer, resourceName),
+					testAccCheckVPCRouteServerPeerExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCRouteServerPeer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,11 +109,11 @@ func TestAccVPCRouteServerPeer_disappears(t *testing.T) {
 func TestAccVPCRouteServerPeer_bgpOptionsBfd(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RouteServerPeer
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpc_route_server_peer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -123,12 +121,12 @@ func TestAccVPCRouteServerPeer_bgpOptionsBfd(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteServerPeerConfig_bgpOptionsBfd(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
+					testAccCheckVPCRouteServerPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -157,11 +155,11 @@ func TestAccVPCRouteServerPeer_bgpOptionsBfd(t *testing.T) {
 func TestAccVPCRouteServerPeer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RouteServerPeer
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rAsn := sdkacctest.RandIntRange(64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpc_route_server_peer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -169,12 +167,12 @@ func TestAccVPCRouteServerPeer_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCRouteServerPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteServerPeerConfig_tags1(rName, rAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
+					testAccCheckVPCRouteServerPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -197,7 +195,7 @@ func TestAccVPCRouteServerPeer_tags(t *testing.T) {
 			{
 				Config: testAccVPCRouteServerPeerConfig_tags2(rName, rAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
+					testAccCheckVPCRouteServerPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -214,7 +212,7 @@ func TestAccVPCRouteServerPeer_tags(t *testing.T) {
 			{
 				Config: testAccVPCRouteServerPeerConfig_tags1(rName, rAsn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
+					testAccCheckVPCRouteServerPeerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -231,9 +229,9 @@ func TestAccVPCRouteServerPeer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCRouteServerPeerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCRouteServerPeerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_route_server_peer" {
@@ -242,7 +240,7 @@ func testAccCheckVPCRouteServerPeerDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfec2.FindRouteServerPeerByID(ctx, conn, rs.Primary.Attributes["route_server_peer_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -257,14 +255,14 @@ func testAccCheckVPCRouteServerPeerDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckVPCRouteServerPeerExists(ctx context.Context, n string, v *awstypes.RouteServerPeer) resource.TestCheckFunc {
+func testAccCheckVPCRouteServerPeerExists(ctx context.Context, t *testing.T, n string, v *awstypes.RouteServerPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindRouteServerPeerByID(ctx, conn, rs.Primary.Attributes["route_server_peer_id"])
 

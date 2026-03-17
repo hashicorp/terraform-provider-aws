@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fis_test
@@ -13,14 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,22 +26,22 @@ func TestAccFISTargetAccountConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var targetaccountconfiguration awstypes.TargetAccountConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_target_account_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetAccountConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetAccountConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &targetaccountconfiguration),
+					testAccCheckTargetAccountConfigurationExists(ctx, t, resourceName, &targetaccountconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
@@ -66,29 +64,29 @@ func TestAccFISTargetAccountConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var before, after awstypes.TargetAccountConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_target_account_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetAccountConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetAccountConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &before),
+					testAccCheckTargetAccountConfigurationExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s target account configuration", rName)),
 				),
 			},
 			{
 				Config: testAccTargetAccountConfigurationConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &after),
+					testAccCheckTargetAccountConfigurationExists(ctx, t, resourceName, &after),
 					testAccCheckTargetAccountConfigurationNotRecreated(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s target account configuration updated", rName)),
 				),
@@ -108,23 +106,23 @@ func TestAccFISTargetAccountConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var targetaccountconfiguration awstypes.TargetAccountConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fis_target_account_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FISServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetAccountConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetAccountConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetAccountConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetAccountConfigurationExists(ctx, resourceName, &targetaccountconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffis.ResourceTargetAccountConfiguration, resourceName),
+					testAccCheckTargetAccountConfigurationExists(ctx, t, resourceName, &targetaccountconfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffis.ResourceTargetAccountConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,9 +130,9 @@ func TestAccFISTargetAccountConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTargetAccountConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTargetAccountConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fis_target_account_configuration" {
@@ -144,7 +142,7 @@ func testAccCheckTargetAccountConfigurationDestroy(ctx context.Context) resource
 			accountId := aws.String(rs.Primary.Attributes[names.AttrAccountID])
 			experimentId := aws.String(rs.Primary.Attributes["experiment_template_id"])
 			_, err := tffis.FindTargetAccountConfigurationByID(ctx, conn, accountId, experimentId)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -158,7 +156,7 @@ func testAccCheckTargetAccountConfigurationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckTargetAccountConfigurationExists(ctx context.Context, name string, targetaccountconfiguration *awstypes.TargetAccountConfiguration) resource.TestCheckFunc {
+func testAccCheckTargetAccountConfigurationExists(ctx context.Context, t *testing.T, name string, targetaccountconfiguration *awstypes.TargetAccountConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -169,7 +167,7 @@ func testAccCheckTargetAccountConfigurationExists(ctx context.Context, name stri
 			return create.Error(names.FIS, create.ErrActionCheckingExistence, tffis.ResNameTargetAccountConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 
 		accountId := aws.String(rs.Primary.Attributes[names.AttrAccountID])
 		experimentTemplateId := aws.String(rs.Primary.Attributes["experiment_template_id"])
@@ -186,7 +184,7 @@ func testAccCheckTargetAccountConfigurationExists(ctx context.Context, name stri
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).FISClient(ctx)
 
 	input := &fis.ListExperimentTemplatesInput{}
 

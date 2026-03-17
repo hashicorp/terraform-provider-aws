@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -11,17 +13,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +43,10 @@ func resourceThreatIntelSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"activate": {
+				Type:     schema.TypeBool,
+				Required: true,
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -49,10 +55,6 @@ func resourceThreatIntelSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			names.AttrFormat: {
 				Type:             schema.TypeString,
@@ -64,12 +66,16 @@ func resourceThreatIntelSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"activate": {
-				Type:     schema.TypeBool,
+			names.AttrName: {
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"threat_intel_set_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -80,76 +86,59 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 	detectorID := d.Get("detector_id").(string)
 	name := d.Get(names.AttrName).(string)
-	input := &guardduty.CreateThreatIntelSetInput{
+	input := guardduty.CreateThreatIntelSetInput{
+		Activate:   aws.Bool(d.Get("activate").(bool)),
 		DetectorId: aws.String(detectorID),
-		Name:       aws.String(name),
 		Format:     awstypes.ThreatIntelSetFormat(d.Get(names.AttrFormat).(string)),
 		Location:   aws.String(d.Get(names.AttrLocation).(string)),
-		Activate:   aws.Bool(d.Get("activate").(bool)),
+		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateThreatIntelSet(ctx, input)
+	output, err := conn.CreateThreatIntelSet(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Threat Intel Set (%s): %s", name, err)
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.ThreatIntelSetStatusActivating, awstypes.ThreatIntelSetStatusDeactivating),
-		Target:     enum.Slice(awstypes.ThreatIntelSetStatusActive, awstypes.ThreatIntelSetStatusInactive),
-		Refresh:    threatintelsetRefreshStatusFunc(ctx, conn, *resp.ThreatIntelSetId, detectorID),
-		Timeout:    5 * time.Minute,
-		MinTimeout: 3 * time.Second,
-	}
+	threatIntelSetID := aws.ToString(output.ThreatIntelSetId)
+	d.SetId(threatIntelSetCreateResourceID(detectorID, threatIntelSetID))
 
-	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Threat Intel Set (%s): waiting for completion: %s", name, err)
+	if _, err := waitThreatIntelSetCreated(ctx, conn, detectorID, threatIntelSetID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Threat Intel Set (%s) create: %s", d.Id(), err)
 	}
-
-	d.SetId(fmt.Sprintf("%s:%s", detectorID, aws.ToString(resp.ThreatIntelSetId)))
 
 	return append(diags, resourceThreatIntelSetRead(ctx, d, meta)...)
 }
 
 func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
-	threatIntelSetId, detectorId, err := DecodeThreatIntelSetID(d.Id())
+	detectorID, threatIntelSetID, err := threatIntelSetParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	output, err := findThreatIntelSetByTwoPartKey(ctx, conn, detectorID, threatIntelSetID)
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Threat Intel Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 	}
-	input := &guardduty.GetThreatIntelSetInput{
-		DetectorId:       aws.String(detectorId),
-		ThreatIntelSetId: aws.String(threatIntelSetId),
-	}
 
-	resp, err := conn.GetThreatIntelSet(ctx, input)
-	if err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-			log.Printf("[WARN] GuardDuty ThreatIntelSet %q not found, removing from state", threatIntelSetId)
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
-	}
+	d.Set("activate", output.Status == awstypes.ThreatIntelSetStatusActive)
+	d.Set(names.AttrARN, threatIntelSetARN(ctx, c, detectorID, threatIntelSetID))
+	d.Set("detector_id", detectorID)
+	d.Set(names.AttrFormat, output.Format)
+	d.Set(names.AttrLocation, output.Location)
+	d.Set(names.AttrName, output.Name)
+	d.Set("threat_intel_set_id", threatIntelSetID)
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("detector/%s/threatintelset/%s", detectorId, threatIntelSetId),
-	}.String()
-	d.Set(names.AttrARN, arn)
-
-	d.Set("detector_id", detectorId)
-	d.Set(names.AttrFormat, resp.Format)
-	d.Set(names.AttrLocation, resp.Location)
-	d.Set(names.AttrName, resp.Name)
-	d.Set("activate", resp.Status == awstypes.ThreatIntelSetStatusActive)
-
-	setTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -158,28 +147,29 @@ func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		detectorID, threatIntelSetID, err := threatIntelSetParseResourceID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 
-	if d.HasChanges("activate", names.AttrLocation, names.AttrName) {
-		input := &guardduty.UpdateThreatIntelSetInput{
-			DetectorId:       aws.String(detectorId),
+		input := guardduty.UpdateThreatIntelSetInput{
+			DetectorId:       aws.String(detectorID),
 			ThreatIntelSetId: aws.String(threatIntelSetID),
 		}
 
-		if d.HasChange(names.AttrName) {
-			input.Name = aws.String(d.Get(names.AttrName).(string))
+		if d.HasChange("activate") {
+			input.Activate = aws.Bool(d.Get("activate").(bool))
 		}
 		if d.HasChange(names.AttrLocation) {
 			input.Location = aws.String(d.Get(names.AttrLocation).(string))
 		}
-		if d.HasChange("activate") {
-			input.Activate = aws.Bool(d.Get("activate").(bool))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if _, err = conn.UpdateThreatIntelSet(ctx, input); err != nil {
+		_, err = conn.UpdateThreatIntelSet(ctx, &input)
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 		}
 	}
@@ -191,20 +181,130 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	threatIntelSetID, detectorId, err := DecodeThreatIntelSetID(d.Id())
+	detectorID, threatIntelSetID, err := threatIntelSetParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := guardduty.DeleteThreatIntelSetInput{
+		DetectorId:       aws.String(detectorID),
+		ThreatIntelSetId: aws.String(threatIntelSetID),
+	}
+	_, err = conn.DeleteThreatIntelSet(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 	}
-	input := &guardduty.DeleteThreatIntelSetInput{
-		DetectorId:       aws.String(detectorId),
+
+	if _, err := waitThreatIntelSetDeleted(ctx, conn, detectorID, threatIntelSetID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Threat Intel Set (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+const threatIntelSetResourceIDSeparator = ":"
+
+func threatIntelSetCreateResourceID(detectorID, threatIntelSetID string) string {
+	parts := []string{detectorID, threatIntelSetID}
+	id := strings.Join(parts, threatIntelSetResourceIDSeparator)
+
+	return id
+}
+
+func threatIntelSetParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, threatIntelSetResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <Detector ID>%[2]s<ThreatIntelSet ID>", id, threatIntelSetResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findThreatIntelSetByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, threatIntelSetID string) (*guardduty.GetThreatIntelSetOutput, error) {
+	input := guardduty.GetThreatIntelSetInput{
+		DetectorId:       aws.String(detectorID),
 		ThreatIntelSetId: aws.String(threatIntelSetID),
 	}
 
-	_, err = conn.DeleteThreatIntelSet(ctx, input)
+	output, err := findThreatIntelSet(ctx, conn, &input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
+		return nil, err
 	}
 
+	if status := output.Status; status == awstypes.ThreatIntelSetStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(status),
+		}
+	}
+
+	return output, nil
+}
+
+func findThreatIntelSet(ctx context.Context, conn *guardduty.Client, input *guardduty.GetThreatIntelSetInput) (*guardduty.GetThreatIntelSetOutput, error) {
+	output, err := conn.GetThreatIntelSet(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusThreatIntelSet(conn *guardduty.Client, detectorID, threatIntelSetID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findThreatIntelSetByTwoPartKey(ctx, conn, detectorID, threatIntelSetID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitThreatIntelSetCreated(ctx context.Context, conn *guardduty.Client, detectorID, threatIntelSetID string) (*guardduty.GetThreatIntelSetOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ThreatIntelSetStatusActivating, awstypes.ThreatIntelSetStatusDeactivating),
+		Target:     enum.Slice(awstypes.ThreatIntelSetStatusActive, awstypes.ThreatIntelSetStatusInactive),
+		Refresh:    statusThreatIntelSet(conn, detectorID, threatIntelSetID),
+		Timeout:    timeout,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*guardduty.GetThreatIntelSetOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitThreatIntelSetDeleted(ctx context.Context, conn *guardduty.Client, detectorID, threatIntelSetID string) (*guardduty.GetThreatIntelSetOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ThreatIntelSetStatusActive,
@@ -213,41 +313,20 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 			awstypes.ThreatIntelSetStatusDeactivating,
 			awstypes.ThreatIntelSetStatusDeletePending,
 		),
-		Target:     enum.Slice(awstypes.ThreatIntelSetStatusDeleted),
-		Refresh:    threatintelsetRefreshStatusFunc(ctx, conn, threatIntelSetID, detectorId),
-		Timeout:    5 * time.Minute,
+		Target:     []string{},
+		Refresh:    statusThreatIntelSet(conn, detectorID, threatIntelSetID),
+		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty ThreatIntelSet status to be \"%s\": %s", string(awstypes.ThreatIntelSetStatusDeleted), err)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*guardduty.GetThreatIntelSetOutput); ok {
+		return output, err
 	}
 
-	return diags
+	return nil, err
 }
 
-func threatintelsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, threatIntelSetID, detectorID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		input := &guardduty.GetThreatIntelSetInput{
-			DetectorId:       aws.String(detectorID),
-			ThreatIntelSetId: aws.String(threatIntelSetID),
-		}
-		resp, err := conn.GetThreatIntelSet(ctx, input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		return resp, string(resp.Status), nil
-	}
-}
-
-func DecodeThreatIntelSetID(id string) (threatIntelSetID, detectorID string, err error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		err = fmt.Errorf("GuardDuty ThreatIntelSet ID must be of the form <Detector ID>:<ThreatIntelSet ID>, was provided: %s", id)
-		return
-	}
-	threatIntelSetID = parts[1]
-	detectorID = parts[0]
-	return
+func threatIntelSetARN(ctx context.Context, c *conns.AWSClient, detectorID, threatIntelSetID string) string {
+	return c.RegionalARN(ctx, "guardduty", "detector/"+detectorID+"/threatintelset/"+threatIntelSetID)
 }

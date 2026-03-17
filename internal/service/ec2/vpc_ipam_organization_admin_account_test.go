@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,10 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +42,7 @@ func testAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_organization_admin_account.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -51,7 +50,7 @@ func testAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers.
@@ -64,7 +63,7 @@ func testAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 				},
 				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
+					testAccCheckIPAMOrganizationAdminAccountExists(ctx, t, resourceName, &organization),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceIdentity, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
@@ -85,7 +84,7 @@ func testAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
 	var organization organizationstypes.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -93,7 +92,7 @@ func testAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers.
@@ -106,8 +105,8 @@ func testAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
 				},
 				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMOrganizationAdminAccount(), resourceName),
+					testAccCheckIPAMOrganizationAdminAccountExists(ctx, t, resourceName, &organization),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,9 +114,9 @@ func testAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_organization_admin_account" {
@@ -126,7 +125,7 @@ func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resour
 
 			_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -141,14 +140,14 @@ func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n string, v *organizationstypes.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, t *testing.T, n string, v *organizationstypes.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
 

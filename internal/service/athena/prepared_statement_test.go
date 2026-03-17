@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena_test
@@ -8,35 +8,33 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx),
+		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPreparedStatementConfig_basic(rName, condition),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPreparedStatementExists(ctx, resourceName),
+					testAccCheckPreparedStatementExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", condition),
@@ -54,24 +52,24 @@ func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 
 func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx),
+		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPreparedStatementConfig_basic(rName, condition),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPreparedStatementExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourcePreparedStatement(), resourceName),
+					testAccCheckPreparedStatementExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourcePreparedStatement(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,24 +79,24 @@ func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 
 func TestAccAthenaPreparedStatement_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 	updatedCondition := "y = ?"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx),
+		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPreparedStatementConfig_update(rName, condition, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPreparedStatementExists(ctx, resourceName),
+					testAccCheckPreparedStatementExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", condition),
@@ -112,7 +110,7 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 			{
 				Config: testAccPreparedStatementConfig_update(rName, updatedCondition, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPreparedStatementExists(ctx, resourceName),
+					testAccCheckPreparedStatementExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", updatedCondition),
@@ -122,9 +120,9 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 	})
 }
 
-func testAccCheckPreparedStatementDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPreparedStatementDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_prepared_statement" {
@@ -133,7 +131,7 @@ func testAccCheckPreparedStatementDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfathena.FindPreparedStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -148,14 +146,14 @@ func testAccCheckPreparedStatementDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckPreparedStatementExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPreparedStatementExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
 
 		_, err := tfathena.FindPreparedStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup"], rs.Primary.Attributes[names.AttrName])
 

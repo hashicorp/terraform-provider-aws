@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearchserverless
 
@@ -22,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -182,7 +184,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 
 	output, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -379,8 +381,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -389,17 +390,17 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcEndpointDetails, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCEndpoint(conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -415,7 +416,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -425,7 +426,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -438,7 +439,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -447,7 +448,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -460,7 +461,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
 		Target:                    []string{},
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 5,
 	}
@@ -469,7 +470,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

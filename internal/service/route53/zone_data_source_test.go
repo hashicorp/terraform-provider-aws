@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,11 +19,11 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 
 	fqdn := acctest.RandomFQDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneDataSourceConfig_id(fqdn),
@@ -35,6 +34,7 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(resourceName, "enable_accelerated_recovery", dataSourceName, "enable_accelerated_recovery"),
 				),
 			},
 		},
@@ -48,11 +48,11 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 
 	fqdn := acctest.RandomFQDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneDataSourceConfig_name(fqdn),
@@ -62,6 +62,7 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(resourceName, "enable_accelerated_recovery", dataSourceName, "enable_accelerated_recovery"),
 				),
 			},
 		},
@@ -82,11 +83,11 @@ func TestAccRoute53ZoneDataSource_name_idEmptyString(t *testing.T) {
 
 	fqdn := acctest.RandomFQDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneDataSourceConfig_name_idEmptyString(fqdn),
@@ -104,17 +105,17 @@ func TestAccRoute53ZoneDataSource_name_idEmptyString(t *testing.T) {
 
 func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	fqdn := acctest.RandomFQDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneDataSourceConfig_tagsPrivate(fqdn, rInt),
@@ -130,17 +131,45 @@ func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
+func TestAccRoute53ZoneDataSource_tagsOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	fqdn := acctest.RandomFQDomainName()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneDataSourceConfig_tagsOnly(fqdn, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
+	rInt := acctest.RandInt(t)
+	resourceName := "aws_route53_zone.test"
+	dataSourceName := "data.aws_route53_zone.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneDataSourceConfig_vpc(rInt),
@@ -156,17 +185,43 @@ func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ZoneDataSource_vpcOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	rInt := acctest.RandInt(t)
+	resourceName := "aws_route53_zone.test"
+	dataSourceName := "data.aws_route53_zone.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneDataSourceConfig_vpcOnly(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "servicediscovery") },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccZoneDataSourceConfig_serviceDiscovery(rInt),
@@ -248,6 +303,28 @@ data "aws_route53_zone" "test" {
 `, fqdn, rInt)
 }
 
+func testAccZoneDataSourceConfig_tagsOnly(fqdn string, rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+
+  tags = {
+    Environment = "tf-acc-test-%[2]d"
+    Name        = "tf-acc-test-%[2]d"
+  }
+}
+
+data "aws_route53_zone" "test" {
+  tags = {
+    Environment = "tf-acc-test-%[2]d"
+    Name        = "tf-acc-test-%[2]d"
+  }
+
+  depends_on = [aws_route53_zone.test]
+}
+`, fqdn, rInt)
+}
+
 func testAccZoneDataSourceConfig_vpc(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -274,6 +351,36 @@ data "aws_route53_zone" "test" {
   name         = aws_route53_zone.test.name
   private_zone = true
   vpc_id       = aws_vpc.test.id
+}
+`, rInt)
+}
+
+func testAccZoneDataSourceConfig_vpcOnly(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-r53-zone-data-source-%[1]d"
+  }
+}
+
+resource "aws_route53_zone" "test" {
+  name = "test.acc-%[1]d."
+
+  vpc {
+    vpc_id = aws_vpc.test.id
+  }
+
+  tags = {
+    Environment = "dev-%[1]d"
+  }
+}
+
+data "aws_route53_zone" "test" {
+  vpc_id = aws_vpc.test.id
+
+  depends_on = [aws_route53_zone.test]
 }
 `, rInt)
 }

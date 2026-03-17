@@ -1,9 +1,16 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Welcome
 
 The Terraform AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. This site contains extensive instructions about how to contribute and how the AWS provider works.
 
 !!! tip
     This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
+
+!!! tip
+    New Resources and Data Sources need to be implemented using [aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) and [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).
+    Preferred tooling for the same would be our scaffolding tool, [skaff](skaff.md).
 
 ## Contribute
 
@@ -44,7 +51,9 @@ If you are unable to pay for acceptance tests for your contributions, mention th
 
 ### 5. Continuous Integration
 
-When submitting a pull request, you'll notice that we run several automated processes on your proposed change.Some of these processes are tests to ensure your contribution aligns with our standards. While we strive for accuracy, some users may find these tests confusing. Check out [Continuous Integration](continuous-integration.md) for additional clarity.
+When submitting a pull request, you'll notice that we run several automated processes on your proposed change. Some of these processes are tests to ensure your contribution aligns with our standards. While we strive for accuracy, some users may find these tests confusing. Check out [Continuous Integration](continuous-integration.md) for additional clarity.
+
+For contributors working on GitHub Actions workflows or experiencing slow CI builds, see [GitHub Actions Caching Strategy](github-actions-caching.md) for details on how caching is optimized for this large codebase.
 
 ### 6. Update the Changelog
 

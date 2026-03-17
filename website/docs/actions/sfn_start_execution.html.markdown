@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_sfn_start_execution
 
-~> **Note:** `aws_sfn_start_execution` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Starts a Step Functions state machine execution with the specified input data. This action allows for imperative execution of state machines with full control over execution parameters.
 
 For information about AWS Step Functions, see the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/). For specific information about starting executions, see the [StartExecution](https://docs.aws.amazon.com/step-functions/latest/apireference/API_StartExecution.html) page in the AWS Step Functions API Reference.

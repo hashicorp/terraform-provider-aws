@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +82,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
-		CreatorRequestId:    aws.String(id.PrefixedUniqueId("tf-r53-rslvr-frgassoc-")),
+		CreatorRequestId:    aws.String(sdkid.PrefixedUniqueId("tf-r53-rslvr-frgassoc-")),
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
 		Priority:            aws.Int32(int32(d.Get(names.AttrPriority).(int))),
@@ -113,7 +115,7 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 
 	ruleGroupAssociation, err := findFirewallRuleGroupAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Rule Group Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -195,8 +197,7 @@ func findFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -205,17 +206,17 @@ func findFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	}
 
 	if output == nil || output.FirewallRuleGroupAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FirewallRuleGroupAssociation, nil
 }
 
-func statusFirewallRuleGroupAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewallRuleGroupAssociation(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallRuleGroupAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -237,14 +238,14 @@ func waitFirewallRuleGroupAssociationCreated(ctx context.Context, conn *route53r
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallRuleGroupAssociationStatusUpdating),
 		Target:  enum.Slice(awstypes.FirewallRuleGroupAssociationStatusComplete),
-		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
+		Refresh: statusFirewallRuleGroupAssociation(conn, id),
 		Timeout: firewallRuleGroupAssociationCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FirewallRuleGroupAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -256,14 +257,14 @@ func waitFirewallRuleGroupAssociationUpdated(ctx context.Context, conn *route53r
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallRuleGroupAssociationStatusUpdating),
 		Target:  enum.Slice(awstypes.FirewallRuleGroupAssociationStatusComplete),
-		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
+		Refresh: statusFirewallRuleGroupAssociation(conn, id),
 		Timeout: firewallRuleGroupAssociationUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FirewallRuleGroupAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -275,14 +276,14 @@ func waitFirewallRuleGroupAssociationDeleted(ctx context.Context, conn *route53r
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallRuleGroupAssociationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
+		Refresh: statusFirewallRuleGroupAssociation(conn, id),
 		Timeout: firewallRuleGroupAssociationDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FirewallRuleGroupAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

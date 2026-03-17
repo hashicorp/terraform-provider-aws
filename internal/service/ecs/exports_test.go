@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -9,6 +9,7 @@ var (
 	ResourceCapacityProvider         = resourceCapacityProvider
 	ResourceCluster                  = resourceCluster
 	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
+	ResourceExpressGatewayService    = newExpressGatewayServiceResource
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
 	ResourceTaskDefinition           = resourceTaskDefinition
@@ -18,6 +19,7 @@ var (
 	FindCapacityProviderByARN               = findCapacityProviderByARN
 	FindClusterByNameOrARN                  = findClusterByNameOrARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
+	FindExpressGatewayServiceByARN          = findExpressGatewayServiceByARN
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
 	FindTag                                 = findTag
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN

@@ -1,19 +1,31 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
 
 // Exports for use in tests only.
 var (
-	ResourceFilter                = resourceFilter
-	ResourceInviteAccepter        = resourceInviteAccepter
-	ResourceMalwareProtectionPlan = newMalwareProtectionPlanResource
-	ResourcePublishingDestination = resourcePublishingDestination
+	ResourceDetector                 = resourceDetector
+	ResourceFilter                   = resourceFilter
+	ResourceInviteAccepter           = resourceInviteAccepter
+	ResourceIPSet                    = resourceIPSet
+	ResourceMalwareProtectionPlan    = newMalwareProtectionPlanResource
+	ResourceMember                   = resourceMember
+	ResourceOrganizationAdminAccount = resourceOrganizationAdminAccount
+	ResourcePublishingDestination    = resourcePublishingDestination
+	ResourceThreatIntelSet           = resourceThreatIntelSet
 
-	FindDetectorByID                        = findDetectorByID
-	FindDetectorFeatureByTwoPartKey         = findDetectorFeatureByTwoPartKey
-	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
-	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
-
-	GetOrganizationAdminAccount = getOrganizationAdminAccount
+	FindDetectorByID                                 = findDetectorByID
+	FindDetectorID                                   = findDetectorID
+	FindDetectorFeatureByTwoPartKey                  = findDetectorFeatureByTwoPartKey
+	FindFilterByTwoPartKey                           = findFilterByTwoPartKey
+	FindIPSetByTwoPartKey                            = findIPSetByTwoPartKey
+	FindMalwareProtectionPlanByID                    = findMalwareProtectionPlanByID
+	FindMemberByTwoPartKey                           = findMemberByTwoPartKey
+	FindMemberDetectorFeatureByThreePartKey          = findMemberDetectorFeatureByThreePartKey
+	FindOrganizationAdminAccountByID                 = findOrganizationAdminAccountByID
+	FindOrganizationConfigurationByID                = findOrganizationConfigurationByID
+	FindOrganizationConfigurationFeatureByTwoPartKey = findOrganizationConfigurationFeatureByTwoPartKey
+	FindPublishingDestinationByTwoPartKey            = findPublishingDestinationByTwoPartKey
+	FindThreatIntelSetByTwoPartKey                   = findThreatIntelSetByTwoPartKey
 )

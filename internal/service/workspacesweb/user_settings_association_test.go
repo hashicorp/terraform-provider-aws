@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -13,9 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +25,7 @@ func TestAccWorkSpacesWebUserSettingsAssociation_basic(t *testing.T) {
 	userSettingsResourceName := "aws_workspacesweb_user_settings.test"
 	portalResourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -34,12 +33,12 @@ func TestAccWorkSpacesWebUserSettingsAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsAssociationExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "user_settings_arn", userSettingsResourceName, "user_settings_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
@@ -73,7 +72,7 @@ func TestAccWorkSpacesWebUserSettingsAssociation_disappears(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -81,13 +80,13 @@ func TestAccWorkSpacesWebUserSettingsAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserSettingsAssociation, resourceName),
+					testAccCheckUserSettingsAssociationExists(ctx, t, resourceName, &userSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,9 +94,9 @@ func TestAccWorkSpacesWebUserSettingsAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserSettingsAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserSettingsAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_user_settings_association" {
@@ -106,7 +105,7 @@ func testAccCheckUserSettingsAssociationDestroy(ctx context.Context) resource.Te
 
 			userSettings, err := tfworkspacesweb.FindUserSettingsByARN(ctx, conn, rs.Primary.Attributes["user_settings_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -125,14 +124,14 @@ func testAccCheckUserSettingsAssociationDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckUserSettingsAssociationExists(ctx context.Context, n string, v *awstypes.UserSettings) resource.TestCheckFunc {
+func testAccCheckUserSettingsAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.UserSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindUserSettingsByARN(ctx, conn, rs.Primary.Attributes["user_settings_arn"])
 

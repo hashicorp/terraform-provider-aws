@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -9,31 +9,29 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
-	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 30, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAccessExists(ctx, resourceName),
+					testAccCheckEndpointAccessExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
@@ -50,7 +48,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 			{
 				Config: testAccEndpointAccessConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAccessExists(ctx, resourceName),
+					testAccCheckEndpointAccessExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("managedvpcendpoint/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
@@ -67,19 +65,19 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
-	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 30, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceWorkgroup(), "aws_redshiftserverless_workgroup.test"),
+					testAccCheckEndpointAccessExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceWorkgroup(), "aws_redshiftserverless_workgroup.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,19 +88,19 @@ func TestAccRedshiftServerlessEndpointAccess_Disappears_workgroup(t *testing.T) 
 func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_endpoint_access.test"
-	rName := sdkacctest.RandStringFromCharSet(30, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 30, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointAccessExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceEndpointAccess(), resourceName),
+					testAccCheckEndpointAccessExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceEndpointAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,9 +108,9 @@ func TestAccRedshiftServerlessEndpointAccess_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEndpointAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_endpoint_access" {
@@ -120,7 +118,7 @@ func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFu
 			}
 			_, err := tfredshiftserverless.FindEndpointAccessByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -135,14 +133,14 @@ func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckEndpointAccessExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEndpointAccessExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindEndpointAccessByName(ctx, conn, rs.Primary.ID)
 
