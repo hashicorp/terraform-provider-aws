@@ -264,6 +264,7 @@ func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
 
 	setTagsOut(ctx, out.Tags)
 
