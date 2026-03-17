@@ -598,7 +598,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 
 					// RdsPromoteReadReplica config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_promote_read_replica_config.*", map[string]string{
-						"cross_account_role": "arn:aws:iam::123456789012:role/RdsPromoateReplicaRole",
+						"cross_account_role": "arn:aws:iam::123456789012:role/RdsPromoteReplicaRole",
 						names.AttrExternalID: "rds-promote-replica-external-id",
 						"timeout_minutes":    "45",
 					}),
@@ -1557,7 +1557,7 @@ resource "aws_arcregionswitch_plan" "test" {
           %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-db-secondary"
         }
         timeout_minutes = 45
-        cross_account_role = "arn:aws:iam::123456789012:role/RdsPromoateReplicaRole"
+        cross_account_role = "arn:aws:iam::123456789012:role/RdsPromoteReplicaRole"
         external_id        = "rds-promote-replica-external-id"
       }
     }

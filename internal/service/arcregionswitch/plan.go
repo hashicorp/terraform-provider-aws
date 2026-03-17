@@ -641,10 +641,10 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 										NestedObject: fwschema.NestedBlockObject{
 											Attributes: map[string]fwschema.Attribute{
 												"bucket_path": fwschema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 												"bucket_owner": fwschema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -1996,80 +1996,12 @@ type rdsCreateCrossRegionReadReplicaConfigModel struct {
 	TimeoutMinutes   types.Int32         `tfsdk:"timeout_minutes"`
 }
 
-var (
-	_ flex.Expander  = rdsCreateCrossRegionReadReplicaConfigModel{}
-	_ flex.Flattener = &rdsCreateCrossRegionReadReplicaConfigModel{}
-)
-
-func (m rdsCreateCrossRegionReadReplicaConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
-	var result awstypes.RdsCreateCrossRegionReplicaConfiguration
-	var diags fwdiag.Diagnostics
-
-	diags.Append(flex.Expand(ctx, m.CrossAccountRole, &result.CrossAccountRole)...)
-	diags.Append(flex.Expand(ctx, m.ExternalID, &result.ExternalId)...)
-	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
-	diags.Append(flex.Expand(ctx, m.DbInstanceArnMap, &result.DbInstanceArnMap)...)
-
-	return &result, diags
-}
-
-func (m *rdsCreateCrossRegionReadReplicaConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
-	var diags fwdiag.Diagnostics
-
-	config, ok := v.(awstypes.RdsCreateCrossRegionReplicaConfiguration)
-	if !ok {
-		diags.AddError("Unexpected Type", "Expected awstypes.RdsCreateCrossRegionReplicaConfiguration")
-		return diags
-	}
-
-	diags.Append(flex.Flatten(ctx, config.CrossAccountRole, &m.CrossAccountRole)...)
-	diags.Append(flex.Flatten(ctx, config.ExternalId, &m.ExternalID)...)
-	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
-	diags.Append(flex.Flatten(ctx, config.DbInstanceArnMap, &m.DbInstanceArnMap)...)
-
-	return diags
-}
-
 // RDS Promote Read Replica Configuration Models
 type rdsPromoteReadReplicaConfigModel struct {
 	CrossAccountRole types.String        `tfsdk:"cross_account_role"`
 	DbInstanceArnMap fwtypes.MapOfString `tfsdk:"db_instance_arn_map"`
 	ExternalID       types.String        `tfsdk:"external_id"`
 	TimeoutMinutes   types.Int32         `tfsdk:"timeout_minutes"`
-}
-
-var (
-	_ flex.Expander  = rdsPromoteReadReplicaConfigModel{}
-	_ flex.Flattener = &rdsPromoteReadReplicaConfigModel{}
-)
-
-func (m rdsPromoteReadReplicaConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
-	var result awstypes.RdsPromoteReadReplicaConfiguration
-	var diags fwdiag.Diagnostics
-
-	diags.Append(flex.Expand(ctx, m.CrossAccountRole, &result.CrossAccountRole)...)
-	diags.Append(flex.Expand(ctx, m.ExternalID, &result.ExternalId)...)
-	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
-	diags.Append(flex.Expand(ctx, m.DbInstanceArnMap, &result.DbInstanceArnMap)...)
-
-	return &result, diags
-}
-
-func (m *rdsPromoteReadReplicaConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
-	var diags fwdiag.Diagnostics
-
-	config, ok := v.(awstypes.RdsPromoteReadReplicaConfiguration)
-	if !ok {
-		diags.AddError("Unexpected Type", "Expected awstypes.RdsPromoteReadReplicaConfiguration")
-		return diags
-	}
-
-	diags.Append(flex.Flatten(ctx, config.CrossAccountRole, &m.CrossAccountRole)...)
-	diags.Append(flex.Flatten(ctx, config.ExternalId, &m.ExternalID)...)
-	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
-	diags.Append(flex.Flatten(ctx, config.DbInstanceArnMap, &m.DbInstanceArnMap)...)
-
-	return diags
 }
 
 // Trigger Configuration Models
