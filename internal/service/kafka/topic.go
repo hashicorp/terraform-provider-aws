@@ -173,50 +173,9 @@ func (r *topicResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	importing := state.TopicARN.IsNull()
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state, importing))
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	// The Configs returned from the API contains server-augmented values.
-	// The resource's ConfigsActual contains all values whilst Config contains only client-configured values.
-	v, diags := flattenTopicConfigsActual(ctx, out.Configs)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	state.ConfigsActual = v
-
-	if !state.Configs.IsNull() {
-		var serverConfigs map[string]any
-		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, state.ConfigsActual), &serverConfigs); err != nil {
-			resp.Diagnostics.AddError("JSON decoding server configs", err.Error())
-			return
-		}
-		var clientConfigs map[string]any
-		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, state.Configs), &clientConfigs); err != nil {
-			resp.Diagnostics.AddError("JSON decoding client configs", err.Error())
-			return
-		}
-
-		for k := range clientConfigs {
-			if v, ok := serverConfigs[k]; ok {
-				clientConfigs[k] = v
-			} else {
-				delete(clientConfigs, k)
-			}
-		}
-
-		v, err := tfjson.EncodeToString(clientConfigs)
-		if err != nil {
-			resp.Diagnostics.AddError("JSON encoding client configs", err.Error())
-			return
-		}
-
-		state.Configs = jsontypes.NewNormalizedValue(v)
-	} else if importing {
-		state.Configs = jsontypes.Normalized{StringValue: state.ConfigsActual}
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -323,6 +282,57 @@ func (r *topicResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 		return
 	}
+}
+
+func (r *topicResource) flatten(ctx context.Context, topic *kafka.DescribeTopicOutput, data *topicResourceModel, importing bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, topic, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// The Configs returned from the API contains server-augmented values.
+	// The resource's ConfigsActual contains all values whilst Config contains only client-configured values.
+	v, d := flattenTopicConfigsActual(ctx, topic.Configs)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	data.ConfigsActual = v
+
+	if !data.Configs.IsNull() {
+		var serverConfigs map[string]any
+		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, data.ConfigsActual), &serverConfigs); err != nil {
+			diags.AddError("JSON decoding server configs", err.Error())
+			return diags
+		}
+		var clientConfigs map[string]any
+		if err := tfjson.DecodeFromString(fwflex.StringValueFromFramework(ctx, data.Configs), &clientConfigs); err != nil {
+			diags.AddError("JSON decoding client configs", err.Error())
+			return diags
+		}
+
+		for k := range clientConfigs {
+			if v, ok := serverConfigs[k]; ok {
+				clientConfigs[k] = v
+			} else {
+				delete(clientConfigs, k)
+			}
+		}
+
+		v, err := tfjson.EncodeToString(clientConfigs)
+		if err != nil {
+			diags.AddError("JSON encoding client configs", err.Error())
+			return diags
+		}
+
+		data.Configs = jsontypes.NewNormalizedValue(v)
+	} else if importing {
+		data.Configs = jsontypes.Normalized{StringValue: data.ConfigsActual}
+	}
+
+	return diags
 }
 
 func waitTopicCreated(ctx context.Context, conn *kafka.Client, clusterARN, topicName string, timeout time.Duration) (*kafka.DescribeTopicOutput, error) {

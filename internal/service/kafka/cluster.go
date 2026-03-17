@@ -657,8 +657,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.KafkaClient(ctx)
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	cluster, err := findClusterByARN(ctx, conn, d.Id())
 
@@ -678,7 +677,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	}
 
-	if err := resourceClusterFlatten(ctx, c, cluster, outputGBB, d); err != nil {
+	if err := resourceClusterFlatten(ctx, cluster, outputGBB, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -1044,7 +1043,7 @@ func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta any
 	return nil
 }
 
-func resourceClusterFlatten(ctx context.Context, awsClient *conns.AWSClient, cluster *types.ClusterInfo, outputGBB *kafka.GetBootstrapBrokersOutput, d *schema.ResourceData) error {
+func resourceClusterFlatten(ctx context.Context, cluster *types.ClusterInfo, outputGBB *kafka.GetBootstrapBrokersOutput, d *schema.ResourceData) error {
 	clusterARN := aws.ToString(cluster.ClusterArn)
 	d.Set(names.AttrARN, clusterARN)
 	d.Set("bootstrap_brokers", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerString)))

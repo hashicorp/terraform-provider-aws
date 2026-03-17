@@ -164,8 +164,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.KafkaClient(ctx)
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	cluster, err := findServerlessClusterByARN(ctx, conn, d.Id())
 
@@ -179,7 +178,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading MSK Serverless Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceServerlessClusterFlatten(ctx, c, cluster, d); err != nil {
+	if err := resourceServerlessClusterFlatten(ctx, cluster, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -205,7 +204,7 @@ func resourceServerlessClusterUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServerlessClusterRead(ctx, d, meta)...)
 }
 
-func resourceServerlessClusterFlatten(ctx context.Context, awsClient *conns.AWSClient, cluster *types.Cluster, d *schema.ResourceData) error {
+func resourceServerlessClusterFlatten(ctx context.Context, cluster *types.Cluster, d *schema.ResourceData) error {
 	clusterARN := aws.ToString(cluster.ClusterArn)
 	d.Set(names.AttrARN, clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {

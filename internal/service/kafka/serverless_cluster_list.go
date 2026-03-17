@@ -66,7 +66,7 @@ func (l *serverlessClusterListResource) List(ctx context.Context, request list.L
 			rd.Set(names.AttrARN, arn)
 
 			if request.IncludeResource {
-				if err := resourceServerlessClusterFlatten(ctx, l.Meta(), &item, rd); err != nil {
+				if err := resourceServerlessClusterFlatten(ctx, &item, rd); err != nil {
 					tflog.Error(ctx, "Flattening MSK Serverless Cluster", map[string]any{
 						"error": err.Error(),
 					})
