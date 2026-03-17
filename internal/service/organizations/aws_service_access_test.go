@@ -149,7 +149,7 @@ func testAccCheckAwsServiceAccessExists(ctx context.Context, t *testing.T, name 
 func testAccAwsServiceAccessConfig_basic(servicePrincipal string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_aws_service_access" "test" {
-  service_principal             = %[1]q
+  service_principal = %[1]q
 }
 `, servicePrincipal)
 }
