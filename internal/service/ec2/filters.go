@@ -283,3 +283,22 @@ func newAttributeFilterList(m map[string]string) []awstypes.Filter {
 
 	return filters
 }
+
+func newMultiValueAttributeFilterList(m map[string][]string) []awstypes.Filter {
+	var filters []awstypes.Filter
+
+	// Sort the filters by name to make the output deterministic.
+	names := tfmaps.Keys(m)
+	slices.Sort(names)
+
+	for _, name := range names {
+		values := m[name]
+		if len(values) == 0 {
+			continue
+		}
+
+		filters = append(filters, newFilter(name, values))
+	}
+
+	return filters
+}
