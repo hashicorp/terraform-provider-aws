@@ -209,7 +209,7 @@ func resourceServerlessClusterFlatten(ctx context.Context, cluster *types.Cluste
 	d.Set(names.AttrARN, clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []any{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
-			return fmt.Errorf("setting client_authentication: %s", err)
+			return fmt.Errorf("setting client_authentication: %w", err)
 		}
 	} else {
 		d.Set("client_authentication", nil)
@@ -218,7 +218,7 @@ func resourceServerlessClusterFlatten(ctx context.Context, cluster *types.Cluste
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
 	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
-		return fmt.Errorf("setting vpc_config: %s", err)
+		return fmt.Errorf("setting vpc_config: %w", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
