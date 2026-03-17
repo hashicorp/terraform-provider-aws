@@ -58,9 +58,9 @@ import (
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
 
-	r.SetDefaultCreateTimeout(25 * time.Minute)
-	r.SetDefaultUpdateTimeout(25 * time.Minute)
-	r.SetDefaultDeleteTimeout(25 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
 }
@@ -1503,9 +1503,6 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	planAlgoSpec := plan.AlgorithmSpecification
-	planStoppingCondition := plan.StoppingCondition
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	waitOut, err := waitTrainingJobCreated(ctx, conn, plan.TrainingJobName.ValueString(), createTimeout)
 	if err != nil {
@@ -1513,17 +1510,10 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut, &plan))
+	r.flatten(ctx, waitOut, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	normalizeAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	normalizeStoppingCondition(ctx, planStoppingCondition, plan.ServerlessJobConfig, &plan.StoppingCondition)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -1550,19 +1540,10 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	stateAlgoSpec := state.AlgorithmSpecification
-	stateStoppingCondition := state.StoppingCondition
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	r.flatten(ctx, out, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	normalizeAlgoSpecMetricDefinitions(ctx, stateAlgoSpec, &state.AlgorithmSpecification, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	normalizeStoppingCondition(ctx, stateStoppingCondition, state.ServerlessJobConfig, &state.StoppingCondition)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -1798,6 +1779,28 @@ func normalizeStoppingCondition(
 	if (saved.IsNull() || len(saved.Elements()) == 0) && !serverlessJobConfig.IsNull() && len(serverlessJobConfig.Elements()) > 0 {
 		*target = fwtypes.NewListNestedObjectValueOfNull[trainingJobStoppingConditionModel](ctx)
 	}
+}
+
+func (r *resourceTrainingJob) flatten(
+	ctx context.Context,
+	out *sagemaker.DescribeTrainingJobOutput,
+	target *resourceTrainingJobModel,
+	diags *diag.Diagnostics,
+) {
+	savedAlgoSpec := target.AlgorithmSpecification
+	savedStoppingCondition := target.StoppingCondition
+
+	diags.Append(flex.Flatten(ctx, out, target)...)
+	if diags.HasError() {
+		return
+	}
+
+	normalizeAlgoSpecMetricDefinitions(ctx, savedAlgoSpec, &target.AlgorithmSpecification, diags)
+	if diags.HasError() {
+		return
+	}
+
+	normalizeStoppingCondition(ctx, savedStoppingCondition, target.ServerlessJobConfig, &target.StoppingCondition)
 }
 
 // SageMaker always selects the latest version of the provided model irrespective of user config
