@@ -83,7 +83,7 @@ func (l *listResourceBaseBucketPropertySDK) List(ctx context.Context, request li
 type listResourceSDK interface {
 	framework.WithMeta
 	ResourceData() *schema.ResourceData
-	SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData)
+	SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, rd *schema.ResourceData, result *list.ListResult)
 }
 
 func parseQuery[T any](ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {
@@ -112,6 +112,6 @@ func (l baseBucketPropertyListHandlerSDK) ResourceData() *schema.ResourceData {
 	return l.lister.ResourceData()
 }
 
-func (l baseBucketPropertyListHandlerSDK) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
-	l.lister.SetResult(ctx, awsClient, includeResource, result, rd)
+func (l baseBucketPropertyListHandlerSDK) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, rd *schema.ResourceData, result *list.ListResult) {
+	l.lister.SetResult(ctx, awsClient, includeResource, rd, result)
 }

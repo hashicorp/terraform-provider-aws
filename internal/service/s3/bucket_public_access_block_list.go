@@ -81,7 +81,7 @@ func (l *listResourceBucketPublicAccessBlock) List(ctx context.Context, request 
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

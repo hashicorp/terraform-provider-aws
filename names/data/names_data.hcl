@@ -4203,8 +4203,9 @@ service "iam" {
   }
 
   names {
-    provider_name_upper = "IAM"
-    human_friendly      = "IAM (Identity & Access Management)"
+    provider_name_upper  = "IAM"
+    human_friendly       = "IAM (Identity & Access Management)"
+    human_friendly_short = "IAM"
   }
 
   env_var {

@@ -89,7 +89,7 @@ func (l bucketPolicyListHandler) list(ctx context.Context, request list.ListRequ
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
