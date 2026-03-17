@@ -50,9 +50,11 @@ func TestAccOrganizationsAwsServiceAccess_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "service_principal",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_principal"),
 			},
 		},
 	})

@@ -67,21 +67,24 @@ func testAccOrganizationsAwsServiceAccess_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/AwsServiceAccess/basic/"),
-				ConfigVariables:   config.Variables{},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory:                      config.StaticDirectory("testdata/AwsServiceAccess/basic/"),
+				ConfigVariables:                      config.Variables{},
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_principal"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "service_principal",
 			},
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/AwsServiceAccess/basic/"),
-				ConfigVariables: config.Variables{},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ConfigDirectory:   config.StaticDirectory("testdata/AwsServiceAccess/basic/"),
+				ConfigVariables:   config.Variables{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "service_principal"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_principal"), knownvalue.NotNull()),

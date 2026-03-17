@@ -31,6 +31,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
+// @Testing(importStateIdAttribute="service_principal")
 func newAwsServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &awsServiceAccessResource{}
 
