@@ -143,7 +143,7 @@ resource "aws_mediaconnect_flow" "example" {
   }
 
   source_monitoring_config {
-    thumbnail_state               = "ENABLED"
+    thumbnail_state                = "ENABLED"
     content_quality_analysis_state = "ENABLED"
 
     video_monitoring_setting {

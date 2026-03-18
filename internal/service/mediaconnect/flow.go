@@ -1123,10 +1123,11 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 
 	// Add additional sources for multi-source flows.
 	if len(additionalSources) > 0 {
-		_, err = conn.AddFlowSources(ctx, &mediaconnect.AddFlowSourcesInput{
+		addSourcesInput := mediaconnect.AddFlowSourcesInput{
 			FlowArn: output.Flow.FlowArn,
 			Sources: additionalSources,
-		})
+		}
+		_, err = conn.AddFlowSources(ctx, &addSourcesInput)
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("adding sources to MediaConnect Flow (%s)", data.Name.ValueString()), err.Error())
 			return
@@ -1146,7 +1147,7 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 	}
 
 	// Flatten the response.
-	response.Diagnostics.Append(flattenFlow(ctx, flowOutput.Flow, &data)...)
+	flattenFlow(ctx, flowOutput.Flow, &data)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1192,7 +1193,7 @@ func (r *flowResource) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	response.Diagnostics.Append(flattenFlow(ctx, output.Flow, &data)...)
+	flattenFlow(ctx, output.Flow, &data)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1218,7 +1219,6 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		!newData.Maintenance.Equal(oldData.Maintenance) ||
 		!newData.SourceFailoverConfig.Equal(oldData.SourceFailoverConfig) ||
 		!newData.SourceMonitoringConfig.Equal(oldData.SourceMonitoringConfig) {
-
 		input := mediaconnect.UpdateFlowInput{
 			FlowArn: fwflex.StringFromFramework(ctx, newData.ID),
 		}
@@ -1493,10 +1493,11 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		for name, oldV := range oldByName {
 			newV, exists := newByName[name]
 			if !exists || oldV.RoleARN.ValueString() != newV.RoleARN.ValueString() || oldV.SubnetID.ValueString() != newV.SubnetID.ValueString() || !oldV.NetworkInterfaceType.Equal(newV.NetworkInterfaceType) || !oldV.SecurityGroupIDs.Equal(newV.SecurityGroupIDs) {
-				_, err := conn.RemoveFlowVpcInterface(ctx, &mediaconnect.RemoveFlowVpcInterfaceInput{
+				removeInput := mediaconnect.RemoveFlowVpcInterfaceInput{
 					FlowArn:          fwflex.StringFromFramework(ctx, newData.ID),
 					VpcInterfaceName: aws.String(name),
-				})
+				}
+				_, err := conn.RemoveFlowVpcInterface(ctx, &removeInput)
 				if err != nil {
 					response.Diagnostics.AddError(fmt.Sprintf("removing VPC interface (%s) from MediaConnect Flow (%s)", name, newData.ID.ValueString()), err.Error())
 					return
@@ -1513,10 +1514,11 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 			}
 		}
 		if len(toAdd) > 0 {
-			_, err := conn.AddFlowVpcInterfaces(ctx, &mediaconnect.AddFlowVpcInterfacesInput{
+			addVpcInput := mediaconnect.AddFlowVpcInterfacesInput{
 				FlowArn:       fwflex.StringFromFramework(ctx, newData.ID),
 				VpcInterfaces: toAdd,
-			})
+			}
+			_, err := conn.AddFlowVpcInterfaces(ctx, &addVpcInput)
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("adding VPC interfaces to MediaConnect Flow (%s)", newData.ID.ValueString()), err.Error())
 				return
@@ -1525,7 +1527,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 	}
 
 	// Wait for updates to settle.
-	if _, err := waitFlowUpdated(ctx, conn, newData.ID.ValueString(), r.UpdateTimeout(ctx, newData.Timeouts)); err != nil {
+	if err := waitFlowUpdated(ctx, conn, newData.ID.ValueString(), r.UpdateTimeout(ctx, newData.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for MediaConnect Flow (%s) update", newData.ID.ValueString()), err.Error())
 		return
 	}
@@ -1537,7 +1539,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		return
 	}
 
-	response.Diagnostics.Append(flattenFlow(ctx, output.Flow, &newData)...)
+	flattenFlow(ctx, output.Flow, &newData)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1593,7 +1595,7 @@ func (r *flowResource) Delete(ctx context.Context, request resource.DeleteReques
 			}
 		case awstypes.StatusStarting, awstypes.StatusUpdating:
 			// Wait for the transitional state to settle, then stop if needed.
-			if _, err := waitFlowUpdated(ctx, conn, flowARN, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+			if err := waitFlowUpdated(ctx, conn, flowARN, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("waiting for MediaConnect Flow (%s) to settle before delete", flowARN), err.Error())
 				return
 			}
@@ -1623,9 +1625,10 @@ func (r *flowResource) Delete(ctx context.Context, request resource.DeleteReques
 		}
 	}
 
-	_, err = conn.DeleteFlow(ctx, &mediaconnect.DeleteFlowInput{
+	deleteInput := mediaconnect.DeleteFlowInput{
 		FlowArn: aws.String(flowARN),
-	})
+	}
+	_, err = conn.DeleteFlow(ctx, &deleteInput)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return
@@ -1983,7 +1986,7 @@ func waitFlowActive(ctx context.Context, conn *mediaconnect.Client, arn string, 
 	return nil, err
 }
 
-func waitFlowUpdated(ctx context.Context, conn *mediaconnect.Client, arn string, timeout time.Duration) (*mediaconnect.DescribeFlowOutput, error) {
+func waitFlowUpdated(ctx context.Context, conn *mediaconnect.Client, arn string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.StatusUpdating,
@@ -2000,18 +2003,16 @@ func waitFlowUpdated(ctx context.Context, conn *mediaconnect.Client, arn string,
 		ContinuousTargetOccurence: 2,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*mediaconnect.DescribeFlowOutput); ok {
-		return output, err
-	}
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	return nil, err
+	return err
 }
 
 func startFlow(ctx context.Context, conn *mediaconnect.Client, arn string, timeout time.Duration) error {
-	_, err := conn.StartFlow(ctx, &mediaconnect.StartFlowInput{
+	startInput := mediaconnect.StartFlowInput{
 		FlowArn: aws.String(arn),
-	})
+	}
+	_, err := conn.StartFlow(ctx, &startInput)
 	if err != nil {
 		return err
 	}
@@ -2021,9 +2022,10 @@ func startFlow(ctx context.Context, conn *mediaconnect.Client, arn string, timeo
 }
 
 func stopFlow(ctx context.Context, conn *mediaconnect.Client, arn string, timeout time.Duration) error {
-	_, err := conn.StopFlow(ctx, &mediaconnect.StopFlowInput{
+	stopInput := mediaconnect.StopFlowInput{
 		FlowArn: aws.String(arn),
-	})
+	}
+	_, err := conn.StopFlow(ctx, &stopInput)
 	if err != nil {
 		return err
 	}
@@ -2164,7 +2166,7 @@ func expandSetSourceRequest(ctx context.Context, data *sourceModel) (*awstypes.S
 
 func expandUpdateFlowSourceInput(ctx context.Context, data *sourceModel) *mediaconnect.UpdateFlowSourceInput {
 	f := expandSourceFields(ctx, data)
-	result := &mediaconnect.UpdateFlowSourceInput{
+	result := mediaconnect.UpdateFlowSourceInput{
 		Description:           f.Description,
 		EntitlementArn:        f.EntitlementArn,
 		IngestPort:            f.IngestPort,
@@ -2214,7 +2216,7 @@ func expandUpdateFlowSourceInput(ctx context.Context, data *sourceModel) *mediac
 		result.MediaStreamSourceConfigurations = expandMediaStreamSourceConfigRequests(ctx, msscData)
 	}
 
-	return result
+	return &result
 }
 
 // encryptionFields holds common encryption values used by both
@@ -2532,11 +2534,9 @@ func expandMediaStreamOutputConfigRequests(ctx context.Context, data []*mediaStr
 
 // Flatten functions.
 
-func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceModel) {
 	if flow == nil {
-		return diags
+		return
 	}
 
 	data.ARN = fwflex.StringToFramework(ctx, flow.FlowArn)
@@ -2567,9 +2567,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if flow.SourceFailoverConfig != nil {
 		fcModel := flattenFailoverConfig(ctx, flow.SourceFailoverConfig)
 		data.SourceFailoverConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, fcModel)
-	} else if data.SourceFailoverConfig.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.SourceFailoverConfig.IsNull() {
 		data.SourceFailoverConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*failoverConfigModel{})
 	}
 
@@ -2577,9 +2575,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if flow.Maintenance != nil {
 		maintModel := flattenMaintenance(ctx, flow.Maintenance)
 		data.Maintenance = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, maintModel)
-	} else if data.Maintenance.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.Maintenance.IsNull() {
 		data.Maintenance = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*maintenanceModel{})
 	}
 
@@ -2587,9 +2583,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if len(flow.VpcInterfaces) > 0 {
 		vpcModels := flattenVPCInterfaces(ctx, flow.VpcInterfaces)
 		data.VpcInterfaces = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, vpcModels)
-	} else if data.VpcInterfaces.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.VpcInterfaces.IsNull() {
 		data.VpcInterfaces = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*vpcInterfaceModel{})
 	}
 
@@ -2597,9 +2591,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if len(flow.Entitlements) > 0 {
 		entModels := flattenEntitlements(ctx, flow.Entitlements)
 		data.Entitlements = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, entModels)
-	} else if data.Entitlements.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.Entitlements.IsNull() {
 		data.Entitlements = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*entitlementModel{})
 	}
 
@@ -2607,9 +2599,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if len(flow.Outputs) > 0 {
 		outModels := flattenOutputs(ctx, flow.Outputs)
 		data.Outputs = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, outModels)
-	} else if data.Outputs.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.Outputs.IsNull() {
 		data.Outputs = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*outputModel{})
 	}
 
@@ -2617,9 +2607,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if len(flow.MediaStreams) > 0 {
 		msModels := flattenMediaStreams(ctx, flow.MediaStreams)
 		data.MediaStreams = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, msModels)
-	} else if data.MediaStreams.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.MediaStreams.IsNull() {
 		data.MediaStreams = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*mediaStreamModel{})
 	}
 
@@ -2627,13 +2615,10 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if flow.SourceMonitoringConfig != nil {
 		smcModel := flattenMonitoringConfig(ctx, flow.SourceMonitoringConfig)
 		data.SourceMonitoringConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, smcModel)
-	} else if data.SourceMonitoringConfig.IsNull() {
-		// Keep null if it was null.
-	} else {
+	} else if !data.SourceMonitoringConfig.IsNull() {
 		data.SourceMonitoringConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*sourceMonitoringConfigModel{})
 	}
 
-	return diags
 }
 
 func flattenSource(ctx context.Context, source *awstypes.Source) *sourceModel {
@@ -3181,15 +3166,15 @@ func flattenMediaStreamAttributes(ctx context.Context, attrs *awstypes.MediaStre
 	return model
 }
 
-func flattenFmtp(_ context.Context, fmtp *awstypes.Fmtp) *fmtpModel {
+func flattenFmtp(ctx context.Context, fmtp *awstypes.Fmtp) *fmtpModel {
 	if fmtp == nil {
 		return nil
 	}
 
 	model := &fmtpModel{
-		ChannelOrder:   fwflex.StringToFramework(context.Background(), fmtp.ChannelOrder),
-		ExactFramerate: fwflex.StringToFramework(context.Background(), fmtp.ExactFramerate),
-		Par:            fwflex.StringToFramework(context.Background(), fmtp.Par),
+		ChannelOrder:   fwflex.StringToFramework(ctx, fmtp.ChannelOrder),
+		ExactFramerate: fwflex.StringToFramework(ctx, fmtp.ExactFramerate),
+		Par:            fwflex.StringToFramework(ctx, fmtp.Par),
 	}
 
 	if fmtp.Colorimetry != "" {
