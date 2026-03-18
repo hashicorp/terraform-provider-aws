@@ -85,6 +85,7 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 					return
 				}
 
+				data.ClusterARN = fwtypes.ARNValue(clusterARN)
 				result.Diagnostics.Append(l.flatten(ctx, out, &data, true)...)
 				if result.Diagnostics.HasError() {
 					return
