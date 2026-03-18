@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOrganizationsServiceAccess_basic(t *testing.T) {
+func testAccOrganizationsServiceAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -59,7 +59,7 @@ func TestAccOrganizationsServiceAccess_basic(t *testing.T) {
 	})
 }
 
-func TestAccOrganizationsServiceAccess_disappears(t *testing.T) {
+func testAccOrganizationsServiceAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
