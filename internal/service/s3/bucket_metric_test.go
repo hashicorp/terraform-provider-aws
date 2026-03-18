@@ -609,6 +609,144 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 
 func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf types.MetricsConfiguration
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metric.test"
+	metricName := t.Name()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetricConfig_directoryBucket(rName, metricName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketMetricsExistsConfig(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, metricName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketMetric_directoryBucket_filterPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf types.MetricsConfiguration
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metric.test"
+	metricName := t.Name()
+	prefix := "prefix-1/"
+	prefixUpdate := "prefix-2/"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetricConfig_directoryBucketFilterPrefix(rName, metricName, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketMetricsExistsConfig(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccBucketMetricConfig_directoryBucketFilterPrefix(rName, metricName, prefixUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketMetricsExistsConfig(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketMetric_directoryBucket_filterAccessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf types.MetricsConfiguration
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metric.test"
+	accessPointResourceName := "aws_s3_access_point.test"
+	metricName := t.Name()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetricConfig_directoryBucketFilterAccessPoint(rName, metricName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketMetricsExistsConfig(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "filter.0.access_point", accessPointResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketMetric_directoryBucket_filterAccessPointAndPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf types.MetricsConfiguration
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metric.test"
+	accessPointResourceName := "aws_s3_access_point.test"
+	metricName := t.Name()
+	prefix := "prefix-1/"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetricConfig_directoryBucketFilterAccessPointAndPrefix(rName, metricName, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketMetricsExistsConfig(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "filter.0.access_point", accessPointResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketMetric_directoryBucket_filterTagsNotSupported(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	metricName := t.Name()
 
@@ -619,11 +757,96 @@ func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketMetricConfig_directoryBucket(rName, metricName),
-				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+				Config:      testAccBucketMetricConfig_directoryBucketFilterTags(rName, metricName),
+				ExpectError: regexache.MustCompile(`MalformedXML`),
 			},
 		},
 	})
+}
+
+func testAccBucketMetricConfig_directoryBucketBase(bucketName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+ 
+  location {
+    name = local.location_name
+  }
+}
+`)
+}
+
+func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
+	return acctest.ConfigCompose(testAccBucketMetricConfig_directoryBucketBase(bucketName), fmt.Sprintf(`
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+}
+`, metricName))
+}
+
+func testAccBucketMetricConfig_directoryBucketFilterPrefix(bucketName, metricName, prefix string) string {
+	return acctest.ConfigCompose(testAccBucketMetricConfig_directoryBucketBase(bucketName), fmt.Sprintf(`
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+ 
+  filter {
+    prefix = %[2]q
+  }
+}
+`, metricName, prefix))
+}
+
+func testAccBucketMetricConfig_directoryBucketAccessPointBase(bucketName string) string {
+	return acctest.ConfigCompose(testAccBucketMetricConfig_directoryBucketBase(bucketName), fmt.Sprintf(`
+resource "aws_s3_access_point" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = "%[1]s--${local.location_name}--xa-s3"
+}
+`, bucketName))
+}
+
+func testAccBucketMetricConfig_directoryBucketFilterAccessPoint(bucketName, metricName string) string {
+	return acctest.ConfigCompose(testAccBucketMetricConfig_directoryBucketAccessPointBase(bucketName), fmt.Sprintf(`
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+ 
+  filter {
+    access_point = aws_s3_access_point.test.arn
+  }
+}
+`, metricName))
+}
+
+func testAccBucketMetricConfig_directoryBucketFilterAccessPointAndPrefix(bucketName, metricName, prefix string) string {
+	return acctest.ConfigCompose(testAccBucketMetricConfig_directoryBucketAccessPointBase(bucketName), fmt.Sprintf(`
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+ 
+  filter {
+    access_point = aws_s3_access_point.test.arn
+    prefix       = %[2]q
+  }
+}
+`, metricName, prefix))
+}
+
+func testAccBucketMetricConfig_directoryBucketFilterTags(bucketName, metricName string) string {
+	return acctest.ConfigCompose(testAccBucketMetricConfig_directoryBucketBase(bucketName), fmt.Sprintf(`
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+ 
+  filter {
+    tags = {
+      "tag1" = "value1"
+    }
+  }
+}
+`, metricName))
 }
 
 func testAccCheckBucketMetricDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -896,23 +1119,6 @@ func testAccBucketMetricConfig_noFilter(bucketName, metricName string) string {
 	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = %[1]q
-}
-`, metricName))
-}
-
-func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
-resource "aws_s3_directory_bucket" "test" {
-  bucket = local.bucket
-
-  location {
-    name = local.location_name
-  }
-}
-
-resource "aws_s3_bucket_metric" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
 }
 `, metricName))

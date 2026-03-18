@@ -10,8 +10,6 @@ description: |-
 
 Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html) resource.
 
--> This resource cannot be used with S3 directory buckets.
-
 ## Example Usage
 
 ### Add metrics configuration for entire S3 bucket
@@ -76,6 +74,35 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 }
 ```
 
+### Add metrics configuration for S3 directory bucket
+```
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+ 
+resource "aws_s3_directory_bucket" "example" {
+  bucket = "example--zoneId--x-s3"
+  location {
+    name = data.aws_availability_zones.available.zone_ids[0]
+  }
+}
+ 
+resource "aws_s3_access_point" "example-access-point" {
+  bucket = aws_s3_directory_bucket.example.id
+  name   = "example--zoneId--xa-s3"
+}
+ 
+resource "aws_s3_bucket_metric" "example-bucket-metric" {
+  bucket = aws_s3_directory_bucket.example.id
+  name   = "ExampleBucketMetricForDirectoryBuckets"
+ 
+  filter {
+    access_point = aws_s3_access_point.example-access-point.arn
+    prefix       = "documents/"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -91,7 +118,7 @@ The `filter` metric configuration supports the following:
 
 * `access_point` - (Optional) S3 Access Point ARN for filtering (singular).
 * `prefix` - (Optional) Object prefix for filtering (singular).
-* `tags` - (Optional) Object tags for filtering (up to 10).
+* `tags` - (Optional) Object tags for filtering (up to 10). Unsupported for S3 directory buckets.
 
 ## Attribute Reference
 
