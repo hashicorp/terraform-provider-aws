@@ -1,5 +1,9 @@
 ## 6.38.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
+
 ## 6.37.0 (March 18, 2026)
 
 BREAKING CHANGES:
