@@ -837,6 +837,11 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 }
 
 func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput) error {
+	if mcOutput == nil {
+		// No managed certificate found, nothing to update
+		return nil
+	}
+
 	// Check if we need to update the certificate ARN
 	if !needToUpdateCertificateARN(dtOutput.DistributionTenant, aws.ToString(mcOutput.ManagedCertificateDetails.CertificateArn)) {
 		// Certificate ARN already matches, nothing to do
