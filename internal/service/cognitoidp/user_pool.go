@@ -1033,306 +1033,250 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]any)),
 		}
 
-		// Determine email_mfa_configuration changes
-		o, n := d.GetChange("email_mfa_configuration")
-		oldList, _ := o.([]any)
-		newList, _ := n.([]any)
-
-		oldState := len(oldList) > 0 && oldList[0] != nil
-		newState := len(newList) > 0 && newList[0] != nil
-
-		removedEmailMFAConfiguration := oldState && !newState
-
-		explicitEmpty := false
-		emailMFAPopulated := false
-		if newState {
-			if tfMap, ok := newList[0].(map[string]any); ok && tfMap != nil {
-				_, mOk := tfMap[names.AttrMessage].(string)
-				_, sOk := tfMap["subject"].(string)
-
-				if !mOk && !sOk {
-					explicitEmpty = true
-				} else {
-					emailMFAPopulated = true
-				}
-			}
-		}
-		// Since email_mfa_configuration applies to both verification and MFA, only include if MFA is enabled.
+		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
 		// Otherwise, the API will return the following error:
 		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
-		if mfaConfiguration != awstypes.UserPoolMfaTypeOff {
-			if explicitEmpty || emailMFAPopulated {
-				input.EmailMfaConfiguration = expandEmailMFAConfigType(newList)
-			}
-		}
-
-		if removedEmailMFAConfiguration && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
-			// Call 1: clear prior MFA factor configs
-			clearInput := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-				UserPoolId:       aws.String(d.Id()),
-				MfaConfiguration: awstypes.UserPoolMfaTypeOff,
-			}
-
-			_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-				return conn.SetUserPoolMfaConfig(ctx, clearInput)
-			}, userPoolErrorRetryable)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "clearing Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
-			}
-
-			// Call 2: reapply desired MFA state without email_mfa_configuration
-			reapplyInput := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-				UserPoolId:                    aws.String(d.Id()),
-				MfaConfiguration:              mfaConfiguration,
-				SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any)),
-				WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]any)),
-			}
-
-			// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
-			// Otherwise, the API will return the following error:
-			// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
-			if v := d.Get("sms_configuration").([]any); len(v) > 0 && v[0] != nil {
-				reapplyInput.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
-					SmsConfiguration: expandSMSConfigurationType(v),
-				}
-
-				if v, ok := d.GetOk("sms_authentication_message"); ok {
-					reapplyInput.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
-				}
-			}
-			_, err = tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-				return conn.SetUserPoolMfaConfig(ctx, input)
-			}, userPoolErrorRetryable)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reapplying Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
-			}
-		} else {
-			_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-				return conn.SetUserPoolMfaConfig(ctx, input)
-			}, userPoolErrorRetryable)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
-			}
-		}
-
-		// Non MFA updates
-		// NOTES:
-		//  * Include SMS configuration changes since settings are shared between verification and MFA.
-		//  * For backwards compatibility, include SMS authentication message changes without SMS MFA since the API allows it.
-		if d.HasChanges(
-			"account_recovery_setting",
-			"admin_create_user_config",
-			"auto_verified_attributes",
-			names.AttrDeletionProtection,
-			"device_configuration",
-			"email_configuration",
-			"email_verification_message",
-			"email_verification_subject",
-			"lambda_config",
-			names.AttrName,
-			"password_policy",
-			"sign_in_policy",
-			"sms_authentication_message",
-			"sms_configuration",
-			"sms_verification_message",
-			// names.AttrTagsAll,
-			"user_attribute_update_settings",
-			"user_pool_add_ons",
-			"user_pool_tier",
-			"verification_message_template",
-		) {
-			// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
-			// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
-			// For now, use `UpdateTags`. Once this is fixed, `UpdateTags` will no longer be needed by this package.
-			input := &cognitoidentityprovider.UpdateUserPoolInput{
-				UserPoolId: aws.String(d.Id()),
-				// UserPoolTags: getTagsIn(ctx),
-			}
-
-			if v, ok := d.GetOk("account_recovery_setting"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok {
-					input.AccountRecoverySetting = expandAccountRecoverySettingType(v)
-				}
-			}
-
-			if v, ok := d.GetOk("admin_create_user_config"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					input.AdminCreateUserConfig = expandAdminCreateUserConfigType(v)
-				}
-			}
-
-			if v, ok := d.GetOk("auto_verified_attributes"); ok {
-				input.AutoVerifiedAttributes = flex.ExpandStringyValueSet[awstypes.VerifiedAttributeType](v.(*schema.Set))
-			}
-
-			if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
-				input.DeletionProtection = awstypes.DeletionProtectionType(v.(string))
-			}
-
-			if v, ok := d.GetOk("device_configuration"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					input.DeviceConfiguration = expandDeviceConfigurationType(v)
-				}
-			}
-
-			if v, ok := d.GetOk("email_configuration"); ok && len(v.([]any)) > 0 {
-				input.EmailConfiguration = expandEmailConfigurationType(v.([]any))
-			}
-
-			if v, ok := d.GetOk("email_verification_subject"); ok {
-				input.EmailVerificationSubject = aws.String(v.(string))
-			}
-
-			if v, ok := d.GetOk("email_verification_message"); ok {
-				input.EmailVerificationMessage = aws.String(v.(string))
-			}
-
-			if v, ok := d.GetOk("lambda_config"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					if d.HasChange("lambda_config.0.pre_token_generation") {
-						preTokenGeneration := d.Get("lambda_config.0.pre_token_generation")
-						if tfList, ok := v["pre_token_generation_config"].([]any); ok && len(tfList) > 0 && tfList[0] != nil {
-							v["pre_token_generation_config"].([]any)[0].(map[string]any)["lambda_arn"] = preTokenGeneration
-						} else {
-							v["pre_token_generation_config"] = []any{map[string]any{
-								"lambda_arn":     preTokenGeneration,
-								"lambda_version": string(awstypes.PreTokenGenerationLambdaVersionTypeV10), // A guess...
-							}}
-						}
-					}
-
-					if d.HasChange("lambda_config.0.pre_token_generation_config.0.lambda_arn") {
-						v["pre_token_generation"] = d.Get("lambda_config.0.pre_token_generation_config.0.lambda_arn")
-					}
-
-					input.LambdaConfig = expandLambdaConfigType(v)
-				}
-			}
-
-			if v, ok := d.GetOk("mfa_configuration"); ok {
-				input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
-			}
-
-			if v, ok := d.GetOk(names.AttrName); ok {
-				input.PoolName = aws.String(v.(string))
-			}
-
-			if v, ok := d.GetOk("password_policy"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					passwordPolicy := expandPasswordPolicyType(v)
-					if input.Policies == nil {
-						input.Policies = &awstypes.UserPoolPolicyType{}
-					}
-					input.Policies.PasswordPolicy = passwordPolicy
-				}
-			}
-
-			if v, ok := d.GetOk("sign_in_policy"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					signInPolicy := expandSignInPolicyType(v)
-					if input.Policies == nil {
-						input.Policies = &awstypes.UserPoolPolicyType{}
-					}
-					input.Policies.SignInPolicy = signInPolicy
-				}
+		if v := d.Get("sms_configuration").([]any); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
+			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
+				SmsConfiguration: expandSMSConfigurationType(v),
 			}
 
 			if v, ok := d.GetOk("sms_authentication_message"); ok {
-				input.SmsAuthenticationMessage = aws.String(v.(string))
-			}
-
-			if v, ok := d.GetOk("sms_configuration"); ok {
-				input.SmsConfiguration = expandSMSConfigurationType(v.([]any))
-			}
-
-			if v, ok := d.GetOk("sms_verification_message"); ok {
-				input.SmsVerificationMessage = aws.String(v.(string))
-			}
-
-			if v, ok := d.GetOk("user_attribute_update_settings"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					input.UserAttributeUpdateSettings = expandUserAttributeUpdateSettingsType(v)
-				}
-			}
-			if d.HasChange("user_attribute_update_settings") && input.UserAttributeUpdateSettings == nil {
-				// An empty array must be sent to disable this setting if previously enabled. A nil
-				// UserAttibutesUpdateSetting param will result in no modifications.
-				input.UserAttributeUpdateSettings = &awstypes.UserAttributeUpdateSettingsType{
-					AttributesRequireVerificationBeforeUpdate: []awstypes.VerifiedAttributeType{},
-				}
-			}
-
-			if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
-			}
-
-			if v, ok := d.GetOk("verification_message_template"); ok {
-				if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-					if d.HasChange("email_verification_message") {
-						v["email_message"] = d.Get("email_verification_message")
-					}
-					if d.HasChange("email_verification_subject") {
-						v["email_subject"] = d.Get("email_verification_subject")
-					}
-					if d.HasChange("sms_verification_message") {
-						v["sms_message"] = d.Get("sms_verification_message")
-					}
-
-					input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
-				}
-			}
-
-			if v, ok := d.GetOk("user_pool_tier"); ok {
-				input.UserPoolTier = awstypes.UserPoolTierType(v.(string))
-			}
-
-			_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-				func(ctx context.Context) (any, error) {
-					return conn.UpdateUserPool(ctx, input)
-				},
-				func(err error) (bool, error) {
-					if ok, err := userPoolErrorRetryable(err); ok {
-						return true, err
-					}
-
-					switch {
-					case errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") && input.AdminCreateUserConfig.UnusedAccountValidityDays != 0:
-						input.AdminCreateUserConfig.UnusedAccountValidityDays = 0
-						return true, err
-
-					default:
-						return false, err
-					}
-				})
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool (%s): %s", d.Id(), err)
+				input.SmsMfaConfiguration.SmsAuthenticationMessage = aws.String(v.(string))
 			}
 		}
 
-		if d.HasChange(names.AttrSchema) {
-			o, n := d.GetChange(names.AttrSchema)
-			os, ns := o.(*schema.Set), n.(*schema.Set)
+		// Since Email MFA configuration applies to MFA, only include if MFA is enabled.
+		// Otherwise, the API will return the following error:
+		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
+		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
+			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
+		}
 
-			if os.Difference(ns).Len() == 0 {
-				input := &cognitoidentityprovider.AddCustomAttributesInput{
-					CustomAttributes: expandSchemaAttributeTypes(ns.Difference(os).List()),
-					UserPoolId:       aws.String(d.Id()),
-				}
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.SetUserPoolMfaConfig(ctx, input)
+		}, userPoolErrorRetryable)
 
-				_, err := conn.AddCustomAttributes(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "adding Cognito User Pool (%s) custom attributes: %s", d.Id(), err)
-				}
-			} else {
-				return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool (%s): cannot modify or remove schema items", d.Id())
-			}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
 		}
 	}
+
+	// Non MFA updates
+	// NOTES:
+	//  * Include SMS configuration changes since settings are shared between verification and MFA.
+	//  * For backwards compatibility, include SMS authentication message changes without SMS MFA since the API allows it.
+	if d.HasChanges(
+		"account_recovery_setting",
+		"admin_create_user_config",
+		"auto_verified_attributes",
+		names.AttrDeletionProtection,
+		"device_configuration",
+		"email_configuration",
+		"email_verification_message",
+		"email_verification_subject",
+		"lambda_config",
+		names.AttrName,
+		"password_policy",
+		"sign_in_policy",
+		"sms_authentication_message",
+		"sms_configuration",
+		"sms_verification_message",
+		// names.AttrTagsAll,
+		"user_attribute_update_settings",
+		"user_pool_add_ons",
+		"user_pool_tier",
+		"verification_message_template",
+	) {
+		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
+		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
+		// For now, use `UpdateTags`. Once this is fixed, `UpdateTags` will no longer be needed by this package.
+		input := &cognitoidentityprovider.UpdateUserPoolInput{
+			UserPoolId: aws.String(d.Id()),
+			// UserPoolTags: getTagsIn(ctx),
+		}
+
+		if v, ok := d.GetOk("account_recovery_setting"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok {
+				input.AccountRecoverySetting = expandAccountRecoverySettingType(v)
+			}
+		}
+
+		if v, ok := d.GetOk("admin_create_user_config"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				input.AdminCreateUserConfig = expandAdminCreateUserConfigType(v)
+			}
+		}
+
+		if v, ok := d.GetOk("auto_verified_attributes"); ok {
+			input.AutoVerifiedAttributes = flex.ExpandStringyValueSet[awstypes.VerifiedAttributeType](v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
+			input.DeletionProtection = awstypes.DeletionProtectionType(v.(string))
+		}
+
+		if v, ok := d.GetOk("device_configuration"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				input.DeviceConfiguration = expandDeviceConfigurationType(v)
+			}
+		}
+
+		if v, ok := d.GetOk("email_configuration"); ok && len(v.([]any)) > 0 {
+			input.EmailConfiguration = expandEmailConfigurationType(v.([]any))
+		}
+
+		if v, ok := d.GetOk("email_verification_subject"); ok {
+			input.EmailVerificationSubject = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("email_verification_message"); ok {
+			input.EmailVerificationMessage = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("lambda_config"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				if d.HasChange("lambda_config.0.pre_token_generation") {
+					preTokenGeneration := d.Get("lambda_config.0.pre_token_generation")
+					if tfList, ok := v["pre_token_generation_config"].([]any); ok && len(tfList) > 0 && tfList[0] != nil {
+						v["pre_token_generation_config"].([]any)[0].(map[string]any)["lambda_arn"] = preTokenGeneration
+					} else {
+						v["pre_token_generation_config"] = []any{map[string]any{
+							"lambda_arn":     preTokenGeneration,
+							"lambda_version": string(awstypes.PreTokenGenerationLambdaVersionTypeV10), // A guess...
+						}}
+					}
+				}
+
+				if d.HasChange("lambda_config.0.pre_token_generation_config.0.lambda_arn") {
+					v["pre_token_generation"] = d.Get("lambda_config.0.pre_token_generation_config.0.lambda_arn")
+				}
+
+				input.LambdaConfig = expandLambdaConfigType(v)
+			}
+		}
+
+		if v, ok := d.GetOk("mfa_configuration"); ok {
+			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
+		}
+
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password_policy"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				passwordPolicy := expandPasswordPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
+				}
+				input.Policies.PasswordPolicy = passwordPolicy
+			}
+		}
+
+		if v, ok := d.GetOk("sign_in_policy"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				signInPolicy := expandSignInPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
+				}
+				input.Policies.SignInPolicy = signInPolicy
+			}
+		}
+
+		if v, ok := d.GetOk("sms_authentication_message"); ok {
+			input.SmsAuthenticationMessage = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("sms_configuration"); ok {
+			input.SmsConfiguration = expandSMSConfigurationType(v.([]any))
+		}
+
+		if v, ok := d.GetOk("sms_verification_message"); ok {
+			input.SmsVerificationMessage = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				input.UserAttributeUpdateSettings = expandUserAttributeUpdateSettingsType(v)
+			}
+		}
+		if d.HasChange("user_attribute_update_settings") && input.UserAttributeUpdateSettings == nil {
+			// An empty array must be sent to disable this setting if previously enabled. A nil
+			// UserAttibutesUpdateSetting param will result in no modifications.
+			input.UserAttributeUpdateSettings = &awstypes.UserAttributeUpdateSettingsType{
+				AttributesRequireVerificationBeforeUpdate: []awstypes.VerifiedAttributeType{},
+			}
+		}
+
+		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("verification_message_template"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				if d.HasChange("email_verification_message") {
+					v["email_message"] = d.Get("email_verification_message")
+				}
+				if d.HasChange("email_verification_subject") {
+					v["email_subject"] = d.Get("email_verification_subject")
+				}
+				if d.HasChange("sms_verification_message") {
+					v["sms_message"] = d.Get("sms_verification_message")
+				}
+
+				input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
+			}
+		}
+
+		if v, ok := d.GetOk("user_pool_tier"); ok {
+			input.UserPoolTier = awstypes.UserPoolTierType(v.(string))
+		}
+
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateUserPool(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if ok, err := userPoolErrorRetryable(err); ok {
+					return true, err
+				}
+
+				switch {
+				case errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") && input.AdminCreateUserConfig.UnusedAccountValidityDays != 0:
+					input.AdminCreateUserConfig.UnusedAccountValidityDays = 0
+					return true, err
+
+				default:
+					return false, err
+				}
+			})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange(names.AttrSchema) {
+		o, n := d.GetChange(names.AttrSchema)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		if os.Difference(ns).Len() == 0 {
+			input := &cognitoidentityprovider.AddCustomAttributesInput{
+				CustomAttributes: expandSchemaAttributeTypes(ns.Difference(os).List()),
+				UserPoolId:       aws.String(d.Id()),
+			}
+
+			_, err := conn.AddCustomAttributes(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding Cognito User Pool (%s) custom attributes: %s", d.Id(), err)
+			}
+		} else {
+			return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool (%s): cannot modify or remove schema items", d.Id())
+		}
+	}
+
 	return append(diags, resourceUserPoolRead(ctx, d, meta)...)
 }
 
@@ -1418,8 +1362,12 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
-	if len(tfList) == 0 || tfList[0] == nil {
+	if len(tfList) == 0 {
 		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.EmailMfaConfigType{}
 	}
 
 	tfMap := tfList[0].(map[string]any)
