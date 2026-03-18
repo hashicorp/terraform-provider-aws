@@ -5,6 +5,6 @@ package mediaconnect
 
 // Exports for use in tests only.
 var (
-	ResourceFlow   = newFlowResource
-	FindFlowByARN  = findFlowByARN
+	ResourceFlow  = newFlowResource
+	FindFlowByARN = findFlowByARN
 )

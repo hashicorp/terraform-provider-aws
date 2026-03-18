@@ -1062,7 +1062,7 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.VpcInterfaces = expandVpcInterfaceRequests(ctx, vpcData)
+		input.VpcInterfaces = expandVPCInterfaceRequests(ctx, vpcData)
 	}
 
 	// Expand entitlements.
@@ -1509,7 +1509,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		for name, newV := range newByName {
 			oldV, exists := oldByName[name]
 			if !exists || oldV.RoleARN.ValueString() != newV.RoleARN.ValueString() || oldV.SubnetID.ValueString() != newV.SubnetID.ValueString() || !oldV.NetworkInterfaceType.Equal(newV.NetworkInterfaceType) || !oldV.SecurityGroupIDs.Equal(newV.SecurityGroupIDs) {
-				toAdd = append(toAdd, expandSingleVpcInterfaceRequest(ctx, newV))
+				toAdd = append(toAdd, expandSingleVPCInterfaceRequest(ctx, newV))
 			}
 		}
 		if len(toAdd) > 0 {
@@ -1645,6 +1645,7 @@ func (r *flowResource) Delete(ctx context.Context, request resource.DeleteReques
 // Models.
 
 type flowResourceModel struct {
+	framework.WithRegionModel
 	ARN                    types.String                                                 `tfsdk:"arn"`
 	AvailabilityZone       types.String                                                 `tfsdk:"availability_zone"`
 	Description            types.String                                                 `tfsdk:"description"`
@@ -2368,7 +2369,7 @@ func expandUpdateMaintenance(_ context.Context, data *maintenanceModel) *awstype
 	return result
 }
 
-func expandSingleVpcInterfaceRequest(ctx context.Context, d *vpcInterfaceModel) awstypes.VpcInterfaceRequest {
+func expandSingleVPCInterfaceRequest(ctx context.Context, d *vpcInterfaceModel) awstypes.VpcInterfaceRequest {
 	req := awstypes.VpcInterfaceRequest{
 		Name:             aws.String(d.Name.ValueString()),
 		RoleArn:          aws.String(d.RoleARN.ValueString()),
@@ -2383,7 +2384,7 @@ func expandSingleVpcInterfaceRequest(ctx context.Context, d *vpcInterfaceModel) 
 	return req
 }
 
-func expandVpcInterfaceRequests(ctx context.Context, data []*vpcInterfaceModel) []awstypes.VpcInterfaceRequest {
+func expandVPCInterfaceRequests(ctx context.Context, data []*vpcInterfaceModel) []awstypes.VpcInterfaceRequest {
 	if len(data) == 0 {
 		return nil
 	}
@@ -2584,7 +2585,7 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 
 	// Flatten VPC interfaces.
 	if len(flow.VpcInterfaces) > 0 {
-		vpcModels := flattenVpcInterfaces(ctx, flow.VpcInterfaces)
+		vpcModels := flattenVPCInterfaces(ctx, flow.VpcInterfaces)
 		data.VpcInterfaces = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, vpcModels)
 	} else if data.VpcInterfaces.IsNull() {
 		// Keep null if it was null.
@@ -2773,7 +2774,7 @@ func flattenMaintenance(ctx context.Context, maint *awstypes.Maintenance) *maint
 	return model
 }
 
-func flattenVpcInterfaces(ctx context.Context, interfaces []awstypes.VpcInterface) []*vpcInterfaceModel {
+func flattenVPCInterfaces(ctx context.Context, interfaces []awstypes.VpcInterface) []*vpcInterfaceModel {
 	if len(interfaces) == 0 {
 		return nil
 	}

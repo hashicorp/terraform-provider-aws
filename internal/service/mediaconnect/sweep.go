@@ -21,10 +21,10 @@ func RegisterSweepers() {
 
 func sweepFlows(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.MediaConnectClient(ctx)
-	input := &mediaconnect.ListFlowsInput{}
+	input := mediaconnect.ListFlowsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := mediaconnect.NewListFlowsPaginator(conn, input)
+	pages := mediaconnect.NewListFlowsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
