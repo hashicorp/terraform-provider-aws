@@ -36,6 +36,7 @@ var (
 	TableNameFromARN                             = tableNameFromARN
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
+	CheckIfGSIRecreateAttributesChanged          = checkIfGSIRecreateAttributesChanged
 )
 
 const (
