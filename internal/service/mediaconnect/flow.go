@@ -90,7 +90,7 @@ func encryptionSchemaAttributes() map[string]schema.Attribute {
 			Optional: true,
 			Computed: true,
 		},
-		"resource_id": schema.StringAttribute{
+		names.AttrResourceID: schema.StringAttribute{
 			Optional: true,
 			Computed: true,
 		},
@@ -180,8 +180,8 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
-						"arn": framework.ARNAttributeComputedOnly(),
-						"status": schema.StringAttribute{
+						names.AttrARN: framework.ARNAttributeComputedOnly(),
+						names.AttrStatus: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.EntitlementStatus](),
 							Optional:   true,
 							Computed:   true,
@@ -264,16 +264,16 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
-						"id": schema.Int32Attribute{
+						names.AttrID: schema.Int32Attribute{
 							Required: true,
 							PlanModifiers: []planmodifier.Int32{
 								int32planmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.MediaStreamType](),
 							Required:   true,
 						},
@@ -350,7 +350,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
-						"destination": schema.StringAttribute{
+						names.AttrDestination: schema.StringAttribute{
 							Optional: true,
 						},
 						"max_latency": schema.Int32Attribute{
@@ -374,8 +374,8 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
-						"arn": framework.ARNAttributeComputedOnly(),
-						"status": schema.StringAttribute{
+						names.AttrARN: framework.ARNAttributeComputedOnly(),
+						names.AttrStatus: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.OutputStatus](),
 							Optional:   true,
 							Computed:   true,
@@ -476,7 +476,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 										CustomType: fwtypes.StringEnumType[awstypes.EncodingName](),
 										Required:   true,
 									},
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -491,7 +491,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 														fwvalidators.IPv4Address(),
 													},
 												},
-												"port": schema.Int32Attribute{
+												names.AttrPort: schema.Int32Attribute{
 													Required: true,
 													Validators: []validator.Int32{
 														int32validator.Between(1, 65535),
@@ -557,7 +557,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 					},
 				},
 			},
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[sourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -650,7 +650,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 								fwvalidators.IPv4Address(),
 							},
 						},
-						"arn": framework.ARNAttributeComputedOnly(),
+						names.AttrARN: framework.ARNAttributeComputedOnly(),
 						"listener_address": schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
@@ -698,7 +698,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"arn": schema.StringAttribute{
+									names.AttrARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -728,7 +728,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 										CustomType: fwtypes.StringEnumType[awstypes.EncodingName](),
 										Required:   true,
 									},
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -747,7 +747,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 														fwvalidators.IPv4Address(),
 													},
 												},
-												"port": schema.Int32Attribute{
+												names.AttrPort: schema.Int32Attribute{
 													Required: true,
 													Validators: []validator.Int32{
 														int32validator.Between(1, 65535),
@@ -2197,7 +2197,7 @@ func expandUpdateFlowSourceInput(ctx context.Context, data *sourceModel) *mediac
 		gbsData, _ := data.GatewayBridgeSource.ToPtr(ctx)
 		if gbsData != nil {
 			result.GatewayBridgeSource = &awstypes.UpdateGatewayBridgeSourceRequest{
-				BridgeArn: aws.String(gbsData.BridgeARN.ValueString()),
+				BridgeArn: gbsData.BridgeARN.ValueStringPointer(),
 			}
 			if !gbsData.VpcInterfaceAttachment.IsNull() && !gbsData.VpcInterfaceAttachment.IsUnknown() {
 				viaData, _ := gbsData.VpcInterfaceAttachment.ToPtr(ctx)
@@ -2235,32 +2235,32 @@ type encryptionFields struct {
 
 func expandEncryptionFields(data *encryptionModel) encryptionFields {
 	f := encryptionFields{
-		RoleArn: aws.String(data.RoleARN.ValueString()),
+		RoleArn: data.RoleARN.ValueStringPointer(),
 	}
 
 	if !data.Algorithm.IsNull() && !data.Algorithm.IsUnknown() {
 		f.Algorithm = awstypes.Algorithm(data.Algorithm.ValueString())
 	}
 	if !data.ConstantInitializationVector.IsNull() && !data.ConstantInitializationVector.IsUnknown() {
-		f.ConstantInitializationVector = aws.String(data.ConstantInitializationVector.ValueString())
+		f.ConstantInitializationVector = data.ConstantInitializationVector.ValueStringPointer()
 	}
 	if !data.DeviceID.IsNull() && !data.DeviceID.IsUnknown() {
-		f.DeviceId = aws.String(data.DeviceID.ValueString())
+		f.DeviceId = data.DeviceID.ValueStringPointer()
 	}
 	if !data.KeyType.IsNull() && !data.KeyType.IsUnknown() {
 		f.KeyType = awstypes.KeyType(data.KeyType.ValueString())
 	}
 	if !data.Region.IsNull() && !data.Region.IsUnknown() {
-		f.Region = aws.String(data.Region.ValueString())
+		f.Region = data.Region.ValueStringPointer()
 	}
 	if !data.ResourceID.IsNull() && !data.ResourceID.IsUnknown() {
-		f.ResourceId = aws.String(data.ResourceID.ValueString())
+		f.ResourceId = data.ResourceID.ValueStringPointer()
 	}
 	if !data.SecretARN.IsNull() && !data.SecretARN.IsUnknown() {
-		f.SecretArn = aws.String(data.SecretARN.ValueString())
+		f.SecretArn = data.SecretARN.ValueStringPointer()
 	}
 	if !data.URL.IsNull() && !data.URL.IsUnknown() {
-		f.Url = aws.String(data.URL.ValueString())
+		f.Url = data.URL.ValueStringPointer()
 	}
 
 	return f
@@ -2352,7 +2352,7 @@ func expandUpdateFailoverConfig(ctx context.Context, data *failoverConfigModel) 
 func expandAddMaintenance(_ context.Context, data *maintenanceModel) *awstypes.AddMaintenance {
 	result := &awstypes.AddMaintenance{
 		MaintenanceDay:       awstypes.MaintenanceDay(data.MaintenanceDay.ValueString()),
-		MaintenanceStartHour: aws.String(data.MaintenanceStartHour.ValueString()),
+		MaintenanceStartHour: data.MaintenanceStartHour.ValueStringPointer(),
 	}
 
 	return result
@@ -2365,7 +2365,7 @@ func expandUpdateMaintenance(_ context.Context, data *maintenanceModel) *awstype
 		result.MaintenanceDay = awstypes.MaintenanceDay(data.MaintenanceDay.ValueString())
 	}
 	if !data.MaintenanceStartHour.IsNull() && !data.MaintenanceStartHour.IsUnknown() {
-		result.MaintenanceStartHour = aws.String(data.MaintenanceStartHour.ValueString())
+		result.MaintenanceStartHour = data.MaintenanceStartHour.ValueStringPointer()
 	}
 
 	return result
@@ -2373,9 +2373,9 @@ func expandUpdateMaintenance(_ context.Context, data *maintenanceModel) *awstype
 
 func expandSingleVPCInterfaceRequest(ctx context.Context, d *vpcInterfaceModel) awstypes.VpcInterfaceRequest {
 	req := awstypes.VpcInterfaceRequest{
-		Name:             aws.String(d.Name.ValueString()),
-		RoleArn:          aws.String(d.RoleARN.ValueString()),
-		SubnetId:         aws.String(d.SubnetID.ValueString()),
+		Name:             d.Name.ValueStringPointer(),
+		RoleArn:          d.RoleARN.ValueStringPointer(),
+		SubnetId:         d.SubnetID.ValueStringPointer(),
 		SecurityGroupIds: fwflex.ExpandFrameworkStringValueSet(ctx, d.SecurityGroupIDs),
 	}
 
@@ -2399,9 +2399,9 @@ func expandVPCInterfaceRequests(ctx context.Context, data []*vpcInterfaceModel) 
 		}
 
 		req := awstypes.VpcInterfaceRequest{
-			Name:     aws.String(d.Name.ValueString()),
-			RoleArn:  aws.String(d.RoleARN.ValueString()),
-			SubnetId: aws.String(d.SubnetID.ValueString()),
+			Name:     d.Name.ValueStringPointer(),
+			RoleArn:  d.RoleARN.ValueStringPointer(),
+			SubnetId: d.SubnetID.ValueStringPointer(),
 		}
 
 		if !d.NetworkInterfaceType.IsNull() && !d.NetworkInterfaceType.IsUnknown() {
@@ -2418,7 +2418,7 @@ func expandVPCInterfaceRequests(ctx context.Context, data []*vpcInterfaceModel) 
 
 func expandSetGatewayBridgeSourceRequest(ctx context.Context, data *gatewayBridgeSourceModel) *awstypes.SetGatewayBridgeSourceRequest {
 	result := &awstypes.SetGatewayBridgeSourceRequest{
-		BridgeArn: aws.String(data.BridgeARN.ValueString()),
+		BridgeArn: data.BridgeARN.ValueStringPointer(),
 	}
 
 	if !data.VpcInterfaceAttachment.IsNull() && !data.VpcInterfaceAttachment.IsUnknown() {
@@ -2618,7 +2618,6 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	} else if !data.SourceMonitoringConfig.IsNull() {
 		data.SourceMonitoringConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*sourceMonitoringConfigModel{})
 	}
-
 }
 
 func flattenSource(ctx context.Context, source *awstypes.Source) *sourceModel {
@@ -3089,16 +3088,16 @@ func expandFmtpRequest(_ context.Context, data *fmtpModel) *awstypes.FmtpRequest
 	result := &awstypes.FmtpRequest{}
 
 	if !data.ChannelOrder.IsNull() && !data.ChannelOrder.IsUnknown() {
-		result.ChannelOrder = aws.String(data.ChannelOrder.ValueString())
+		result.ChannelOrder = data.ChannelOrder.ValueStringPointer()
 	}
 	if !data.Colorimetry.IsNull() && !data.Colorimetry.IsUnknown() {
 		result.Colorimetry = awstypes.Colorimetry(data.Colorimetry.ValueString())
 	}
 	if !data.ExactFramerate.IsNull() && !data.ExactFramerate.IsUnknown() {
-		result.ExactFramerate = aws.String(data.ExactFramerate.ValueString())
+		result.ExactFramerate = data.ExactFramerate.ValueStringPointer()
 	}
 	if !data.Par.IsNull() && !data.Par.IsUnknown() {
-		result.Par = aws.String(data.Par.ValueString())
+		result.Par = data.Par.ValueStringPointer()
 	}
 	if !data.Range.IsNull() && !data.Range.IsUnknown() {
 		result.Range = awstypes.Range(data.Range.ValueString())

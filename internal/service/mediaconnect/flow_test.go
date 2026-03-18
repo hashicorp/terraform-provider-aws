@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmediaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
@@ -30,34 +28,34 @@ func TestAccMediaConnectFlow_basic(t *testing.T) {
 	}
 
 	var flow mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", rName+"-source"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.description", "Test source"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.protocol", "srt-listener"),
 					resource.TestCheckResourceAttrSet(resourceName, "source.0.arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "source.0.ingest_ip"),
-					resource.TestCheckResourceAttr(resourceName, "start_flow", "false"),
+					resource.TestCheckResourceAttr(resourceName, "start_flow", acctest.CtFalse),
 				),
 			},
 			{
@@ -77,23 +75,23 @@ func TestAccMediaConnectFlow_disappears(t *testing.T) {
 	}
 
 	var flow mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmediaconnect.ResourceFlow, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,30 +107,30 @@ func TestAccMediaConnectFlow_sourceUpdate(t *testing.T) {
 	}
 
 	var flow1, flow2 mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_sourceWhitelist(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow1),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.whitelist_cidr", "10.0.0.0/16"),
 				),
 			},
 			{
 				Config: testAccFlowConfig_sourceWhitelist(rName, "172.16.0.0/12"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow2),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow2),
 					testAccCheckFlowNotRecreated(&flow1, &flow2),
 					resource.TestCheckResourceAttr(resourceName, "source.0.whitelist_cidr", "172.16.0.0/12"),
 				),
@@ -148,23 +146,23 @@ func TestAccMediaConnectFlow_maintenance(t *testing.T) {
 	}
 
 	var flow1, flow2 mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_maintenance(rName, "Sunday", "13:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow1),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow1),
 					resource.TestCheckResourceAttr(resourceName, "maintenance.0.day", "Sunday"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance.0.start_hour", "13:00"),
 				),
@@ -172,7 +170,7 @@ func TestAccMediaConnectFlow_maintenance(t *testing.T) {
 			{
 				Config: testAccFlowConfig_maintenance(rName, "Wednesday", "16:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow2),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow2),
 					testAccCheckFlowNotRecreated(&flow1, &flow2),
 					resource.TestCheckResourceAttr(resourceName, "maintenance.0.day", "Wednesday"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance.0.start_hour", "16:00"),
@@ -195,23 +193,23 @@ func TestAccMediaConnectFlow_entitlement(t *testing.T) {
 	}
 
 	var flow mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_entitlement(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					resource.TestCheckResourceAttr(resourceName, "entitlement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "entitlement.0.name", rName+"-entitlement"),
 					resource.TestCheckResourceAttr(resourceName, "entitlement.0.description", "Test entitlement"),
@@ -235,23 +233,23 @@ func TestAccMediaConnectFlow_output(t *testing.T) {
 	}
 
 	var flow mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_output(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					resource.TestCheckResourceAttr(resourceName, "output.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output.0.name", rName+"-output"),
 					resource.TestCheckResourceAttr(resourceName, "output.0.description", "Test output"),
@@ -276,34 +274,34 @@ func TestAccMediaConnectFlow_startFlow(t *testing.T) {
 	}
 
 	var flow1, flow2 mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_startFlow(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow1),
-					resource.TestCheckResourceAttr(resourceName, "start_flow", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow1),
+					resource.TestCheckResourceAttr(resourceName, "start_flow", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 				),
 			},
 			{
 				Config: testAccFlowConfig_startFlow(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow2),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow2),
 					testAccCheckFlowNotRecreated(&flow1, &flow2),
-					resource.TestCheckResourceAttr(resourceName, "start_flow", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "STANDBY"),
+					resource.TestCheckResourceAttr(resourceName, "start_flow", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "STANDBY"),
 				),
 			},
 		},
@@ -317,23 +315,23 @@ func TestAccMediaConnectFlow_sourceFailover(t *testing.T) {
 	}
 
 	var flow mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_sourceFailover(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "source_failover_config.0.failover_mode", "FAILOVER"),
 					resource.TestCheckResourceAttr(resourceName, "source_failover_config.0.state", "ENABLED"),
@@ -357,51 +355,51 @@ func TestAccMediaConnectFlow_tags(t *testing.T) {
 	}
 
 	var flow mediaconnect.DescribeFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mediaconnect_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaConnectServiceID)
+			acctest.PreCheckPartitionHasService(t, names.MediaConnectEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_tags1(rName, "key1", "value1"),
+				Config: testAccFlowConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccFlowConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFlowConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccFlowConfig_tags1(rName, "key2", "value2"),
+				Config: testAccFlowConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &flow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckFlowExists(ctx, t, resourceName, &flow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFlowDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mediaconnect_flow" {
@@ -423,7 +421,7 @@ func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFlowExists(ctx context.Context, name string, flow *mediaconnect.DescribeFlowOutput) resource.TestCheckFunc {
+func testAccCheckFlowExists(ctx context.Context, t *testing.T, name string, flow *mediaconnect.DescribeFlowOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -434,7 +432,7 @@ func testAccCheckFlowExists(ctx context.Context, name string, flow *mediaconnect
 			return create.Error(names.MediaConnect, create.ErrActionCheckingExistence, tfmediaconnect.ResNameFlow, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaConnectClient(ctx)
 		resp, err := conn.DescribeFlow(ctx, &mediaconnect.DescribeFlowInput{
 			FlowArn: aws.String(rs.Primary.ID),
 		})
@@ -460,7 +458,7 @@ func testAccCheckFlowNotRecreated(before, after *mediaconnect.DescribeFlowOutput
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConnectClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).MediaConnectClient(ctx)
 
 	input := &mediaconnect.ListFlowsInput{}
 	_, err := conn.ListFlows(ctx, input)
