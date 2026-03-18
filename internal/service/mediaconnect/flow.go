@@ -6,6 +6,7 @@ package mediaconnect
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -1018,15 +1019,15 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 			if s == nil {
 				continue
 			}
-			src, d := expandSetSourceRequest(ctx, s)
-			response.Diagnostics.Append(d...)
+			var src awstypes.SetSourceRequest
+			response.Diagnostics.Append(fwflex.Expand(ctx, s, &src)...)
 			if response.Diagnostics.HasError() {
 				return
 			}
 			if i == primaryIdx {
-				input.Source = src
+				input.Source = &src
 			} else {
-				additionalSources = append(additionalSources, *src)
+				additionalSources = append(additionalSources, src)
 			}
 		}
 	}
@@ -1039,7 +1040,12 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 			return
 		}
 		if failoverData != nil {
-			input.SourceFailoverConfig = expandFailoverConfig(ctx, failoverData)
+			var fc awstypes.FailoverConfig
+			response.Diagnostics.Append(fwflex.Expand(ctx, failoverData, &fc)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			input.SourceFailoverConfig = &fc
 		}
 	}
 
@@ -1051,7 +1057,12 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 			return
 		}
 		if maintData != nil {
-			input.Maintenance = expandAddMaintenance(ctx, maintData)
+			var maint awstypes.AddMaintenance
+			response.Diagnostics.Append(fwflex.Expand(ctx, maintData, &maint)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			input.Maintenance = &maint
 		}
 	}
 
@@ -1062,7 +1073,19 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.VpcInterfaces = expandVPCInterfaceRequests(ctx, vpcData)
+		var vpcRequests []awstypes.VpcInterfaceRequest
+		for _, v := range vpcData {
+			if v == nil {
+				continue
+			}
+			var req awstypes.VpcInterfaceRequest
+			response.Diagnostics.Append(fwflex.Expand(ctx, v, &req)...)
+			vpcRequests = append(vpcRequests, req)
+		}
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.VpcInterfaces = vpcRequests
 	}
 
 	// Expand entitlements.
@@ -1072,7 +1095,19 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.Entitlements = expandGrantEntitlementRequests(ctx, entData)
+		var entRequests []awstypes.GrantEntitlementRequest
+		for _, e := range entData {
+			if e == nil {
+				continue
+			}
+			var req awstypes.GrantEntitlementRequest
+			response.Diagnostics.Append(fwflex.Expand(ctx, e, &req)...)
+			entRequests = append(entRequests, req)
+		}
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.Entitlements = entRequests
 	}
 
 	// Expand outputs.
@@ -1082,7 +1117,19 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.Outputs = expandAddOutputRequests(ctx, outData)
+		var outRequests []awstypes.AddOutputRequest
+		for _, o := range outData {
+			if o == nil {
+				continue
+			}
+			var req awstypes.AddOutputRequest
+			response.Diagnostics.Append(fwflex.Expand(ctx, o, &req)...)
+			outRequests = append(outRequests, req)
+		}
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.Outputs = outRequests
 	}
 
 	// Expand media streams.
@@ -1092,7 +1139,19 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.MediaStreams = expandAddMediaStreamRequests(ctx, msData)
+		var msRequests []awstypes.AddMediaStreamRequest
+		for _, ms := range msData {
+			if ms == nil {
+				continue
+			}
+			var req awstypes.AddMediaStreamRequest
+			response.Diagnostics.Append(fwflex.Expand(ctx, ms, &req)...)
+			msRequests = append(msRequests, req)
+		}
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.MediaStreams = msRequests
 	}
 
 	// Expand source monitoring config.
@@ -1103,7 +1162,12 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 			return
 		}
 		if smcData != nil {
-			input.SourceMonitoringConfig = expandMonitoringConfig(ctx, smcData)
+			var smc awstypes.MonitoringConfig
+			response.Diagnostics.Append(fwflex.Expand(ctx, smcData, &smc)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			input.SourceMonitoringConfig = &smc
 		}
 	}
 
@@ -1147,7 +1211,7 @@ func (r *flowResource) Create(ctx context.Context, request resource.CreateReques
 	}
 
 	// Flatten the response.
-	flattenFlow(ctx, flowOutput.Flow, &data)
+	response.Diagnostics.Append(flattenFlow(ctx, flowOutput.Flow, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1193,7 +1257,7 @@ func (r *flowResource) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	flattenFlow(ctx, output.Flow, &data)
+	response.Diagnostics.Append(flattenFlow(ctx, output.Flow, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1234,7 +1298,12 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 				return
 			}
 			if maintData != nil {
-				input.Maintenance = expandUpdateMaintenance(ctx, maintData)
+				var maint awstypes.UpdateMaintenance
+				response.Diagnostics.Append(fwflex.Expand(ctx, maintData, &maint)...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				input.Maintenance = &maint
 			}
 		}
 
@@ -1245,7 +1314,12 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 				return
 			}
 			if failoverData != nil {
-				input.SourceFailoverConfig = expandUpdateFailoverConfig(ctx, failoverData)
+				var fc awstypes.UpdateFailoverConfig
+				response.Diagnostics.Append(fwflex.Expand(ctx, failoverData, &fc)...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				input.SourceFailoverConfig = &fc
 			}
 		}
 
@@ -1256,7 +1330,12 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 				return
 			}
 			if smcData != nil {
-				input.SourceMonitoringConfig = expandMonitoringConfig(ctx, smcData)
+				var smc awstypes.MonitoringConfig
+				response.Diagnostics.Append(fwflex.Expand(ctx, smcData, &smc)...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				input.SourceMonitoringConfig = &smc
 			}
 		}
 
@@ -1283,11 +1362,15 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 			if src == nil || i >= len(oldSources) || oldSources[i] == nil {
 				continue
 			}
-			input := expandUpdateFlowSourceInput(ctx, src)
-			input.FlowArn = fwflex.StringFromFramework(ctx, newData.ID)
-			input.SourceArn = fwflex.StringFromFramework(ctx, oldSources[i].SourceARN)
+			var srcInput mediaconnect.UpdateFlowSourceInput
+			response.Diagnostics.Append(fwflex.Expand(ctx, src, &srcInput)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			srcInput.FlowArn = fwflex.StringFromFramework(ctx, newData.ID)
+			srcInput.SourceArn = fwflex.StringFromFramework(ctx, oldSources[i].SourceARN)
 
-			_, err := conn.UpdateFlowSource(ctx, input)
+			_, err := conn.UpdateFlowSource(ctx, &srcInput)
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("updating MediaConnect Flow (%s) source", newData.ID.ValueString()), err.Error())
 				return
@@ -1327,7 +1410,12 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 			if !ent.Encryption.IsNull() && !ent.Encryption.IsUnknown() {
 				encData, _ := ent.Encryption.ToPtr(ctx)
 				if encData != nil {
-					entInput.Encryption = expandUpdateEncryption(ctx, encData)
+					var enc awstypes.UpdateEncryption
+					response.Diagnostics.Append(fwflex.Expand(ctx, encData, &enc)...)
+					if response.Diagnostics.HasError() {
+						return
+					}
+					entInput.Encryption = &enc
 				}
 			}
 			_, err := conn.UpdateFlowEntitlement(ctx, &entInput)
@@ -1399,12 +1487,29 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 			}
 			if !out.MediaStreamOutputConfigurations.IsNull() && !out.MediaStreamOutputConfigurations.IsUnknown() {
 				msocData, _ := out.MediaStreamOutputConfigurations.ToSlice(ctx)
-				outInput.MediaStreamOutputConfigurations = expandMediaStreamOutputConfigRequests(ctx, msocData)
+				var msocRequests []awstypes.MediaStreamOutputConfigurationRequest
+				for _, msoc := range msocData {
+					if msoc == nil {
+						continue
+					}
+					var req awstypes.MediaStreamOutputConfigurationRequest
+					response.Diagnostics.Append(fwflex.Expand(ctx, msoc, &req)...)
+					msocRequests = append(msocRequests, req)
+				}
+				if response.Diagnostics.HasError() {
+					return
+				}
+				outInput.MediaStreamOutputConfigurations = msocRequests
 			}
 			if !out.Encryption.IsNull() && !out.Encryption.IsUnknown() {
 				encData, _ := out.Encryption.ToPtr(ctx)
 				if encData != nil {
-					outInput.Encryption = expandUpdateEncryption(ctx, encData)
+					var enc awstypes.UpdateEncryption
+					response.Diagnostics.Append(fwflex.Expand(ctx, encData, &enc)...)
+					if response.Diagnostics.HasError() {
+						return
+					}
+					outInput.Encryption = &enc
 				}
 			}
 			if !out.VpcInterfaceAttachment.IsNull() && !out.VpcInterfaceAttachment.IsUnknown() {
@@ -1451,7 +1556,12 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 			if !ms.Attributes.IsNull() && !ms.Attributes.IsUnknown() {
 				attrData, _ := ms.Attributes.ToPtr(ctx)
 				if attrData != nil {
-					msInput.Attributes = expandMediaStreamAttributesRequest(ctx, attrData)
+					var attr awstypes.MediaStreamAttributesRequest
+					response.Diagnostics.Append(fwflex.Expand(ctx, attrData, &attr)...)
+					if response.Diagnostics.HasError() {
+						return
+					}
+					msInput.Attributes = &attr
 				}
 			}
 			_, err := conn.UpdateFlowMediaStream(ctx, &msInput)
@@ -1510,8 +1620,13 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		for name, newV := range newByName {
 			oldV, exists := oldByName[name]
 			if !exists || oldV.RoleARN.ValueString() != newV.RoleARN.ValueString() || oldV.SubnetID.ValueString() != newV.SubnetID.ValueString() || !oldV.NetworkInterfaceType.Equal(newV.NetworkInterfaceType) || !oldV.SecurityGroupIDs.Equal(newV.SecurityGroupIDs) {
-				toAdd = append(toAdd, expandSingleVPCInterfaceRequest(ctx, newV))
+				var req awstypes.VpcInterfaceRequest
+				response.Diagnostics.Append(fwflex.Expand(ctx, newV, &req)...)
+				toAdd = append(toAdd, req)
 			}
+		}
+		if response.Diagnostics.HasError() {
+			return
 		}
 		if len(toAdd) > 0 {
 			addVpcInput := mediaconnect.AddFlowVpcInterfacesInput{
@@ -1539,7 +1654,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		return
 	}
 
-	flattenFlow(ctx, output.Flow, &newData)
+	response.Diagnostics.Append(flattenFlow(ctx, output.Flow, &newData)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1704,8 +1819,8 @@ type encryptionModel struct {
 	KeyType                      fwtypes.StringEnum[awstypes.KeyType]   `tfsdk:"key_type"`
 	Region                       types.String                           `tfsdk:"region"`
 	ResourceID                   types.String                           `tfsdk:"resource_id"`
-	RoleARN                      types.String                           `tfsdk:"role_arn"`
-	SecretARN                    types.String                           `tfsdk:"secret_arn"`
+	RoleARN                      fwtypes.ARN                            `tfsdk:"role_arn"`
+	SecretARN                    fwtypes.ARN                            `tfsdk:"secret_arn"`
 	URL                          types.String                           `tfsdk:"url"`
 }
 
@@ -1731,7 +1846,7 @@ type vpcInterfaceModel struct {
 	Name                 types.String                                      `tfsdk:"name"`
 	NetworkInterfaceIDs  types.List                                        `tfsdk:"network_interface_ids"`
 	NetworkInterfaceType fwtypes.StringEnum[awstypes.NetworkInterfaceType] `tfsdk:"network_interface_type"`
-	RoleARN              types.String                                      `tfsdk:"role_arn"`
+	RoleARN              fwtypes.ARN                                       `tfsdk:"role_arn"`
 	SecurityGroupIDs     types.Set                                         `tfsdk:"security_group_ids"`
 	SubnetID             types.String                                      `tfsdk:"subnet_id"`
 }
@@ -1801,12 +1916,121 @@ type fmtpModel struct {
 }
 
 type gatewayBridgeSourceModel struct {
-	BridgeARN              types.String                                    `tfsdk:"arn"`
+	BridgeARN              fwtypes.ARN                                     `tfsdk:"arn"`
 	VpcInterfaceAttachment fwtypes.ListNestedObjectValueOf[interfaceModel] `tfsdk:"vpc_interface_attachment"`
 }
 
 type interfaceModel struct {
 	Name types.String `tfsdk:"name"`
+}
+
+// Compile-time assertions for TypedExpander implementations.
+var (
+	_ fwflex.TypedExpander = encryptionModel{}
+	_ fwflex.TypedExpander = failoverConfigModel{}
+	_ fwflex.TypedExpander = maintenanceModel{}
+	_ fwflex.TypedExpander = gatewayBridgeSourceModel{}
+	_ fwflex.TypedExpander = sourceModel{}
+)
+
+func (m encryptionModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	type noExpand encryptionModel
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.Encryption]():
+		var result awstypes.Encryption
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	case reflect.TypeFor[awstypes.UpdateEncryption]():
+		var result awstypes.UpdateEncryption
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	}
+	return nil, diags
+}
+
+func (m failoverConfigModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	type noExpand failoverConfigModel
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.FailoverConfig]():
+		var result awstypes.FailoverConfig
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	case reflect.TypeFor[awstypes.UpdateFailoverConfig]():
+		var result awstypes.UpdateFailoverConfig
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	}
+	return nil, diags
+}
+
+func (m maintenanceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	type noExpand maintenanceModel
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.AddMaintenance]():
+		var result awstypes.AddMaintenance
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	case reflect.TypeFor[awstypes.UpdateMaintenance]():
+		var result awstypes.UpdateMaintenance
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	}
+	return nil, diags
+}
+
+func (m gatewayBridgeSourceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	type noExpand gatewayBridgeSourceModel
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.SetGatewayBridgeSourceRequest]():
+		var result awstypes.SetGatewayBridgeSourceRequest
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		// Handle VpcInterfaceAttachment manually: interfaceModel.Name -> VpcInterfaceAttachment.VpcInterfaceName
+		if !m.VpcInterfaceAttachment.IsNull() && !m.VpcInterfaceAttachment.IsUnknown() {
+			viaData, d := m.VpcInterfaceAttachment.ToPtr(ctx)
+			diags.Append(d...)
+			if viaData != nil && !viaData.Name.IsNull() {
+				result.VpcInterfaceAttachment = &awstypes.VpcInterfaceAttachment{
+					VpcInterfaceName: fwflex.StringFromFramework(ctx, viaData.Name),
+				}
+			}
+		}
+		return &result, diags
+	case reflect.TypeFor[awstypes.UpdateGatewayBridgeSourceRequest]():
+		var result awstypes.UpdateGatewayBridgeSourceRequest
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		// Handle VpcInterfaceAttachment manually: interfaceModel.Name -> VpcInterfaceAttachment.VpcInterfaceName
+		if !m.VpcInterfaceAttachment.IsNull() && !m.VpcInterfaceAttachment.IsUnknown() {
+			viaData, d := m.VpcInterfaceAttachment.ToPtr(ctx)
+			diags.Append(d...)
+			if viaData != nil && !viaData.Name.IsNull() {
+				result.VpcInterfaceAttachment = &awstypes.VpcInterfaceAttachment{
+					VpcInterfaceName: fwflex.StringFromFramework(ctx, viaData.Name),
+				}
+			}
+		}
+		return &result, diags
+	}
+	return nil, diags
+}
+
+func (m sourceModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	type noExpand sourceModel
+	var diags diag.Diagnostics
+	switch targetType {
+	case reflect.TypeFor[awstypes.SetSourceRequest]():
+		var result awstypes.SetSourceRequest
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	case reflect.TypeFor[mediaconnect.UpdateFlowSourceInput]():
+		var result mediaconnect.UpdateFlowSourceInput
+		diags.Append(fwflex.Expand(ctx, noExpand(m), &result)...)
+		return &result, diags
+	}
+	return nil, diags
 }
 
 type mediaStreamOutputConfigModel struct {
@@ -2034,509 +2258,13 @@ func stopFlow(ctx context.Context, conn *mediaconnect.Client, arn string, timeou
 	return err
 }
 
-// Expand functions.
-
-// sourceFields holds the common source transport fields shared between
-// SetSourceRequest and UpdateFlowSourceInput.
-type sourceFields struct {
-	Description           *string
-	EntitlementArn        *string
-	IngestPort            *int32
-	MaxBitrate            *int32
-	MaxLatency            *int32
-	MaxSyncBuffer         *int32
-	MinLatency            *int32
-	Protocol              awstypes.Protocol
-	SenderControlPort     *int32
-	SenderIpAddress       *string
-	SourceListenerAddress *string
-	SourceListenerPort    *int32
-	StreamId              *string
-	VpcInterfaceName      *string
-	WhitelistCidr         *string
-}
-
-func expandSourceFields(ctx context.Context, data *sourceModel) sourceFields {
-	var f sourceFields
-
-	if !data.Description.IsNull() && !data.Description.IsUnknown() {
-		f.Description = fwflex.StringFromFramework(ctx, data.Description)
-	}
-	if !data.Protocol.IsNull() && !data.Protocol.IsUnknown() {
-		f.Protocol = awstypes.Protocol(data.Protocol.ValueString())
-	}
-	if !data.WhitelistCIDR.IsNull() && !data.WhitelistCIDR.IsUnknown() {
-		f.WhitelistCidr = fwflex.StringFromFramework(ctx, data.WhitelistCIDR)
-	}
-	if !data.IngestPort.IsNull() && !data.IngestPort.IsUnknown() {
-		f.IngestPort = fwflex.Int32FromFramework(ctx, data.IngestPort)
-	}
-	if !data.MaxBitrate.IsNull() && !data.MaxBitrate.IsUnknown() {
-		f.MaxBitrate = fwflex.Int32FromFramework(ctx, data.MaxBitrate)
-	}
-	if !data.MaxLatency.IsNull() && !data.MaxLatency.IsUnknown() {
-		f.MaxLatency = fwflex.Int32FromFramework(ctx, data.MaxLatency)
-	}
-	if !data.MinLatency.IsNull() && !data.MinLatency.IsUnknown() {
-		f.MinLatency = fwflex.Int32FromFramework(ctx, data.MinLatency)
-	}
-	if !data.MaxSyncBuffer.IsNull() && !data.MaxSyncBuffer.IsUnknown() {
-		f.MaxSyncBuffer = fwflex.Int32FromFramework(ctx, data.MaxSyncBuffer)
-	}
-	if !data.SenderControlPort.IsNull() && !data.SenderControlPort.IsUnknown() {
-		f.SenderControlPort = fwflex.Int32FromFramework(ctx, data.SenderControlPort)
-	}
-	if !data.SenderIPAddress.IsNull() && !data.SenderIPAddress.IsUnknown() {
-		f.SenderIpAddress = fwflex.StringFromFramework(ctx, data.SenderIPAddress)
-	}
-	if !data.StreamID.IsNull() && !data.StreamID.IsUnknown() {
-		f.StreamId = fwflex.StringFromFramework(ctx, data.StreamID)
-	}
-	if !data.SourceListenerAddress.IsNull() && !data.SourceListenerAddress.IsUnknown() {
-		f.SourceListenerAddress = fwflex.StringFromFramework(ctx, data.SourceListenerAddress)
-	}
-	if !data.SourceListenerPort.IsNull() && !data.SourceListenerPort.IsUnknown() {
-		f.SourceListenerPort = fwflex.Int32FromFramework(ctx, data.SourceListenerPort)
-	}
-	if !data.EntitlementARN.IsNull() && !data.EntitlementARN.IsUnknown() {
-		f.EntitlementArn = fwflex.StringFromFramework(ctx, data.EntitlementARN)
-	}
-	if !data.VpcInterfaceName.IsNull() && !data.VpcInterfaceName.IsUnknown() {
-		f.VpcInterfaceName = fwflex.StringFromFramework(ctx, data.VpcInterfaceName)
-	}
-
-	return f
-}
-
-func expandSetSourceRequest(ctx context.Context, data *sourceModel) (*awstypes.SetSourceRequest, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	f := expandSourceFields(ctx, data)
-	result := &awstypes.SetSourceRequest{
-		Description:           f.Description,
-		EntitlementArn:        f.EntitlementArn,
-		IngestPort:            f.IngestPort,
-		MaxBitrate:            f.MaxBitrate,
-		MaxLatency:            f.MaxLatency,
-		MaxSyncBuffer:         f.MaxSyncBuffer,
-		MinLatency:            f.MinLatency,
-		Protocol:              f.Protocol,
-		SenderControlPort:     f.SenderControlPort,
-		SenderIpAddress:       f.SenderIpAddress,
-		SourceListenerAddress: f.SourceListenerAddress,
-		SourceListenerPort:    f.SourceListenerPort,
-		StreamId:              f.StreamId,
-		VpcInterfaceName:      f.VpcInterfaceName,
-		WhitelistCidr:         f.WhitelistCidr,
-	}
-
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
-		result.Name = fwflex.StringFromFramework(ctx, data.Name)
-	}
-
-	// Expand decryption.
-	if !data.Decryption.IsNull() && !data.Decryption.IsUnknown() {
-		encData, d := data.Decryption.ToPtr(ctx)
-		diags.Append(d...)
-		if !diags.HasError() && encData != nil {
-			result.Decryption = expandEncryption(ctx, encData)
-		}
-	}
-
-	// Expand gateway bridge source.
-	if !data.GatewayBridgeSource.IsNull() && !data.GatewayBridgeSource.IsUnknown() {
-		gbsData, d := data.GatewayBridgeSource.ToPtr(ctx)
-		diags.Append(d...)
-		if !diags.HasError() && gbsData != nil {
-			result.GatewayBridgeSource = expandSetGatewayBridgeSourceRequest(ctx, gbsData)
-		}
-	}
-
-	// Expand media stream source configurations.
-	if !data.MediaStreamSourceConfigurations.IsNull() && !data.MediaStreamSourceConfigurations.IsUnknown() {
-		msscData, d := data.MediaStreamSourceConfigurations.ToSlice(ctx)
-		diags.Append(d...)
-		if !diags.HasError() {
-			result.MediaStreamSourceConfigurations = expandMediaStreamSourceConfigRequests(ctx, msscData)
-		}
-	}
-
-	return result, diags
-}
-
-func expandUpdateFlowSourceInput(ctx context.Context, data *sourceModel) *mediaconnect.UpdateFlowSourceInput {
-	f := expandSourceFields(ctx, data)
-	result := mediaconnect.UpdateFlowSourceInput{
-		Description:           f.Description,
-		EntitlementArn:        f.EntitlementArn,
-		IngestPort:            f.IngestPort,
-		MaxBitrate:            f.MaxBitrate,
-		MaxLatency:            f.MaxLatency,
-		MaxSyncBuffer:         f.MaxSyncBuffer,
-		MinLatency:            f.MinLatency,
-		Protocol:              f.Protocol,
-		SenderControlPort:     f.SenderControlPort,
-		SenderIpAddress:       f.SenderIpAddress,
-		SourceListenerAddress: f.SourceListenerAddress,
-		SourceListenerPort:    f.SourceListenerPort,
-		StreamId:              f.StreamId,
-		VpcInterfaceName:      f.VpcInterfaceName,
-		WhitelistCidr:         f.WhitelistCidr,
-	}
-
-	// Decryption (uses UpdateEncryption type).
-	if !data.Decryption.IsNull() && !data.Decryption.IsUnknown() {
-		encData, _ := data.Decryption.ToPtr(ctx)
-		if encData != nil {
-			result.Decryption = expandUpdateEncryption(ctx, encData)
-		}
-	}
-
-	// Gateway bridge source (uses UpdateGatewayBridgeSourceRequest type).
-	if !data.GatewayBridgeSource.IsNull() && !data.GatewayBridgeSource.IsUnknown() {
-		gbsData, _ := data.GatewayBridgeSource.ToPtr(ctx)
-		if gbsData != nil {
-			result.GatewayBridgeSource = &awstypes.UpdateGatewayBridgeSourceRequest{
-				BridgeArn: gbsData.BridgeARN.ValueStringPointer(),
-			}
-			if !gbsData.VpcInterfaceAttachment.IsNull() && !gbsData.VpcInterfaceAttachment.IsUnknown() {
-				viaData, _ := gbsData.VpcInterfaceAttachment.ToPtr(ctx)
-				if viaData != nil && !viaData.Name.IsNull() {
-					result.GatewayBridgeSource.VpcInterfaceAttachment = &awstypes.VpcInterfaceAttachment{
-						VpcInterfaceName: fwflex.StringFromFramework(ctx, viaData.Name),
-					}
-				}
-			}
-		}
-	}
-
-	// Media stream source configurations.
-	if !data.MediaStreamSourceConfigurations.IsNull() && !data.MediaStreamSourceConfigurations.IsUnknown() {
-		msscData, _ := data.MediaStreamSourceConfigurations.ToSlice(ctx)
-		result.MediaStreamSourceConfigurations = expandMediaStreamSourceConfigRequests(ctx, msscData)
-	}
-
-	return &result
-}
-
-// encryptionFields holds common encryption values used by both
-// Encryption (create) and UpdateEncryption (update).
-type encryptionFields struct {
-	Algorithm                    awstypes.Algorithm
-	ConstantInitializationVector *string
-	DeviceId                     *string
-	KeyType                      awstypes.KeyType
-	Region                       *string
-	ResourceId                   *string
-	RoleArn                      *string
-	SecretArn                    *string
-	Url                          *string
-}
-
-func expandEncryptionFields(data *encryptionModel) encryptionFields {
-	f := encryptionFields{
-		RoleArn: data.RoleARN.ValueStringPointer(),
-	}
-
-	if !data.Algorithm.IsNull() && !data.Algorithm.IsUnknown() {
-		f.Algorithm = awstypes.Algorithm(data.Algorithm.ValueString())
-	}
-	if !data.ConstantInitializationVector.IsNull() && !data.ConstantInitializationVector.IsUnknown() {
-		f.ConstantInitializationVector = data.ConstantInitializationVector.ValueStringPointer()
-	}
-	if !data.DeviceID.IsNull() && !data.DeviceID.IsUnknown() {
-		f.DeviceId = data.DeviceID.ValueStringPointer()
-	}
-	if !data.KeyType.IsNull() && !data.KeyType.IsUnknown() {
-		f.KeyType = awstypes.KeyType(data.KeyType.ValueString())
-	}
-	if !data.Region.IsNull() && !data.Region.IsUnknown() {
-		f.Region = data.Region.ValueStringPointer()
-	}
-	if !data.ResourceID.IsNull() && !data.ResourceID.IsUnknown() {
-		f.ResourceId = data.ResourceID.ValueStringPointer()
-	}
-	if !data.SecretARN.IsNull() && !data.SecretARN.IsUnknown() {
-		f.SecretArn = data.SecretARN.ValueStringPointer()
-	}
-	if !data.URL.IsNull() && !data.URL.IsUnknown() {
-		f.Url = data.URL.ValueStringPointer()
-	}
-
-	return f
-}
-
-func expandEncryption(_ context.Context, data *encryptionModel) *awstypes.Encryption {
-	f := expandEncryptionFields(data)
-	return &awstypes.Encryption{
-		Algorithm:                    f.Algorithm,
-		ConstantInitializationVector: f.ConstantInitializationVector,
-		DeviceId:                     f.DeviceId,
-		KeyType:                      f.KeyType,
-		Region:                       f.Region,
-		ResourceId:                   f.ResourceId,
-		RoleArn:                      f.RoleArn,
-		SecretArn:                    f.SecretArn,
-		Url:                          f.Url,
-	}
-}
-
-func expandUpdateEncryption(_ context.Context, data *encryptionModel) *awstypes.UpdateEncryption {
-	f := expandEncryptionFields(data)
-	return &awstypes.UpdateEncryption{
-		Algorithm:                    f.Algorithm,
-		ConstantInitializationVector: f.ConstantInitializationVector,
-		DeviceId:                     f.DeviceId,
-		KeyType:                      f.KeyType,
-		Region:                       f.Region,
-		ResourceId:                   f.ResourceId,
-		RoleArn:                      f.RoleArn,
-		SecretArn:                    f.SecretArn,
-		Url:                          f.Url,
-	}
-}
-
-// failoverFields holds common failover config values used by both
-// FailoverConfig (create) and UpdateFailoverConfig (update).
-type failoverFields struct {
-	FailoverMode   awstypes.FailoverMode
-	RecoveryWindow *int32
-	State          awstypes.State
-	SourcePriority *awstypes.SourcePriority
-}
-
-func expandFailoverFields(ctx context.Context, data *failoverConfigModel) failoverFields {
-	var f failoverFields
-
-	if !data.FailoverMode.IsNull() && !data.FailoverMode.IsUnknown() {
-		f.FailoverMode = awstypes.FailoverMode(data.FailoverMode.ValueString())
-	}
-	if !data.RecoveryWindow.IsNull() && !data.RecoveryWindow.IsUnknown() {
-		f.RecoveryWindow = fwflex.Int32FromFramework(ctx, data.RecoveryWindow)
-	}
-	if !data.State.IsNull() && !data.State.IsUnknown() {
-		f.State = awstypes.State(data.State.ValueString())
-	}
-	if !data.SourcePriority.IsNull() && !data.SourcePriority.IsUnknown() {
-		spData, _ := data.SourcePriority.ToPtr(ctx)
-		if spData != nil {
-			f.SourcePriority = &awstypes.SourcePriority{
-				PrimarySource: fwflex.StringFromFramework(ctx, spData.PrimarySource),
-			}
-		}
-	}
-
-	return f
-}
-
-func expandFailoverConfig(ctx context.Context, data *failoverConfigModel) *awstypes.FailoverConfig {
-	f := expandFailoverFields(ctx, data)
-	return &awstypes.FailoverConfig{
-		FailoverMode:   f.FailoverMode,
-		RecoveryWindow: f.RecoveryWindow,
-		State:          f.State,
-		SourcePriority: f.SourcePriority,
-	}
-}
-
-func expandUpdateFailoverConfig(ctx context.Context, data *failoverConfigModel) *awstypes.UpdateFailoverConfig {
-	f := expandFailoverFields(ctx, data)
-	return &awstypes.UpdateFailoverConfig{
-		FailoverMode:   f.FailoverMode,
-		RecoveryWindow: f.RecoveryWindow,
-		State:          f.State,
-		SourcePriority: f.SourcePriority,
-	}
-}
-
-func expandAddMaintenance(_ context.Context, data *maintenanceModel) *awstypes.AddMaintenance {
-	result := &awstypes.AddMaintenance{
-		MaintenanceDay:       awstypes.MaintenanceDay(data.MaintenanceDay.ValueString()),
-		MaintenanceStartHour: data.MaintenanceStartHour.ValueStringPointer(),
-	}
-
-	return result
-}
-
-func expandUpdateMaintenance(_ context.Context, data *maintenanceModel) *awstypes.UpdateMaintenance {
-	result := &awstypes.UpdateMaintenance{}
-
-	if !data.MaintenanceDay.IsNull() && !data.MaintenanceDay.IsUnknown() {
-		result.MaintenanceDay = awstypes.MaintenanceDay(data.MaintenanceDay.ValueString())
-	}
-	if !data.MaintenanceStartHour.IsNull() && !data.MaintenanceStartHour.IsUnknown() {
-		result.MaintenanceStartHour = data.MaintenanceStartHour.ValueStringPointer()
-	}
-
-	return result
-}
-
-func expandSingleVPCInterfaceRequest(ctx context.Context, d *vpcInterfaceModel) awstypes.VpcInterfaceRequest {
-	req := awstypes.VpcInterfaceRequest{
-		Name:             d.Name.ValueStringPointer(),
-		RoleArn:          d.RoleARN.ValueStringPointer(),
-		SubnetId:         d.SubnetID.ValueStringPointer(),
-		SecurityGroupIds: fwflex.ExpandFrameworkStringValueSet(ctx, d.SecurityGroupIDs),
-	}
-
-	if !d.NetworkInterfaceType.IsNull() && !d.NetworkInterfaceType.IsUnknown() {
-		req.NetworkInterfaceType = awstypes.NetworkInterfaceType(d.NetworkInterfaceType.ValueString())
-	}
-
-	return req
-}
-
-func expandVPCInterfaceRequests(ctx context.Context, data []*vpcInterfaceModel) []awstypes.VpcInterfaceRequest {
-	if len(data) == 0 {
-		return nil
-	}
-
-	var result []awstypes.VpcInterfaceRequest
-
-	for _, d := range data {
-		if d == nil {
-			continue
-		}
-
-		req := awstypes.VpcInterfaceRequest{
-			Name:     d.Name.ValueStringPointer(),
-			RoleArn:  d.RoleARN.ValueStringPointer(),
-			SubnetId: d.SubnetID.ValueStringPointer(),
-		}
-
-		if !d.NetworkInterfaceType.IsNull() && !d.NetworkInterfaceType.IsUnknown() {
-			req.NetworkInterfaceType = awstypes.NetworkInterfaceType(d.NetworkInterfaceType.ValueString())
-		}
-
-		req.SecurityGroupIds = fwflex.ExpandFrameworkStringValueSet(ctx, d.SecurityGroupIDs)
-
-		result = append(result, req)
-	}
-
-	return result
-}
-
-func expandSetGatewayBridgeSourceRequest(ctx context.Context, data *gatewayBridgeSourceModel) *awstypes.SetGatewayBridgeSourceRequest {
-	result := &awstypes.SetGatewayBridgeSourceRequest{
-		BridgeArn: data.BridgeARN.ValueStringPointer(),
-	}
-
-	if !data.VpcInterfaceAttachment.IsNull() && !data.VpcInterfaceAttachment.IsUnknown() {
-		viaData, _ := data.VpcInterfaceAttachment.ToPtr(ctx)
-		if viaData != nil && !viaData.Name.IsNull() {
-			result.VpcInterfaceAttachment = &awstypes.VpcInterfaceAttachment{
-				VpcInterfaceName: fwflex.StringFromFramework(ctx, viaData.Name),
-			}
-		}
-	}
-
-	return result
-}
-
-func expandMediaStreamSourceConfigRequests(ctx context.Context, data []*mediaStreamSourceConfigModel) []awstypes.MediaStreamSourceConfigurationRequest {
-	if len(data) == 0 {
-		return nil
-	}
-
-	var result []awstypes.MediaStreamSourceConfigurationRequest
-
-	for _, d := range data {
-		if d == nil {
-			continue
-		}
-
-		req := awstypes.MediaStreamSourceConfigurationRequest{
-			EncodingName:    awstypes.EncodingName(d.EncodingName.ValueString()),
-			MediaStreamName: fwflex.StringFromFramework(ctx, d.MediaStreamName),
-		}
-
-		if !d.InputConfigurations.IsNull() && !d.InputConfigurations.IsUnknown() {
-			icData, _ := d.InputConfigurations.ToSlice(ctx)
-			for _, ic := range icData {
-				if ic == nil {
-					continue
-				}
-				icReq := awstypes.InputConfigurationRequest{
-					InputPort: fwflex.Int32FromFramework(ctx, ic.InputPort),
-				}
-				if !ic.Interface.IsNull() && !ic.Interface.IsUnknown() {
-					ifData, _ := ic.Interface.ToPtr(ctx)
-					if ifData != nil {
-						icReq.Interface = &awstypes.InterfaceRequest{
-							Name: fwflex.StringFromFramework(ctx, ifData.Name),
-						}
-					}
-				}
-				req.InputConfigurations = append(req.InputConfigurations, icReq)
-			}
-		}
-
-		result = append(result, req)
-	}
-
-	return result
-}
-
-func expandMediaStreamOutputConfigRequests(ctx context.Context, data []*mediaStreamOutputConfigModel) []awstypes.MediaStreamOutputConfigurationRequest {
-	if len(data) == 0 {
-		return nil
-	}
-
-	var result []awstypes.MediaStreamOutputConfigurationRequest
-
-	for _, d := range data {
-		if d == nil {
-			continue
-		}
-
-		req := awstypes.MediaStreamOutputConfigurationRequest{
-			EncodingName:    awstypes.EncodingName(d.EncodingName.ValueString()),
-			MediaStreamName: fwflex.StringFromFramework(ctx, d.MediaStreamName),
-		}
-
-		if !d.EncodingParameters.IsNull() && !d.EncodingParameters.IsUnknown() {
-			epData, _ := d.EncodingParameters.ToPtr(ctx)
-			if epData != nil {
-				req.EncodingParameters = &awstypes.EncodingParametersRequest{
-					CompressionFactor: fwflex.Float64FromFramework(ctx, epData.CompressionFactor),
-					EncoderProfile:    awstypes.EncoderProfile(epData.EncoderProfile.ValueString()),
-				}
-			}
-		}
-
-		if !d.DestinationConfigurations.IsNull() && !d.DestinationConfigurations.IsUnknown() {
-			dcData, _ := d.DestinationConfigurations.ToSlice(ctx)
-			for _, dc := range dcData {
-				if dc == nil {
-					continue
-				}
-				dcReq := awstypes.DestinationConfigurationRequest{
-					DestinationIp:   fwflex.StringFromFramework(ctx, dc.DestinationIP),
-					DestinationPort: fwflex.Int32FromFramework(ctx, dc.DestinationPort),
-				}
-				if !dc.Interface.IsNull() && !dc.Interface.IsUnknown() {
-					ifData, _ := dc.Interface.ToPtr(ctx)
-					if ifData != nil {
-						dcReq.Interface = &awstypes.InterfaceRequest{
-							Name: fwflex.StringFromFramework(ctx, ifData.Name),
-						}
-					}
-				}
-				req.DestinationConfigurations = append(req.DestinationConfigurations, dcReq)
-			}
-		}
-
-		result = append(result, req)
-	}
-
-	return result
-}
-
 // Flatten functions.
 
-func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceModel) {
+func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if flow == nil {
-		return
+		return diags
 	}
 
 	data.ARN = fwflex.StringToFramework(ctx, flow.FlowArn)
@@ -2555,33 +2283,43 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 	if len(flow.Sources) > 0 {
 		var srcModels []*sourceModel
 		for _, s := range flow.Sources {
-			srcModels = append(srcModels, flattenSource(ctx, &s))
+			srcModel, d := flattenSource(ctx, &s)
+			diags.Append(d...)
+			srcModels = append(srcModels, srcModel)
 		}
 		data.Source = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, srcModels)
 	} else if flow.Source != nil {
-		srcModel := flattenSource(ctx, flow.Source)
+		srcModel, d := flattenSource(ctx, flow.Source)
+		diags.Append(d...)
 		data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, srcModel)
 	}
 
 	// Flatten source failover config.
 	if flow.SourceFailoverConfig != nil {
-		fcModel := flattenFailoverConfig(ctx, flow.SourceFailoverConfig)
-		data.SourceFailoverConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, fcModel)
+		var fcModel failoverConfigModel
+		diags.Append(fwflex.Flatten(ctx, flow.SourceFailoverConfig, &fcModel)...)
+		data.SourceFailoverConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fcModel)
 	} else if !data.SourceFailoverConfig.IsNull() {
 		data.SourceFailoverConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*failoverConfigModel{})
 	}
 
 	// Flatten maintenance.
 	if flow.Maintenance != nil {
-		maintModel := flattenMaintenance(ctx, flow.Maintenance)
-		data.Maintenance = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, maintModel)
+		var maintModel maintenanceModel
+		diags.Append(fwflex.Flatten(ctx, flow.Maintenance, &maintModel)...)
+		data.Maintenance = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &maintModel)
 	} else if !data.Maintenance.IsNull() {
 		data.Maintenance = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*maintenanceModel{})
 	}
 
 	// Flatten VPC interfaces.
 	if len(flow.VpcInterfaces) > 0 {
-		vpcModels := flattenVPCInterfaces(ctx, flow.VpcInterfaces)
+		var vpcModels []*vpcInterfaceModel
+		for i := range flow.VpcInterfaces {
+			var m vpcInterfaceModel
+			diags.Append(fwflex.Flatten(ctx, &flow.VpcInterfaces[i], &m)...)
+			vpcModels = append(vpcModels, &m)
+		}
 		data.VpcInterfaces = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, vpcModels)
 	} else if !data.VpcInterfaces.IsNull() {
 		data.VpcInterfaces = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*vpcInterfaceModel{})
@@ -2589,7 +2327,12 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 
 	// Flatten entitlements.
 	if len(flow.Entitlements) > 0 {
-		entModels := flattenEntitlements(ctx, flow.Entitlements)
+		var entModels []*entitlementModel
+		for i := range flow.Entitlements {
+			var m entitlementModel
+			diags.Append(fwflex.Flatten(ctx, &flow.Entitlements[i], &m)...)
+			entModels = append(entModels, &m)
+		}
 		data.Entitlements = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, entModels)
 	} else if !data.Entitlements.IsNull() {
 		data.Entitlements = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*entitlementModel{})
@@ -2597,7 +2340,8 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 
 	// Flatten outputs.
 	if len(flow.Outputs) > 0 {
-		outModels := flattenOutputs(ctx, flow.Outputs)
+		outModels, d := flattenOutputs(ctx, flow.Outputs)
+		diags.Append(d...)
 		data.Outputs = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, outModels)
 	} else if !data.Outputs.IsNull() {
 		data.Outputs = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*outputModel{})
@@ -2605,7 +2349,12 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 
 	// Flatten media streams.
 	if len(flow.MediaStreams) > 0 {
-		msModels := flattenMediaStreams(ctx, flow.MediaStreams)
+		var msModels []*mediaStreamModel
+		for i := range flow.MediaStreams {
+			var m mediaStreamModel
+			diags.Append(fwflex.Flatten(ctx, &flow.MediaStreams[i], &m)...)
+			msModels = append(msModels, &m)
+		}
 		data.MediaStreams = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, msModels)
 	} else if !data.MediaStreams.IsNull() {
 		data.MediaStreams = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*mediaStreamModel{})
@@ -2613,16 +2362,21 @@ func flattenFlow(ctx context.Context, flow *awstypes.Flow, data *flowResourceMod
 
 	// Flatten source monitoring config.
 	if flow.SourceMonitoringConfig != nil {
-		smcModel := flattenMonitoringConfig(ctx, flow.SourceMonitoringConfig)
-		data.SourceMonitoringConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, smcModel)
+		var smcModel sourceMonitoringConfigModel
+		diags.Append(fwflex.Flatten(ctx, flow.SourceMonitoringConfig, &smcModel)...)
+		data.SourceMonitoringConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &smcModel)
 	} else if !data.SourceMonitoringConfig.IsNull() {
 		data.SourceMonitoringConfig = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*sourceMonitoringConfigModel{})
 	}
+
+	return diags
 }
 
-func flattenSource(ctx context.Context, source *awstypes.Source) *sourceModel {
+func flattenSource(ctx context.Context, source *awstypes.Source) (*sourceModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if source == nil {
-		return nil
+		return nil, diags
 	}
 
 	model := &sourceModel{
@@ -2654,8 +2408,9 @@ func flattenSource(ctx context.Context, source *awstypes.Source) *sourceModel {
 
 	// Flatten decryption.
 	if source.Decryption != nil {
-		encModel := flattenEncryption(ctx, source.Decryption)
-		model.Decryption = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, encModel)
+		var encModel encryptionModel
+		diags.Append(fwflex.Flatten(ctx, source.Decryption, &encModel)...)
+		model.Decryption = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &encModel)
 	} else {
 		model.Decryption = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*encryptionModel{})
 	}
@@ -2664,7 +2419,7 @@ func flattenSource(ctx context.Context, source *awstypes.Source) *sourceModel {
 	if source.GatewayBridgeSource != nil {
 		gbs := source.GatewayBridgeSource
 		gbsModel := &gatewayBridgeSourceModel{
-			BridgeARN: fwflex.StringToFramework(ctx, gbs.BridgeArn),
+			BridgeARN: fwflex.StringToFrameworkARN(ctx, gbs.BridgeArn),
 		}
 		if gbs.VpcInterfaceAttachment != nil {
 			viaModel := &interfaceModel{Name: fwflex.StringToFramework(ctx, gbs.VpcInterfaceAttachment.VpcInterfaceName)}
@@ -2679,280 +2434,25 @@ func flattenSource(ctx context.Context, source *awstypes.Source) *sourceModel {
 
 	// Flatten media stream source configurations.
 	if len(source.MediaStreamSourceConfigurations) > 0 {
-		model.MediaStreamSourceConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flattenMediaStreamSourceConfigs(ctx, source.MediaStreamSourceConfigurations))
+		var mssModels []*mediaStreamSourceConfigModel
+		for i := range source.MediaStreamSourceConfigurations {
+			var m mediaStreamSourceConfigModel
+			diags.Append(fwflex.Flatten(ctx, &source.MediaStreamSourceConfigurations[i], &m)...)
+			mssModels = append(mssModels, &m)
+		}
+		model.MediaStreamSourceConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, mssModels)
 	} else {
 		model.MediaStreamSourceConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*mediaStreamSourceConfigModel{})
 	}
 
-	return model
+	return model, diags
 }
 
-func flattenEncryption(ctx context.Context, enc *awstypes.Encryption) *encryptionModel {
-	if enc == nil {
-		return nil
-	}
+func flattenOutputs(ctx context.Context, outputs []awstypes.Output) ([]*outputModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
-	model := &encryptionModel{
-		ConstantInitializationVector: fwflex.StringToFramework(ctx, enc.ConstantInitializationVector),
-		DeviceID:                     fwflex.StringToFramework(ctx, enc.DeviceId),
-		Region:                       fwflex.StringToFramework(ctx, enc.Region),
-		ResourceID:                   fwflex.StringToFramework(ctx, enc.ResourceId),
-		RoleARN:                      fwflex.StringToFramework(ctx, enc.RoleArn),
-		SecretARN:                    fwflex.StringToFramework(ctx, enc.SecretArn),
-		URL:                          fwflex.StringToFramework(ctx, enc.Url),
-	}
-
-	if enc.Algorithm != "" {
-		model.Algorithm = fwtypes.StringEnumValue(enc.Algorithm)
-	}
-	if enc.KeyType != "" {
-		model.KeyType = fwtypes.StringEnumValue(enc.KeyType)
-	}
-
-	return model
-}
-
-func flattenFailoverConfig(ctx context.Context, fc *awstypes.FailoverConfig) *failoverConfigModel {
-	if fc == nil {
-		return nil
-	}
-
-	model := &failoverConfigModel{
-		RecoveryWindow: fwflex.Int32ToFramework(ctx, fc.RecoveryWindow),
-	}
-
-	if fc.FailoverMode != "" {
-		model.FailoverMode = fwtypes.StringEnumValue(fc.FailoverMode)
-	}
-	if fc.State != "" {
-		model.State = fwtypes.StringEnumValue(fc.State)
-	}
-
-	if fc.SourcePriority != nil {
-		spModel := &sourcePriorityModel{
-			PrimarySource: fwflex.StringToFramework(ctx, fc.SourcePriority.PrimarySource),
-		}
-		model.SourcePriority = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, spModel)
-	} else {
-		model.SourcePriority = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*sourcePriorityModel{})
-	}
-
-	return model
-}
-
-func flattenMaintenance(ctx context.Context, maint *awstypes.Maintenance) *maintenanceModel {
-	if maint == nil {
-		return nil
-	}
-
-	model := &maintenanceModel{
-		MaintenanceDeadline:      fwflex.StringToFramework(ctx, maint.MaintenanceDeadline),
-		MaintenanceScheduledDate: fwflex.StringToFramework(ctx, maint.MaintenanceScheduledDate),
-		MaintenanceStartHour:     fwflex.StringToFramework(ctx, maint.MaintenanceStartHour),
-	}
-
-	if maint.MaintenanceDay != "" {
-		model.MaintenanceDay = fwtypes.StringEnumValue(maint.MaintenanceDay)
-	}
-
-	return model
-}
-
-func flattenVPCInterfaces(ctx context.Context, interfaces []awstypes.VpcInterface) []*vpcInterfaceModel {
-	if len(interfaces) == 0 {
-		return nil
-	}
-
-	var result []*vpcInterfaceModel
-
-	for _, iface := range interfaces {
-		model := &vpcInterfaceModel{
-			Name:     fwflex.StringToFramework(ctx, iface.Name),
-			RoleARN:  fwflex.StringToFramework(ctx, iface.RoleArn),
-			SubnetID: fwflex.StringToFramework(ctx, iface.SubnetId),
-		}
-
-		if iface.NetworkInterfaceType != "" {
-			model.NetworkInterfaceType = fwtypes.StringEnumValue(iface.NetworkInterfaceType)
-		}
-
-		model.NetworkInterfaceIDs, _ = types.ListValueFrom(ctx, types.StringType, iface.NetworkInterfaceIds)
-
-		// Convert security group IDs to set.
-		model.SecurityGroupIDs, _ = types.SetValueFrom(ctx, types.StringType, iface.SecurityGroupIds)
-
-		result = append(result, model)
-	}
-
-	return result
-}
-
-// Entitlement expand/flatten.
-
-func expandGrantEntitlementRequests(ctx context.Context, data []*entitlementModel) []awstypes.GrantEntitlementRequest {
-	if len(data) == 0 {
-		return nil
-	}
-
-	var result []awstypes.GrantEntitlementRequest
-
-	for _, d := range data {
-		if d == nil {
-			continue
-		}
-
-		req := awstypes.GrantEntitlementRequest{}
-
-		if !d.Name.IsNull() && !d.Name.IsUnknown() {
-			req.Name = fwflex.StringFromFramework(ctx, d.Name)
-		}
-		if !d.Description.IsNull() && !d.Description.IsUnknown() {
-			req.Description = fwflex.StringFromFramework(ctx, d.Description)
-		}
-		if !d.EntitlementStatus.IsNull() && !d.EntitlementStatus.IsUnknown() {
-			req.EntitlementStatus = awstypes.EntitlementStatus(d.EntitlementStatus.ValueString())
-		}
-		if !d.DataTransferSubscriberFeePercent.IsNull() && !d.DataTransferSubscriberFeePercent.IsUnknown() {
-			req.DataTransferSubscriberFeePercent = fwflex.Int32FromFramework(ctx, d.DataTransferSubscriberFeePercent)
-		}
-
-		req.Subscribers = fwflex.ExpandFrameworkStringValueList(ctx, d.Subscribers)
-
-		// Encryption.
-		if !d.Encryption.IsNull() && !d.Encryption.IsUnknown() {
-			encData, _ := d.Encryption.ToPtr(ctx)
-			if encData != nil {
-				req.Encryption = expandEncryption(ctx, encData)
-			}
-		}
-
-		result = append(result, req)
-	}
-
-	return result
-}
-
-func flattenEntitlements(ctx context.Context, entitlements []awstypes.Entitlement) []*entitlementModel {
-	if len(entitlements) == 0 {
-		return nil
-	}
-
-	var result []*entitlementModel
-
-	for _, ent := range entitlements {
-		model := &entitlementModel{
-			Description:                      fwflex.StringToFramework(ctx, ent.Description),
-			EntitlementARN:                   fwflex.StringToFramework(ctx, ent.EntitlementArn),
-			Name:                             fwflex.StringToFramework(ctx, ent.Name),
-			DataTransferSubscriberFeePercent: fwflex.Int32ToFramework(ctx, ent.DataTransferSubscriberFeePercent),
-		}
-
-		if ent.EntitlementStatus != "" {
-			model.EntitlementStatus = fwtypes.StringEnumValue(ent.EntitlementStatus)
-		}
-
-		model.Subscribers, _ = types.ListValueFrom(ctx, types.StringType, ent.Subscribers)
-
-		if ent.Encryption != nil {
-			encModel := flattenEncryption(ctx, ent.Encryption)
-			model.Encryption = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, encModel)
-		} else {
-			model.Encryption = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*encryptionModel{})
-		}
-
-		result = append(result, model)
-	}
-
-	return result
-}
-
-// Output expand/flatten.
-
-func expandAddOutputRequests(ctx context.Context, data []*outputModel) []awstypes.AddOutputRequest {
-	if len(data) == 0 {
-		return nil
-	}
-
-	var result []awstypes.AddOutputRequest
-
-	for _, d := range data {
-		if d == nil {
-			continue
-		}
-
-		req := awstypes.AddOutputRequest{}
-
-		if !d.Name.IsNull() && !d.Name.IsUnknown() {
-			req.Name = fwflex.StringFromFramework(ctx, d.Name)
-		}
-		if !d.Description.IsNull() && !d.Description.IsUnknown() {
-			req.Description = fwflex.StringFromFramework(ctx, d.Description)
-		}
-		if !d.Destination.IsNull() && !d.Destination.IsUnknown() {
-			req.Destination = fwflex.StringFromFramework(ctx, d.Destination)
-		}
-		if !d.Protocol.IsNull() && !d.Protocol.IsUnknown() {
-			req.Protocol = awstypes.Protocol(d.Protocol.ValueString())
-		}
-		if !d.Port.IsNull() && !d.Port.IsUnknown() {
-			req.Port = fwflex.Int32FromFramework(ctx, d.Port)
-		}
-		if !d.MaxLatency.IsNull() && !d.MaxLatency.IsUnknown() {
-			req.MaxLatency = fwflex.Int32FromFramework(ctx, d.MaxLatency)
-		}
-		if !d.MinLatency.IsNull() && !d.MinLatency.IsUnknown() {
-			req.MinLatency = fwflex.Int32FromFramework(ctx, d.MinLatency)
-		}
-		if !d.SmoothingLatency.IsNull() && !d.SmoothingLatency.IsUnknown() {
-			req.SmoothingLatency = fwflex.Int32FromFramework(ctx, d.SmoothingLatency)
-		}
-		if !d.StreamID.IsNull() && !d.StreamID.IsUnknown() {
-			req.StreamId = fwflex.StringFromFramework(ctx, d.StreamID)
-		}
-		if !d.RemoteID.IsNull() && !d.RemoteID.IsUnknown() {
-			req.RemoteId = fwflex.StringFromFramework(ctx, d.RemoteID)
-		}
-		if !d.SenderControlPort.IsNull() && !d.SenderControlPort.IsUnknown() {
-			req.SenderControlPort = fwflex.Int32FromFramework(ctx, d.SenderControlPort)
-		}
-		if !d.OutputStatus.IsNull() && !d.OutputStatus.IsUnknown() {
-			req.OutputStatus = awstypes.OutputStatus(d.OutputStatus.ValueString())
-		}
-		// VPC interface attachment.
-		if !d.VpcInterfaceAttachment.IsNull() && !d.VpcInterfaceAttachment.IsUnknown() {
-			viaData, _ := d.VpcInterfaceAttachment.ToPtr(ctx)
-			if viaData != nil && !viaData.Name.IsNull() {
-				req.VpcInterfaceAttachment = &awstypes.VpcInterfaceAttachment{
-					VpcInterfaceName: fwflex.StringFromFramework(ctx, viaData.Name),
-				}
-			}
-		}
-
-		// Media stream output configurations.
-		if !d.MediaStreamOutputConfigurations.IsNull() && !d.MediaStreamOutputConfigurations.IsUnknown() {
-			msocData, _ := d.MediaStreamOutputConfigurations.ToSlice(ctx)
-			req.MediaStreamOutputConfigurations = expandMediaStreamOutputConfigRequests(ctx, msocData)
-		}
-
-		req.CidrAllowList = fwflex.ExpandFrameworkStringValueList(ctx, d.CIDRAllowList)
-
-		// Encryption.
-		if !d.Encryption.IsNull() && !d.Encryption.IsUnknown() {
-			encData, _ := d.Encryption.ToPtr(ctx)
-			if encData != nil {
-				req.Encryption = expandEncryption(ctx, encData)
-			}
-		}
-
-		result = append(result, req)
-	}
-
-	return result
-}
-
-func flattenOutputs(ctx context.Context, outputs []awstypes.Output) []*outputModel {
 	if len(outputs) == 0 {
-		return nil
+		return nil, diags
 	}
 
 	var result []*outputModel
@@ -3005,14 +2505,21 @@ func flattenOutputs(ctx context.Context, outputs []awstypes.Output) []*outputMod
 		}
 
 		if len(out.MediaStreamOutputConfigurations) > 0 {
-			model.MediaStreamOutputConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flattenMediaStreamOutputConfigs(ctx, out.MediaStreamOutputConfigurations))
+			var msocModels []*mediaStreamOutputConfigModel
+			for i := range out.MediaStreamOutputConfigurations {
+				var m mediaStreamOutputConfigModel
+				diags.Append(fwflex.Flatten(ctx, &out.MediaStreamOutputConfigurations[i], &m)...)
+				msocModels = append(msocModels, &m)
+			}
+			model.MediaStreamOutputConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, msocModels)
 		} else {
 			model.MediaStreamOutputConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*mediaStreamOutputConfigModel{})
 		}
 
 		if out.Encryption != nil {
-			encModel := flattenEncryption(ctx, out.Encryption)
-			model.Encryption = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, encModel)
+			var encModel encryptionModel
+			diags.Append(fwflex.Flatten(ctx, out.Encryption, &encModel)...)
+			model.Encryption = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &encModel)
 		} else {
 			model.Encryption = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*encryptionModel{})
 		}
@@ -3020,416 +2527,5 @@ func flattenOutputs(ctx context.Context, outputs []awstypes.Output) []*outputMod
 		result = append(result, model)
 	}
 
-	return result
-}
-
-// MediaStream expand/flatten.
-
-func expandAddMediaStreamRequests(ctx context.Context, data []*mediaStreamModel) []awstypes.AddMediaStreamRequest {
-	if len(data) == 0 {
-		return nil
-	}
-
-	var result []awstypes.AddMediaStreamRequest
-
-	for _, d := range data {
-		if d == nil {
-			continue
-		}
-
-		req := awstypes.AddMediaStreamRequest{
-			MediaStreamId:   fwflex.Int32FromFramework(ctx, d.MediaStreamID),
-			MediaStreamName: fwflex.StringFromFramework(ctx, d.MediaStreamName),
-			MediaStreamType: awstypes.MediaStreamType(d.MediaStreamType.ValueString()),
-		}
-
-		if !d.ClockRate.IsNull() && !d.ClockRate.IsUnknown() {
-			req.ClockRate = fwflex.Int32FromFramework(ctx, d.ClockRate)
-		}
-		if !d.Description.IsNull() && !d.Description.IsUnknown() {
-			req.Description = fwflex.StringFromFramework(ctx, d.Description)
-		}
-		if !d.VideoFormat.IsNull() && !d.VideoFormat.IsUnknown() {
-			req.VideoFormat = fwflex.StringFromFramework(ctx, d.VideoFormat)
-		}
-
-		// Attributes.
-		if !d.Attributes.IsNull() && !d.Attributes.IsUnknown() {
-			attrData, _ := d.Attributes.ToPtr(ctx)
-			if attrData != nil {
-				req.Attributes = expandMediaStreamAttributesRequest(ctx, attrData)
-			}
-		}
-
-		result = append(result, req)
-	}
-
-	return result
-}
-
-func expandMediaStreamAttributesRequest(ctx context.Context, data *mediaStreamAttributesModel) *awstypes.MediaStreamAttributesRequest {
-	result := &awstypes.MediaStreamAttributesRequest{}
-
-	if !data.Lang.IsNull() && !data.Lang.IsUnknown() {
-		result.Lang = fwflex.StringFromFramework(ctx, data.Lang)
-	}
-
-	if !data.Fmtp.IsNull() && !data.Fmtp.IsUnknown() {
-		fmtpData, _ := data.Fmtp.ToPtr(ctx)
-		if fmtpData != nil {
-			result.Fmtp = expandFmtpRequest(ctx, fmtpData)
-		}
-	}
-
-	return result
-}
-
-func expandFmtpRequest(_ context.Context, data *fmtpModel) *awstypes.FmtpRequest {
-	result := &awstypes.FmtpRequest{}
-
-	if !data.ChannelOrder.IsNull() && !data.ChannelOrder.IsUnknown() {
-		result.ChannelOrder = data.ChannelOrder.ValueStringPointer()
-	}
-	if !data.Colorimetry.IsNull() && !data.Colorimetry.IsUnknown() {
-		result.Colorimetry = awstypes.Colorimetry(data.Colorimetry.ValueString())
-	}
-	if !data.ExactFramerate.IsNull() && !data.ExactFramerate.IsUnknown() {
-		result.ExactFramerate = data.ExactFramerate.ValueStringPointer()
-	}
-	if !data.Par.IsNull() && !data.Par.IsUnknown() {
-		result.Par = data.Par.ValueStringPointer()
-	}
-	if !data.Range.IsNull() && !data.Range.IsUnknown() {
-		result.Range = awstypes.Range(data.Range.ValueString())
-	}
-	if !data.ScanMode.IsNull() && !data.ScanMode.IsUnknown() {
-		result.ScanMode = awstypes.ScanMode(data.ScanMode.ValueString())
-	}
-	if !data.Tcs.IsNull() && !data.Tcs.IsUnknown() {
-		result.Tcs = awstypes.Tcs(data.Tcs.ValueString())
-	}
-
-	return result
-}
-
-func flattenMediaStreams(ctx context.Context, streams []awstypes.MediaStream) []*mediaStreamModel {
-	if len(streams) == 0 {
-		return nil
-	}
-
-	var result []*mediaStreamModel
-
-	for _, ms := range streams {
-		model := &mediaStreamModel{
-			ClockRate:       fwflex.Int32ToFramework(ctx, ms.ClockRate),
-			Description:     fwflex.StringToFramework(ctx, ms.Description),
-			Fmt:             fwflex.Int32ToFramework(ctx, ms.Fmt),
-			MediaStreamID:   fwflex.Int32ToFramework(ctx, ms.MediaStreamId),
-			MediaStreamName: fwflex.StringToFramework(ctx, ms.MediaStreamName),
-			VideoFormat:     fwflex.StringToFramework(ctx, ms.VideoFormat),
-		}
-
-		if ms.MediaStreamType != "" {
-			model.MediaStreamType = fwtypes.StringEnumValue(ms.MediaStreamType)
-		}
-
-		if ms.Attributes != nil {
-			attrModel := flattenMediaStreamAttributes(ctx, ms.Attributes)
-			model.Attributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, attrModel)
-		} else {
-			model.Attributes = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*mediaStreamAttributesModel{})
-		}
-
-		result = append(result, model)
-	}
-
-	return result
-}
-
-func flattenMediaStreamAttributes(ctx context.Context, attrs *awstypes.MediaStreamAttributes) *mediaStreamAttributesModel {
-	if attrs == nil {
-		return nil
-	}
-
-	model := &mediaStreamAttributesModel{
-		Lang: fwflex.StringToFramework(ctx, attrs.Lang),
-	}
-
-	if attrs.Fmtp != nil {
-		fmtpModel := flattenFmtp(ctx, attrs.Fmtp)
-		model.Fmtp = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, fmtpModel)
-	} else {
-		model.Fmtp = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*fmtpModel{})
-	}
-
-	return model
-}
-
-func flattenFmtp(ctx context.Context, fmtp *awstypes.Fmtp) *fmtpModel {
-	if fmtp == nil {
-		return nil
-	}
-
-	model := &fmtpModel{
-		ChannelOrder:   fwflex.StringToFramework(ctx, fmtp.ChannelOrder),
-		ExactFramerate: fwflex.StringToFramework(ctx, fmtp.ExactFramerate),
-		Par:            fwflex.StringToFramework(ctx, fmtp.Par),
-	}
-
-	if fmtp.Colorimetry != "" {
-		model.Colorimetry = fwtypes.StringEnumValue(fmtp.Colorimetry)
-	}
-	if fmtp.Range != "" {
-		model.Range = fwtypes.StringEnumValue(fmtp.Range)
-	}
-	if fmtp.ScanMode != "" {
-		model.ScanMode = fwtypes.StringEnumValue(fmtp.ScanMode)
-	}
-	if fmtp.Tcs != "" {
-		model.Tcs = fwtypes.StringEnumValue(fmtp.Tcs)
-	}
-
-	return model
-}
-
-func flattenMediaStreamSourceConfigs(ctx context.Context, configs []awstypes.MediaStreamSourceConfiguration) []*mediaStreamSourceConfigModel {
-	if len(configs) == 0 {
-		return nil
-	}
-
-	var result []*mediaStreamSourceConfigModel
-
-	for _, cfg := range configs {
-		model := &mediaStreamSourceConfigModel{
-			MediaStreamName: fwflex.StringToFramework(ctx, cfg.MediaStreamName),
-		}
-		if cfg.EncodingName != "" {
-			model.EncodingName = fwtypes.StringEnumValue(cfg.EncodingName)
-		}
-
-		if len(cfg.InputConfigurations) > 0 {
-			var icModels []*inputConfigModel
-			for _, ic := range cfg.InputConfigurations {
-				icModel := &inputConfigModel{
-					InputIP:   fwflex.StringToFramework(ctx, ic.InputIp),
-					InputPort: fwflex.Int32ToFramework(ctx, ic.InputPort),
-				}
-				if ic.Interface != nil {
-					ifModel := &interfaceModel{Name: fwflex.StringToFramework(ctx, ic.Interface.Name)}
-					icModel.Interface = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, ifModel)
-				} else {
-					icModel.Interface = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*interfaceModel{})
-				}
-				icModels = append(icModels, icModel)
-			}
-			model.InputConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, icModels)
-		} else {
-			model.InputConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*inputConfigModel{})
-		}
-
-		result = append(result, model)
-	}
-
-	return result
-}
-
-func flattenMediaStreamOutputConfigs(ctx context.Context, configs []awstypes.MediaStreamOutputConfiguration) []*mediaStreamOutputConfigModel {
-	if len(configs) == 0 {
-		return nil
-	}
-
-	var result []*mediaStreamOutputConfigModel
-
-	for _, cfg := range configs {
-		model := &mediaStreamOutputConfigModel{
-			MediaStreamName: fwflex.StringToFramework(ctx, cfg.MediaStreamName),
-		}
-		if cfg.EncodingName != "" {
-			model.EncodingName = fwtypes.StringEnumValue(cfg.EncodingName)
-		}
-
-		if cfg.EncodingParameters != nil {
-			ep := cfg.EncodingParameters
-			epModel := &encodingParametersModel{
-				CompressionFactor: types.Float64Value(aws.ToFloat64(ep.CompressionFactor)),
-			}
-			if ep.EncoderProfile != "" {
-				epModel.EncoderProfile = fwtypes.StringEnumValue(ep.EncoderProfile)
-			}
-			model.EncodingParameters = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, epModel)
-		} else {
-			model.EncodingParameters = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*encodingParametersModel{})
-		}
-
-		if len(cfg.DestinationConfigurations) > 0 {
-			var dcModels []*destinationConfigModel
-			for _, dc := range cfg.DestinationConfigurations {
-				dcModel := &destinationConfigModel{
-					DestinationIP:   fwflex.StringToFramework(ctx, dc.DestinationIp),
-					DestinationPort: fwflex.Int32ToFramework(ctx, dc.DestinationPort),
-					OutboundIP:      fwflex.StringToFramework(ctx, dc.OutboundIp),
-				}
-				if dc.Interface != nil {
-					ifModel := &interfaceModel{Name: fwflex.StringToFramework(ctx, dc.Interface.Name)}
-					dcModel.Interface = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, ifModel)
-				} else {
-					dcModel.Interface = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*interfaceModel{})
-				}
-				dcModels = append(dcModels, dcModel)
-			}
-			model.DestinationConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, dcModels)
-		} else {
-			model.DestinationConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*destinationConfigModel{})
-		}
-
-		result = append(result, model)
-	}
-
-	return result
-}
-
-func expandMonitoringConfig(ctx context.Context, data *sourceMonitoringConfigModel) *awstypes.MonitoringConfig {
-	result := &awstypes.MonitoringConfig{}
-
-	if !data.ContentQualityAnalysisState.IsNull() && !data.ContentQualityAnalysisState.IsUnknown() {
-		result.ContentQualityAnalysisState = awstypes.ContentQualityAnalysisState(data.ContentQualityAnalysisState.ValueString())
-	}
-	if !data.ThumbnailState.IsNull() && !data.ThumbnailState.IsUnknown() {
-		result.ThumbnailState = awstypes.ThumbnailState(data.ThumbnailState.ValueString())
-	}
-
-	if !data.AudioMonitoringSettings.IsNull() && !data.AudioMonitoringSettings.IsUnknown() {
-		amsData, _ := data.AudioMonitoringSettings.ToSlice(ctx)
-		for _, am := range amsData {
-			if am == nil {
-				continue
-			}
-			setting := awstypes.AudioMonitoringSetting{}
-			if !am.SilentAudio.IsNull() && !am.SilentAudio.IsUnknown() {
-				saData, _ := am.SilentAudio.ToPtr(ctx)
-				if saData != nil {
-					sa := &awstypes.SilentAudio{}
-					if !saData.State.IsNull() && !saData.State.IsUnknown() {
-						sa.State = awstypes.State(saData.State.ValueString())
-					}
-					if !saData.ThresholdSeconds.IsNull() && !saData.ThresholdSeconds.IsUnknown() {
-						sa.ThresholdSeconds = fwflex.Int32FromFramework(ctx, saData.ThresholdSeconds)
-					}
-					setting.SilentAudio = sa
-				}
-			}
-			result.AudioMonitoringSettings = append(result.AudioMonitoringSettings, setting)
-		}
-	}
-
-	if !data.VideoMonitoringSettings.IsNull() && !data.VideoMonitoringSettings.IsUnknown() {
-		vmsData, _ := data.VideoMonitoringSettings.ToSlice(ctx)
-		for _, vm := range vmsData {
-			if vm == nil {
-				continue
-			}
-			setting := awstypes.VideoMonitoringSetting{}
-			if !vm.BlackFrames.IsNull() && !vm.BlackFrames.IsUnknown() {
-				bfData, _ := vm.BlackFrames.ToPtr(ctx)
-				if bfData != nil {
-					bf := &awstypes.BlackFrames{}
-					if !bfData.State.IsNull() && !bfData.State.IsUnknown() {
-						bf.State = awstypes.State(bfData.State.ValueString())
-					}
-					if !bfData.ThresholdSeconds.IsNull() && !bfData.ThresholdSeconds.IsUnknown() {
-						bf.ThresholdSeconds = fwflex.Int32FromFramework(ctx, bfData.ThresholdSeconds)
-					}
-					setting.BlackFrames = bf
-				}
-			}
-			if !vm.FrozenFrames.IsNull() && !vm.FrozenFrames.IsUnknown() {
-				ffData, _ := vm.FrozenFrames.ToPtr(ctx)
-				if ffData != nil {
-					ff := &awstypes.FrozenFrames{}
-					if !ffData.State.IsNull() && !ffData.State.IsUnknown() {
-						ff.State = awstypes.State(ffData.State.ValueString())
-					}
-					if !ffData.ThresholdSeconds.IsNull() && !ffData.ThresholdSeconds.IsUnknown() {
-						ff.ThresholdSeconds = fwflex.Int32FromFramework(ctx, ffData.ThresholdSeconds)
-					}
-					setting.FrozenFrames = ff
-				}
-			}
-			result.VideoMonitoringSettings = append(result.VideoMonitoringSettings, setting)
-		}
-	}
-
-	return result
-}
-
-func flattenMonitoringConfig(ctx context.Context, mc *awstypes.MonitoringConfig) *sourceMonitoringConfigModel {
-	if mc == nil {
-		return nil
-	}
-
-	model := &sourceMonitoringConfigModel{}
-
-	if mc.ContentQualityAnalysisState != "" {
-		model.ContentQualityAnalysisState = fwtypes.StringEnumValue(mc.ContentQualityAnalysisState)
-	}
-	if mc.ThumbnailState != "" {
-		model.ThumbnailState = fwtypes.StringEnumValue(mc.ThumbnailState)
-	}
-
-	if len(mc.AudioMonitoringSettings) > 0 {
-		var amsModels []*audioMonitoringSettingModel
-		for _, am := range mc.AudioMonitoringSettings {
-			amModel := &audioMonitoringSettingModel{}
-			if am.SilentAudio != nil {
-				saModel := &silentAudioModel{
-					ThresholdSeconds: fwflex.Int32ToFramework(ctx, am.SilentAudio.ThresholdSeconds),
-				}
-				if am.SilentAudio.State != "" {
-					saModel.State = fwtypes.StringEnumValue(am.SilentAudio.State)
-				}
-				amModel.SilentAudio = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, saModel)
-			} else {
-				amModel.SilentAudio = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*silentAudioModel{})
-			}
-			amsModels = append(amsModels, amModel)
-		}
-		model.AudioMonitoringSettings = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, amsModels)
-	} else {
-		model.AudioMonitoringSettings = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*audioMonitoringSettingModel{})
-	}
-
-	if len(mc.VideoMonitoringSettings) > 0 {
-		var vmsModels []*videoMonitoringSettingModel
-		for _, vm := range mc.VideoMonitoringSettings {
-			vmModel := &videoMonitoringSettingModel{}
-			if vm.BlackFrames != nil {
-				bfModel := &blackFramesModel{
-					ThresholdSeconds: fwflex.Int32ToFramework(ctx, vm.BlackFrames.ThresholdSeconds),
-				}
-				if vm.BlackFrames.State != "" {
-					bfModel.State = fwtypes.StringEnumValue(vm.BlackFrames.State)
-				}
-				vmModel.BlackFrames = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, bfModel)
-			} else {
-				vmModel.BlackFrames = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*blackFramesModel{})
-			}
-			if vm.FrozenFrames != nil {
-				ffModel := &frozenFramesModel{
-					ThresholdSeconds: fwflex.Int32ToFramework(ctx, vm.FrozenFrames.ThresholdSeconds),
-				}
-				if vm.FrozenFrames.State != "" {
-					ffModel.State = fwtypes.StringEnumValue(vm.FrozenFrames.State)
-				}
-				vmModel.FrozenFrames = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, ffModel)
-			} else {
-				vmModel.FrozenFrames = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*frozenFramesModel{})
-			}
-			vmsModels = append(vmsModels, vmModel)
-		}
-		model.VideoMonitoringSettings = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, vmsModels)
-	} else {
-		model.VideoMonitoringSettings = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*videoMonitoringSettingModel{})
-	}
-
-	return model
+	return result, diags
 }
