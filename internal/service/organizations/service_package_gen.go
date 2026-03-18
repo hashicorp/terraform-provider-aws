@@ -34,9 +34,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newAwsServiceAccessResource,
-			TypeName: "aws_organizations_aws_service_access",
-			Name:     "Aws Service Access",
+			Factory:  newServiceAccessResource,
+			TypeName: "aws_organizations_service_access",
+			Name:     "Service Access",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalSingleParameterIdentity("service_principal"),
 			Import: inttypes.FrameworkImport{

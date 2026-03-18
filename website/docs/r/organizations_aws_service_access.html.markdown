@@ -1,12 +1,12 @@
 ---
 subcategory: "Organizations"
 layout: "aws"
-page_title: "AWS: aws_organizations_aws_service_access"
+page_title: "AWS: aws_organizations_service_access"
 description: |-
-  Manages an AWS Organizations Aws Service Access.
+  Manages an AWS Organizations Service Access.
 ---
 
-# Resource: aws_organizations_aws_service_access
+# Resource: aws_organizations_service_access
 
 Manages trusted access between an AWS service and AWS Organizations.
 
@@ -17,7 +17,7 @@ Manages trusted access between an AWS service and AWS Organizations.
 ## Example Usage
 
 ```terraform
-resource "aws_organizations_aws_service_access" "example" {
+resource "aws_organizations_service_access" "example" {
   service_principal = "tagpolicies.tag.amazonaws.com"
 }
 ```
@@ -40,13 +40,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_organizations_aws_service_access.example
+  to = aws_organizations_service_access.example
   identity = {
     service_principal = "tagpolicies.tag.amazonaws.com"
   }
 }
 
-resource "aws_organizations_aws_service_access" "example" {
+resource "aws_organizations_service_access" "example" {
   service_principal = "tagpolicies.tag.amazonaws.com"
 }
 ```
@@ -55,7 +55,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_organizations_aws_service_access.example
+  to = aws_organizations_service_access.example
   id = "tagpolicies.tag.amazonaws.com"
 }
 ```
@@ -63,5 +63,5 @@ import {
 Using `terraform import`, import trusted access using the `service_principal`. For example:
 
 ```console
-% terraform import aws_organizations_aws_service_access.example tagpolicies.tag.amazonaws.com
+% terraform import aws_organizations_service_access.example tagpolicies.tag.amazonaws.com
 ```
