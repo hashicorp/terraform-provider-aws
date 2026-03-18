@@ -193,3 +193,62 @@ func TestAccSSMDocument_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSSMDocument_List_filtered(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceNameExpected1 := "aws_ssm_document.expected[0]"
+	resourceNameExpected2 := "aws_ssm_document.expected[1]"
+	resourceNameNotExpected1 := "aws_ssm_document.not_expected[0]"
+	resourceNameNotExpected2 := "aws_ssm_document.not_expected[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identityExpected1 := tfstatecheck.Identity()
+	identityExpected2 := tfstatecheck.Identity()
+	identityNotExpected1 := tfstatecheck.Identity()
+	identityNotExpected2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Document/list_filtered/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identityExpected1.GetIdentity(resourceNameExpected1),
+					statecheck.ExpectKnownValue(resourceNameExpected1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("ssm", "document/"+rName+"-expected-0")),
+
+					identityExpected2.GetIdentity(resourceNameExpected2),
+					statecheck.ExpectKnownValue(resourceNameExpected2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("ssm", "document/"+rName+"-expected-1")),
+
+					identityNotExpected1.GetIdentity(resourceNameNotExpected1),
+					statecheck.ExpectKnownValue(resourceNameNotExpected1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("ssm", "document/"+rName+"-other-0")),
+
+					identityNotExpected2.GetIdentity(resourceNameNotExpected2),
+					statecheck.ExpectKnownValue(resourceNameNotExpected2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("ssm", "document/"+rName+"-other-1")),
+				},
+			},
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Document/list_filtered/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_ssm_document.test", identityExpected1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_ssm_document.test", identityExpected2.Checks()),
+					tfquerycheck.ExpectNoIdentityFunc("aws_ssm_document.test", identityNotExpected1.Checks()),
+					tfquerycheck.ExpectNoIdentityFunc("aws_ssm_document.test", identityNotExpected2.Checks()),
+				},
+			},
+		},
+	})
+}

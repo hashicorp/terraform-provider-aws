@@ -44,8 +44,8 @@ type documentListResourceModel struct {
 }
 
 type documentFiltersModel struct {
-	Key   types.String         `tfsdk:"key"`
-	Value fwtypes.ListOfString `tfsdk:"value"`
+	Key    types.String         `tfsdk:"key"`
+	Values fwtypes.ListOfString `tfsdk:"values"`
 }
 
 func (l *documentListResource) ListResourceConfigSchema(ctx context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
