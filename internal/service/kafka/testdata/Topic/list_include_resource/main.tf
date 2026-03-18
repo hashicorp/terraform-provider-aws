@@ -8,8 +8,6 @@ resource "aws_msk_topic" "test" {
   cluster_arn        = aws_msk_cluster.test.arn
   partition_count    = 2
   replication_factor = 2
-
-  tags = var.resource_tags
 }
 
 resource "aws_msk_cluster" "test" {
@@ -64,11 +62,5 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
-  nullable    = false
-}
-
-variable "resource_tags" {
-  description = "Tags to set on resource"
-  type        = map(string)
   nullable    = false
 }

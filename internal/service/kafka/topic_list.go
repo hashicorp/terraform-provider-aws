@@ -71,16 +71,15 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 				return
 			}
 
-			arn, name := aws.ToString(item.TopicArn), aws.ToString(item.TopicName)
+			arn := aws.ToString(item.TopicArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			result := request.NewListResult(ctx)
 
 			var data topicResourceModel
-			// TIP: -- 6. Set the ID, arguments, and attributes
-			// Using a field name prefix allows mapping fields such as `TopicId` to `ID`
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				out, err := findTopicByTwoPartKey(ctx, conn, arn, name)
+				topicName := aws.ToString(item.TopicName)
+				out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
 				if err != nil {
 					result.Diagnostics.AddError("Reading MSK Topic", err.Error())
 					return
@@ -91,7 +90,7 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 					return
 				}
 
-				result.DisplayName = name
+				result.DisplayName = topicName
 			})
 
 			if !yield(result) {

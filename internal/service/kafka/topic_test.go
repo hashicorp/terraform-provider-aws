@@ -23,6 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func checkTopicARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`topic/.+/.+/+`+name+`$`))
+}
+
+func checkTopicARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(`topic/.+/.+/+`+name+`$`))
+}
+
 func TestAccKafkaTopic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var topic kafka.DescribeTopicOutput
@@ -50,7 +58,7 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkTopicARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("configs_actual"), knownvalue.NotNull()),
 				},
 			},

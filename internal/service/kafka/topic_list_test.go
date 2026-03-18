@@ -4,10 +4,8 @@
 package kafka_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -16,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
@@ -52,10 +49,10 @@ func TestAccKafkaTopic_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s-0$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkTopicARN(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s-1$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkTopicARN(rName+"-1")),
 				},
 			},
 
@@ -108,7 +105,7 @@ func TestAccKafkaTopic_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s-0$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkTopicARN(rName+"-0")),
 				},
 			},
 
@@ -124,7 +121,7 @@ func TestAccKafkaTopic_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_msk_topic.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_msk_topic.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_msk_topic.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s-0$`, rName)))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkTopicARN(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("configs"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("configs_actual"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
@@ -169,10 +166,10 @@ func TestAccKafkaTopic_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s-0$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkTopicARNAlternateRegion(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s-1$`, rName)))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkTopicARNAlternateRegion(rName+"-1")),
 				},
 			},
 
