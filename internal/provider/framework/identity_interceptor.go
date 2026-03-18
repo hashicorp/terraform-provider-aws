@@ -110,12 +110,15 @@ func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[r
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
-		if response.State.Raw.IsNull() {
-			break
-		}
 		identity := response.Identity
 		if identity == nil {
 			break
+		}
+
+		// If state is null (resource removed), populate identity from request state
+		stateToRead := response.State
+		if response.State.Raw.IsNull() {
+			stateToRead = opts.request.State
 		}
 
 		for _, att := range r.attributes {
@@ -134,7 +137,7 @@ func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[r
 
 			default:
 				var attrVal attr.Value
-				opts.response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+				opts.response.Diagnostics.Append(stateToRead.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
 				if opts.response.Diagnostics.HasError() {
 					return
 				}
