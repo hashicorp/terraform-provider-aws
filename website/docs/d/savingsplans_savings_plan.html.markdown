@@ -45,5 +45,5 @@ This data source exports the following attributes in addition to the arguments a
 * `term_duration_in_seconds` - The duration of the term, in seconds.
 * `ec2_instance_family` - The EC2 instance family for the Savings Plan.
 * `region` - The AWS Region.
-* `offering_id` - The ID of the offering.
+* `savings_plan_offering_id` - The unique ID of a Savings Plan offering.
 * `tags` - A map of tags assigned to the resource.

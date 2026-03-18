@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_savingsplans_savings_plan: Remove deprecated `offering_id` attribute. Use `savings_plan_offering_id` instead.
+```
+
+```release-note:breaking-change
+data-source/aws_savingsplans_savings_plan: Remove deprecated `offering_id` attribute. Use `savings_plan_offering_id` instead.
+```

@@ -72,7 +72,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `term_duration_in_seconds` - The duration of the term, in seconds.
 * `ec2_instance_family` - The EC2 instance family for the Savings Plan (only applicable to EC2 Instance Savings Plans).
 * `region` - The AWS Region.
-* `offering_id` - The ID of the offering.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
