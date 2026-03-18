@@ -96,7 +96,7 @@ func testAccSavingsPlanConfig_basic() string {
 # Note: You need to provide a valid savings_plan_offering_id
 # Use the aws_savingsplans_offerings data source to find valid offerings
 resource "aws_savingsplans_savings_plan" "test" {
-  savings_plan_offering_id = "00000000-0000-0000-0000-000000000000"
+  savings_plan_offering_id = "10000000-0000-4000-8000-000000000000"
   commitment               = "1.0"
 }
 `
