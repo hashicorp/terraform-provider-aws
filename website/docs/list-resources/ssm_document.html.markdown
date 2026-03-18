@@ -37,8 +37,8 @@ list "aws_ssm_document" "example" {
 
 This list resource supports the following arguments:
 
-* `region` - (Optional) Region to query. Defaults to provider region.
 * `filter` - (Optional) One or more filters to apply to the search. If omitted, the list returns self-owned SSM documents by default.
+* `region` - (Optional) Region to query. Defaults to provider region.
 
 ### `filter` Block
 
