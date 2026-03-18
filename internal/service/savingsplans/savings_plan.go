@@ -88,14 +88,6 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"offering_id": schema.StringAttribute{
-				Computed:           true,
-				DeprecationMessage: "offering_id is deprecated. Use savings_plan_offering_id instead.",
-				Description:        "The ID of the offering.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"payment_option": schema.StringAttribute{
 				Computed:    true,
 				Description: "The payment option for the Savings Plan.",
@@ -407,7 +399,6 @@ type savingsPlanResourceModel struct {
 	Description            types.String                                  `tfsdk:"description"`
 	EC2InstanceFamily      types.String                                  `tfsdk:"ec2_instance_family"`
 	End                    types.String                                  `tfsdk:"end"`
-	OfferingID             types.String                                  `tfsdk:"offering_id"`
 	PaymentOption          types.String                                  `tfsdk:"payment_option"`
 	ProductTypes           fwtypes.ListOfString                          `tfsdk:"product_types"`
 	PurchaseTime           timetypes.RFC3339                             `tfsdk:"purchase_time"`
