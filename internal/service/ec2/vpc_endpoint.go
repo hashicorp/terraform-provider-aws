@@ -804,11 +804,11 @@ func resourceVPCEndpointFlatten(ctx context.Context, awsClient *conns.AWSClient,
 
 	d.Set(names.AttrARN, vpcEndpointARN(ctx, awsClient, ownerID, d.Id()))
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
-		return fmt.Errorf("setting dns_entry: %s", err)
+		return fmt.Errorf("setting dns_entry: %w", err)
 	}
 	if vpce.DnsOptions != nil {
 		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
-			return fmt.Errorf("setting dns_options: %s", err)
+			return fmt.Errorf("setting dns_options: %w", err)
 		}
 	} else {
 		d.Set("dns_options", nil)
