@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOrganizationsAwsServiceAccess_basic(t *testing.T) {
