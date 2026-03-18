@@ -226,7 +226,7 @@ func testAccCheckLocationAzureBlobExists(ctx context.Context, t *testing.T, n st
 }
 
 func testAccLocationAzureBlobConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentAgentConfig_baseBasicMode(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q
