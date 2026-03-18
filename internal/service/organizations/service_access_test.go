@@ -29,7 +29,7 @@ func TestAccOrganizationsServiceAccess_basic(t *testing.T) {
 
 	var serviceaccess awstypes.EnabledServicePrincipal
 	servicePrincipal := "tagpolicies.tag.amazonaws.com"
-	resourceName := "aws_organizations_aws_service_access.test"
+	resourceName := "aws_organizations_service_access.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -67,7 +67,7 @@ func TestAccOrganizationsServiceAccess_disappears(t *testing.T) {
 
 	var serviceaccess awstypes.EnabledServicePrincipal
 	servicePrincipal := "tagpolicies.tag.amazonaws.com"
-	resourceName := "aws_organizations_aws_service_access.test"
+	resourceName := "aws_organizations_service_access.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -100,7 +100,7 @@ func testAccCheckServiceAccessDestroy(ctx context.Context, t *testing.T) resourc
 		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_organizations_aws_service_access" {
+			if rs.Type != "aws_organizations_service_access" {
 				continue
 			}
 
@@ -147,7 +147,7 @@ func testAccCheckServiceAccessExists(ctx context.Context, t *testing.T, name str
 
 func testAccServiceAccessConfig_basic(servicePrincipal string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_aws_service_access" "test" {
+resource "aws_organizations_service_access" "test" {
   service_principal = %[1]q
 }
 `, servicePrincipal)
