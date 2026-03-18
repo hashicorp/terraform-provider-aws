@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.23.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.20 // indirect
@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emr v1.57.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emr v1.58.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.22 // indirect
@@ -143,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.138.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.139.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.3 // indirect
