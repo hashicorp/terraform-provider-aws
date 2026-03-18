@@ -838,7 +838,6 @@ func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Clien
 
 func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput) error {
 	if mcOutput == nil {
-		// No managed certificate found, nothing to update
 		return nil
 	}
 
