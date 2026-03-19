@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -218,7 +218,7 @@ func (r *scraperResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 		Value: []byte(data.ScrapeConfiguration.ValueString()),
 	}
@@ -319,7 +319,7 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ScrapeConfiguration = &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 			Value: []byte(new.ScrapeConfiguration.ValueString()),
 		}
@@ -353,7 +353,7 @@ func (r *scraperResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().AMPClient(ctx)
 
 	input := amp.DeleteScraperInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		ScraperId:   fwflex.StringFromFramework(ctx, data.ID),
 	}
 	_, err := conn.DeleteScraper(ctx, &input)

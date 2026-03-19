@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -140,7 +140,7 @@ func (r *queryLoggingConfigurationResource) Create(ctx context.Context, request 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	_, err := conn.CreateQueryLoggingConfiguration(ctx, &input)
 
@@ -209,7 +209,7 @@ func (r *queryLoggingConfigurationResource) Update(ctx context.Context, request 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	_, err := conn.UpdateQueryLoggingConfiguration(ctx, &input)
 
@@ -240,7 +240,7 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
 	input := amp.DeleteQueryLoggingConfigurationInput{
 		WorkspaceId: aws.String(workspaceID),
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 	}
 	_, err := conn.DeleteQueryLoggingConfiguration(ctx, &input)
 
