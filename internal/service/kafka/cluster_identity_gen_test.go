@@ -234,7 +234,7 @@ func TestAccKafkaCluster_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.36.0
+// Resource Identity was added after v6.37.0
 func TestAccKafkaCluster_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -255,7 +255,7 @@ func TestAccKafkaCluster_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Cluster/basic_v6.36.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Cluster/basic_v6.37.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -293,7 +293,7 @@ func TestAccKafkaCluster_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.36.0
+// Resource Identity was added after v6.37.0
 func TestAccKafkaCluster_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -319,7 +319,7 @@ func TestAccKafkaCluster_Identity_ExistingResource_noRefreshNoChange(t *testing.
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Cluster/basic_v6.36.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Cluster/basic_v6.37.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

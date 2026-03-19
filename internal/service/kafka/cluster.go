@@ -37,7 +37,7 @@ import (
 // @SDKResource("aws_msk_cluster", name="Cluster")
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
-// @Testing(preIdentityVersion="v6.36.0")
+// @Testing(preIdentityVersion="v6.37.0")
 // @Testing(tagsTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka/types;awstypes;awstypes.ClusterInfo")
 // @Testing(preCheck="testAccPreCheck")
