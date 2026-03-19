@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -189,7 +189,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		creationToken = sdkid.UniqueId()
+		creationToken = create.UniqueId(ctx)
 	}
 	throughputMode := awstypes.ThroughputMode(d.Get("throughput_mode").(string))
 	input := &efs.CreateFileSystemInput{
