@@ -1529,8 +1529,8 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   custom_response_body {
-    key = "CustomResponseBody"
-    content = "{\"message\": \"Custom response body\"}"
+    key          = "CustomResponseBody"
+    content      = "{\"message\": \"Custom response body\"}"
     content_type = "APPLICATION_JSON"
   }
 
