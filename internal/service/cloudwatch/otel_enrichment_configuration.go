@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudwatch_otel_enrichment_configuration", name="OTel Enrichment Configuration")
@@ -42,7 +43,7 @@ type otelEnrichmentConfigurationResource struct {
 func (r *otelEnrichmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
@@ -50,7 +51,7 @@ func (r *otelEnrichmentConfigurationResource) Schema(ctx context.Context, req re
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -128,4 +129,15 @@ type otelEnrichmentConfigurationResourceModel struct {
 	framework.WithRegionModel
 	Enabled  types.Bool     `tfsdk:"enabled"`
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
+}
+
+func findOtelEnrichmentConfiguration(ctx context.Context, conn *cloudwatch.Client) (*cloudwatch.GetOTelEnrichmentConfigurationOutput, error) {
+	input := &cloudwatch.GetOTelEnrichmentConfigurationInput{}
+	
+	output, err := conn.GetOTelEnrichmentConfiguration(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	
+	return output, nil
 }
