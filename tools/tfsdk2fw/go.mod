@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.23.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.20 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.295.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.56.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.74.0 // indirect
@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emr v1.57.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emr v1.58.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.22 // indirect
@@ -143,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.138.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.139.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.3 // indirect
@@ -184,7 +184,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.88.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.93.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.5 // indirect
