@@ -1844,10 +1844,10 @@ type maintenanceModel struct {
 
 type vpcInterfaceModel struct {
 	Name                 types.String                                      `tfsdk:"name"`
-	NetworkInterfaceIDs  types.List                                        `tfsdk:"network_interface_ids"`
+	NetworkInterfaceIDs  fwtypes.ListValueOf[types.String]                 `tfsdk:"network_interface_ids"`
 	NetworkInterfaceType fwtypes.StringEnum[awstypes.NetworkInterfaceType] `tfsdk:"network_interface_type"`
 	RoleARN              fwtypes.ARN                                       `tfsdk:"role_arn"`
-	SecurityGroupIDs     types.Set                                         `tfsdk:"security_group_ids"`
+	SecurityGroupIDs     fwtypes.SetValueOf[types.String]                  `tfsdk:"security_group_ids"`
 	SubnetID             types.String                                      `tfsdk:"subnet_id"`
 }
 
@@ -1858,13 +1858,13 @@ type entitlementModel struct {
 	EntitlementARN                   types.String                                     `tfsdk:"arn"`
 	EntitlementStatus                fwtypes.StringEnum[awstypes.EntitlementStatus]   `tfsdk:"status"`
 	Name                             types.String                                     `tfsdk:"name"`
-	Subscribers                      types.List                                       `tfsdk:"subscriber"`
+	Subscribers                      fwtypes.ListValueOf[types.String]                `tfsdk:"subscriber"`
 }
 
 type outputModel struct {
 	BridgeARN                        types.String                                                  `tfsdk:"bridge_arn"`
-	BridgePorts                      types.List                                                    `tfsdk:"bridge_ports"`
-	CIDRAllowList                    types.List                                                    `tfsdk:"cidr_allow_list"`
+	BridgePorts                      fwtypes.ListValueOf[types.Int32]                              `tfsdk:"bridge_ports"`
+	CIDRAllowList                    fwtypes.ListValueOf[fwtypes.CIDRBlock]                        `tfsdk:"cidr_allow_list"`
 	DataTransferSubscriberFeePercent types.Int32                                                   `tfsdk:"data_transfer_subscriber_fee_percent"`
 	Description                      types.String                                                  `tfsdk:"description"`
 	Destination                      types.String                                                  `tfsdk:"destination"`
@@ -2473,9 +2473,11 @@ func flattenOutputs(ctx context.Context, outputs []awstypes.Output) ([]*outputMo
 		}
 
 		if len(out.BridgePorts) > 0 {
-			model.BridgePorts, _ = types.ListValueFrom(ctx, types.Int32Type, out.BridgePorts)
+			lv, _ := types.ListValueFrom(ctx, types.Int32Type, out.BridgePorts)
+			model.BridgePorts = fwtypes.ListValueOf[types.Int32]{ListValue: lv}
 		} else {
-			model.BridgePorts, _ = types.ListValueFrom(ctx, types.Int32Type, []int32{})
+			lv, _ := types.ListValueFrom(ctx, types.Int32Type, []int32{})
+			model.BridgePorts = fwtypes.ListValueOf[types.Int32]{ListValue: lv}
 		}
 
 		if out.OutputStatus != "" {
@@ -2492,9 +2494,11 @@ func flattenOutputs(ctx context.Context, outputs []awstypes.Output) ([]*outputMo
 			model.RemoteID = fwflex.StringToFramework(ctx, out.Transport.RemoteId)
 			model.SenderControlPort = fwflex.Int32ToFramework(ctx, out.Transport.SenderControlPort)
 			model.SenderIPAddress = fwflex.StringToFramework(ctx, out.Transport.SenderIpAddress)
-			model.CIDRAllowList, _ = types.ListValueFrom(ctx, fwtypes.CIDRBlockType, out.Transport.CidrAllowList)
+			lv, _ := types.ListValueFrom(ctx, fwtypes.CIDRBlockType, out.Transport.CidrAllowList)
+			model.CIDRAllowList = fwtypes.ListValueOf[fwtypes.CIDRBlock]{ListValue: lv}
 		} else {
-			model.CIDRAllowList, _ = types.ListValueFrom(ctx, fwtypes.CIDRBlockType, []string{})
+			lv, _ := types.ListValueFrom(ctx, fwtypes.CIDRBlockType, []string{})
+			model.CIDRAllowList = fwtypes.ListValueOf[fwtypes.CIDRBlock]{ListValue: lv}
 		}
 
 		if out.VpcInterfaceAttachment != nil {
