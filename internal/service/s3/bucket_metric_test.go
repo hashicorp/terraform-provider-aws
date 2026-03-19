@@ -768,7 +768,7 @@ func testAccBucketMetricConfig_directoryBucketBase(bucketName string) string {
 	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
- 
+
   location {
     name = local.location_name
   }
@@ -790,7 +790,7 @@ func testAccBucketMetricConfig_directoryBucketFilterPrefix(bucketName, metricNam
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
- 
+
   filter {
     prefix = %[2]q
   }
@@ -812,7 +812,7 @@ func testAccBucketMetricConfig_directoryBucketFilterAccessPoint(bucketName, metr
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
- 
+
   filter {
     access_point = aws_s3_access_point.test.arn
   }
@@ -825,7 +825,7 @@ func testAccBucketMetricConfig_directoryBucketFilterAccessPointAndPrefix(bucketN
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
- 
+
   filter {
     access_point = aws_s3_access_point.test.arn
     prefix       = %[2]q
@@ -839,7 +839,7 @@ func testAccBucketMetricConfig_directoryBucketFilterTags(bucketName, metricName 
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
- 
+
   filter {
     tags = {
       "tag1" = "value1"
