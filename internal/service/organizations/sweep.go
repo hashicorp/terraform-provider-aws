@@ -34,7 +34,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
 		"aws_organizations_account")
 
-	awsv2.Register("aws_organizations_service_access", sweepServiceAccesss)
+	awsv2.Register("aws_organizations_service_access", sweepServiceAccesses)
 }
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -244,7 +244,7 @@ func sweepListOrganizationalUnits(ctx context.Context, client *conns.AWSClient, 
 	return sweepResources, nil
 }
 
-func sweepServiceAccesss(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if skip, err := sweepPreCheck(ctx, client); err != nil {
 		return nil, err
 	} else if skip {
