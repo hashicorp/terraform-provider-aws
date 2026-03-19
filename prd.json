@@ -64,7 +64,7 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "This resource operates on IAM, not RDS directly. It looks up the proxy's RoleArn via DescribeDBProxies then attaches policy to that role."
     },
     {
@@ -80,7 +80,7 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Determine inline vs managed approach based on existing provider patterns (aws_iam_role_policy uses inline, aws_iam_role_policy_attachment uses managed)."
     },
     {
@@ -96,7 +96,7 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

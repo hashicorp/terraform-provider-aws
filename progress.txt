@@ -7,6 +7,10 @@
 - `make gen` must be run after adding `@SDKResource` annotations to register resources
 - `validIdentifier` is the standard validator for db_proxy_name fields
 - `verify.ValidARN` is used for ARN validation
+- Cross-service client access works from any package: `meta.(*conns.AWSClient).IAMClient(ctx)`
+- IAM SDK types alias: `awsiam "github.com/aws/aws-sdk-go-v2/service/iam/types"` avoids RDS types conflict
+- `tfresource.NewEmptyResultError()` takes no arguments
+- IAM policy documents come URL-encoded from AWS; use `url.QueryUnescape()` then `verify.PolicyToSet()`
 
 ---
 
@@ -30,4 +34,17 @@
 ## 2026-03-19 - US-003
 - No code changes needed — Read and Import were fully implemented in US-001
 - All acceptance criteria verified: DescribeDBProxies via findDBProxyByName, state removal on missing secret, import with db_proxy_name/secret_arn format
+---
+
+## 2026-03-19 - US-004, US-005, US-006
+- Implemented aws_db_proxy_policy_attachment resource with full CRUD + Import
+- Files changed: internal/service/rds/proxy_policy_attachment.go (new), internal/service/rds/exports_test.go, internal/service/rds/service_package_gen.go (generated)
+- **Learnings for future iterations:**
+  - Cross-service client access: `meta.(*conns.AWSClient).IAMClient(ctx)` works from any service package
+  - IAM role policy uses inline pattern (PutRolePolicy/GetRolePolicy/DeleteRolePolicy)
+  - IAM SDK types need alias import: `awsiam "github.com/aws/aws-sdk-go-v2/service/iam/types"` to avoid conflict with RDS types
+  - Proxy RoleArn must be parsed with `arn.Parse()` then extract role name from Resource field (`role/path/name`)
+  - `tfresource.NewEmptyResultError()` takes no arguments in this codebase
+  - Policy normalization uses `structure.NormalizeJsonString()` and `verify.PolicyToSet()` for read
+  - Policy document comes URL-encoded from AWS API, must `url.QueryUnescape()` it
 ---
