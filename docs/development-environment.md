@@ -82,7 +82,7 @@ provider_installation {
 
 ### Managing Go Cache
 
-Consistent work on the provider can cause your Go cache to reach hundreds of GB in just a few days due to the large number of dependencies and frequent builds. We recommend using [cachegoat](https://github.com/YakDriver/cachegoat) to help manage your Go cache size and setting up scheduled cache cleaning.
+Consistent work on the provider can cause your Go cache to reach hundreds of GB in just a few days due to the large number of dependencies and frequent builds. We recommend using [cachegoat](https://github.com/YakDriver/cachegoat) to help manage your Go cache size, setting up scheduled cache cleaning.
 
 Install cachegoat:
 
