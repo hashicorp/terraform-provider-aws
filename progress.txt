@@ -1,0 +1,33 @@
+## Codebase Patterns
+- RDS proxy resources use `@SDKResource` annotation (SDK V2 pattern), not Framework
+- Proxy resources reuse `findDBProxyByName()`, `waitDBProxyUpdated()` from proxy.go
+- Composite resource IDs use `/` separator with `SplitN` parsing (see proxy_target.go)
+- Auth configs on proxy use `UserAuthConfig` (input) vs `UserAuthConfigInfo` (output) types
+- Export test vars in `exports_test.go` alphabetically within sections
+- `make gen` must be run after adding `@SDKResource` annotations to register resources
+- `validIdentifier` is the standard validator for db_proxy_name fields
+- `verify.ValidARN` is used for ARN validation
+
+---
+
+## 2026-03-19 - US-001
+- Implemented aws_db_proxy_secret resource skeleton with full CRUD + Import
+- Files changed: internal/service/rds/proxy_secret.go (new), internal/service/rds/exports_test.go, internal/service/rds/service_package_gen.go (generated)
+- **Learnings for future iterations:**
+  - The resource actually implements full CRUD (not just stubs) since the create/read/delete logic for proxy secrets is straightforward (ModifyDBProxy to add/remove secret from auth list)
+  - Import uses `db_proxy_name/secret_arn` format parsed with SplitN(id, "/", 2)
+  - Auth config conversion from `UserAuthConfigInfo` (read response) to `UserAuthConfig` (modify input) requires manually mapping fields
+  - `go build ./internal/service/rds/...` takes ~2 minutes on this machine
+---
+
+## 2026-03-19 - US-002
+- No code changes needed — Create and Delete were fully implemented in US-001
+- All acceptance criteria verified: ModifyDBProxy calls, waiters, error handling, compilation, vet
+- **Learnings for future iterations:**
+  - When US-001 implements full CRUD instead of stubs, subsequent stories for the same operations can be marked as passing without code changes
+---
+
+## 2026-03-19 - US-003
+- No code changes needed — Read and Import were fully implemented in US-001
+- All acceptance criteria verified: DescribeDBProxies via findDBProxyByName, state removal on missing secret, import with db_proxy_name/secret_arn format
+---

@@ -28,6 +28,7 @@ var (
 	ResourceProxy                               = resourceProxy
 	ResourceProxyDefaultTargetGroup             = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint                       = resourceProxyEndpoint
+	ResourceProxyPolicyAttachment               = resourceProxyPolicyAttachment
 	ResourceProxySecret                         = resourceProxySecret
 	ResourceProxyTarget                         = resourceProxyTarget
 	ResourceReservedInstance                    = resourceReservedInstance

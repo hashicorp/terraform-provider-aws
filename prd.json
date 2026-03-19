@@ -1,0 +1,185 @@
+{
+  "project": "terraform-provider-aws",
+  "branchName": "ralph/rds-proxy-secret-and-policy",
+  "description": "Add aws_db_proxy_secret and aws_db_proxy_policy_attachment resources to manage RDS Proxy secrets and IAM policies independently from the proxy resource",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create aws_db_proxy_secret resource skeleton and schema",
+      "description": "As a contributor, I need the resource file scaffolding with schema so that CRUD operations can be implemented.",
+      "acceptanceCriteria": [
+        "File internal/service/rds/proxy_secret.go exists with @SDKResource or @FrameworkResource annotation",
+        "Resource schema defines db_proxy_name (Required, ForceNew, string), secret_arn (Required, ForceNew, string), and id (Computed)",
+        "CRUD function stubs exist (create, read, delete) even if not yet implemented",
+        "Resource is registered in the provider via make gen",
+        "Code compiles (go build ./...)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Follow existing proxy_*.go file patterns in internal/service/rds/. Use findDBProxyByName() and waiter patterns from proxy.go."
+    },
+    {
+      "id": "US-002",
+      "title": "Implement Create and Delete for aws_db_proxy_secret",
+      "description": "As a Terraform user, I want to create and delete a proxy-secret association so that my RDS Proxy can authenticate using credentials stored in Secrets Manager.",
+      "acceptanceCriteria": [
+        "Create calls ModifyDBProxy to add the secret ARN to the proxy's Auth configuration",
+        "Delete calls ModifyDBProxy to remove the secret ARN from the proxy's auth configuration",
+        "Handles the proxy's modifying/available status with appropriate waiters",
+        "Error handling follows provider conventions (create.AppendDiagError, resource-not-found detection)",
+        "Code compiles and make lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Reuse findDBProxyByName(), waitDBProxyUpdated(), expandUserAuthConfigs(), flattenUserAuthConfigInfos() from proxy.go."
+    },
+    {
+      "id": "US-003",
+      "title": "Implement Read and Import for aws_db_proxy_secret",
+      "description": "As a Terraform user, I want to read and import a proxy-secret association so I can manage existing associations.",
+      "acceptanceCriteria": [
+        "Read calls DescribeDBProxies and checks that the secret ARN is present in the proxy's auth list",
+        "Read removes from state if the secret ARN is not found (handles out-of-band deletion)",
+        "Import ID format is db_proxy_name/secret_arn",
+        "terraform import aws_db_proxy_secret.example my-proxy/arn:aws:secretsmanager:... populates state correctly",
+        "Code compiles and make lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Create aws_db_proxy_policy_attachment resource skeleton and schema",
+      "description": "As a contributor, I need the resource file scaffolding for the policy attachment resource.",
+      "acceptanceCriteria": [
+        "File internal/service/rds/proxy_policy_attachment.go exists with resource registration annotation",
+        "Resource schema defines db_proxy_name (Required, ForceNew, string), policy_name (Required, ForceNew, string), policy_document (Required, string, JSON IAM policy), and id (Computed)",
+        "CRUD function stubs exist (create, read, update, delete)",
+        "Resource is registered in the provider via make gen",
+        "Code compiles (go build ./...)",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "This resource operates on IAM, not RDS directly. It looks up the proxy's RoleArn via DescribeDBProxies then attaches policy to that role."
+    },
+    {
+      "id": "US-005",
+      "title": "Implement Create and Delete for aws_db_proxy_policy_attachment",
+      "description": "As a Terraform user, I want to attach and remove an IAM policy on an RDS Proxy's execution role so the proxy can access secrets.",
+      "acceptanceCriteria": [
+        "Create looks up the proxy's IAM RoleArn via DescribeDBProxies",
+        "Create attaches the policy to the role (inline via PutRolePolicy or managed via CreatePolicy+AttachRolePolicy)",
+        "Delete removes the policy from the execution role",
+        "Error handling follows provider conventions",
+        "Code compiles and make lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Determine inline vs managed approach based on existing provider patterns (aws_iam_role_policy uses inline, aws_iam_role_policy_attachment uses managed)."
+    },
+    {
+      "id": "US-006",
+      "title": "Implement Read, Update, and Import for aws_db_proxy_policy_attachment",
+      "description": "As a Terraform user, I want to read, update, and import a policy attachment.",
+      "acceptanceCriteria": [
+        "Read verifies the policy is still attached to the proxy's execution role; removes from state if not found",
+        "Update supports updating policy_document in-place",
+        "Import ID format is db_proxy_name/policy_name",
+        "terraform import aws_db_proxy_policy_attachment.example my-proxy/rds-proxy-access populates state correctly",
+        "Code compiles and make lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Acceptance tests for aws_db_proxy_secret",
+      "description": "As a contributor, I need comprehensive acceptance tests to validate the proxy secret resource.",
+      "acceptanceCriteria": [
+        "TestAccRDSProxySecret_basic test creates a proxy-secret association, verifies it exists, destroys it",
+        "TestAccRDSProxySecret_disappears test verifies graceful handling when the association is removed outside Terraform",
+        "Import state verification step included in basic test",
+        "testAccCheckRDSProxySecretExists() helper implemented",
+        "testAccCheckRDSProxySecretDestroy() helper implemented",
+        "Base test config reuses common infrastructure via acctest.ConfigCompose()",
+        "Tests use sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) for resource naming",
+        "make lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Follow patterns from proxy_test.go. Tests must pass in us-west-2. Use resource.ParallelTest()."
+    },
+    {
+      "id": "US-008",
+      "title": "Acceptance tests for aws_db_proxy_policy_attachment",
+      "description": "As a contributor, I need comprehensive acceptance tests to validate the policy attachment resource.",
+      "acceptanceCriteria": [
+        "TestAccRDSProxyPolicyAttachment_basic test creates a policy attachment, verifies it exists, destroys it",
+        "TestAccRDSProxyPolicyAttachment_disappears test verifies graceful handling when the policy is removed outside Terraform",
+        "TestAccRDSProxyPolicyAttachment_update test verifies updating policy_document works correctly",
+        "Import state verification step included in basic test",
+        "testAccCheckRDSProxyPolicyAttachmentExists() helper implemented",
+        "testAccCheckRDSProxyPolicyAttachmentDestroy() helper implemented",
+        "make lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Follow patterns from proxy_test.go. Tests must pass in us-west-2. Use resource.ParallelTest()."
+    },
+    {
+      "id": "US-009",
+      "title": "Documentation for aws_db_proxy_secret",
+      "description": "As a Terraform user, I want reference documentation so I know how to use the proxy secret resource.",
+      "acceptanceCriteria": [
+        "File website/docs/r/db_proxy_secret.html.markdown exists",
+        "Includes page title, subcategory, description, example usage, argument reference, attribute reference, import section",
+        "Example shows creating a Secrets Manager secret and associating it with a proxy",
+        "Import section documents the db_proxy_name/secret_arn format",
+        "make docs-lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Follow the format of website/docs/r/db_proxy.html.markdown and other existing proxy resource docs."
+    },
+    {
+      "id": "US-010",
+      "title": "Documentation for aws_db_proxy_policy_attachment",
+      "description": "As a Terraform user, I want reference documentation for the policy attachment resource.",
+      "acceptanceCriteria": [
+        "File website/docs/r/db_proxy_policy_attachment.html.markdown exists",
+        "Includes page title, subcategory, description, example usage, argument reference, attribute reference, import section",
+        "Example shows creating an IAM policy document and attaching it to a proxy",
+        "Import section documents the db_proxy_name/policy_name format",
+        "make docs-lint passes",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Follow the format of existing proxy resource docs."
+    },
+    {
+      "id": "US-011",
+      "title": "Changelog entry for new resources",
+      "description": "As a contributor, I need to add a changelog entry for the new resources.",
+      "acceptanceCriteria": [
+        "A .changelog file is created with entries for both new resources",
+        "Follows existing changelog format (e.g., aws_db_proxy_secret: New resource)",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "PR number may not be known yet; use a placeholder if needed."
+    }
+  ]
+}
