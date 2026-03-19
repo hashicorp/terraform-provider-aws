@@ -194,3 +194,22 @@ func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInpu
 		}
 	}
 }
+
+func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.VpcEndpoint, error] {
+	return func(yield func(awstypes.VpcEndpoint, error) bool) {
+		pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.VpcEndpoint](), fmt.Errorf("listing EC2 VPC Endpoints: %w", err))
+				return
+			}
+
+			for _, item := range page.VpcEndpoints {
+				if !yield(item, nil) {
+					return
+				}
+			}
+		}
+	}
+}

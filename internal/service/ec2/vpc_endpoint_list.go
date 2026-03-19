@@ -6,11 +6,9 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -131,25 +129,6 @@ func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListReq
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) iter.Seq2[awstypes.VpcEndpoint, error] {
-	return func(yield func(awstypes.VpcEndpoint, error) bool) {
-		pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.VpcEndpoint{}, fmt.Errorf("listing VPC Endpoint resources: %w", err))
-				return
-			}
-
-			for _, item := range page.VpcEndpoints {
-				if !yield(item, nil) {
-					return
-				}
 			}
 		}
 	}

@@ -2586,24 +2586,17 @@ func findVPCEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
-	var output []awstypes.VpcEndpoint
+func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) ([]awstypes.VpcEndpoint, error) {
+	output, err := tfslices.CollectWithError(listVPCEndpoints(ctx, conn, input, optFns...))
 
-	pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.VpcEndpoints...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
