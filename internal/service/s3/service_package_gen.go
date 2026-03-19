@@ -421,6 +421,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newBucketOwnershipControlsResourceAsListResource,
+			TypeName: "aws_s3_bucket_ownership_controls",
+			Name:     "Bucket Ownership Controls",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
 			Factory:  newBucketPolicyResourceAsListResource,
 			TypeName: "aws_s3_bucket_policy",
 			Name:     "Bucket Policy",

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add `bucket_namespace` argument in support of [account regional namespaces for general purpose buckets](https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-gp-buckets)
+```
