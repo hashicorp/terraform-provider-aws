@@ -61,7 +61,7 @@ resource "aws_elasticache_user" "test" {
   access_string        = "on ~* +@all"
   engine               = "redis"
   passwords_wo         = var.elasticache_password
-  passwords_wo_version = 1  # Increment to trigger password update
+  passwords_wo_version = 1 # Increment to trigger password update
 }
 ```
 

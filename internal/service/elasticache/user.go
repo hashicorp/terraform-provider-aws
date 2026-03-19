@@ -163,7 +163,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.AuthenticationMode = expandAuthenticationMode(d, v.([]any)[0].(map[string]any))
+		input.AuthenticationMode = expandAuthenticationMode(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("passwords"); ok && v.(*schema.Set).Len() > 0 {
@@ -265,7 +265,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		if d.HasChange("authentication_mode") {
 			if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.AuthenticationMode = expandAuthenticationMode(d, v.([]any)[0].(map[string]any))
+				input.AuthenticationMode = expandAuthenticationMode(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -450,7 +450,7 @@ func waitUserDeleted(ctx context.Context, conn *elasticache.Client, id string, t
 	return nil, err
 }
 
-func expandAuthenticationMode(d *schema.ResourceData, tfMap map[string]any) *awstypes.AuthenticationMode {
+func expandAuthenticationMode(tfMap map[string]any) *awstypes.AuthenticationMode {
 	if tfMap == nil {
 		return nil
 	}
