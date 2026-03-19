@@ -34,7 +34,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
 		"aws_organizations_account")
 
-	awsv2.Register("aws_organizations_aws_service_access", sweepServiceAccesss)
+	awsv2.Register("aws_organizations_service_access", sweepServiceAccesss)
 }
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -264,7 +264,7 @@ func sweepServiceAccesss(ctx context.Context, client *conns.AWSClient) ([]sweep.
 
 		for _, service := range page.EnabledServicePrincipals {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newServiceAccessResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(service.ServicePrincipal))),
+				sweepfw.NewAttribute("service_principal", aws.ToString(service.ServicePrincipal))),
 			)
 		}
 	}
