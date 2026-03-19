@@ -5,9 +5,14 @@ FEATURES:
 * **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
 * **New List Resource:** `aws_vpc_endpoint` ([#46977](https://github.com/hashicorp/terraform-provider-aws/issues/46977))
 
+ENHANCEMENTS:
+
+* resource/aws_mq_broker: Change `user` block to Optional ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
+
 BUG FIXES:
 
 * resource/aws_cloudfront_distribution_tenant: Fix panic when managed certificate is not found during creation ([#46982](https://github.com/hashicorp/terraform-provider-aws/issues/46982))
+* resource/aws_mq_broker: Fix non-idempotent behavior for RabbitMQ brokers with `user` block ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
 
 ## 6.37.0 (March 18, 2026)
 
