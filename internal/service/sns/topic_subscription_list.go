@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -65,7 +66,7 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 	tflog.Info(ctx, "Listing SNS Topic Subscriptions")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for subscription, err := range listSubscriptionsByTopic(ctx, conn, &input) {
+		for subscription, err := range tfiter.ConcatValuesWithError(listSubscriptionsByTopic(ctx, conn, &input)) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
