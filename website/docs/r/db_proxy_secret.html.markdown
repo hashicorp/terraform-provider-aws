@@ -40,8 +40,13 @@ resource "aws_secretsmanager_secret_version" "additional" {
 }
 
 resource "aws_db_proxy_secret" "example" {
-  db_proxy_name = aws_db_proxy.example.name
-  secret_arn    = aws_secretsmanager_secret.additional.arn
+  db_proxy_name             = aws_db_proxy.example.name
+  secret_arn                = aws_secretsmanager_secret.additional.arn
+  auth_scheme               = "SECRETS"
+  client_password_auth_type = "MYSQL_NATIVE_PASSWORD"
+  iam_auth                  = "DISABLED"
+  description               = "Additional database user"
+  username                  = "additional_user"
 }
 ```
 
@@ -51,6 +56,11 @@ This resource supports the following arguments:
 
 * `db_proxy_name` - (Required, Forces new resource) The name of the DB proxy to associate the secret with.
 * `secret_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Secrets Manager secret that the proxy uses to authenticate to the database.
+* `auth_scheme` - (Optional) The type of authentication that the proxy uses for connections from the proxy to the underlying database. Valid values: `SECRETS`. Defaults to `SECRETS`.
+* `client_password_auth_type` - (Optional) The type of authentication the proxy uses for connections from clients. Valid values: `MYSQL_NATIVE_PASSWORD`, `POSTGRES_SCRAM_SHA_256`, `POSTGRES_MD5`, `SQL_SERVER_AUTHENTICATION`. If not specified, AWS determines the default based on the proxy's engine family.
+* `description` - (Optional) A user-specified description about the authentication used by a proxy to log in as a specific database user.
+* `iam_auth` - (Optional) Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy. Valid values: `DISABLED`, `REQUIRED`, `ENABLED`. Defaults to `DISABLED`.
+* `username` - (Optional) The name of the database user to which the proxy connects.
 
 ## Attribute Reference
 
@@ -63,6 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `30m`)
+- `update` - (Default `30m`)
 - `delete` - (Default `30m`)
 
 ## Import

@@ -38,7 +38,10 @@ func TestAccRDSProxySecret_basic(t *testing.T) {
 				Config: testAccProxySecretConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxySecretExists(ctx, t, resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, "auth_scheme", "SECRETS"),
+					resource.TestCheckResourceAttrSet(resourceName, "client_password_auth_type"),
 					resource.TestCheckResourceAttr(resourceName, "db_proxy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "iam_auth", "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", "aws_secretsmanager_secret.additional", names.AttrARN),
 				),
 			},
@@ -186,4 +189,100 @@ resource "aws_db_proxy_secret" "test" {
   depends_on = [aws_secretsmanager_secret_version.additional]
 }
 `)
+}
+
+func TestAccRDSProxySecret_authConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbProxy types.DBProxy
+	resourceName := "aws_db_proxy_secret.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxySecretDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxySecretConfig_authConfig(rName, "MYSQL_NATIVE_PASSWORD", "DISABLED", "test description", "db_user2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProxySecretExists(ctx, t, resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, "auth_scheme", "SECRETS"),
+					resource.TestCheckResourceAttr(resourceName, "client_password_auth_type", "MYSQL_NATIVE_PASSWORD"),
+					resource.TestCheckResourceAttr(resourceName, "db_proxy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, "iam_auth", "DISABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "secret_arn", "aws_secretsmanager_secret.additional", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "db_user2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSProxySecret_authConfigUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbProxy types.DBProxy
+	resourceName := "aws_db_proxy_secret.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxySecretDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxySecretConfig_authConfig(rName, "MYSQL_NATIVE_PASSWORD", "DISABLED", "initial description", "db_user2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProxySecretExists(ctx, t, resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, "client_password_auth_type", "MYSQL_NATIVE_PASSWORD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "initial description"),
+					resource.TestCheckResourceAttr(resourceName, "iam_auth", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccProxySecretConfig_authConfig(rName, "MYSQL_NATIVE_PASSWORD", "REQUIRED", "updated description", "db_user2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProxySecretExists(ctx, t, resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
+					resource.TestCheckResourceAttr(resourceName, "iam_auth", "REQUIRED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccProxySecretConfig_authConfig(rName, clientPasswordAuthType, iamAuth, description, username string) string {
+	return acctest.ConfigCompose(testAccProxySecretConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_proxy_secret" "test" {
+  db_proxy_name             = aws_db_proxy.test.name
+  secret_arn                = aws_secretsmanager_secret.additional.arn
+  auth_scheme               = "SECRETS"
+  client_password_auth_type = %[1]q
+  iam_auth                  = %[2]q
+  description               = %[3]q
+  username                  = %[4]q
+
+  depends_on = [aws_secretsmanager_secret_version.additional]
+}
+`, clientPasswordAuthType, iamAuth, description, username))
 }
