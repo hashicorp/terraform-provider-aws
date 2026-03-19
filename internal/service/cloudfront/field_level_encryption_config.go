@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -143,7 +143,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	apiObject := &awstypes.FieldLevelEncryptionConfig{
-		CallerReference: aws.String(sdkid.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
