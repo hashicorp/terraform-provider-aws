@@ -1,0 +1,118 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Trees",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.treeModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Trees",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.treeModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Trees",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.treeModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping XML wrapper split - direct field match found",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Oaks",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Trees",
+    "autoflex.target.fieldname": "Oak",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.treeModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Oaks",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Trees",
+    "autoflex.target.fieldname": "Oak",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.treeModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Oaks",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oaks",
+    "autoflex.target.path": "Oak",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel·106]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Diseased",
+    "autoflex.source.path": "Oaks",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oaks",
+    "autoflex.target.fieldname": "Diseased",
+    "autoflex.target.path": "Oak",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Oaks.Diseased",
+    "autoflex.source.type": "*bool",
+    "autoflex.target.path": "Oak.Diseased",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.BoolValue"
+  },
+  {
+    "@level": "debug",
+    "@message": "No corresponding target field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Quantity",
+    "autoflex.source.path": "Oaks",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oaks",
+    "autoflex.target.path": "Oak",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "Oaks",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oaks",
+    "autoflex.target.fieldname": "Item",
+    "autoflex.target.path": "Oak",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakModel"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Oaks.Items",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oak",
+    "autoflex.target.path": "Oak.Item",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakItemModel·105]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Oaks.Items",
+    "autoflex.source.size": 0,
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Oak",
+    "autoflex.target.path": "Oak.Item",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.oakItemModel·105]"
+  }
+]

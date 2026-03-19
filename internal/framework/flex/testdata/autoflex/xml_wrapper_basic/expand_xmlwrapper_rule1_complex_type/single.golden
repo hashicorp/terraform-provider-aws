@@ -1,0 +1,158 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.fruitModel",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Fruits"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.fruitModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Fruits"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: Found xmlwrapper tag",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Apple",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.fruitModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Fruits",
+    "xmlWrapperField": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Apple",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.fruitModel",
+    "autoflex.target.fieldname": "Apples",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Fruits"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples",
+    "xmlWrapper": true,
+    "xmlWrapperField": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding NestedObjectCollection to XML wrapper",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: Checking for Rule 2 pattern",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples",
+    "fromSlice_len": 1,
+    "nested_kind": "ptr"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: Using Rule 1 - direct collection to XML wrapper",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding Rule 1 XML wrapper (direct collection)",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting nested objects to items",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Apple",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel·70]",
+    "autoflex.target.path": "Apples",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apples",
+    "items_count": 1,
+    "items_type": "[]flex.Apple"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apple"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Name",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel",
+    "autoflex.target.fieldname": "Name",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apple"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Name",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "Name",
+    "autoflex.target.type": "*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Color",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.appleModel",
+    "autoflex.target.fieldname": "Color",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Apple"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Color",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "Color",
+    "autoflex.target.type": "*string"
+  }
+]
