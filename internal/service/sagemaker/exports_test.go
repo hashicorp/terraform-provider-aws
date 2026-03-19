@@ -3,6 +3,14 @@
 
 package sagemaker
 
+type (
+	TrainingJobAlgorithmSpecificationModel = trainingJobAlgorithmSpecificationModel
+	TrainingJobMetricDefinitionModel       = trainingJobMetricDefinitionModel
+	TrainingJobTrainingImageConfigModel    = trainingJobTrainingImageConfigModel
+	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
+	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
+)
+
 // Exports for use in tests only.
 var (
 	ResourceApp                                    = resourceApp
@@ -90,6 +98,9 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+
+	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition         = normalizeStoppingCondition
 
 	ValidName   = validName
 	ValidPrefix = validPrefix

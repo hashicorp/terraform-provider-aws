@@ -10,6 +10,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,6 +31,163 @@ const (
 	trainingJobNovaModelARNEnvVar = "SAGEMAKER_TRAINING_JOB_NOVA_MODEL_ARN"
 	trainingJobCustomImageEnvVar  = "SAGEMAKER_TRAINING_JOB_CUSTOM_IMAGE"
 )
+
+func TestNormalizeAlgoSpecMetricDefinitions(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	injectedMetrics := testTrainingJobMetricDefinitionsValue(ctx, []*tfsagemaker.TrainingJobMetricDefinitionModel{
+		{
+			Name:  types.StringValue("aws:loss"),
+			Regex: types.StringValue("aws=(.*)"),
+		},
+	})
+
+	nullMetrics := fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobMetricDefinitionModel](ctx)
+
+	testCases := []struct {
+		name   string
+		config fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel]
+		remote fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel]
+		want   fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel]
+	}{
+		{
+			name:   "config omitted suppresses injected metric definitions",
+			config: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobAlgorithmSpecificationModel](ctx),
+			remote: testTrainingJobAlgorithmSpecificationValue(ctx, injectedMetrics),
+			want:   testTrainingJobAlgorithmSpecificationValue(ctx, nullMetrics),
+		},
+		{
+			name:   "unknown config value is a no op",
+			config: fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.TrainingJobAlgorithmSpecificationModel](ctx),
+			remote: testTrainingJobAlgorithmSpecificationValue(ctx, injectedMetrics),
+			want:   testTrainingJobAlgorithmSpecificationValue(ctx, injectedMetrics),
+		},
+		{
+			name:   "empty target is left unchanged",
+			config: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobAlgorithmSpecificationModel](ctx),
+			remote: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobAlgorithmSpecificationModel](ctx),
+			want:   fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobAlgorithmSpecificationModel](ctx),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.remote
+			var diags diag.Diagnostics
+
+			tfsagemaker.NormalizeAlgoSpecMetricDefinitions(ctx, testCase.config, &got, &diags)
+
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+
+			if !got.Equal(testCase.want) {
+				t.Errorf("got = %#v, want = %#v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestNormalizeStoppingCondition(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	targetStoppingCondition := testTrainingJobStoppingConditionValue(ctx, 86400)
+	explicitStoppingCondition := testTrainingJobStoppingConditionValue(ctx, 3600)
+	serverlessJobConfig := testTrainingJobServerlessJobConfigValue(ctx)
+
+	testCases := []struct {
+		name                string
+		config              fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobStoppingConditionModel]
+		serverlessJobConfig fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobServerlessJobConfigModel]
+		target              fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobStoppingConditionModel]
+		want                fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobStoppingConditionModel]
+	}{
+		{
+			name:                "serverless default is suppressed when config omitted stopping condition",
+			config:              fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobStoppingConditionModel](ctx),
+			serverlessJobConfig: serverlessJobConfig,
+			target:              targetStoppingCondition,
+			want:                fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobStoppingConditionModel](ctx),
+		},
+		{
+			name:                "explicit stopping condition is preserved for serverless jobs",
+			config:              explicitStoppingCondition,
+			serverlessJobConfig: serverlessJobConfig,
+			target:              targetStoppingCondition,
+			want:                targetStoppingCondition,
+		},
+		{
+			name:                "unknown config value is a no op",
+			config:              fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.TrainingJobStoppingConditionModel](ctx),
+			serverlessJobConfig: serverlessJobConfig,
+			target:              targetStoppingCondition,
+			want:                targetStoppingCondition,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.target
+
+			tfsagemaker.NormalizeStoppingCondition(ctx, testCase.config, testCase.serverlessJobConfig, &got)
+
+			if !got.Equal(testCase.want) {
+				t.Errorf("got = %#v, want = %#v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func testTrainingJobAlgorithmSpecificationValue(ctx context.Context, metricDefinitions fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobMetricDefinitionModel]) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel] {
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobAlgorithmSpecificationModel{
+		{
+			AlgorithmName:                    types.StringNull(),
+			ContainerArguments:               fwtypes.NewListValueOfNull[basetypes.StringValue](ctx),
+			ContainerEntrypoint:              fwtypes.NewListValueOfNull[basetypes.StringValue](ctx),
+			EnableSageMakerMetricsTimeSeries: types.BoolNull(),
+			MetricDefinitions:                metricDefinitions,
+			TrainingImage:                    types.StringValue("123456789012.dkr.ecr.us-west-2.amazonaws.com/test:latest"), //lintignore:AWSAT003
+			TrainingImageConfig:              fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobTrainingImageConfigModel](ctx),
+			TrainingInputMode:                types.StringNull(),
+		},
+	})
+}
+
+func testTrainingJobMetricDefinitionsValue(ctx context.Context, metricDefinitions []*tfsagemaker.TrainingJobMetricDefinitionModel) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobMetricDefinitionModel] {
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, metricDefinitions)
+}
+
+func testTrainingJobStoppingConditionValue(ctx context.Context, maxRuntimeInSeconds int64) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobStoppingConditionModel] {
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobStoppingConditionModel{
+		{
+			MaxPendingTimeInSeconds: types.Int64Null(),
+			MaxRuntimeInSeconds:     types.Int64Value(maxRuntimeInSeconds),
+			MaxWaitTimeInSeconds:    types.Int64Null(),
+		},
+	})
+}
+
+func testTrainingJobServerlessJobConfigValue(ctx context.Context) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobServerlessJobConfigModel] {
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobServerlessJobConfigModel{
+		{
+			AcceptEULA:             types.BoolNull(),
+			BaseModelARN:           types.StringValue("arn:aws:sagemaker:us-west-2:aws:hub-content/example/Model/test/1.0.0"), //lintignore:AWSAT003,AWSAT005
+			CustomizationTechnique: fwtypes.StringEnumNull[awstypes.CustomizationTechnique](),
+			EvaluationType:         fwtypes.StringEnumNull[awstypes.EvaluationType](),
+			EvaluatorARN:           types.StringNull(),
+			JobType:                fwtypes.StringEnumNull[awstypes.ServerlessJobType](),
+			Peft:                   fwtypes.StringEnumNull[awstypes.Peft](),
+		},
+	})
+}
 
 func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
