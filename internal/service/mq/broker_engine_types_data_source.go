@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -86,7 +86,7 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 		input.NextToken = output.NextToken
 	}
 
-	d.SetId(sdkid.UniqueId())
+	d.SetId(create.UniqueId(ctx))
 
 	if err := d.Set("broker_engine_types", flattenBrokerList(engineTypes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting broker_engine_types: %s", err)
