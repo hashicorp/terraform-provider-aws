@@ -412,7 +412,7 @@ func TestCollectWithError(t *testing.T) {
 	}
 }
 
-func TestCollectAndConcatWithError(t *testing.T) {
+func TestCollectWithErrorAndConcat(t *testing.T) {
 	t.Parallel()
 
 	noError := func(yield func([]int, error) bool) {
@@ -455,14 +455,14 @@ func TestCollectAndConcatWithError(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := CollectAndConcatWithError(test.input)
+			got, err := CollectWithErrorAndConcat(test.input)
 
 			if got, want := err != nil, test.wantErr; !cmp.Equal(got, want) {
-				t.Errorf("CollectAndConcatWithError() err %t, want %t", got, want)
+				t.Errorf("CollectWithErrorAndConcat() err %t, want %t", got, want)
 			}
 			if err == nil {
 				if got, want := len(got), test.wantLen; !cmp.Equal(got, want) {
-					t.Errorf("CollectAndConcatWithError() len %d, want %d", got, want)
+					t.Errorf("CollectWithErrorAndConcat() len %d, want %d", got, want)
 				}
 			}
 		})
