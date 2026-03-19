@@ -179,6 +179,29 @@ func TestAccWAFV2WebACLRule_managedRuleGroup(t *testing.T) {
 					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_managedRuleGroupWithRuleActionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupWithRuleActionOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.name", "SizeRestrictions_BODY"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.rule_action_override.0.action_to_use.#", "1"),
@@ -1513,6 +1536,52 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 
 func testAccWebACLRuleConfig_managedRuleGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  override_action {
+    none {}
+  }
+
+  statement {
+    managed_rule_group_statement {
+      name        = "AWSManagedRulesCommonRuleSet"
+      vendor_name = "AWS"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_managedRuleGroupWithRuleActionOverride(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = %[1]q
