@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
+* **New List Resource:** `aws_vpc_endpoint` ([#46977](https://github.com/hashicorp/terraform-provider-aws/issues/46977))
 
 ## 6.37.0 (March 18, 2026)
 
