@@ -1362,12 +1362,8 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
-	if len(tfList) == 0 {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
-	}
-
-	if tfList[0] == nil {
-		return &awstypes.EmailMfaConfigType{}
 	}
 
 	tfMap := tfList[0].(map[string]any)
@@ -1379,6 +1375,10 @@ func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
 
 	if v, ok := tfMap["subject"].(string); ok && v != "" {
 		apiObject.Subject = aws.String(v)
+	}
+
+	if apiObject.Message == nil && apiObject.Subject == nil {
+		return nil
 	}
 
 	return apiObject
@@ -1471,17 +1471,20 @@ func flattenEmailMFAConfigType(apiObject *awstypes.EmailMfaConfigType) []any {
 
 	tfMap := map[string]any{}
 
-	if v := apiObject.Message; v != nil {
+	if v := apiObject.Message; v != nil && aws.ToString(v) != "" {
 		tfMap[names.AttrMessage] = aws.ToString(v)
 	}
 
-	if v := apiObject.Subject; v != nil {
+	if v := apiObject.Subject; v != nil && aws.ToString(v) != "" {
 		tfMap["subject"] = aws.ToString(v)
+	}
+
+	if len(tfMap) == 0 {
+		return nil
 	}
 
 	return []any{tfMap}
 }
-
 func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfigType) []any {
 	if apiObject == nil {
 		return nil
