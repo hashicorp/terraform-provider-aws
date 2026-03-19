@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -295,7 +294,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (*cloudformation.CreateStackInstancesOutput, error) {
-			input.OperationId = aws.String(sdkid.UniqueId())
+			input.OperationId = aws.String(create.UniqueId(ctx))
 
 			return conn.CreateStackInstances(ctx, input)
 		},
@@ -388,7 +387,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 		input := &cloudformation.UpdateStackInstancesInput{
 			Accounts:           []string{accountOrOrgID},
-			OperationId:        aws.String(sdkid.UniqueId()),
+			OperationId:        aws.String(create.UniqueId(ctx)),
 			ParameterOverrides: []awstypes.Parameter{},
 			Regions:            []string{region},
 			StackSetName:       aws.String(stackSetName),
@@ -433,7 +432,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	input := &cloudformation.DeleteStackInstancesInput{
 		Accounts:     []string{accountOrOrgID},
-		OperationId:  aws.String(sdkid.UniqueId()),
+		OperationId:  aws.String(create.UniqueId(ctx)),
 		Regions:      []string{region},
 		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
 		StackSetName: aws.String(stackSetName),

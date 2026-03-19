@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -147,7 +147,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	requestToken := sdkid.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
@@ -281,7 +281,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	requestToken := sdkid.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	input := &cloudformation.UpdateStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),
@@ -352,7 +352,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Stack: %s", d.Id())
-	requestToken := sdkid.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	input := cloudformation.DeleteStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),

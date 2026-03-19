@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -149,7 +149,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	typeName := d.Get("type_name").(string)
 	inputRT := cloudformation.RegisterTypeInput{
-		ClientRequestToken:   aws.String(sdkid.UniqueId()),
+		ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 		SchemaHandlerPackage: aws.String(d.Get("schema_handler_package").(string)),
 		TypeName:             aws.String(typeName),
 	}
