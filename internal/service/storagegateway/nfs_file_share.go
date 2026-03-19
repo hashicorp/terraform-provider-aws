@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -231,7 +231,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &storagegateway.CreateNFSFileShareInput{
 		ClientList:           flex.ExpandStringValueSet(d.Get("client_list").(*schema.Set)),
-		ClientToken:          aws.String(sdkid.UniqueId()),
+		ClientToken:          aws.String(create.UniqueId(ctx)),
 		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
