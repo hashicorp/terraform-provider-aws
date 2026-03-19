@@ -23,7 +23,6 @@ import (
 
 func TestAccCloudWatchOtelEnrichmentConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config cloudwatch.GetOTelEnrichmentConfigurationOutput
 	resourceName := "aws_cloudwatch_otel_enrichment_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -39,7 +38,7 @@ func TestAccCloudWatchOtelEnrichmentConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOtelEnrichmentConfigurationConfig_basic(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOtelEnrichmentConfigurationExists(ctx, t, resourceName, &config),
+					testAccCheckOtelEnrichmentConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -54,7 +53,6 @@ func TestAccCloudWatchOtelEnrichmentConfiguration_basic(t *testing.T) {
 
 func TestAccCloudWatchOtelEnrichmentConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config cloudwatch.GetOTelEnrichmentConfigurationOutput
 	resourceName := "aws_cloudwatch_otel_enrichment_configuration.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -70,7 +68,7 @@ func TestAccCloudWatchOtelEnrichmentConfiguration_disappears(t *testing.T) {
 			{
 				Config: testAccOtelEnrichmentConfigurationConfig_basic(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOtelEnrichmentConfigurationExists(ctx, t, resourceName, &config),
+					testAccCheckOtelEnrichmentConfigurationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceOtelEnrichmentConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,7 +106,7 @@ func testAccCheckOtelEnrichmentConfigurationDestroy(ctx context.Context, t *test
 	}
 }
 
-func testAccCheckOtelEnrichmentConfigurationExists(ctx context.Context, t *testing.T, name string, config *cloudwatch.GetOTelEnrichmentConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckOtelEnrichmentConfigurationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -121,12 +119,10 @@ func testAccCheckOtelEnrichmentConfigurationExists(ctx context.Context, t *testi
 
 		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
-		resp, err := tfcloudwatch.FindOtelEnrichmentConfiguration(ctx, conn)
+		_, err := tfcloudwatch.FindOtelEnrichmentConfiguration(ctx, conn)
 		if err != nil {
 			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameOtelEnrichmentConfiguration, rs.Primary.ID, err)
 		}
-
-		*config = *resp
 
 		return nil
 	}
