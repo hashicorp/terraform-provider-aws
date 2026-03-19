@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -168,6 +169,40 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_vectorOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID, endpoints.ApSoutheast2RegionID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_vectorOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "VECTORSEARCH"),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.serverless_vector_acceleration", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -360,5 +395,23 @@ resource "aws_opensearchserverless_collection" "test" {
   depends_on = [aws_opensearchserverless_security_policy.test]
 }
 `, rName, key1, value1, key2, value2),
+	)
+}
+
+func testAccCollectionConfig_vectorOptions(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+  type = "VECTORSEARCH"
+
+  vector_options = {
+    serverless_vector_acceleration = "ENABLED"
+  }
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName),
 	)
 }

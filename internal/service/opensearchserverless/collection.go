@@ -16,8 +16,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -29,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,18 +54,23 @@ func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, e
 
 type collectionResourceModel struct {
 	framework.WithRegionModel
-	ARN                types.String   `tfsdk:"arn"`
-	CollectionEndpoint types.String   `tfsdk:"collection_endpoint"`
-	DashboardEndpoint  types.String   `tfsdk:"dashboard_endpoint"`
-	Description        types.String   `tfsdk:"description"`
-	ID                 types.String   `tfsdk:"id"`
-	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
-	Name               types.String   `tfsdk:"name"`
-	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
-	Tags               tftags.Map     `tfsdk:"tags"`
-	TagsAll            tftags.Map     `tfsdk:"tags_all"`
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Type               types.String   `tfsdk:"type"`
+	ARN                types.String                              `tfsdk:"arn"`
+	CollectionEndpoint types.String                              `tfsdk:"collection_endpoint"`
+	DashboardEndpoint  types.String                              `tfsdk:"dashboard_endpoint"`
+	Description        types.String                              `tfsdk:"description"`
+	ID                 types.String                              `tfsdk:"id"`
+	KmsKeyARN          types.String                              `tfsdk:"kms_key_arn"`
+	Name               types.String                              `tfsdk:"name"`
+	StandbyReplicas    types.String                              `tfsdk:"standby_replicas"`
+	Tags               tftags.Map                                `tfsdk:"tags"`
+	TagsAll            tftags.Map                                `tfsdk:"tags_all"`
+	Timeouts           timeouts.Value                            `tfsdk:"timeouts"`
+	Type               types.String                              `tfsdk:"type"`
+	VectorOptions      fwtypes.ObjectValueOf[vectorOptionsModel] `tfsdk:"vector_options"`
+}
+
+type vectorOptionsModel struct {
+	ServerlessVectorAcceleration types.String `tfsdk:"serverless_vector_acceleration"`
 }
 
 const (
@@ -145,6 +154,13 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.CollectionType](),
 				},
 			},
+			"vector_options": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[vectorOptionsModel](ctx),
+				Optional:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -159,6 +175,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 	var plan collectionResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(plan.validateVectorOptions(ctx)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -379,4 +396,39 @@ func statusCollection(conn *opensearchserverless.Client, id string) retry.StateR
 
 		return output, string(output.Status), nil
 	}
+}
+
+func (m *collectionResourceModel) validateVectorOptions(ctx context.Context) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if m.VectorOptions.IsNull() || m.VectorOptions.IsUnknown() {
+		return diags
+	}
+
+	vo, d := m.VectorOptions.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	validValues := []awstypes.ServerlessVectorAccelerationStatus{
+		awstypes.ServerlessVectorAccelerationStatusEnabled,
+		awstypes.ServerlessVectorAccelerationStatusDisabled,
+		awstypes.ServerlessVectorAccelerationStatusAllowed,
+	}
+
+	val := vo.ServerlessVectorAcceleration.ValueString()
+	for _, v := range validValues {
+		if val == string(v) {
+			return diags
+		}
+	}
+
+	diags.AddAttributeError(
+		path.Root("vector_options").AtName("serverless_vector_acceleration"),
+		"Invalid serverless_vector_acceleration value",
+		fmt.Sprintf("Expected one of: %v, got: %s", validValues, val),
+	)
+
+	return diags
 }
