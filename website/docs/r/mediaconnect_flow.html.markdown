@@ -190,6 +190,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `availability_zone` - (Optional, Forces new resource) The Availability Zone that you want to create the flow in.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `entitlement` - (Optional) The entitlements for the flow. See [Entitlement](#entitlement) below.
 * `flow_size` - (Optional) The processing capacity of the flow. Valid values: `MEDIUM`, `LARGE`, `LARGE_4X`.
 * `maintenance` - (Optional) The maintenance settings for the flow. See [Maintenance](#maintenance) below.

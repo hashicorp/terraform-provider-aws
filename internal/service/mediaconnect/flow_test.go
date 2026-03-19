@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect/types"
@@ -46,7 +47,7 @@ func TestAccMediaConnectFlow_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, t, resourceName, &flow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediaconnect", regexache.MustCompile(`flow:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
@@ -433,9 +434,10 @@ func testAccCheckFlowExists(ctx context.Context, t *testing.T, name string, flow
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).MediaConnectClient(ctx)
-		resp, err := conn.DescribeFlow(ctx, &mediaconnect.DescribeFlowInput{
+		input := mediaconnect.DescribeFlowInput{
 			FlowArn: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.DescribeFlow(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.MediaConnect, create.ErrActionCheckingExistence, tfmediaconnect.ResNameFlow, rs.Primary.ID, err)
@@ -460,8 +462,8 @@ func testAccCheckFlowNotRecreated(before, after *mediaconnect.DescribeFlowOutput
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).MediaConnectClient(ctx)
 
-	input := &mediaconnect.ListFlowsInput{}
-	_, err := conn.ListFlows(ctx, input)
+	input := mediaconnect.ListFlowsInput{}
+	_, err := conn.ListFlows(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
