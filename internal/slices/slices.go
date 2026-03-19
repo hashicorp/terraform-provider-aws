@@ -185,7 +185,7 @@ func CollectWithError[E any](seq iter.Seq2[E, error], optFns ...FinderOptionsFun
 		}
 		s = append(s, v)
 		if opts.ReturnFirstMatch() {
-			break
+			return s, nil
 		}
 	}
 
@@ -203,13 +203,20 @@ func CollectWithErrorAndConcat[E any](seq iter.Seq2[[]E, error], optFns ...Finde
 		if err != nil {
 			return nil, err
 		}
+
+		// Optimization for the common case.
+		if len(optFns) == 0 {
+			s = append(s, page...)
+			continue
+		}
+
 		for _, v := range page {
 			if filter := opts.Filter(); filter != nil && !filter(v) {
 				continue
 			}
 			s = append(s, v)
 			if opts.ReturnFirstMatch() {
-				break
+				return s, nil
 			}
 		}
 	}

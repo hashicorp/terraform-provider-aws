@@ -437,6 +437,7 @@ func TestCollectWithErrorAndConcat(t *testing.T) {
 
 	type testCase struct {
 		input   iter.Seq2[[]int, error]
+		optFns  []FinderOptionsFunc[int]
 		wantErr bool
 		wantLen int
 	}
@@ -449,13 +450,23 @@ func TestCollectWithErrorAndConcat(t *testing.T) {
 			input:   hasError,
 			wantErr: true,
 		},
+		"no error, with filter": {
+			input:   noError,
+			optFns:  []FinderOptionsFunc[int]{WithFilter(func(v int) bool { return v%2 == 0 })},
+			wantLen: 2,
+		},
+		"no error, with return-first-match": {
+			input:   noError,
+			optFns:  []FinderOptionsFunc[int]{WithReturnFirstMatch[int]()},
+			wantLen: 1,
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := CollectWithErrorAndConcat(test.input)
+			got, err := CollectWithErrorAndConcat(test.input, test.optFns...)
 
 			if got, want := err != nil, test.wantErr; !cmp.Equal(got, want) {
 				t.Errorf("CollectWithErrorAndConcat() err %t, want %t", got, want)
