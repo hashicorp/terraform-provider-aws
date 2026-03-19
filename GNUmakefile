@@ -767,14 +767,6 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
-semgrep-vcr: ## Enable VCR support with Semgrep --autofix
-	@echo "make: Enable VCR support with Semgrep --autofix"
-	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
-	@echo "this target may need to be run twice."
-	@semgrep $(SEMGREP_ARGS) --autofix \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config internal/vcr/.semgrep-vcr.yml
-
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -1047,12 +1039,6 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 
-vcr-enable: ## Enable VCR testing
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) fmt
-	goimports -w ./$(PKG_NAME)/
-
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
 website-link-check: ## Check website links (Legacy, use caution)
@@ -1260,7 +1246,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep-vcr \
 	skaff \
 	skaff-check-compile \
 	smoke \
@@ -1290,7 +1275,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tools \
 	ts \
 	update \
-	vcr-enable \
 	website \
 	website-link-check \
 	website-link-check-ghrc \
