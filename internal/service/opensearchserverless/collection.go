@@ -16,6 +16,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -66,11 +68,16 @@ type collectionResourceModel struct {
 	TagsAll             tftags.Map                                             `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                         `tfsdk:"timeouts"`
 	Type                types.String                                           `tfsdk:"type"`
+	VectorOptions       fwtypes.ObjectValueOf[vectorOptionsModel]              `tfsdk:"vector_options"`
 }
 
 type encryptionConfigModel struct {
 	AWSOwnedKey types.Bool   `tfsdk:"aws_owned_key"`
 	KmsKeyArn   types.String `tfsdk:"kms_key_arn"`
+}
+
+type vectorOptionsModel struct {
+	ServerlessVectorAcceleration types.String `tfsdk:"serverless_vector_acceleration"`
 }
 
 const (
@@ -167,6 +174,10 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.CollectionType](),
 				},
 			},
+			"vector_options": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[vectorOptionsModel](ctx),
+				Optional:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -181,6 +192,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 	var plan collectionResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(plan.validateVectorOptions(ctx)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -280,7 +292,7 @@ func (r *collectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if !plan.Description.Equal(state.Description) {
+	if !plan.Description.Equal(state.Description) || !plan.VectorOptions.Equal(state.VectorOptions) {
 		input := &opensearchserverless.UpdateCollectionInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
@@ -408,4 +420,39 @@ func statusCollection(conn *opensearchserverless.Client, id string) retry.StateR
 
 		return output, string(output.Status), nil
 	}
+}
+
+func (m *collectionResourceModel) validateVectorOptions(ctx context.Context) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if m.VectorOptions.IsNull() || m.VectorOptions.IsUnknown() {
+		return diags
+	}
+
+	vo, d := m.VectorOptions.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	validValues := []awstypes.ServerlessVectorAccelerationStatus{
+		awstypes.ServerlessVectorAccelerationStatusEnabled,
+		awstypes.ServerlessVectorAccelerationStatusDisabled,
+		awstypes.ServerlessVectorAccelerationStatusAllowed,
+	}
+
+	val := vo.ServerlessVectorAcceleration.ValueString()
+	for _, v := range validValues {
+		if val == string(v) {
+			return diags
+		}
+	}
+
+	diags.AddAttributeError(
+		path.Root("vector_options").AtName("serverless_vector_acceleration"),
+		"Invalid serverless_vector_acceleration value",
+		fmt.Sprintf("Expected one of: %v, got: %s", validValues, val),
+	)
+
+	return diags
 }

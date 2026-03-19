@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -168,6 +170,48 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_vectorOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection1, collection2 types.CollectionDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID, endpoints.ApSoutheast2RegionID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_vectorOptions(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "VECTORSEARCH"),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.serverless_vector_acceleration", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccCollectionConfig_vectorOptions(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, t, resourceName, &collection2),
+					testAccCheckCollectionNotRecreated(&collection1, &collection2),
+					resource.TestCheckResourceAttr(resourceName, "vector_options.serverless_vector_acceleration", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -350,6 +394,16 @@ func testAccCheckCollectionExists(ctx context.Context, t *testing.T, name string
 	}
 }
 
+func testAccCheckCollectionNotRecreated(before, after *types.CollectionDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
+			return fmt.Errorf("OpenSearch Serverless Collection %s recreated", before)
+		}
+
+		return nil
+	}
+}
+
 func testAccPreCheckCollection(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
@@ -498,10 +552,10 @@ func testAccCollectionConfig_encryptionConfig_owned(rName string) string {
 resource "aws_opensearchserverless_collection" "test" {
   name = %[1]q
 
-  encryption_config {
+  encryption_config = [{
     aws_owned_key = true
     kms_key_arn   = null
-  }
+  }]
 }
 `, rName)
 }
@@ -516,10 +570,28 @@ resource "aws_kms_key" "test" {
 resource "aws_opensearchserverless_collection" "test" {
   name = %[1]q
 
-  encryption_config {
+  encryption_config = [{
     aws_owned_key = null
     kms_key_arn   = aws_kms_key.test.arn
-  }
+  }]
 }
 `, rName)
+}
+
+func testAccCollectionConfig_vectorOptions(rName, acceleration string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+  type = "VECTORSEARCH"
+
+  vector_options = {
+    serverless_vector_acceleration = %[2]q
+  }
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName, acceleration),
+	)
 }
