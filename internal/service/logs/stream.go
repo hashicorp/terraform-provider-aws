@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -167,7 +166,7 @@ func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 }
 
 func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogStream]) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	output, err := tfslices.CollectWithError(listLogStreams(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectWithErrorAndConcat(listLogStreams(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -182,20 +181,18 @@ func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *clo
 	return output, nil
 }
 
-func listLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogStream, error] { // nosemgrep:ci.logs-in-func-name
-	return func(yield func(awstypes.LogStream, error) bool) {
+func listLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogStream, error] { // nosemgrep:ci.logs-in-func-name
+	return func(yield func([]awstypes.LogStream, error) bool) {
 		pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.LogStream](), fmt.Errorf("listing CloudWatch Logs Log Streams: %w", err))
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Log Streams: %w", err))
 				return
 			}
 
-			for _, v := range page.LogStreams {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.LogStreams, nil) {
+				return
 			}
 		}
 	}

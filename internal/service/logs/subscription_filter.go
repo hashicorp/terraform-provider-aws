@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -260,7 +259,7 @@ func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, in
 }
 
 func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) ([]awstypes.SubscriptionFilter, error) {
-	output, err := tfslices.CollectWithError(listSubscriptionFilters(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectWithErrorAndConcat(listSubscriptionFilters(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -275,20 +274,18 @@ func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, i
 	return output, nil
 }
 
-func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.SubscriptionFilter, error] { // nosemgrep:ci.logs-in-func-name
-	return func(yield func(awstypes.SubscriptionFilter, error) bool) {
+func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.SubscriptionFilter, error] { // nosemgrep:ci.logs-in-func-name
+	return func(yield func([]awstypes.SubscriptionFilter, error) bool) {
 		pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.SubscriptionFilter](), fmt.Errorf("listing CloudWatch Logs Subscription Filters: %w", err))
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Subscription Filters: %w", err))
 				return
 			}
 
-			for _, v := range page.SubscriptionFilters {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.SubscriptionFilters, nil) {
+				return
 			}
 		}
 	}

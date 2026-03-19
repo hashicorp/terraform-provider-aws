@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -193,27 +192,25 @@ func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input
 }
 
 func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.QueryDefinition]) ([]awstypes.QueryDefinition, error) {
-	return tfslices.CollectWithError(listQueryDefinitions(ctx, conn, input), optFns...)
+	return tfslices.CollectWithErrorAndConcat(listQueryDefinitions(ctx, conn, input), optFns...)
 }
 
-func listQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.QueryDefinition, error] {
-	return func(yield func(awstypes.QueryDefinition, error) bool) {
+func listQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.QueryDefinition, error] {
+	return func(yield func([]awstypes.QueryDefinition, error) bool) {
 		err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
-			for _, v := range page.QueryDefinitions {
-				if !yield(v, nil) {
-					return false
-				}
+			if !yield(page.QueryDefinitions, nil) {
+				return false
 			}
 
 			return !lastPage
 		}, optFns...)
 
 		if err != nil {
-			yield(inttypes.Zero[awstypes.QueryDefinition](), fmt.Errorf("listing CloudWatch Logs Query Definitions: %w", err))
+			yield(nil, fmt.Errorf("listing CloudWatch Logs Query Definitions: %w", err))
 			return
 		}
 	}

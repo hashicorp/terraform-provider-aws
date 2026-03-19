@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -245,7 +244,7 @@ func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 }
 
 func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) ([]awstypes.MetricFilter, error) {
-	output, err := tfslices.CollectWithError(listMetricFilters(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectWithErrorAndConcat(listMetricFilters(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -260,20 +259,18 @@ func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *
 	return output, nil
 }
 
-func listMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.MetricFilter, error] {
-	return func(yield func(awstypes.MetricFilter, error) bool) {
+func listMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.MetricFilter, error] {
+	return func(yield func([]awstypes.MetricFilter, error) bool) {
 		pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.MetricFilter](), fmt.Errorf("listing CloudWatch Logs Metric Filters: %w", err))
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Metric Filters: %w", err))
 				return
 			}
 
-			for _, v := range page.MetricFilters {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.MetricFilters, nil) {
+				return
 			}
 		}
 	}

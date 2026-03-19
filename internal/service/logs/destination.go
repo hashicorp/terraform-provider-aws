@@ -26,7 +26,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -198,23 +197,21 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 }
 
 func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
-	return tfslices.CollectWithError(listDestinations(ctx, conn, input), optFns...)
+	return tfslices.CollectWithErrorAndConcat(listDestinations(ctx, conn, input), optFns...)
 }
 
-func listDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.Destination, error] {
-	return func(yield func(awstypes.Destination, error) bool) {
+func listDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {
+	return func(yield func([]awstypes.Destination, error) bool) {
 		pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Destination](), fmt.Errorf("listing CloudWatch Logs Destinations: %w", err))
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Destinations: %w", err))
 				return
 			}
 
-			for _, v := range page.Destinations {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.Destinations, nil) {
+				return
 			}
 		}
 	}

@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -251,27 +250,25 @@ func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input 
 }
 
 func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...tfslices.FinderOptionsFunc[awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
-	return tfslices.CollectWithError(listResourcePolicies(ctx, conn, input), optFns...)
+	return tfslices.CollectWithErrorAndConcat(listResourcePolicies(ctx, conn, input), optFns...)
 }
 
-func listResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.ResourcePolicy, error] {
-	return func(yield func(awstypes.ResourcePolicy, error) bool) {
+func listResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.ResourcePolicy, error] {
+	return func(yield func([]awstypes.ResourcePolicy, error) bool) {
 		err := describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
-			for _, v := range page.ResourcePolicies {
-				if !yield(v, nil) {
-					return false
-				}
+			if !yield(page.ResourcePolicies, nil) {
+				return false
 			}
 
 			return !lastPage
 		}, optFns...)
 
 		if err != nil {
-			yield(inttypes.Zero[awstypes.ResourcePolicy](), fmt.Errorf("listing CloudWatch Logs Resource Policies: %w", err))
+			yield(nil, fmt.Errorf("listing CloudWatch Logs Resource Policies: %w", err))
 			return
 		}
 	}
