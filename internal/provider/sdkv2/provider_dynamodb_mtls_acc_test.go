@@ -454,6 +454,10 @@ func TestAccProvider_DynamoDBMTLS(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -510,6 +514,10 @@ func TestAccProvider_DynamoDBMTLSFailsWithoutCert(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -560,6 +568,10 @@ func TestAccProvider_DynamoDBMTLSWithEncryptedKey(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -587,6 +599,10 @@ func TestAccProvider_DynamoDBMTLSWithPKCS8EncryptedKey(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -612,6 +628,10 @@ func TestAccProvider_DynamoDBMTLSFailsWithoutCABundle(t *testing.T) {
 
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
+
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 	resource.Test(t, resource.TestCase{
 		ErrorCheck:               acctest.ErrorCheck(t),
@@ -666,6 +686,9 @@ func TestAccProvider_DynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
+	t.Setenv("AWS_ACCESS_KEY_ID", "mock-access-key")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "mock-secret-key")
+	t.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	t.Setenv("TF_AWS_CLIENT_CERTIFICATE_PATH", clientCertFile)
 	t.Setenv("TF_AWS_CLIENT_PRIVATE_KEY_PATH", clientKeyFile)
 	t.Setenv("TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE", passphrase)
