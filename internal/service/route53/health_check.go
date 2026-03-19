@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -278,7 +279,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Regions = flex.ExpandStringyValueSet[awstypes.HealthCheckRegion](v.(*schema.Set))
 	}
 
-	callerRef := sdkid.UniqueId()
+	callerRef := create.UniqueId(ctx)
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
 	}
