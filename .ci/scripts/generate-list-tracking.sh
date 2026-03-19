@@ -44,7 +44,8 @@ for ((i=0; i<empty; i++)); do bar+="░"; done
 # Output the dynamic content
 cat << EOF
 
-###Implementation Progress:
+### Implementation Progress:
+
 \`[${bar}] ${pct}% (${list_implemented}/${total_resources})\`
 
 | Resource File | Resource Identity | List |
