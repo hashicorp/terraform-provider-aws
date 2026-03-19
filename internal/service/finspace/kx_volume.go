@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -181,7 +180,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(rID)
 
 	in := &finspace.CreateKxVolumeInput{
-		ClientToken:         aws.String(sdkid.UniqueId()),
+		ClientToken:         aws.String(create.UniqueId(ctx)),
 		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		EnvironmentId:       aws.String(environmentId),
 		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),
