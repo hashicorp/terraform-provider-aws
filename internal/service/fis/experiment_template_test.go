@@ -645,6 +645,60 @@ func TestAccFISExperimentTemplate_lambdaFunctions(t *testing.T) {
 	})
 }
 
+func TestAccFISExperimentTemplate_kinesisStreams(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf awstypes.ExperimentTemplate
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_kinesisStreams(rName, "kinesis stream provisioned throughput exception", "throughput-exception", "kinesis stream provisioned throughput exception", "aws:kinesis:stream-provisioned-throughput-exception", "KinesisStreams", "target-1", "PT1M", "10", "aws:kinesis:stream", "ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "kinesis stream provisioned throughput exception"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "throughput-exception"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "kinesis stream provisioned throughput exception"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:kinesis:stream-provisioned-throughput-exception"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.parameter.*", map[string]string{
+						"key":   names.AttrDuration,
+						"value": "PT1M",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.parameter.*", map[string]string{
+						"key":   "percentage",
+						"value": "10",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "KinesisStreams"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "target-1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "target-1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:kinesis:stream"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_kinesis_stream.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName+"-fis"),
+				),
+			},
+		},
+	})
+}
+
 func testAccExperimentTemplateConfig_basic(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1712,4 +1766,78 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK))
+}
+
+func testAccExperimentTemplateConfig_kinesisStreams(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, duration, percentage, targetResType, targetSelectMode string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_kinesis_stream" "test" {
+  name        = %[1]q
+  shard_count = 1
+
+  tags = {
+	Name = %[1]q
+  }
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+
+    parameter {
+      key   = "duration"
+      value = %[8]q
+    }
+
+    parameter {
+      key   = "percentage"
+      value = %[9]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[10]q
+    selection_mode = %[11]q
+
+    resource_arns = [aws_kinesis_stream.test.arn]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, duration, percentage, targetResType, targetSelectMode)
 }
