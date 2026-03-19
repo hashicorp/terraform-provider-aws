@@ -26,7 +26,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -134,23 +133,21 @@ func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, inpu
 }
 
 func findApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Application]) ([]awstypes.Application, error) { // nosemgrep:ci.logs-in-func-name
-	return tfslices.CollectWithError(listApplications(ctx, conn, input), optFns...)
+	return tfslices.CollectWithErrorAndConcat(listApplications(ctx, conn, input), optFns...)
 }
 
-func listApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...func(*appconfig.Options)) iter.Seq2[awstypes.Application, error] {
-	return func(yield func(awstypes.Application, error) bool) {
+func listApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...func(*appconfig.Options)) iter.Seq2[[]awstypes.Application, error] {
+	return func(yield func([]awstypes.Application, error) bool) {
 		pages := appconfig.NewListApplicationsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Application](), fmt.Errorf("listing AppConfig Applications: %w", err))
+				yield(nil, fmt.Errorf("listing AppConfig Applications: %w", err))
 				return
 			}
 
-			for _, v := range page.Items {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.Items, nil) {
+				return
 			}
 		}
 	}
