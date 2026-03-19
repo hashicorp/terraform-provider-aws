@@ -1336,6 +1336,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"DBInstances",
 		"Functions",
 		"Instances",
+		"KinesisStreams",
 		"ManagedResources",
 		"Nodegroups",
 		"Pods",
