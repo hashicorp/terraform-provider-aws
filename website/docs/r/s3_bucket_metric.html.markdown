@@ -75,7 +75,8 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 ```
 
 ### Add metrics configuration for S3 directory bucket
-```
+
+```terraform
 data "aws_availability_zones" "available" {
   state = "available"
 }

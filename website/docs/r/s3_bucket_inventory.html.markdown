@@ -10,8 +10,6 @@ description: |-
 
 Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html) resource.
 
--> This resource cannot be used with S3 directory buckets.
-
 ## Example Usage
 
 ### Add inventory configuration
@@ -79,6 +77,47 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 }
 ```
 
+### Add inventory configuration for S3 directory bucket
+```terraform
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+ 
+resource "aws_s3_directory_bucket" "source-bucket" {
+  bucket = "example--zoneId--x-s3"
+  location {
+    name = data.aws_availability_zones.available.zone_ids[0]
+  }
+}
+
+resource "aws_s3_bucket" "dest-bucket" {
+  bucket = "my-tf-inventory-bucket"
+}
+
+resource "aws_s3_bucket_inventory" "test-inventory-config" {
+  bucket = aws_s3_bucket.source-bucket.id
+  name   = "DocumentsWeekly"
+
+  included_object_versions = "All"
+
+  schedule {
+    frequency = "Daily"
+  }
+
+  filter {
+    prefix = "documents/"
+  }
+
+  destination {
+    bucket {
+      format     = "ORC"
+      bucket_arn = aws_s3_bucket.dest-bucket.arn
+      prefix     = "inventory"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -91,7 +130,7 @@ This resource supports the following arguments:
 * `destination` - (Required) Contains information about where to publish the inventory results (documented below).
 * `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
 * `filter` - (Optional) Specifies an inventory filter. The inventory only includes objects that meet the filter's criteria (documented below).
-* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
+* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Some optional fields are not supported for directory buckets. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
 
 The `filter` configuration supports the following:
 
