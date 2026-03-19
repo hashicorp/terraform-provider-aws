@@ -15,10 +15,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -321,7 +321,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 	input := ec2.CreateVerifiedAccessEndpointInput{
 		AttachmentType:        awstypes.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
-		ClientToken:           aws.String(sdkid.UniqueId()),
+		ClientToken:           aws.String(create.UniqueId(ctx)),
 		EndpointType:          awstypes.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
@@ -445,7 +445,7 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll) {
 		input := ec2.ModifyVerifiedAccessEndpointInput{
-			ClientToken:              aws.String(sdkid.UniqueId()),
+			ClientToken:              aws.String(create.UniqueId(ctx)),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
 
@@ -520,7 +520,7 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessEndpointInput{
-		ClientToken:              aws.String(sdkid.UniqueId()),
+		ClientToken:              aws.String(create.UniqueId(ctx)),
 		VerifiedAccessEndpointId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &input)
