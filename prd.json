@@ -115,7 +115,7 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Follow patterns from proxy_test.go. Tests must pass in us-west-2. Use resource.ParallelTest()."
     },
     {
@@ -133,7 +133,7 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Follow patterns from proxy_test.go. Tests must pass in us-west-2. Use resource.ParallelTest()."
     },
     {
@@ -149,7 +149,7 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the format of website/docs/r/db_proxy.html.markdown and other existing proxy resource docs."
     },
     {
@@ -165,7 +165,7 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the format of existing proxy resource docs."
     },
     {
@@ -178,7 +178,7 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "PR number may not be known yet; use a placeholder if needed."
     }
   ]

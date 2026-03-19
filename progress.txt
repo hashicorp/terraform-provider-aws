@@ -11,6 +11,7 @@
 - IAM SDK types alias: `awsiam "github.com/aws/aws-sdk-go-v2/service/iam/types"` avoids RDS types conflict
 - `tfresource.NewEmptyResultError()` takes no arguments
 - IAM policy documents come URL-encoded from AWS; use `url.QueryUnescape()` then `verify.PolicyToSet()`
+- Cross-service test helpers: use `acctest.ProviderMeta(ctx, t).IAMClient(ctx)` for IAM in RDS tests
 
 ---
 
@@ -47,4 +48,55 @@
   - `tfresource.NewEmptyResultError()` takes no arguments in this codebase
   - Policy normalization uses `structure.NormalizeJsonString()` and `verify.PolicyToSet()` for read
   - Policy document comes URL-encoded from AWS API, must `url.QueryUnescape()` it
+---
+
+## 2026-03-19 - US-007
+- Implemented acceptance tests for aws_db_proxy_secret: basic (with import step) and disappears
+- Files changed: internal/service/rds/proxy_secret_test.go (new)
+- **Learnings for future iterations:**
+  - Proxy secret tests need a second secret (additional) separate from the proxy's initial auth secret
+  - Use `acctest.RandomWithPrefix(t, acctest.ResourcePrefix)` (not sdkacctest) for random names
+  - Use `acctest.ParallelTest(ctx, t, ...)` not `resource.ParallelTest()`
+  - Exists helper checks proxy's auth list for the specific secret ARN via attributes
+  - Destroy helper iterates `s.RootModule().Resources`, filters by type, uses attributes to verify
+  - `testAccDBProxyPreCheck` is defined in proxy_test.go and reusable across proxy sub-resource tests
+---
+
+## 2026-03-19 - US-008
+- Implemented acceptance tests for aws_db_proxy_policy_attachment: basic (with import), disappears, and update
+- Files changed: internal/service/rds/proxy_policy_attachment_test.go (new), internal/service/rds/exports_test.go (added FindDBProxyRoleName, FindRolePolicyForProxy exports)
+- **Learnings for future iterations:**
+  - Cross-service test helpers need IAM client: `acctest.ProviderMeta(ctx, t).IAMClient(ctx)`
+  - Policy attachment exists/destroy checks need both RDS client (to find role name) and IAM client (to check policy)
+  - Update test for policy_document changes the Action list (add DescribeSecret) to verify in-place update works
+  - Reuse testAccProxyConfig_base() from proxy_test.go as foundation for proxy sub-resource test configs
+---
+
+## 2026-03-19 - US-009
+- Created documentation for aws_db_proxy_secret resource
+- Files changed: website/docs/r/db_proxy_secret.html.markdown (new)
+- **Learnings for future iterations:**
+  - Follow the format of website/docs/r/db_proxy_target.html.markdown for sub-resource docs
+  - Include frontmatter with subcategory "RDS (Relational Database)", layout "aws", page_title, and description
+  - Import section should show both `import` block (v1.5.0+) and `terraform import` CLI examples
+  - `make docs-lint-fix` and `make website-lint-fix` require `misspell` tool which may not be installed locally
+  - Timeouts section should match the resource's actual timeout configuration
+---
+
+## 2026-03-19 - US-010
+- Created documentation for aws_db_proxy_policy_attachment resource
+- Files changed: website/docs/r/db_proxy_policy_attachment.html.markdown (new)
+- **Learnings for future iterations:**
+  - Policy attachment docs should explain the inline IAM policy pattern (PutRolePolicy on proxy's execution role)
+  - Timeouts for this resource are 5m (not 30m like the proxy secret), matching the resource schema
+  - Example usage should show a realistic IAM policy (e.g., secretsmanager:GetSecretValue) since that's the primary use case
+---
+
+## 2026-03-19 - US-011
+- Created changelog entry in .changelog/00000.txt with release-note:new-resource entries for both aws_db_proxy_secret and aws_db_proxy_policy_attachment
+- Files changed: .changelog/00000.txt (new)
+- **Learnings for future iterations:**
+  - Changelog files are named by PR number; use 00000.txt as placeholder when PR number is unknown
+  - Format is triple-backtick fenced blocks with `release-note:new-resource` header, one resource name per block
+  - No additional description needed for new resources (just the resource name)
 ---
