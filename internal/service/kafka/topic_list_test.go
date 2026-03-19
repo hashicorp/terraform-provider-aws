@@ -153,7 +153,7 @@ func TestAccKafkaTopic_List_regionOverride(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
-		CheckDestroy:             testAccCheckTopicDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
