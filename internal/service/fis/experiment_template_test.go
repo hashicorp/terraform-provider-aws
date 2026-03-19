@@ -1794,7 +1794,7 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
