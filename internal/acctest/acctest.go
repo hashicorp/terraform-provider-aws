@@ -56,6 +56,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -2003,7 +2004,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		issueCertInput := acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(caARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(sdkid.UniqueId()),
+			IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
@@ -2065,7 +2066,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		issueCertInput := acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCAARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(sdkid.UniqueId()),
+			IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpcatypes.Validity{
