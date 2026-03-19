@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -166,7 +166,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	const (
@@ -272,7 +272,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.Identifier = fwflex.StringFromFramework(ctx, new.ID)
 
 		_, err := conn.UpdateDomain(ctx, &input)
@@ -296,7 +296,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	conn := r.Meta().DataZoneClient(ctx)
 
 	input := datazone.DeleteDomainInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Identifier:  data.ID.ValueStringPointer(),
 	}
 	if !data.SkipDeletionCheck.IsNull() {
