@@ -28,6 +28,7 @@ var (
 	ResourceProxy                               = resourceProxy
 	ResourceProxyDefaultTargetGroup             = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint                       = resourceProxyEndpoint
+	ResourceProxySecret                         = resourceProxySecret
 	ResourceProxyTarget                         = resourceProxyTarget
 	ResourceReservedInstance                    = resourceReservedInstance
 	ResourceShardGroup                          = newShardGroupResource
