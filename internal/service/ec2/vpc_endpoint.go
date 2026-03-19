@@ -378,95 +378,22 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
 	vpce, err := findVPCEndpointByID(ctx, conn, d.Id())
-
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(vpce.OwnerId)
-	d.Set(names.AttrARN, vpcEndpointARN(ctx, meta.(*conns.AWSClient), ownerID, d.Id()))
-	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
+	if err := resourceVPCEndpointFlatten(ctx, awsClient, vpce, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening VPC Endpoint (%s): %s", d.Id(), err)
 	}
-	if vpce.DnsOptions != nil {
-		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
-		}
-	} else {
-		d.Set("dns_options", nil)
-	}
-	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
-	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
-	d.Set(names.AttrOwnerID, ownerID)
-	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
-	d.Set("requester_managed", vpce.RequesterManaged)
-	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
-	d.Set("route_table_ids", vpce.RouteTableIds)
-	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	d.Set("service_network_arn", vpce.ServiceNetworkArn)
-	d.Set("service_region", vpce.ServiceRegion)
-	d.Set(names.AttrState, vpce.State)
-	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
-	// VPC endpoints don't have types in GovCloud, so set type to default if empty
-	if v := string(vpce.VpcEndpointType); v == "" {
-		d.Set("vpc_endpoint_type", awstypes.VpcEndpointTypeGateway)
-	} else {
-		d.Set("vpc_endpoint_type", v)
-	}
-	d.Set(names.AttrVPCID, vpce.VpcId)
-
-	if vpce.ServiceName != nil {
-		serviceName := aws.ToString(vpce.ServiceName)
-
-		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
-			if retry.NotFound(err) {
-				d.Set("cidr_blocks", nil)
-			} else {
-				return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
-			}
-		} else {
-			d.Set("cidr_blocks", pl.Cidrs)
-			d.Set("prefix_list_id", pl.PrefixListId)
-		}
-
-		d.Set(names.AttrServiceName, serviceName)
-	} else {
-		d.Set("cidr_blocks", nil)
-		d.Set(names.AttrServiceName, nil)
-	}
-
-	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s) subnet configurations: %s", d.Id(), err)
-	}
-
-	if err := d.Set("subnet_configuration", flattenSubnetConfigurations(subnetConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_configuration: %s", err)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
 
 	setTagsOut(ctx, vpce.Tags)
 
@@ -869,4 +796,84 @@ func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []any {
 
 func vpcEndpointARN(ctx context.Context, c *conns.AWSClient, ownerID, vpceID string) string {
 	return c.RegionalARNWithAccount(ctx, "ec2", ownerID, "vpc-endpoint/"+vpceID)
+}
+
+func resourceVPCEndpointFlatten(ctx context.Context, awsClient *conns.AWSClient, vpce *awstypes.VpcEndpoint, d *schema.ResourceData) error {
+	conn := awsClient.EC2Client(ctx)
+	ownerID := aws.ToString(vpce.OwnerId)
+
+	d.Set(names.AttrARN, vpcEndpointARN(ctx, awsClient, ownerID, d.Id()))
+	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
+		return fmt.Errorf("setting dns_entry: %w", err)
+	}
+	if vpce.DnsOptions != nil {
+		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+			return fmt.Errorf("setting dns_options: %w", err)
+		}
+	} else {
+		d.Set("dns_options", nil)
+	}
+	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
+	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
+	d.Set("requester_managed", vpce.RequesterManaged)
+	d.Set("resource_configuration_arn", vpce.ResourceConfigurationArn)
+	d.Set("route_table_ids", vpce.RouteTableIds)
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
+	d.Set("service_network_arn", vpce.ServiceNetworkArn)
+	d.Set("service_region", vpce.ServiceRegion)
+	d.Set(names.AttrState, vpce.State)
+	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
+
+	// VPC endpoints don't have types in GovCloud, so set type to default if empty
+	if v := string(vpce.VpcEndpointType); v == "" {
+		d.Set("vpc_endpoint_type", awstypes.VpcEndpointTypeGateway)
+	} else {
+		d.Set("vpc_endpoint_type", v)
+	}
+	d.Set(names.AttrVPCID, vpce.VpcId)
+
+	// Prefix List
+	if vpce.ServiceName != nil {
+		serviceName := aws.ToString(vpce.ServiceName)
+
+		if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
+			if retry.NotFound(err) {
+				d.Set("cidr_blocks", nil)
+			} else {
+				return fmt.Errorf("reading EC2 Prefix List (%s): %w", serviceName, err)
+			}
+		} else {
+			d.Set("cidr_blocks", pl.Cidrs)
+			d.Set("prefix_list_id", pl.PrefixListId)
+		}
+
+		d.Set(names.AttrServiceName, serviceName)
+	} else {
+		d.Set("cidr_blocks", nil)
+		d.Set(names.AttrServiceName, nil)
+	}
+
+	// Subnet Configurations
+	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
+	if err != nil {
+		return fmt.Errorf("reading VPC Endpoint (%s) subnet configurations: %w", d.Id(), err)
+	}
+	if err := d.Set("subnet_configuration", flattenSubnetConfigurations(subnetConfigurations)); err != nil {
+		return fmt.Errorf("setting subnet_configuration: %w", err)
+	}
+
+	// Policy
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
+	if err != nil {
+		return err
+	}
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+	if err != nil {
+		return err
+	}
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return nil
 }
