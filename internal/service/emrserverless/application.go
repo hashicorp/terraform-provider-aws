@@ -17,10 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -425,7 +425,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 	input := emrserverless.CreateApplicationInput{
-		ClientToken:  aws.String(sdkid.UniqueId()),
+		ClientToken:  aws.String(create.UniqueId(ctx)),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -573,7 +573,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
-			ClientToken:   aws.String(sdkid.UniqueId()),
+			ClientToken:   aws.String(create.UniqueId(ctx)),
 		}
 
 		if v, ok := d.GetOk("architecture"); ok {
