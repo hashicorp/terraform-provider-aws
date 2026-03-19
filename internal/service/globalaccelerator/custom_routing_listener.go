@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -83,7 +83,7 @@ func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.Resource
 	acceleratorARN := d.Get("accelerator_arn").(string)
 	input := &globalaccelerator.CreateCustomRoutingListenerInput{
 		AcceleratorArn:   aws.String(acceleratorARN),
-		IdempotencyToken: aws.String(sdkid.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
