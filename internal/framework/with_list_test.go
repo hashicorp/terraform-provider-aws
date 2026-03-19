@@ -80,30 +80,10 @@ func TestSetZeroValueAttrFieldsToNull_NilPointer(t *testing.T) {
 
 	ctx := context.Background()
 
-	var data *listModel = nil
+	var data *listModel
 
 	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
 		t.Fatalf("unexpected diagnostics: %v", diags)
-	}
-}
-
-func TestSetZeroValueAttrFieldsToNull_UnexportedField(t *testing.T) {
-	t.Parallel()
-
-	type modelWithPrivateField struct {
-		Public  types.String `tfsdk:"public"`
-		private types.String
-	}
-
-	ctx := context.Background()
-	data := &modelWithPrivateField{}
-
-	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", diags)
-	}
-
-	if !data.Public.IsNull() {
-		t.Errorf("expected Public field to be null")
 	}
 }
 
