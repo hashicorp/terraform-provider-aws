@@ -51,6 +51,7 @@ var (
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
+	FindDBProxyRoleName                        = findDBProxyRoleName
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
 	FindDBShardGroupByID                       = findDBShardGroupByID
 	FindDBSnapshotByID                         = findDBSnapshotByID
@@ -63,6 +64,7 @@ var (
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
+	FindRolePolicyForProxy                     = findRolePolicyForProxy
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParameterChunksForModify                   = parameterChunksForModify
