@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -440,7 +440,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	inputC := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileSystemType:     awstypes.FileSystemTypeLustre,
 		LustreConfiguration: &awstypes.CreateFileSystemLustreConfiguration{
 			DeploymentType: awstypes.LustreDeploymentType(d.Get("deployment_type").(string)),
@@ -450,7 +450,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		LustreConfiguration: &awstypes.CreateFileSystemLustreConfiguration{
 			DeploymentType: awstypes.LustreDeploymentType(d.Get("deployment_type").(string)),
 		},
@@ -667,7 +667,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	// Sometimes it is necessary to increase IOPS before increasing storage_capacity.
 	if d.HasChange("metadata_configuration") {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken: aws.String(sdkid.UniqueId()),
+			ClientRequestToken: aws.String(create.UniqueId(ctx)),
 			FileSystemId:       aws.String(d.Id()),
 			LustreConfiguration: &awstypes.UpdateFileSystemLustreConfiguration{
 				MetadataConfiguration: expandLustreMetadataUpdateConfiguration(d.Get("metadata_configuration").([]any)),
@@ -695,7 +695,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		names.AttrTagsAll,
 	) {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:  aws.String(sdkid.UniqueId()),
+			ClientRequestToken:  aws.String(create.UniqueId(ctx)),
 			FileSystemId:        aws.String(d.Id()),
 			LustreConfiguration: &awstypes.UpdateFileSystemLustreConfiguration{},
 		}
@@ -771,7 +771,7 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.DeleteFileSystemInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileSystemId:       aws.String(d.Id()),
 	}
 
