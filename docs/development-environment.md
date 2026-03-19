@@ -79,6 +79,7 @@ provider_installation {
   }
   direct {}
 }
+```
 
 ### Managing Go Cache
 
