@@ -2549,6 +2549,7 @@ resource "aws_cognito_user_pool" "test" {
 func testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabledAndEmailMFAConfigurationEnabled(rName string, enabled bool, message, subject, email, arn, from, account string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
 
@@ -2558,36 +2559,36 @@ resource "aws_ses_configuration_set" "test" {
 }
 
 resource "aws_cognito_user_pool" "test" {
-	mfa_configuration = "ON"
-	name							=	%[1]q
-	
-	account_recovery_setting {
-		recovery_mechanism {
-			name			=	"verified_email"
-			priority	=	1
-		}
-		recovery_mechanism {
-    	name     = "verified_phone_number"
-    	priority = 2
+  mfa_configuration = "ON"
+  name              = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
     }
-	}
-	
-	software_token_mfa_configuration {
-		enabled	=	%[2]t
-	}
-	
-	email_mfa_configuration {
-		message	=	%[3]q
-		subject	=	%[4]q
-	}
-		
-	email_configuration {
-		reply_to_email_address	=	%[5]q
-		source_arn							=	%[6]q
-		from_email_address			=	%[7]q
-		email_sending_account		=	%[8]q
-		configuration_set				=	aws_ses_configuration_set.test.name
-	}
+    recovery_mechanism {
+      name     = "verified_phone_number"
+      priority = 2
+    }
+  }
+
+  software_token_mfa_configuration {
+    enabled = %[2]t
+  }
+
+  email_mfa_configuration {
+    message = %[3]q
+    subject = %[4]q
+  }
+
+  email_configuration {
+    reply_to_email_address = %[5]q
+    source_arn             = %[6]q
+    from_email_address     = %[7]q
+    email_sending_account  = %[8]q
+    configuration_set      = aws_ses_configuration_set.test.name
+  }
 }
 `, rName, enabled, message, subject, email, arn, from, account)
 }
@@ -2595,6 +2596,7 @@ resource "aws_cognito_user_pool" "test" {
 func testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabledAndEmailMFAConfigurationRemoved(rName string, enabled bool, message, subject, email, arn, from, account string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
 
@@ -2604,31 +2606,31 @@ resource "aws_ses_configuration_set" "test" {
 }
 
 resource "aws_cognito_user_pool" "test" {
-	mfa_configuration	=	"ON"
-	name							=	%[1]q
-	
-	account_recovery_setting {
-		recovery_mechanism {
-			name			=	"verified_email"
-			priority	=	1
-		}
-		recovery_mechanism {
-    	name     = "verified_phone_number"
-    	priority = 2
+  mfa_configuration = "ON"
+  name              = %[1]q
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
     }
-	}
-	
-	software_token_mfa_configuration {
-		enabled	=	%[2]t
-	}
-	
-	email_configuration {
-		reply_to_email_address	=	%[5]q
-		source_arn							=	%[6]q
-		from_email_address			=	%[7]q
-		email_sending_account		=	%[8]q
-		configuration_set				=	aws_ses_configuration_set.test.name
-	}
+    recovery_mechanism {
+      name     = "verified_phone_number"
+      priority = 2
+    }
+  }
+
+  software_token_mfa_configuration {
+    enabled = %[2]t
+  }
+
+  email_configuration {
+    reply_to_email_address = %[5]q
+    source_arn             = %[6]q
+    from_email_address     = %[7]q
+    email_sending_account  = %[8]q
+    configuration_set      = aws_ses_configuration_set.test.name
+  }
 }
 `, rName, enabled, message, subject, email, arn, from, account)
 }
