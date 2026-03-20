@@ -51,9 +51,11 @@ func (r *defaultDomainResource) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDomainName: schema.StringAttribute{
+				Description: "Mail domain name to set as the default.",
 				Required: true,
 			},
 			"organization_id": schema.StringAttribute{
+				Description: "Identifier of the WorkMail organization.",
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
