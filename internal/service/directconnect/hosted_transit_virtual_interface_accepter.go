@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -141,16 +142,23 @@ func resourceHostedTransitVirtualInterfaceAccepterUpdate(ctx context.Context, d 
 }
 
 func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	// Import ID optionally ends with "@<region>".
+	id, region, _ := strings.Cut(d.Id(), "@")
+	d.SetId(id)
+	if region != "" {
+		d.Set(names.AttrRegion, region)
+	}
+
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "transit" {
-		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
+		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", id, vifType)
 	}
 
 	arn := arn.ARN{
@@ -158,7 +166,7 @@ func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d 
 		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+		Resource:  fmt.Sprintf("dxvif/%s", id),
 	}.String()
 	d.Set(names.AttrARN, arn)
 
