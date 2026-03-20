@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -384,7 +385,8 @@ func findTeamsChannelConfigurationByARN(ctx context.Context, conn *chatbot.Clien
 
 	output, err := conn.GetMicrosoftTeamsChannelConfiguration(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
