@@ -64,6 +64,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"Name":               testAccInsight_Name,
 			"NumberFilters":      testAccInsight_NumberFilters,
 			"WorkflowStatus":     testAccInsight_WorkflowStatus,
+			"StringFilters":      testAccInsight_StringFilters,
 		},
 		"InviteAccepter": {
 			acctest.CtBasic: testAccInviteAccepter_basic,
