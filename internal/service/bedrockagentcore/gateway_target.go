@@ -469,6 +469,68 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
+									"api_gateway": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mcpApiGatewayConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"rest_api_id": schema.StringAttribute{
+													Required: true,
+												},
+												names.AttrStage: schema.StringAttribute{
+													Required: true,
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"api_gateway_tool_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[mcpApiGatewayToolConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"tool_filter": schema.SetNestedBlock{
+																CustomType: fwtypes.NewSetNestedObjectTypeOf[mcpApiGatewayToolFilterModel](ctx),
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"filter_path": schema.StringAttribute{
+																			Required: true,
+																		},
+																		"methods": schema.SetAttribute{
+																			ElementType: fwtypes.StringEnumType[awstypes.RestApiMethod](),
+																			Required:    true,
+																		},
+																	},
+																},
+															},
+															"tool_override": schema.SetNestedBlock{
+																CustomType: fwtypes.NewSetNestedObjectTypeOf[mcpApiGatewayToolOverrideModel](ctx),
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrDescription: schema.StringAttribute{
+																			Optional: true,
+																		},
+																		"method": schema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.RestApiMethod](),
+																			Required:   true,
+																		},
+																		names.AttrName: schema.StringAttribute{
+																			Required: true,
+																		},
+																		names.AttrPath: schema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"lambda": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[mcpLambdaConfigurationModel](ctx),
 										Validators: []validator.List{
@@ -1168,10 +1230,11 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 }
 
 type mcpConfigurationModel struct {
-	Lambda        fwtypes.ListNestedObjectValueOf[mcpLambdaConfigurationModel] `tfsdk:"lambda"`
-	MCPServer     fwtypes.ListNestedObjectValueOf[mcpServerConfigurationModel] `tfsdk:"mcp_server"`
-	SmithyModel   fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"smithy_model"`
-	OpenApiSchema fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"open_api_schema"`
+	ApiGateway    fwtypes.ListNestedObjectValueOf[mcpApiGatewayConfigurationModel] `tfsdk:"api_gateway"`
+	Lambda        fwtypes.ListNestedObjectValueOf[mcpLambdaConfigurationModel]     `tfsdk:"lambda"`
+	MCPServer     fwtypes.ListNestedObjectValueOf[mcpServerConfigurationModel]     `tfsdk:"mcp_server"`
+	SmithyModel   fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel]     `tfsdk:"smithy_model"`
+	OpenApiSchema fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel]     `tfsdk:"open_api_schema"`
 }
 
 var (
@@ -1182,6 +1245,14 @@ var (
 func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
+	case awstypes.McpTargetConfigurationMemberApiGateway:
+		var model mcpApiGatewayConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.ApiGateway = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
 	case awstypes.McpTargetConfigurationMemberLambda:
 		var model mcpLambdaConfigurationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
@@ -1226,6 +1297,20 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnos
 func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
+	case !m.ApiGateway.IsNull():
+		apiGatewayMCPConfigurationData, d := m.ApiGateway.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.McpTargetConfigurationMemberApiGateway
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, apiGatewayMCPConfigurationData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
 	case !m.Lambda.IsNull():
 		lambdaMCPConfigurationData, d := m.Lambda.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
@@ -1301,6 +1386,29 @@ type oauthCredentialProviderModel struct {
 
 type gatewayIAMRoleProviderModel struct {
 	// Empty struct - Gateway IAM Role provider requires no configuration
+}
+
+type mcpApiGatewayConfigurationModel struct {
+	ApiGatewayToolConfiguration fwtypes.ListNestedObjectValueOf[mcpApiGatewayToolConfigurationModel] `tfsdk:"api_gateway_tool_configuration"`
+	RestApiID                   types.String                                                         `tfsdk:"rest_api_id"`
+	Stage                       types.String                                                         `tfsdk:"stage"`
+}
+
+type mcpApiGatewayToolConfigurationModel struct {
+	ToolFilter   fwtypes.SetNestedObjectValueOf[mcpApiGatewayToolFilterModel]   `tfsdk:"tool_filter"`
+	ToolOverride fwtypes.SetNestedObjectValueOf[mcpApiGatewayToolOverrideModel] `tfsdk:"tool_override"`
+}
+
+type mcpApiGatewayToolFilterModel struct {
+	FilterPath types.String                                    `tfsdk:"filter_path"`
+	Methods    fwtypes.SetOfStringEnum[awstypes.RestApiMethod] `tfsdk:"methods"`
+}
+
+type mcpApiGatewayToolOverrideModel struct {
+	Description types.String                               `tfsdk:"description"`
+	Method      fwtypes.StringEnum[awstypes.RestApiMethod] `tfsdk:"method"`
+	Name        types.String                               `tfsdk:"name"`
+	Path        types.String                               `tfsdk:"path"`
 }
 
 type mcpLambdaConfigurationModel struct {
