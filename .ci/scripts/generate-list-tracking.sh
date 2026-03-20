@@ -60,8 +60,8 @@ print_progress() {
         local pct=0
     fi
 
-    local filled=$(( pct / 5 ))
-    local empty=$(( 20 - filled ))
+    local filled=$(( pct * 40 / 100 ))
+    local empty=$(( 40 - filled ))
     local bar=""
     for ((i=0; i<filled; i++)); do bar+="▓"; done
     for ((i=0; i<empty; i++)); do bar+="░"; done
@@ -88,9 +88,20 @@ for table in $(ls -1 "$tmp_dir"/*.table 2>/dev/null | sort); do
         svc_impl=0
     fi
 
-    echo "<details><summary><code>${service_name}</code></summary><br>"
-    echo ""
-    print_progress "$svc_impl" "$svc_total" "Progress: "
+    if [ "$svc_total" -gt 0 ]; then
+        svc_pct=$(( svc_impl * 100 / svc_total ))
+    else
+        svc_pct=0
+    fi
+
+    svc_text="${svc_pct}% (${svc_impl}/${svc_total})"
+    if [ "$svc_impl" -eq "$svc_total" ] && [ "$svc_total" -gt 0 ]; then
+        svc_text="${svc_text} ✅"
+    elif [ "$svc_impl" -gt 0 ] && [ "$svc_impl" -lt "$svc_total" ]; then
+        svc_text="${svc_text} 🟡"
+    fi
+
+    echo "<details><summary><code>${service_name}</code> ${svc_text}</summary><br>"
     echo ""
     echo "| Resource File | Resource Identity | List |"
     echo "|---|:---:|:---:|"
