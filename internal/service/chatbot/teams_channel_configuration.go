@@ -153,14 +153,14 @@ func (r *teamsChannelConfigurationResource) Create(ctx context.Context, request 
 
 	out, err := conn.CreateMicrosoftTeamsChannelConfiguration(ctx, input)
 	if err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionCreating, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionCreating, ResNameTeamsChannelConfiguration, data.ConfigurationName.ValueString(), err)
 
 		return
 	}
 
-	output, err := waitTeamsChannelConfigurationAvailable(ctx, conn, aws.ToString(out.ChannelConfiguration.TeamId), r.CreateTimeout(ctx, data.Timeouts))
+	output, err := waitTeamsChannelConfigurationAvailable(ctx, conn, aws.ToString(out.ChannelConfiguration.ChatConfigurationArn), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForCreation, ResNameTeamsChannelConfiguration, aws.ToString(out.ChannelConfiguration.TeamId), err)
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForCreation, ResNameTeamsChannelConfiguration, aws.ToString(out.ChannelConfiguration.ChatConfigurationArn), err)
 
 		return
 	}
@@ -185,18 +185,43 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, data.TeamID.ValueString())
+	var output *awstypes.TeamsChannelConfiguration
 
-	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
+	if !data.ChatConfigurationARN.IsNull() && data.ChatConfigurationARN.ValueString() != "" {
+		if err := data.InitFromID(); err != nil {
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionExpandingResourceId, ResNameTeamsChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
+			return
+		}
 
-		return
-	}
+		var err error
+		output, err = findTeamsChannelConfigurationByARN(ctx, conn, data.ChatConfigurationARN.ValueString())
 
-	if err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
-		return
+		if retry.NotFound(err) {
+			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			response.State.RemoveResource(ctx)
+			return
+		}
+
+		if err != nil {
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
+			return
+		}
+	} else {
+		// Legacy import path: look up by team_id.
+		// This only works when there is a single channel configuration for the team.
+		var err error
+		output, err = findTeamsChannelConfigurationByTeamID(ctx, conn, data.TeamID.ValueString())
+
+		if retry.NotFound(err) {
+			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			response.State.RemoveResource(ctx)
+			return
+		}
+
+		if err != nil {
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
+			return
+		}
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
@@ -238,21 +263,21 @@ func (r *teamsChannelConfigurationResource) Update(ctx context.Context, request 
 
 		_, err := conn.UpdateMicrosoftTeamsChannelConfiguration(ctx, input)
 		if err != nil {
-			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionUpdating, ResNameTeamsChannelConfiguration, new.TeamID.ValueString(), err)
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionUpdating, ResNameTeamsChannelConfiguration, new.ChatConfigurationARN.ValueString(), err)
 
 			return
 		}
 
-		if _, err := waitTeamsChannelConfigurationAvailable(ctx, conn, old.TeamID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForUpdate, ResNameTeamsChannelConfiguration, new.TeamID.ValueString(), err)
+		if _, err := waitTeamsChannelConfigurationAvailable(ctx, conn, old.ChatConfigurationARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForUpdate, ResNameTeamsChannelConfiguration, new.ChatConfigurationARN.ValueString(), err)
 
 			return
 		}
 	}
 
-	output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, old.TeamID.ValueString())
+	output, err := findTeamsChannelConfigurationByARN(ctx, conn, old.ChatConfigurationARN.ValueString())
 	if err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, old.TeamID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionReading, ResNameTeamsChannelConfiguration, old.ChatConfigurationARN.ValueString(), err)
 
 		return
 	}
@@ -292,18 +317,23 @@ func (r *teamsChannelConfigurationResource) Delete(ctx context.Context, request 
 	}
 
 	if err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionDeleting, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionDeleting, ResNameTeamsChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
 
-	if _, err := waitTeamsChannelConfigurationDeleted(ctx, conn, data.TeamID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameTeamsChannelConfiguration, data.TeamID.ValueString(), err)
+	if _, err := waitTeamsChannelConfigurationDeleted(ctx, conn, data.ChatConfigurationARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionWaitingForDeletion, ResNameTeamsChannelConfiguration, data.ChatConfigurationARN.ValueString(), err)
 		return
 	}
 }
 
 func (r *teamsChannelConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("team_id"), request, response)
+	if arn.IsARN(request.ID) {
+		resource.ImportStatePassthroughID(ctx, path.Root("chat_configuration_arn"), request, response)
+	} else {
+		// Legacy: support import by team_id for backward compatibility.
+		resource.ImportStatePassthroughID(ctx, path.Root("team_id"), request, response)
+	}
 }
 
 func findTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, input *chatbot.ListMicrosoftTeamsChannelConfigurationsInput) (*awstypes.TeamsChannelConfiguration, error) {
@@ -375,9 +405,9 @@ const (
 	teamsChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusTeamsChannelConfiguration(conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
+func statusTeamsChannelConfiguration(conn *chatbot.Client, configARN string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
+		output, err := findTeamsChannelConfigurationByARN(ctx, conn, configARN)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -390,11 +420,11 @@ func statusTeamsChannelConfiguration(conn *chatbot.Client, teamID string) retry.
 	}
 }
 
-func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, teamID string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
+func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, configARN string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{teamsChannelConfigurationAvailable},
-		Refresh:    statusTeamsChannelConfiguration(conn, teamID),
+		Refresh:    statusTeamsChannelConfiguration(conn, configARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -409,11 +439,11 @@ func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 	return nil, err
 }
 
-func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, teamID string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
+func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, configARN string, timeout time.Duration) (*awstypes.TeamsChannelConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{teamsChannelConfigurationAvailable},
 		Target:     []string{},
-		Refresh:    statusTeamsChannelConfiguration(conn, teamID),
+		Refresh:    statusTeamsChannelConfiguration(conn, configARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
