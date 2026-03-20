@@ -195,8 +195,8 @@ func CollectWithError[E any](seq iter.Seq2[E, error], optFns ...FinderOptionsFun
 // CollectAndConcatWithError collects values from seq into a new slice and returns it.
 // The first non-nil error in seq is returned.
 // If seq is empty, the result is nil.
-func CollectAndConcatWithError[E any](seq iter.Seq2[[]E, error], optFns ...FinderOptionsFunc[E]) ([]E, error) {
-	var s []E
+func CollectAndConcatWithError[S ~[]E, E any](seq iter.Seq2[S, error], optFns ...FinderOptionsFunc[E]) (S, error) {
+	var s S
 	opts := NewFinderOptions(optFns...)
 
 	for page, err := range seq {
