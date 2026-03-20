@@ -21,6 +21,7 @@ BUG FIXES:
 
 * resource/aws_cloudfront_distribution_tenant: Fix panic when managed certificate is not found during creation ([#46982](https://github.com/hashicorp/terraform-provider-aws/issues/46982))
 * resource/aws_mq_broker: Fix non-idempotent behavior for RabbitMQ brokers with `user` block ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
+* resource/aws_wafv2_web_acl_rule: Fix `Unable to unmarshal DynamicValue` error when `statement.managed_rule_group_statement.rule_action_override` block is specified ([#46998](https://github.com/hashicorp/terraform-provider-aws/issues/46998))
 
 ## 6.37.0 (March 18, 2026)
 
