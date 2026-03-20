@@ -757,7 +757,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAAndEmail(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.message", message),
 					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.0.subject", subject),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.0.name", "verified_email"),
@@ -777,7 +777,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAAndEmail(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "email_mfa_configuration.0.message"),
 					resource.TestCheckNoResourceAttr(resourceName, "email_mfa_configuration.0.subject"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.0.name", "verified_email"),
@@ -789,11 +789,22 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAAndEmail(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabledAndEmailMFAConfigurationRemoved(rName, true, message, subject, replyTo, sourceARN, emailTo, "DEVELOPER"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
-		},
+				Config: testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabledAndEmailMFAConfigurationRemoved(
+					rName,
+					true,
+					message,
+					subject,
+					replyTo,
+					sourceARN,
+					emailTo,
+					"DEVELOPER",
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			}},
 	})
 }
 
