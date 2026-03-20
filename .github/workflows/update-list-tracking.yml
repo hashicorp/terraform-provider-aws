@@ -43,7 +43,7 @@ jobs:
       - name: Update Implemented List Issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMPLEMENTED_ISSUE_NUMBER: "99999" # <-- UPDATE THIS ISSUE NUMBER
+          IMPLEMENTED_ISSUE_NUMBER: "47040"
         run: |
           # 1. Fetch the current issue body
           gh issue view $IMPLEMENTED_ISSUE_NUMBER --json body -q .body > current_issue2.md
