@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_fis_experiment_template: Support `KinesisStreams` as a value for `action.target.key` ([#47010](https://github.com/hashicorp/terraform-provider-aws/issues/47010))
 * resource/aws_mq_broker: Change `user` block to Optional ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
 * resource/aws_msk_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * resource/aws_msk_serverless_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
