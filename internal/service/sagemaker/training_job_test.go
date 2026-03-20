@@ -146,6 +146,68 @@ func TestNormalizeStoppingCondition(t *testing.T) {
 	}
 }
 
+func TestServerlessJobConfigEqualityFunc(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	baseModelARNV1 := "arn:aws:sagemaker:us-west-2:aws:hub-content/example/Model/test/1.0.0" //lintignore:AWSAT003,AWSAT005
+	baseModelARNV2 := "arn:aws:sagemaker:us-west-2:aws:hub-content/example/Model/test/2.0.0" //lintignore:AWSAT003,AWSAT005
+
+	testCases := []struct {
+		name     string
+		oldValue fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobServerlessJobConfigModel]
+		newValue fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobServerlessJobConfigModel]
+		want     bool
+	}{
+		{
+			name:     "same values are equal",
+			oldValue: testTrainingJobServerlessJobConfigValue(ctx),
+			newValue: testTrainingJobServerlessJobConfigValue(ctx),
+			want:     true,
+		},
+		{
+			name:     "base model arn version differences are semantically equal",
+			oldValue: testTrainingJobServerlessJobConfigValueWithOptions(ctx, baseModelARNV1, types.StringNull()),
+			newValue: testTrainingJobServerlessJobConfigValueWithOptions(ctx, baseModelARNV2, types.StringNull()),
+			want:     true,
+		},
+		{
+			name:     "different non arn fields are not equal",
+			oldValue: testTrainingJobServerlessJobConfigValueWithOptions(ctx, baseModelARNV1, types.StringNull()),
+			newValue: testTrainingJobServerlessJobConfigValueWithOptions(ctx, baseModelARNV1, types.StringValue("different-evaluator")),
+			want:     false,
+		},
+		{
+			name:     "null values are equal",
+			oldValue: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobServerlessJobConfigModel](ctx),
+			newValue: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobServerlessJobConfigModel](ctx),
+			want:     true,
+		},
+		{
+			name:     "null and populated values are not equal",
+			oldValue: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobServerlessJobConfigModel](ctx),
+			newValue: testTrainingJobServerlessJobConfigValue(ctx),
+			want:     false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, diags := tfsagemaker.ServerlessJobConfigEqualityFunc(ctx, testCase.oldValue, testCase.newValue)
+
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+
+			if got != testCase.want {
+				t.Errorf("got = %v, want = %v", got, testCase.want)
+			}
+		})
+	}
+}
+
 func testTrainingJobAlgorithmSpecificationValue(ctx context.Context, metricDefinitions fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobMetricDefinitionModel]) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel] {
 	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobAlgorithmSpecificationModel{
 		{
@@ -176,13 +238,17 @@ func testTrainingJobStoppingConditionValue(ctx context.Context, maxRuntimeInSeco
 }
 
 func testTrainingJobServerlessJobConfigValue(ctx context.Context) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobServerlessJobConfigModel] {
+	return testTrainingJobServerlessJobConfigValueWithOptions(ctx, "arn:aws:sagemaker:us-west-2:aws:hub-content/example/Model/test/1.0.0", types.StringNull()) //lintignore:AWSAT003,AWSAT005
+}
+
+func testTrainingJobServerlessJobConfigValueWithOptions(ctx context.Context, baseModelARN string, evaluatorARN types.String) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobServerlessJobConfigModel] {
 	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobServerlessJobConfigModel{
 		{
 			AcceptEULA:             types.BoolNull(),
-			BaseModelARN:           types.StringValue("arn:aws:sagemaker:us-west-2:aws:hub-content/example/Model/test/1.0.0"), //lintignore:AWSAT003,AWSAT005
+			BaseModelARN:           types.StringValue(baseModelARN), //lintignore:AWSAT003,AWSAT005
 			CustomizationTechnique: fwtypes.StringEnumNull[awstypes.CustomizationTechnique](),
 			EvaluationType:         fwtypes.StringEnumNull[awstypes.EvaluationType](),
-			EvaluatorARN:           types.StringNull(),
+			EvaluatorARN:           evaluatorARN,
 			JobType:                fwtypes.StringEnumNull[awstypes.ServerlessJobType](),
 			Peft:                   fwtypes.StringEnumNull[awstypes.Peft](),
 		},
