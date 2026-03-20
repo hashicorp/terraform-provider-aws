@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_dx_hosted_transit_virtual_interface: Fix import to honor `@region` suffix when using resource-level `region` attribute
+```
+
+```release-note:bug
+resource/aws_dx_hosted_transit_virtual_interface_accepter: Fix import to honor `@region` suffix when using resource-level `region` attribute
+```
+
+```release-note:bug
+resource/aws_dx_transit_virtual_interface: Fix import to honor `@region` suffix when using resource-level `region` attribute
+```
+
+```release-note:bug
+resource/aws_route_table_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
+```
