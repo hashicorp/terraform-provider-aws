@@ -926,8 +926,6 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	}
 
 	// Serialize operations on this WebACL to prevent intra-provider race conditions.
-	// Multiple aws_wafv2_web_acl_rule_group_association resources targeting the same
-	// WebACL will race to update it, causing WAFOptimisticLockException errors.
 	mutex := getWebACLMutex(webACLID)
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -1374,8 +1372,6 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 	}
 
 	// Serialize operations on this WebACL to prevent intra-provider race conditions.
-	// Multiple aws_wafv2_web_acl_rule_group_association resources targeting the same
-	// WebACL will race to update it, causing WAFOptimisticLockException errors.
 	mutex := getWebACLMutex(webACLID)
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -1599,8 +1595,6 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 	}
 
 	// Serialize operations on this WebACL to prevent intra-provider race conditions.
-	// Multiple aws_wafv2_web_acl_rule_group_association resources targeting the same
-	// WebACL will race to update it, causing WAFOptimisticLockException errors.
 	mutex := getWebACLMutex(webACLID)
 	mutex.Lock()
 	defer mutex.Unlock()
