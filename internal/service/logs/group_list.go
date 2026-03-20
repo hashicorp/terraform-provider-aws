@@ -48,7 +48,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input cloudwatchlogs.DescribeLogGroupsInput
-		for output, err := range tfiter.ConcatValuesWithError(listLogGroupPages(ctx, conn, &input)) {
+		for output, err := range listLogGroups(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
