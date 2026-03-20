@@ -1481,14 +1481,14 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
 	}, func(err error) (bool, error) {
-		if tfawserr.ErrMessageContainsAny(err, ErrCodeValidationException, []string{
+		if tfawserr.ErrMessageContainsAny(err, ErrCodeValidationException,
 			"Could not assume role",
 			"Unauthorized to List objects under S3 URL",
 			"Access denied to OutputDataConfig S3 bucket",
 			"no identity-based policy allows the s3:ListBucket action",
 			"Access denied to hub content",
 			"Access denied for repository",
-		}) {
+		) {
 			return true, err
 		}
 		return false, err
