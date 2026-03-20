@@ -244,7 +244,7 @@ func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 }
 
 func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) ([]awstypes.MetricFilter, error) {
-	output, err := tfslices.CollectWithErrorAndConcat(listMetricFilters(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listMetricFilters(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

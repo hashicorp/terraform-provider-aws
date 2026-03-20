@@ -259,7 +259,7 @@ func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, in
 }
 
 func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) ([]awstypes.SubscriptionFilter, error) {
-	output, err := tfslices.CollectWithErrorAndConcat(listSubscriptionFilters(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listSubscriptionFilters(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

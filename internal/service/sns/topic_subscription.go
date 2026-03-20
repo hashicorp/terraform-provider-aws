@@ -400,7 +400,7 @@ func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.L
 }
 
 func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...tfslices.FinderOptionsFunc[types.Subscription]) ([]types.Subscription, error) {
-	output, err := tfslices.CollectWithErrorAndConcat(listSubscriptionsByTopic(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listSubscriptionsByTopic(ctx, conn, input), optFns...)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

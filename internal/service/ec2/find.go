@@ -419,7 +419,7 @@ func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInst
 }
 
 func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) ([]awstypes.Instance, error) {
-	output, err := tfslices.CollectWithErrorAndConcat(listInstances(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listInstances(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil, &retry.NotFoundError{

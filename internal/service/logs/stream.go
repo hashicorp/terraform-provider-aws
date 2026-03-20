@@ -166,7 +166,7 @@ func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 }
 
 func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogStream]) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
-	output, err := tfslices.CollectWithErrorAndConcat(listLogStreams(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listLogStreams(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

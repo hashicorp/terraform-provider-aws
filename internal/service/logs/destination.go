@@ -197,7 +197,7 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 }
 
 func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
-	return tfslices.CollectWithErrorAndConcat(listDestinations(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listDestinations(ctx, conn, input), optFns...)
 }
 
 func listDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {

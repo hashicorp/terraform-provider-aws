@@ -133,7 +133,7 @@ func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, inpu
 }
 
 func findApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Application]) ([]awstypes.Application, error) { // nosemgrep:ci.logs-in-func-name
-	return tfslices.CollectWithErrorAndConcat(listApplications(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listApplications(ctx, conn, input), optFns...)
 }
 
 func listApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...func(*appconfig.Options)) iter.Seq2[[]awstypes.Application, error] {

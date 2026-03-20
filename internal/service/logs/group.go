@@ -305,7 +305,7 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 }
 
 func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) ([]awstypes.LogGroup, error) {
-	return tfslices.CollectWithErrorAndConcat(listLogGroups(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listLogGroups(ctx, conn, input), optFns...)
 }
 
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {

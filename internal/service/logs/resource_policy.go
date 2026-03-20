@@ -250,7 +250,7 @@ func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input 
 }
 
 func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...tfslices.FinderOptionsFunc[awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
-	return tfslices.CollectWithErrorAndConcat(listResourcePolicies(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listResourcePolicies(ctx, conn, input), optFns...)
 }
 
 func listResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.ResourcePolicy, error] {
