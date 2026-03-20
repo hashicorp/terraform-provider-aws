@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -96,7 +97,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
-		for instance, err := range listInstances(ctx, conn, &input) {
+		for instance, err := range tfiter.ConcatValuesWithError(listInstances(ctx, conn, &input)) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

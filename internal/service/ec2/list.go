@@ -15,21 +15,19 @@ import (
 )
 
 // DescribeInstances is an "All-Or-Some" call.
-func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Instance, error] {
-	return func(yield func(awstypes.Instance, error) bool) {
+func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.Instance, error] {
+	return func(yield func([]awstypes.Instance, error) bool) {
 		pages := ec2.NewDescribeInstancesPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Instance](), fmt.Errorf("listing EC2 Instances: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Instances: %w", err))
 				return
 			}
 
 			for _, v := range page.Reservations {
-				for _, v := range v.Instances {
-					if !yield(v, nil) {
-						return
-					}
+				if !yield(v.Instances, nil) {
+					return
 				}
 			}
 		}
