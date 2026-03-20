@@ -6,6 +6,7 @@ package sagemaker
 type (
 	TrainingJobAlgorithmSpecificationModel = trainingJobAlgorithmSpecificationModel
 	TrainingJobMetricDefinitionModel       = trainingJobMetricDefinitionModel
+	TrainingJobModelPackageConfigModel     = trainingJobModelPackageConfigModel
 	TrainingJobTrainingImageConfigModel    = trainingJobTrainingImageConfigModel
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel

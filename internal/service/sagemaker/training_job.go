@@ -97,6 +97,13 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"delete_model_packages_on_destroy": schema.BoolAttribute{
+				Optional:            true,
+				MarkdownDescription: "Whether to delete model packages in the configured model package group when destroying the training job.",
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"enable_inter_container_traffic_encryption": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -1649,18 +1656,15 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		}
 	}
 
-	if !state.ModelPackageConfig.IsNull() && !state.ModelPackageConfig.IsUnknown() {
-		mpConfigs, diags := state.ModelPackageConfig.ToSlice(ctx)
+	if state.DeleteModelPackagesOnDestroy.ValueBool() {
+		groupARN, diags := ModelPackageGroupARNFromState(ctx, state.ModelPackageConfig)
 		resp.Diagnostics.Append(diags...)
-		if !resp.Diagnostics.HasError() && len(mpConfigs) > 0 {
-			groupARN := mpConfigs[0].ModelPackageGroupARN.ValueString()
-			if groupARN != "" {
-				if err := deleteModelPackages(ctx, conn, groupARN); err != nil {
-					resp.Diagnostics.AddWarning(
-						"Error cleaning up Model Packages",
-						fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up model packages in group %s: %s", state.TrainingJobName.ValueString(), groupARN, err),
-					)
-				}
+		if !resp.Diagnostics.HasError() && groupARN != "" {
+			if err := deleteModelPackages(ctx, conn, groupARN); err != nil {
+				resp.Diagnostics.AddWarning(
+					"Error cleaning up Model Packages",
+					fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up model packages in group %s: %s", state.TrainingJobName.ValueString(), groupARN, err),
+				)
 			}
 		}
 	}
@@ -1736,6 +1740,22 @@ func VPCConfigFromState(ctx context.Context, vpcConfig fwtypes.ListNestedObjectV
 	diags.Append(vpcConfigs[0].Subnets.ElementsAs(ctx, &subnetIDs, false)...)
 
 	return securityGroupIDs, subnetIDs, diags
+}
+
+func ModelPackageGroupARNFromState(ctx context.Context, modelPackageConfig fwtypes.ListNestedObjectValueOf[trainingJobModelPackageConfigModel]) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if modelPackageConfig.IsNull() || modelPackageConfig.IsUnknown() {
+		return "", diags
+	}
+
+	mpConfigs, d := modelPackageConfig.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(mpConfigs) == 0 {
+		return "", diags
+	}
+
+	return mpConfigs[0].ModelPackageGroupARN.ValueString(), diags
 }
 
 // SageMaker injects metric definitions for some built-in algorithms and supported
@@ -1922,7 +1942,8 @@ func isTrainingJobInTerminalState(err error) bool {
 type resourceTrainingJobModel struct {
 	framework.WithRegionModel
 	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
-	DeleteVPCENIsOnDestroy                types.Bool                                                               `tfsdk:"delete_vpc_enis_on_destroy"`
+	DeleteModelPackagesOnDestroy          types.Bool                                                               `tfsdk:"delete_model_packages_on_destroy" autoflex:",noexpand,noflatten"`
+	DeleteVPCENIsOnDestroy                types.Bool                                                               `tfsdk:"delete_vpc_enis_on_destroy" autoflex:",noexpand,noflatten"`
 	TrainingJobARN                        types.String                                                             `tfsdk:"arn"`
 	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[trainingJobCheckpointConfigModel]        `tfsdk:"checkpoint_config"`
 	DebugHookConfig                       fwtypes.ListNestedObjectValueOf[trainingJobDebugHookConfigModel]         `tfsdk:"debug_hook_config"`

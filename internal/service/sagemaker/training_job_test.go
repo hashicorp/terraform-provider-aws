@@ -275,6 +275,60 @@ func TestVPCConfigFromState(t *testing.T) {
 	}
 }
 
+func TestModelPackageGroupARNFromState(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := []struct {
+		name         string
+		config       fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobModelPackageConfigModel]
+		want         string
+		wantHasError bool
+	}{
+		{
+			name:         "null config returns empty",
+			config:       fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobModelPackageConfigModel](ctx),
+			want:         "",
+			wantHasError: false,
+		},
+		{
+			name:         "unknown config returns empty",
+			config:       fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.TrainingJobModelPackageConfigModel](ctx),
+			want:         "",
+			wantHasError: false,
+		},
+		{
+			name:         "empty known config returns empty",
+			config:       fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobModelPackageConfigModel{}),
+			want:         "",
+			wantHasError: false,
+		},
+		{
+			name:         "valid config extracts group arn",
+			config:       testTrainingJobModelPackageConfigValue(ctx, "arn:aws:sagemaker:us-west-2:123456789012:model-package-group/example"), //lintignore:AWSAT003,AWSAT005
+			want:         "arn:aws:sagemaker:us-west-2:123456789012:model-package-group/example",                                              //lintignore:AWSAT003,AWSAT005
+			wantHasError: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, diags := tfsagemaker.ModelPackageGroupARNFromState(ctx, testCase.config)
+
+			if diags.HasError() != testCase.wantHasError {
+				t.Errorf("got = %v, want %v", diags.HasError(), testCase.wantHasError)
+			}
+
+			if !testCase.wantHasError && got != testCase.want {
+				t.Errorf("got = %q, want %q", got, testCase.want)
+			}
+		})
+	}
+}
+
 func testTrainingJobAlgorithmSpecificationValue(ctx context.Context, metricDefinitions fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobMetricDefinitionModel]) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel] {
 	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobAlgorithmSpecificationModel{
 		{
@@ -336,6 +390,15 @@ func testTrainingJobVPCConfigValue(ctx context.Context, securityGroupIDs, subnet
 		{
 			SecurityGroupIDs: fwtypes.NewListValueOfMust[basetypes.StringValue](ctx, sgValues),
 			Subnets:          fwtypes.NewListValueOfMust[basetypes.StringValue](ctx, subnetValues),
+		},
+	})
+}
+
+func testTrainingJobModelPackageConfigValue(ctx context.Context, modelPackageGroupARN string) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobModelPackageConfigModel] {
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobModelPackageConfigModel{
+		{
+			ModelPackageGroupARN:  fwtypes.ARNValue(modelPackageGroupARN),
+			SourceModelPackageARN: fwtypes.ARNNull(),
 		},
 	})
 }
@@ -445,6 +508,7 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delete_vpc_enis_on_destroy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
@@ -456,6 +520,7 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delete_vpc_enis_on_destroy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
@@ -965,6 +1030,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delete_model_packages_on_destroy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", acctest.CtTrue),
@@ -981,6 +1047,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delete_model_packages_on_destroy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", acctest.CtTrue),
@@ -998,7 +1065,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
 				ImportStateVerifyIdentifierAttribute: "training_job_name",
-				ImportStateVerifyIgnore:              []string{"serverless_job_config.0.base_model_arn"},
+				ImportStateVerifyIgnore:              []string{"delete_model_packages_on_destroy", "serverless_job_config.0.base_model_arn"},
 			},
 		},
 	})
@@ -1157,6 +1224,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delete_model_packages_on_destroy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mlflow_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mlflow_config.0.mlflow_experiment_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "mlflow_config.0.mlflow_resource_arn"),
@@ -1168,6 +1236,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "delete_model_packages_on_destroy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mlflow_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mlflow_config.0.mlflow_experiment_name", rNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "mlflow_config.0.mlflow_resource_arn"),
@@ -1180,6 +1249,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
 				ImportStateVerifyIdentifierAttribute: "training_job_name",
+				ImportStateVerifyIgnore:              []string{"delete_model_packages_on_destroy"},
 			},
 		},
 	})
@@ -2618,8 +2688,9 @@ resource "aws_sagemaker_model_package_group" "test" {
 }
 
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  training_job_name                = %[1]q
+  role_arn                         = aws_iam_role.test.arn
+  delete_model_packages_on_destroy = true
 
   input_data_config {
     channel_name = "train"
@@ -2729,8 +2800,9 @@ resource "aws_sagemaker_model_package_group" "test" {
 }
 
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  training_job_name                = %[1]q
+  role_arn                         = aws_iam_role.test.arn
+  delete_model_packages_on_destroy = true
 
   input_data_config {
     channel_name = "train"
@@ -2969,8 +3041,9 @@ resource "aws_sagemaker_mlflow_tracking_server" "test" {
 }
 
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  training_job_name                = %[1]q
+  role_arn                         = aws_iam_role.test.arn
+  delete_model_packages_on_destroy = true
 
   input_data_config {
     channel_name = "train"
@@ -3077,8 +3150,9 @@ resource "aws_sagemaker_mlflow_tracking_server" "test" {
 }
 
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  training_job_name                = %[1]q
+  role_arn                         = aws_iam_role.test.arn
+  delete_model_packages_on_destroy = true
 
   input_data_config {
     channel_name = "train"
