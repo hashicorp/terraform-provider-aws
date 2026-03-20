@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,7 +46,7 @@ func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, req
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input ec2.DescribeTransitGatewayMeteringPoliciesInput
-		for item, err := range listTransitGatewayMeteringPolicies(ctx, conn, &input) {
+		for item, err := range tfiter.ConcatValuesWithError(listTransitGatewayMeteringPolicies(ctx, conn, &input)) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

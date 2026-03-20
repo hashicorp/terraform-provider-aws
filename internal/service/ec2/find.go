@@ -1406,7 +1406,7 @@ func findSubnet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnet
 }
 
 func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
-	output, err := tfslices.CollectWithError(listSubnets(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listSubnets(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 		return nil, &retry.NotFoundError{
@@ -2041,7 +2041,7 @@ func findSecurityGroup(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 }
 
 func findSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
-	output, err := tfslices.CollectWithError(listSecurityGroups(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listSecurityGroups(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupIDNotFound) {
 		return nil, &retry.NotFoundError{
@@ -2127,7 +2127,7 @@ func findSecurityGroupRule(ctx context.Context, conn *ec2.Client, input *ec2.Des
 }
 
 func findSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) ([]awstypes.SecurityGroupRule, error) {
-	output, err := tfslices.CollectWithError(listSecurityGroupRules(ctx, conn, input, tfslices.PredicateTrue[awstypes.SecurityGroupRule]()))
+	output, err := tfslices.CollectAndConcatWithError(listSecurityGroupRules(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -2587,7 +2587,7 @@ func findVPCEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 }
 
 func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) ([]awstypes.VpcEndpoint, error) {
-	output, err := tfslices.CollectWithError(listVPCEndpoints(ctx, conn, input, optFns...))
+	output, err := tfslices.CollectAndConcatWithError(listVPCEndpoints(ctx, conn, input, optFns...))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -5235,7 +5235,7 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 }
 
 func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) ([]awstypes.TransitGatewayMeteringPolicy, error) {
-	output, err := tfslices.CollectWithError(listTransitGatewayMeteringPolicies(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listTransitGatewayMeteringPolicies(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -7202,7 +7202,7 @@ func findSecondaryNetwork(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 }
 
 func findSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) ([]awstypes.SecondaryNetwork, error) {
-	output, err := tfslices.CollectWithError(listSecondaryNetworks(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listSecondaryNetworks(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
 		return nil, &retry.NotFoundError{
@@ -7254,7 +7254,7 @@ func findSecondarySubnet(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 }
 
 func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) ([]awstypes.SecondarySubnet, error) {
-	output, err := tfslices.CollectWithError(listSecondarySubnets(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listSecondarySubnets(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
 		return nil, &retry.NotFoundError{

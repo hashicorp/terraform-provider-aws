@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -91,7 +92,7 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listSecurityGroups(ctx, conn, &input) {
+		for item, err := range tfiter.ConcatValuesWithError(listSecurityGroups(ctx, conn, &input)) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

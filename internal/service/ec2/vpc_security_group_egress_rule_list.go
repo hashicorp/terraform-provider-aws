@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -86,11 +86,15 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for rule, err := range listSecurityGroupRules(ctx, conn, &input, func(v awstypes.SecurityGroupRule) bool { return aws.ToBool(v.IsEgress) }) {
+		for rule, err := range tfiter.ConcatValuesWithError(listSecurityGroupRules(ctx, conn, &input)) {
 			if err != nil {
 				tflog.Error(ctx, "Listing resources", map[string]any{
 					"error": err.Error(),
 				})
+				continue
+			}
+
+			if !aws.ToBool(rule.IsEgress) {
 				continue
 			}
 

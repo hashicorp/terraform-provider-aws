@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 )
 
 // @FrameworkListResource("aws_ec2_secondary_network")
@@ -40,7 +41,7 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input ec2.DescribeSecondaryNetworksInput
-		for item, err := range listSecondaryNetworks(ctx, conn, &input) {
+		for item, err := range tfiter.ConcatValuesWithError(listSecondaryNetworks(ctx, conn, &input)) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

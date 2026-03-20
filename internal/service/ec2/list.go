@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -51,122 +50,106 @@ func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeR
 	}
 }
 
-func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecondaryNetwork, error] {
-	return func(yield func(awstypes.SecondaryNetwork, error) bool) {
+func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.SecondaryNetwork, error] {
+	return func(yield func([]awstypes.SecondaryNetwork, error) bool) {
 		pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.SecondaryNetwork](), fmt.Errorf("listing EC2 Secondary Networks: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Secondary Networks: %w", err))
 				return
 			}
 
-			for _, v := range page.SecondaryNetworks {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.SecondaryNetworks, nil) {
+				return
 			}
 		}
 	}
 }
 
-func listSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecondarySubnet, error] {
-	return func(yield func(awstypes.SecondarySubnet, error) bool) {
+func listSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.SecondarySubnet, error] {
+	return func(yield func([]awstypes.SecondarySubnet, error) bool) {
 		pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.SecondarySubnet](), fmt.Errorf("listing EC2 Secondary Subnets: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Secondary Subnets: %w", err))
 				return
 			}
 
-			for _, v := range page.SecondarySubnets {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.SecondarySubnets, nil) {
+				return
 			}
 		}
 	}
 }
 
-func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecurityGroup, error] {
-	return func(yield func(awstypes.SecurityGroup, error) bool) {
+func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.SecurityGroup, error] {
+	return func(yield func([]awstypes.SecurityGroup, error) bool) {
 		pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.SecurityGroup](), fmt.Errorf("listing EC2 Security Groups: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Security Groups: %w", err))
 				return
 			}
 
-			for _, v := range page.SecurityGroups {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.SecurityGroups, nil) {
+				return
 			}
 		}
 	}
 }
 
-func listSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput, filter tfslices.Predicate[awstypes.SecurityGroupRule], optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecurityGroupRule, error] {
-	return func(yield func(awstypes.SecurityGroupRule, error) bool) {
+func listSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.SecurityGroupRule, error] {
+	return func(yield func([]awstypes.SecurityGroupRule, error) bool) {
 		pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.SecurityGroupRule](), fmt.Errorf("listing EC2 Security Group Rules: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Security Group Rules: %w", err))
 				return
 			}
 
-			for _, v := range page.SecurityGroupRules {
-				if filter != nil && !filter(v) {
-					continue
-				}
-
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.SecurityGroupRules, nil) {
+				return
 			}
 		}
 	}
 }
 
-func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Subnet, error] {
-	return func(yield func(awstypes.Subnet, error) bool) {
+func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.Subnet, error] {
+	return func(yield func([]awstypes.Subnet, error) bool) {
 		pages := ec2.NewDescribeSubnetsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Subnet](), fmt.Errorf("listing EC2 Subnets: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Subnets: %w", err))
 				return
 			}
 
-			for _, v := range page.Subnets {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.Subnets, nil) {
+				return
 			}
 		}
 	}
 }
 
-func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
-	return func(yield func(awstypes.TransitGatewayMeteringPolicy, error) bool) {
+func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.TransitGatewayMeteringPolicy, error] {
+	return func(yield func([]awstypes.TransitGatewayMeteringPolicy, error) bool) {
 		err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
-			for _, v := range page.TransitGatewayMeteringPolicies {
-				if !yield(v, nil) {
-					return false
-				}
+			if !yield(page.TransitGatewayMeteringPolicies, nil) {
+				return false
 			}
 
 			return !lastPage
 		}, optFns...)
 		if err != nil {
-			yield(inttypes.Zero[awstypes.TransitGatewayMeteringPolicy](), fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
+			yield(nil, fmt.Errorf("listing EC2 Transit Gateway Metering Policies: %w", err))
 			return
 		}
 	}
@@ -191,20 +174,18 @@ func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInpu
 	}
 }
 
-func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.VpcEndpoint, error] {
-	return func(yield func(awstypes.VpcEndpoint, error) bool) {
+func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.VpcEndpoint, error] {
+	return func(yield func([]awstypes.VpcEndpoint, error) bool) {
 		pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.VpcEndpoint](), fmt.Errorf("listing EC2 VPC Endpoints: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 VPC Endpoints: %w", err))
 				return
 			}
 
-			for _, item := range page.VpcEndpoints {
-				if !yield(item, nil) {
-					return
-				}
+			if !yield(page.VpcEndpoints, nil) {
+				return
 			}
 		}
 	}
