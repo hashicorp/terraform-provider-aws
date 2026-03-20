@@ -11,120 +11,211 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+type testNestedModel struct {
+	Field1 types.String `tfsdk:"field1"`
+	Field2 types.Int32  `tfsdk:"field2"`
+}
+
+type testListModel struct {
+	Name   types.String                                     `tfsdk:"name"`
+	Tags   fwtypes.MapValueOf[types.String]                 `tfsdk:"tags"`
+	Config fwtypes.ObjectValueOf[testNestedModel]           `tfsdk:"config"`
+	Rules  fwtypes.ListNestedObjectValueOf[testNestedModel] `tfsdk:"rules"`
+	Nested testNestedModel                                  `tfsdk:"nested"`
+}
+
+type testMixedFieldModel struct {
+	Name   types.String `tfsdk:"name"`
+	Count  int          `tfsdk:"count"`
+	hidden types.String `tfsdk:"hidden"`
+}
+
+type testDeepLeafModel struct {
+	Field1 types.String `tfsdk:"field1"`
+	Field2 types.Int32  `tfsdk:"field2"`
+}
+
+type testDeepMiddleModel struct {
+	Leaf testDeepLeafModel `tfsdk:"leaf"`
+}
+
+type testDeepRootModel struct {
+	Name   types.String        `tfsdk:"name"`
+	Middle testDeepMiddleModel `tfsdk:"middle"`
+}
+
 func TestSetZeroValueAttrFieldsToNull(t *testing.T) {
 	t.Parallel()
 
-	type nestedModel struct {
-		Field1 types.String `tfsdk:"field1"`
-		Field2 types.Int32  `tfsdk:"field2"`
-	}
-
-	type listModel struct {
-		Name   types.String                                 `tfsdk:"name"`
-		Tags   fwtypes.MapValueOf[types.String]             `tfsdk:"tags"`
-		Config fwtypes.ObjectValueOf[nestedModel]           `tfsdk:"config"`
-		Rules  fwtypes.ListNestedObjectValueOf[nestedModel] `tfsdk:"rules"`
-		Nested nestedModel                                  `tfsdk:"nested"`
-	}
-
 	ctx := context.Background()
-	data := &listModel{
-		Name: types.StringValue("example"),
+
+	tests := map[string]struct {
+		data     *testListModel
+		expected *testListModel
+	}{
+		"zero attr fields become null": {
+			data: &testListModel{
+				Name: types.StringValue("example"),
+			},
+			expected: expectedTestListModel(ctx, types.StringValue("example")),
+		},
+		"null values remain null": {
+			data: &testListModel{
+				Name: types.StringNull(),
+			},
+			expected: expectedTestListModel(ctx, types.StringNull()),
+		},
+		"unknown values remain unknown": {
+			data: &testListModel{
+				Name: types.StringUnknown(),
+			},
+			expected: expectedTestListModel(ctx, types.StringUnknown()),
+		},
 	}
 
-	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", diags)
-	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	if !data.Name.Equal(types.StringValue("example")) {
-		t.Fatalf("expected Name to be unchanged")
-	}
-	if !data.Tags.IsNull() {
-		t.Errorf("expected Tags to be null")
-	}
-	if !data.Config.IsNull() {
-		t.Errorf("expected Config to be null")
-	}
-	if !data.Rules.IsNull() {
-		t.Errorf("expected Rules to be null")
-	}
-	if !data.Nested.Field1.IsNull() {
-		t.Errorf("expected Nested.Field1 to be null")
-	}
-	if !data.Nested.Field2.IsNull() {
-		t.Errorf("expected Nested.Field2 to be null")
+			if diags := setZeroValueAttrFieldsToNull(ctx, test.data); diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+
+			assertTestListModelEqual(t, test.data, test.expected)
+		})
 	}
 }
 
-func TestSetZeroValueAttrFieldsToNull_NonPointer(t *testing.T) {
+func TestSetZeroValueAttrFieldsToNull_IgnoresInvalidTargets(t *testing.T) {
 	t.Parallel()
 
-	type listModel struct {
-		Name types.String `tfsdk:"name"`
+	ctx := context.Background()
+
+	tests := map[string]struct {
+		target any
+	}{
+		"non-pointer": {
+			target: testListModel{},
+		},
+		"nil pointer": {
+			target: (*testListModel)(nil),
+		},
+		"pointer to non-struct": {
+			target: func() any {
+				v := 42
+				return &v
+			}(),
+		},
 	}
 
-	ctx := context.Background()
-	data := listModel{}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", diags)
+			if diags := setZeroValueAttrFieldsToNull(ctx, test.target); diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+		})
 	}
 }
 
-func TestSetZeroValueAttrFieldsToNull_NilPointer(t *testing.T) {
+func TestSetZeroValueAttrFieldsToNull_AdditionalCases(t *testing.T) {
 	t.Parallel()
-
-	type listModel struct {
-		Name types.String `tfsdk:"name"`
-	}
 
 	ctx := context.Background()
 
-	var data *listModel
+	tests := map[string]struct {
+		target any
+		assert func(*testing.T, any)
+	}{
+		"skips unsettable and non-struct fields": {
+			target: &testMixedFieldModel{
+				Count:  42,
+				hidden: types.String{},
+			},
+			assert: func(t *testing.T, target any) {
+				t.Helper()
 
-	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", diags)
+				data := target.(*testMixedFieldModel)
+
+				if !data.Name.IsNull() {
+					t.Fatalf("expected Name to be normalized to null")
+				}
+				if got, want := data.Count, 42; got != want {
+					t.Fatalf("expected Count to remain %d, got %d", want, got)
+				}
+				if !data.hidden.Equal(types.String{}) {
+					t.Fatalf("expected hidden field to remain zero value")
+				}
+			},
+		},
+		"recurses two levels deep": {
+			target: &testDeepRootModel{
+				Name: types.StringValue("example"),
+			},
+			assert: func(t *testing.T, target any) {
+				t.Helper()
+
+				data := target.(*testDeepRootModel)
+
+				if !data.Name.Equal(types.StringValue("example")) {
+					t.Fatalf("expected Name to remain unchanged")
+				}
+				if !data.Middle.Leaf.Field1.IsNull() {
+					t.Fatalf("expected Middle.Leaf.Field1 to be normalized to null")
+				}
+				if !data.Middle.Leaf.Field2.IsNull() {
+					t.Fatalf("expected Middle.Leaf.Field2 to be normalized to null")
+				}
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if diags := setZeroValueAttrFieldsToNull(ctx, test.target); diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+
+			test.assert(t, test.target)
+		})
 	}
 }
 
-func TestSetZeroValueAttrFieldsToNull_AlreadyNull(t *testing.T) {
-	t.Parallel()
-
-	type listModel struct {
-		Name types.String `tfsdk:"name"`
-	}
-
-	ctx := context.Background()
-	data := &listModel{
-		Name: types.StringNull(),
-	}
-
-	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", diags)
-	}
-
-	if !data.Name.IsNull() {
-		t.Errorf("expected Name to remain null")
+func expectedTestListModel(ctx context.Context, name types.String) *testListModel {
+	return &testListModel{
+		Name:   name,
+		Tags:   fwtypes.NewMapValueOfNull[types.String](ctx),
+		Config: fwtypes.NewObjectValueOfNull[testNestedModel](ctx),
+		Rules:  fwtypes.NewListNestedObjectValueOfNull[testNestedModel](ctx),
+		Nested: testNestedModel{
+			Field1: types.StringNull(),
+			Field2: types.Int32Null(),
+		},
 	}
 }
 
-func TestSetZeroValueAttrFieldsToNull_UnknownValue(t *testing.T) {
-	t.Parallel()
+func assertTestListModelEqual(t *testing.T, got, want *testListModel) {
+	t.Helper()
 
-	type listModel struct {
-		Name types.String `tfsdk:"name"`
+	if !got.Name.Equal(want.Name) {
+		t.Fatalf("expected Name to equal %s, got %s", want.Name, got.Name)
 	}
-
-	ctx := context.Background()
-	data := &listModel{
-		Name: types.StringUnknown(),
+	if !got.Tags.Equal(want.Tags) {
+		t.Fatalf("expected Tags to equal %s, got %s", want.Tags, got.Tags)
 	}
-
-	if diags := setZeroValueAttrFieldsToNull(ctx, data); diags.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", diags)
+	if !got.Config.Equal(want.Config) {
+		t.Fatalf("expected Config to equal %s, got %s", want.Config, got.Config)
 	}
-
-	if !data.Name.IsUnknown() {
-		t.Errorf("expected Name to remain unknown")
+	if !got.Rules.Equal(want.Rules) {
+		t.Fatalf("expected Rules to equal %s, got %s", want.Rules, got.Rules)
+	}
+	if !got.Nested.Field1.Equal(want.Nested.Field1) {
+		t.Fatalf("expected Nested.Field1 to equal %s, got %s", want.Nested.Field1, got.Nested.Field1)
+	}
+	if !got.Nested.Field2.Equal(want.Nested.Field2) {
+		t.Fatalf("expected Nested.Field2 to equal %s, got %s", want.Nested.Field2, got.Nested.Field2)
 	}
 }
