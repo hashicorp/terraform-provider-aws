@@ -6,11 +6,13 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+  "slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -208,6 +210,71 @@ func TestServerlessJobConfigEqualityFunc(t *testing.T) {
 	}
 }
 
+func TestVPCConfigFromState(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := []struct {
+		name         string
+		vpcConfig    fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobVPCConfigModel]
+		wantSGIDs    []string
+		wantSubnets  []string
+		wantHasError bool
+	}{
+		{
+			name:         "null config returns empty",
+			vpcConfig:    fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TrainingJobVPCConfigModel](ctx),
+			wantSGIDs:    nil,
+			wantSubnets:  nil,
+			wantHasError: false,
+		},
+		{
+			name:         "unknown config returns empty",
+			vpcConfig:    fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.TrainingJobVPCConfigModel](ctx),
+			wantSGIDs:    nil,
+			wantSubnets:  nil,
+			wantHasError: false,
+		},
+    {
+      name:         "empty known config returns empty",
+      vpcConfig:    fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobVPCConfigModel{}),
+      wantSGIDs:    nil,
+      wantSubnets:  nil,
+      wantHasError: false,
+    },
+		{
+			name:         "valid config extracts IDs",
+			vpcConfig:    testTrainingJobVPCConfigValue(ctx, []string{"sg-12345", "sg-67890"}, []string{"subnet-1", "subnet-2"}),
+			wantSGIDs:    []string{"sg-12345", "sg-67890"},
+			wantSubnets:  []string{"subnet-1", "subnet-2"},
+			wantHasError: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			gotSGIDs, gotSubnets, diags := tfsagemaker.VPCConfigFromState(ctx, testCase.vpcConfig)
+
+			if diags.HasError() != testCase.wantHasError {
+				t.Errorf("got = %v, want %v", diags.HasError(), testCase.wantHasError)
+			}
+
+			if !testCase.wantHasError {
+        if !slices.Equal(gotSGIDs, testCase.wantSGIDs) {
+          t.Errorf("got SG IDs = %v, want %v", gotSGIDs, testCase.wantSGIDs)
+        }
+
+        if !slices.Equal(gotSubnets, testCase.wantSubnets) {
+          t.Errorf("got subnets = %v, want %v", gotSubnets, testCase.wantSubnets)
+        }
+			}
+		})
+	}
+}
+
 func testTrainingJobAlgorithmSpecificationValue(ctx context.Context, metricDefinitions fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobMetricDefinitionModel]) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobAlgorithmSpecificationModel] {
 	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobAlgorithmSpecificationModel{
 		{
@@ -251,6 +318,24 @@ func testTrainingJobServerlessJobConfigValueWithOptions(ctx context.Context, bas
 			EvaluatorARN:           evaluatorARN,
 			JobType:                fwtypes.StringEnumNull[awstypes.ServerlessJobType](),
 			Peft:                   fwtypes.StringEnumNull[awstypes.Peft](),
+		},
+	})
+}
+
+func testTrainingJobVPCConfigValue(ctx context.Context, securityGroupIDs, subnets []string) fwtypes.ListNestedObjectValueOf[tfsagemaker.TrainingJobVPCConfigModel] {
+	sgValues := make([]attr.Value, len(securityGroupIDs))
+	for i, sg := range securityGroupIDs {
+		sgValues[i] = types.StringValue(sg)
+	}
+	subnetValues := make([]attr.Value, len(subnets))
+	for i, subnet := range subnets {
+		subnetValues[i] = types.StringValue(subnet)
+	}
+
+	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobVPCConfigModel{
+		{
+			SecurityGroupIDs: fwtypes.NewListValueOfMust[basetypes.StringValue](ctx, sgValues),
+			Subnets:          fwtypes.NewListValueOfMust[basetypes.StringValue](ctx, subnetValues),
 		},
 	})
 }

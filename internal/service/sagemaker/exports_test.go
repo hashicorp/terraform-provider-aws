@@ -9,6 +9,7 @@ type (
 	TrainingJobTrainingImageConfigModel    = trainingJobTrainingImageConfigModel
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
+	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
 )
 
 // Exports for use in tests only.

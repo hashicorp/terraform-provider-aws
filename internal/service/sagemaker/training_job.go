@@ -1592,27 +1592,17 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	job, err := findTrainingJobByName(ctx, conn, state.TrainingJobName.ValueString())
-	if err != nil {
-		if !retry.NotFound(err) {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
-		}
-		return
+	stopInput := &sagemaker.StopTrainingJobInput{
+		TrainingJobName: state.TrainingJobName.ValueStringPointer(),
 	}
-
-	if job.TrainingJobStatus == awstypes.TrainingJobStatusInProgress {
-		stopInput := &sagemaker.StopTrainingJobInput{
-			TrainingJobName: state.TrainingJobName.ValueStringPointer(),
-		}
-		_, err := conn.StopTrainingJob(ctx, stopInput)
-		if err != nil {
+	if _, err := conn.StopTrainingJob(ctx, stopInput); err != nil {
+		if !isTrainingJobInTerminalState(err) {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 			return
 		}
-
+	} else {
 		stopTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err = waitTrainingJobStopped(ctx, conn, state.TrainingJobName.ValueString(), stopTimeout)
-		if err != nil {
+		if _, err := waitTrainingJobStopped(ctx, conn, state.TrainingJobName.ValueString(), stopTimeout); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 			return
 		}
@@ -1622,8 +1612,7 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		TrainingJobName: state.TrainingJobName.ValueStringPointer(),
 	}
 
-	_, err = conn.DeleteTrainingJob(ctx, &input)
-
+	_, err := conn.DeleteTrainingJob(ctx, &input)
 	if err != nil {
 		if errs.Contains(err, "Requested resource not found") {
 			return
@@ -1641,22 +1630,14 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	if !state.VPCConfig.IsNull() && !state.VPCConfig.IsUnknown() {
-		vpcConfigs, diags := state.VPCConfig.ToSlice(ctx)
+		sgIDs, subnetIDs, diags := VPCConfigFromState(ctx, state.VPCConfig)
 		resp.Diagnostics.Append(diags...)
-		if !resp.Diagnostics.HasError() && len(vpcConfigs) > 0 {
-			var securityGroupIDs []string
-			resp.Diagnostics.Append(vpcConfigs[0].SecurityGroupIDs.ElementsAs(ctx, &securityGroupIDs, false)...)
-
-			var subnetIDs []string
-			resp.Diagnostics.Append(vpcConfigs[0].Subnets.ElementsAs(ctx, &subnetIDs, false)...)
-
-			if !resp.Diagnostics.HasError() && len(securityGroupIDs) > 0 && len(subnetIDs) > 0 {
-				if err := deleteTrainingJobVPCENIs(ctx, r.Meta().EC2Client(ctx), securityGroupIDs, subnetIDs, deleteTimeout); err != nil {
-					resp.Diagnostics.AddWarning(
-						"Error cleaning up VPC ENIs",
-						fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up VPC network interfaces: %s", state.TrainingJobName.ValueString(), err),
-					)
-				}
+		if !resp.Diagnostics.HasError() && len(sgIDs) > 0 && len(subnetIDs) > 0 {
+			if err := deleteTrainingJobVPCENIs(ctx, r.Meta().EC2Client(ctx), sgIDs, subnetIDs, deleteTimeout); err != nil {
+				resp.Diagnostics.AddWarning(
+					"Error cleaning up VPC ENIs",
+					fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up VPC network interfaces: %s", state.TrainingJobName.ValueString(), err),
+				)
 			}
 		}
 	}
@@ -1726,6 +1707,28 @@ func deleteModelPackages(ctx context.Context, conn *sagemaker.Client, groupNameO
 		}
 	}
 	return nil
+}
+
+func VPCConfigFromState(ctx context.Context, vpcConfig fwtypes.ListNestedObjectValueOf[trainingJobVPCConfigModel]) ([]string, []string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if vpcConfig.IsNull() || vpcConfig.IsUnknown() {
+		return nil, nil, diags
+	}
+
+	vpcConfigs, d := vpcConfig.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(vpcConfigs) == 0 {
+		return nil, nil, diags
+	}
+
+	var securityGroupIDs []string
+	diags.Append(vpcConfigs[0].SecurityGroupIDs.ElementsAs(ctx, &securityGroupIDs, false)...)
+
+	var subnetIDs []string
+	diags.Append(vpcConfigs[0].Subnets.ElementsAs(ctx, &subnetIDs, false)...)
+
+	return securityGroupIDs, subnetIDs, diags
 }
 
 // SageMaker injects metric definitions for some built-in algorithms and supported
@@ -1895,6 +1898,18 @@ func ErrMessageContainsAny(err error, code string, messages ...string) bool {
 		}
 	}
 	return false
+}
+
+func isTrainingJobInTerminalState(err error) bool {
+	if !tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
+		return false
+	}
+	return ErrMessageContainsAny(
+		err,
+		ErrCodeValidationException,
+		"The request was rejected because the training job is in status",
+		"Requested resource not found",
+	)
 }
 
 type resourceTrainingJobModel struct {
