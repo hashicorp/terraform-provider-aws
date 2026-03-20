@@ -43,23 +43,12 @@ func TestAccWorkMailDefaultDomain_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccDefaultDomainImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "organization_id"),
 				ImportStateVerifyIdentifierAttribute: "organization_id",
 			},
 		},
 	})
-}
-
-func testAccDefaultDomainImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["organization_id"], rs.Primary.Attributes[names.AttrDomainName]), nil
-	}
 }
 
 func testAccCheckDefaultDomainExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {

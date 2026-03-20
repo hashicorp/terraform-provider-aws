@@ -26,6 +26,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +45,6 @@ func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error
 
 const (
 	ResNameDomain = "Domain"
-	domainIDParts = 2
 )
 
 type domainResource struct {
@@ -161,17 +161,19 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	var input workmail.DeregisterMailDomainInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &state, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, state, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.DeregisterMailDomain(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.MailDomainNotFoundException](err) {
-			return
-		}
 
+	if errs.IsA[*awstypes.OrganizationNotFoundException](err) ||
+		errs.IsA[*awstypes.OrganizationStateException](err) {
+		return
+	}
+
+	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.DomainName.String())
 		return
 	}
@@ -190,28 +192,21 @@ func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, d
 	}
 
 	out, err := conn.GetMailDomain(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.MailDomainNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		} else if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		} else if errs.IsA[*awstypes.OrganizationStateException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
 
+	if errs.IsA[*awstypes.MailDomainNotFoundException](err) ||
+		errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		errs.IsA[*awstypes.OrganizationStateException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			Message: fmt.Sprintf("WorkMail Domain %s in organization %s not found", domainName, orgID),
-		})
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

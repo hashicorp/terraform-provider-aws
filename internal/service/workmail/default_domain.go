@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -29,6 +27,10 @@ import (
 )
 
 // @FrameworkResource("aws_workmail_default_domain", name="Default Domain")
+// @IdentityAttribute("organization_id")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="organization_id")
+// @Testing(checkDestroyNoop=true)
 func newDefaultDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultDomainResource{}
 
@@ -42,6 +44,7 @@ const (
 type defaultDomainResource struct {
 	framework.ResourceWithModel[defaultDomainResourceModel]
 	framework.WithNoOpDelete
+	framework.WithImportByIdentity
 }
 
 func (r *defaultDomainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -135,18 +138,6 @@ func (r *defaultDomainResource) putDefaultMailDomain(ctx context.Context, conn *
 
 	return diags
 }
-
-func (r *defaultDomainResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, domainIDParts, false)
-	if err != nil {
-		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[1])...)
-}
-
 func findDefaultDomainByOrgID(ctx context.Context, conn *workmail.Client, orgID string) (string, error) {
 	input := workmail.ListMailDomainsInput{
 		OrganizationId: aws.String(orgID),
