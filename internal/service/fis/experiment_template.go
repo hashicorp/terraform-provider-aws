@@ -1327,7 +1327,7 @@ func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 }
 
 func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
-	// See https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets
+	// See https://docs.aws.amazon.com/fis/latest/userguide/action-sequence.html#action-targets
 	allowedActionTargets := []string{
 		"AutoScalingGroups",
 		"Buckets",
@@ -1336,6 +1336,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"DBInstances",
 		"Functions",
 		"Instances",
+		"KinesisStreams",
 		"ManagedResources",
 		"Nodegroups",
 		"Pods",
