@@ -1574,9 +1574,7 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		_, err := conn.UpdateTrainingJob(ctx, &input)
-
-		if err != nil {
+		if _, err := conn.UpdateTrainingJob(ctx, &input); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName)
 			return
 		}
