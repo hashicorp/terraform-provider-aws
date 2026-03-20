@@ -192,10 +192,10 @@ func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input
 }
 
 func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.QueryDefinition]) ([]awstypes.QueryDefinition, error) {
-	return tfslices.CollectAndConcatWithError(listQueryDefinitions(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listQueryDefinitionPages(ctx, conn, input), optFns...)
 }
 
-func listQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.QueryDefinition, error] {
+func listQueryDefinitionPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.QueryDefinition, error] {
 	return func(yield func([]awstypes.QueryDefinition, error) bool) {
 		err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 			if page == nil {

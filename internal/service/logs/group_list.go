@@ -5,9 +5,11 @@ package logs
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -46,7 +48,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input cloudwatchlogs.DescribeLogGroupsInput
-		for output, err := range tfiter.ConcatValuesWithError(listLogGroups(ctx, conn, &input)) {
+		for output, err := range tfiter.ConcatValuesWithError(listLogGroupPages(ctx, conn, &input)) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -70,4 +72,8 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
+}
+
+func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogGroup, error] {
+	return tfiter.ConcatValuesWithError(listLogGroupPages(ctx, conn, input, optFns...))
 }

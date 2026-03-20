@@ -244,7 +244,7 @@ func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 }
 
 func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) ([]awstypes.MetricFilter, error) {
-	output, err := tfslices.CollectAndConcatWithError(listMetricFilters(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listMetricFilterPages(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -259,7 +259,7 @@ func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *
 	return output, nil
 }
 
-func listMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.MetricFilter, error] {
+func listMetricFilterPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.MetricFilter, error] {
 	return func(yield func([]awstypes.MetricFilter, error) bool) {
 		pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
 		for pages.HasMorePages() {

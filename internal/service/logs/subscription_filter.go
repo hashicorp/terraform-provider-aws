@@ -259,7 +259,7 @@ func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, in
 }
 
 func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) ([]awstypes.SubscriptionFilter, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSubscriptionFilters(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listSubscriptionFilterPages(ctx, conn, input), optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -274,7 +274,7 @@ func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, i
 	return output, nil
 }
 
-func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.SubscriptionFilter, error] { // nosemgrep:ci.logs-in-func-name
+func listSubscriptionFilterPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.SubscriptionFilter, error] {
 	return func(yield func([]awstypes.SubscriptionFilter, error) bool) {
 		pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
 		for pages.HasMorePages() {

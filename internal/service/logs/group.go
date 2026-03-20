@@ -305,7 +305,7 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 }
 
 func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) ([]awstypes.LogGroup, error) {
-	return tfslices.CollectAndConcatWithError(listLogGroups(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listLogGroupPages(ctx, conn, input), optFns...)
 }
 
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
@@ -320,7 +320,7 @@ func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 }
 
-func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogGroup, error] {
+func listLogGroupPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogGroup, error] {
 	return func(yield func([]awstypes.LogGroup, error) bool) {
 		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
 		for pages.HasMorePages() {

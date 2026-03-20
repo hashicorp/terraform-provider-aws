@@ -197,10 +197,10 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 }
 
 func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
-	return tfslices.CollectAndConcatWithError(listDestinations(ctx, conn, input), optFns...)
+	return tfslices.CollectAndConcatWithError(listDestinationPages(ctx, conn, input), optFns...)
 }
 
-func listDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {
+func listDestinationPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {
 	return func(yield func([]awstypes.Destination, error) bool) {
 		pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
 		for pages.HasMorePages() {
