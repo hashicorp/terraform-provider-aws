@@ -61,7 +61,6 @@ func (l *trainingJobListResource) List(ctx context.Context, request list.ListReq
 
 			var data resourceTrainingJobModel
 			data.TrainingJobName = fwflex.StringValueToFramework(ctx, trainingJobName)
-			data.TrainingJobName = fwflex.StringValueToFramework(ctx, trainingJobName)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {
