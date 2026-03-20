@@ -75,12 +75,12 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateRoutingControl(ctx, input)
-	result := output.RoutingControl
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Routing Control: %s", err)
 	}
 
+	result := output.RoutingControl
 	if result == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Routing Control: empty response")
 	}
