@@ -132,7 +132,7 @@ func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, inpu
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Application]) ([]awstypes.Application, error) { // nosemgrep:ci.logs-in-func-name
+func findApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Application]) ([]awstypes.Application, error) {
 	return tfslices.CollectAndConcatWithError(listApplicationPages(ctx, conn, input), optFns...)
 }
 
