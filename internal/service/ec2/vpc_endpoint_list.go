@@ -6,9 +6,11 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -90,7 +92,7 @@ func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListReq
 
 	tflog.Info(ctx, "Listing Resources")
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range tfiter.ConcatValuesWithError(listVPCEndpoints(ctx, conn, &input)) {
+		for item, err := range listVPCEndpoints(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -133,4 +135,8 @@ func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListReq
 			}
 		}
 	}
+}
+
+func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.VpcEndpoint, error] {
+	return tfiter.ConcatValuesWithError(listVPCEndpointPages(ctx, conn, input, optFns...))
 }

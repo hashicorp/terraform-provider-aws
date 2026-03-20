@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -97,7 +98,7 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
-		for instance, err := range tfiter.ConcatValuesWithError(listInstances(ctx, conn, &input)) {
+		for instance, err := range listInstances(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -139,6 +140,10 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
+}
+
+func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Instance, error] {
+	return tfiter.ConcatValuesWithError(listInstancePages(ctx, conn, input, optFns...))
 }
 
 func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {

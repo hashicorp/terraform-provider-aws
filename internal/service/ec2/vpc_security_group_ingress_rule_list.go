@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -86,7 +85,7 @@ func (l *listResourceSecurityGroupIngressRule) List(ctx context.Context, request
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for rule, err := range tfiter.ConcatValuesWithError(listSecurityGroupRules(ctx, conn, &input)) {
+		for rule, err := range listSecurityGroupRules(ctx, conn, &input) {
 			if err != nil {
 				tflog.Error(ctx, "Listing resources", map[string]any{
 					"error": err.Error(),

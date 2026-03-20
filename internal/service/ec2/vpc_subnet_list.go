@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -141,7 +142,7 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 	tflog.Info(ctx, "Listing resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for subnet, err := range tfiter.ConcatValuesWithError(listSubnets(ctx, conn, &input)) {
+		for subnet, err := range listSubnets(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -176,4 +177,8 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 			}
 		}
 	}
+}
+
+func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Subnet, error] {
+	return tfiter.ConcatValuesWithError(listSubnetPages(ctx, conn, input, optFns...))
 }

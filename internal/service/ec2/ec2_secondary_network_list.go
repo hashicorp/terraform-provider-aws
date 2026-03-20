@@ -5,9 +5,11 @@ package ec2
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -41,7 +43,7 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input ec2.DescribeSecondaryNetworksInput
-		for item, err := range tfiter.ConcatValuesWithError(listSecondaryNetworks(ctx, conn, &input)) {
+		for item, err := range listSecondaryNetworks(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -74,4 +76,8 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 
 type listSecondaryNetworkModel struct {
 	framework.WithRegionModel
+}
+
+func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecondaryNetwork, error] {
+	return tfiter.ConcatValuesWithError(listSecondaryNetworkPages(ctx, conn, input, optFns...))
 }

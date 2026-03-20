@@ -6,9 +6,11 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -102,7 +104,7 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 	tflog.Info(ctx, "Listing resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for routeTable, err := range tfiter.ConcatValuesWithError(listRouteTables(ctx, conn, &input)) {
+		for routeTable, err := range listRouteTables(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -153,4 +155,8 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 			}
 		}
 	}
+}
+
+func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.RouteTable, error] {
+	return tfiter.ConcatValuesWithError(listRouteTablePages(ctx, conn, input, optFns...))
 }

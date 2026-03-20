@@ -146,7 +146,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 	tflog.Info(ctx, "Listing resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for page, err := range listVPCs(ctx, conn, &input) {
+		for page, err := range listVPCPages(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)

@@ -5,9 +5,11 @@ package ec2
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -77,7 +79,7 @@ func (l *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
-		for item, err := range tfiter.ConcatValuesWithError(listSecondarySubnets(ctx, conn, &input)) {
+		for item, err := range listSecondarySubnets(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -103,4 +105,8 @@ func (l *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 			}
 		}
 	}
+}
+
+func listSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecondarySubnet, error] {
+	return tfiter.ConcatValuesWithError(listSecondarySubnetPages(ctx, conn, input, optFns...))
 }

@@ -5,9 +5,11 @@ package ec2
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -86,7 +88,7 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for rule, err := range tfiter.ConcatValuesWithError(listSecurityGroupRules(ctx, conn, &input)) {
+		for rule, err := range listSecurityGroupRules(ctx, conn, &input) {
 			if err != nil {
 				tflog.Error(ctx, "Listing resources", map[string]any{
 					"error": err.Error(),
@@ -137,4 +139,8 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 			}
 		}
 	}
+}
+
+func listSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecurityGroupRule, error] {
+	return tfiter.ConcatValuesWithError(listSecurityGroupRulePages(ctx, conn, input, optFns...))
 }

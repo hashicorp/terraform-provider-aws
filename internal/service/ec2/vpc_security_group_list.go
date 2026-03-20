@@ -6,9 +6,11 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -92,7 +94,7 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range tfiter.ConcatValuesWithError(listSecurityGroups(ctx, conn, &input)) {
+		for item, err := range listSecurityGroups(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -143,4 +145,8 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 			}
 		}
 	}
+}
+
+func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecurityGroup, error] {
+	return tfiter.ConcatValuesWithError(listSecurityGroupPages(ctx, conn, input, optFns...))
 }
