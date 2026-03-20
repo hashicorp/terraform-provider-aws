@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chatbot/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -346,6 +347,30 @@ func findTeamsChannelConfigurationByTeamID(ctx context.Context, conn *chatbot.Cl
 	return findTeamsChannelConfiguration(ctx, conn, input)
 }
 
+func findTeamsChannelConfigurationByARN(ctx context.Context, conn *chatbot.Client, configARN string) (*awstypes.TeamsChannelConfiguration, error) {
+	input := &chatbot.GetMicrosoftTeamsChannelConfigurationInput{
+		ChatConfigurationArn: aws.String(configARN),
+	}
+
+	output, err := conn.GetMicrosoftTeamsChannelConfiguration(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ChannelConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.ChannelConfiguration, nil
+}
+
 const (
 	teamsChannelConfigurationAvailable = "AVAILABLE"
 )
@@ -420,4 +445,9 @@ type teamsChannelConfigurationResourceModel struct {
 	TenantID                  types.String                      `tfsdk:"tenant_id"`
 	Timeouts                  timeouts.Value                    `tfsdk:"timeouts"`
 	UserAuthorizationRequired types.Bool                        `tfsdk:"user_authorization_required"`
+}
+
+func (data *teamsChannelConfigurationResourceModel) InitFromID() error {
+	_, err := arn.Parse(data.ChatConfigurationARN.ValueString())
+	return err
 }
