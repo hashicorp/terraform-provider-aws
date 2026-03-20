@@ -6,7 +6,7 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
-  "slices"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -236,13 +236,13 @@ func TestVPCConfigFromState(t *testing.T) {
 			wantSubnets:  nil,
 			wantHasError: false,
 		},
-    {
-      name:         "empty known config returns empty",
-      vpcConfig:    fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobVPCConfigModel{}),
-      wantSGIDs:    nil,
-      wantSubnets:  nil,
-      wantHasError: false,
-    },
+		{
+			name:         "empty known config returns empty",
+			vpcConfig:    fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobVPCConfigModel{}),
+			wantSGIDs:    nil,
+			wantSubnets:  nil,
+			wantHasError: false,
+		},
 		{
 			name:         "valid config extracts IDs",
 			vpcConfig:    testTrainingJobVPCConfigValue(ctx, []string{"sg-12345", "sg-67890"}, []string{"subnet-1", "subnet-2"}),
@@ -263,13 +263,13 @@ func TestVPCConfigFromState(t *testing.T) {
 			}
 
 			if !testCase.wantHasError {
-        if !slices.Equal(gotSGIDs, testCase.wantSGIDs) {
-          t.Errorf("got SG IDs = %v, want %v", gotSGIDs, testCase.wantSGIDs)
-        }
+				if !slices.Equal(gotSGIDs, testCase.wantSGIDs) {
+					t.Errorf("got SG IDs = %v, want %v", gotSGIDs, testCase.wantSGIDs)
+				}
 
-        if !slices.Equal(gotSubnets, testCase.wantSubnets) {
-          t.Errorf("got subnets = %v, want %v", gotSubnets, testCase.wantSubnets)
-        }
+				if !slices.Equal(gotSubnets, testCase.wantSubnets) {
+					t.Errorf("got subnets = %v, want %v", gotSubnets, testCase.wantSubnets)
+				}
 			}
 		})
 	}
@@ -468,6 +468,7 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "training_job_name"),
 				ImportStateVerifyIdentifierAttribute: "training_job_name",
+				ImportStateVerifyIgnore:              []string{"delete_vpc_enis_on_destroy"},
 			},
 		},
 	})
@@ -1441,8 +1442,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  training_job_name          = %[1]q
+  role_arn                   = aws_iam_role.test.arn
+  delete_vpc_enis_on_destroy = true
 
   algorithm_specification {
     training_input_mode = "File"
@@ -1495,8 +1497,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_sagemaker_training_job" "test" {
-  training_job_name = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  training_job_name          = %[1]q
+  role_arn                   = aws_iam_role.test.arn
+  delete_vpc_enis_on_destroy = true
 
   algorithm_specification {
     training_input_mode = "File"

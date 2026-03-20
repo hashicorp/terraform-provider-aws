@@ -301,6 +301,7 @@ The following arguments are optional:
 * `checkpoint_config` - (Optional) Location of checkpoints during training. See [`checkpoint_config`](#checkpoint_config) below. Conflicts with `serverless_job_config`.
 * `debug_hook_config` - (Optional) Configuration for debugging rules. See [`debug_hook_config`](#debug_hook_config) below. Conflicts with `serverless_job_config`.
 * `debug_rule_configurations` - (Optional) List of debug rule configurations. Maximum of 20. See [`debug_rule_configurations`](#debug_rule_configurations) below.
+* `delete_vpc_enis_on_destroy` - (Optional) Whether to delete detached VPC ENIs SageMaker may leave behind when the training job is destroyed. Default is `false`.
 * `enable_inter_container_traffic_encryption` - (Optional) Whether to encrypt inter-container traffic. When enabled, communications between containers are encrypted.
 * `enable_managed_spot_training` - (Optional) Whether to use managed spot training. Optimizes the cost of training by using Amazon EC2 Spot Instances. Conflicts with `serverless_job_config`.
 * `enable_network_isolation` - (Optional) Whether to isolate the training container from the network. No inbound or outbound network calls can be made.

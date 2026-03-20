@@ -90,6 +90,13 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"delete_vpc_enis_on_destroy": schema.BoolAttribute{
+				Optional:            true,
+				MarkdownDescription: "Whether to delete detached VPC ENIs that SageMaker may leave behind when destroying the training job.",
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"enable_inter_container_traffic_encryption": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -1629,7 +1636,7 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	if !state.VPCConfig.IsNull() && !state.VPCConfig.IsUnknown() {
+	if state.DeleteVPCENIsOnDestroy.ValueBool() && !state.VPCConfig.IsNull() && !state.VPCConfig.IsUnknown() {
 		sgIDs, subnetIDs, diags := VPCConfigFromState(ctx, state.VPCConfig)
 		resp.Diagnostics.Append(diags...)
 		if !resp.Diagnostics.HasError() && len(sgIDs) > 0 && len(subnetIDs) > 0 {
@@ -1915,6 +1922,7 @@ func isTrainingJobInTerminalState(err error) bool {
 type resourceTrainingJobModel struct {
 	framework.WithRegionModel
 	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
+	DeleteVPCENIsOnDestroy                types.Bool                                                               `tfsdk:"delete_vpc_enis_on_destroy"`
 	TrainingJobARN                        types.String                                                             `tfsdk:"arn"`
 	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[trainingJobCheckpointConfigModel]        `tfsdk:"checkpoint_config"`
 	DebugHookConfig                       fwtypes.ListNestedObjectValueOf[trainingJobDebugHookConfigModel]         `tfsdk:"debug_hook_config"`
