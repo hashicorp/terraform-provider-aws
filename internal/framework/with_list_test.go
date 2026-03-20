@@ -94,9 +94,6 @@ func TestSetZeroValueAttrFieldsToNull_IgnoresInvalidTargets(t *testing.T) {
 	tests := map[string]struct {
 		target any
 	}{
-		"non-pointer": {
-			target: testListModel{},
-		},
 		"nil pointer": {
 			target: (*testListModel)(nil),
 		},
@@ -125,9 +122,18 @@ func TestSetZeroValueAttrFieldsToNull_AdditionalCases(t *testing.T) {
 	ctx := context.Background()
 
 	tests := map[string]struct {
-		target any
-		assert func(*testing.T, any)
+		target               any
+		assert               func(*testing.T, any)
+		expectError          bool
+		expectedErrorSummary string
+		expectedErrorDetail  string
 	}{
+		"returns error for non-pointer": {
+			target:               testListModel{},
+			expectError:          true,
+			expectedErrorSummary: "Normalizing List Result",
+			expectedErrorDetail:  "target must be a pointer, got framework.testListModel",
+		},
 		"skips unsettable and non-struct fields": {
 			target: &testMixedFieldModel{
 				Count:  42,
@@ -175,7 +181,29 @@ func TestSetZeroValueAttrFieldsToNull_AdditionalCases(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if diags := setZeroValueAttrFieldsToNull(ctx, test.target); diags.HasError() {
+			diags := setZeroValueAttrFieldsToNull(ctx, test.target)
+
+			if test.expectError {
+				if !diags.HasError() {
+					t.Fatal("expected diagnostics")
+				}
+
+				if got, want := diags.ErrorsCount(), 1; got != want {
+					t.Fatalf("expected %d errors, got %d", want, got)
+				}
+
+				err := diags.Errors()[0]
+				if got, want := err.Summary(), test.expectedErrorSummary; got != want {
+					t.Fatalf("expected summary %q, got %q", want, got)
+				}
+				if got, want := err.Detail(), test.expectedErrorDetail; got != want {
+					t.Fatalf("expected detail %q, got %q", want, got)
+				}
+
+				return
+			}
+
+			if diags.HasError() {
 				t.Fatalf("unexpected error: %v", diags)
 			}
 
