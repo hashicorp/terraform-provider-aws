@@ -23,6 +23,8 @@ import (
 )
 
 // @SDKDataSource("aws_msk_cluster", name="Cluster")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -215,7 +217,6 @@ func dataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	cluster, err := findClusterByName(ctx, conn, clusterName)
@@ -255,9 +256,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
 
-	if err := d.Set(names.AttrTags, keyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
