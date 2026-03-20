@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -236,16 +237,23 @@ func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.Resour
 }
 
 func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	// Import ID optionally ends with "@<region>".
+	id, region, _ := strings.Cut(d.Id(), "@")
+	d.SetId(id)
+	if region != "" {
+		d.Set(names.AttrRegion, region)
+	}
+
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "transit" {
-		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
+		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", id, vifType)
 	}
 
 	return []*schema.ResourceData{d}, nil
