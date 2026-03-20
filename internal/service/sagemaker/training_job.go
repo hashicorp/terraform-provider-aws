@@ -58,8 +58,8 @@ import (
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
 
-	r.SetDefaultCreateTimeout(45 * time.Minute)
-	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
@@ -1481,7 +1481,7 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
 	}, func(err error) (bool, error) {
-		if tfawserr.ErrMessageContainsAny(err, ErrCodeValidationException,
+		if ErrMessageContainsAny(err, ErrCodeValidationException,
 			"Could not assume role",
 			"Unauthorized to List objects under S3 URL",
 			"Access denied to OutputDataConfig S3 bucket",
@@ -1884,6 +1884,17 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 	}
 
 	return out, nil
+}
+
+// TODO : use tfawserr.ErrMessageContainsAny after releasing new version of aws-sdk-go-base
+// https://github.com/hashicorp/terraform-provider-aws/issues/47033
+func ErrMessageContainsAny(err error, code string, messages ...string) bool {
+	for _, message := range messages {
+		if tfawserr.ErrMessageContains(err, code, message) {
+			return true
+		}
+	}
+	return false
 }
 
 type resourceTrainingJobModel struct {
