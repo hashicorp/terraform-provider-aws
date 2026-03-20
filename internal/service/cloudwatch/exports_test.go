@@ -11,7 +11,7 @@ var (
 	ResourceMetricStream                  = resourceMetricStream
 	ResourceContributorInsightRule        = newContributorInsightRuleResource
 	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
-	ResourceOtelEnrichmentConfiguration   = newOtelEnrichmentConfigurationResource
+	ResourceOtelEnrichment                = newOtelEnrichmentResource
 
 	FindCompositeAlarmByName                                   = findCompositeAlarmByName
 	FindDashboardByName                                        = findDashboardByName
@@ -19,5 +19,5 @@ var (
 	FindMetricStreamByName                                     = findMetricStreamByName
 	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
 	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
-	FindOtelEnrichmentConfiguration                            = findOtelEnrichmentConfiguration
+	FindOtelEnrichment                                         = findOtelEnrichment
 )

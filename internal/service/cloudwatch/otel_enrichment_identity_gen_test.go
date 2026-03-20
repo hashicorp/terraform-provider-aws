@@ -8,6 +8,7 @@ package cloudwatch_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -20,21 +21,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCloudWatchOTelEnrichmentConfiguration_identitySerial(t *testing.T) {
+func testAccCloudWatchOTelEnrichment_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic,
-		"RegionOverride": testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride,
+		acctest.CtBasic:  testAccCloudWatchOTelEnrichment_Identity_basic,
+		"RegionOverride": testAccCloudWatchOTelEnrichment_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic(t *testing.T) {
+func testAccCloudWatchOTelEnrichment_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_cloudwatch_otel_enrichment_configuration.test"
+	resourceName := "aws_cloudwatch_otel_enrichment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -43,19 +44,20 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckOtelEnrichmentConfigurationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckOTelEnrichmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOtelEnrichmentConfigurationExists(ctx, t, resourceName),
+					testAccCheckOTelEnrichmentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
@@ -66,7 +68,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -78,7 +80,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -95,7 +97,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -113,10 +115,10 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_basic(t *testing.T) {
 	})
 }
 
-func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *testing.T) {
+func testAccCloudWatchOTelEnrichment_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_cloudwatch_otel_enrichment_configuration.test"
+	resourceName := "aws_cloudwatch_otel_enrichment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -130,12 +132,13 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *tes
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
@@ -146,7 +149,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *tes
 
 			// Step 2: Import command with appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -160,7 +163,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *tes
 
 			// Step 3: Import command without appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -173,7 +176,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *tes
 
 			// Step 4: Import block with Import ID and appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -192,7 +195,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *tes
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -210,7 +213,7 @@ func testAccCloudWatchOTelEnrichmentConfiguration_Identity_regionOverride(t *tes
 
 			// Step 6: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichmentConfiguration/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OTelEnrichment/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
