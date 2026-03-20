@@ -103,8 +103,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0 h1:DCONGOKen9tTc35KrPbMGEr9
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0/go.mod h1:C/1NPMi8p0/I4HKgDqXYl7WdcQvWrKBq5PqwGQjMz8U=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6 h1:NuFq27qHpFuEEJBU9g4TWTjebw4A8R6Fg4rgsKq7SuI=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6/go.mod h1:/km2uZARrg9SotWJ1RIodg08j//vsgvUf8E8+vNAywk=
-github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.1 h1:D2Ry8w3jqgtDV1gRYOVGCfuEMObeJ1T38yUN+deiYxo=
-github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.22.1/go.mod h1:i6u+diPVJdod3dAPGuK335/gfN+iE10FcErKDzndvus=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.23.0 h1:BC4ZY0GBNR6TA1wepwH3ZX/dhimE9lASaLR93H4Z3RA=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.23.0/go.mod h1:i6u+diPVJdod3dAPGuK335/gfN+iE10FcErKDzndvus=
 github.com/aws/aws-sdk-go-v2/service/billing v1.10.3 h1:w8F86toOHMD3hI7rAB/ue4TpWqa48Jtd+vcw9RZ+LG0=
 github.com/aws/aws-sdk-go-v2/service/billing v1.10.3/go.mod h1:4ZcdVC4Gv96ShNp+BMMFPXOeDbKQwXLIr1osxiWcfVU=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.43.3 h1:lRfG8F8/sQ9aTj/Kj2aol953Ri6pq+pFJ/fRzkDWjEM=
@@ -221,8 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.12.7 h1:rm/yA8/eq1XhRLD5p2ApIgFb2ZX
 github.com/aws/aws-sdk-go-v2/service/dsql v1.12.7/go.mod h1:tUhyRZ65US50+620OP8A3HNXj7k94Se/y+qgAyv4aEI=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.2 h1:xi/ECwajy2mixviBD7bKAlGGSwzEaFKX2wIhrZt9NGw=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.2/go.mod h1:dLREOeW66eVaaGIOi2ZlLHDgkR3nuJ02rd00j0YSlBE=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.1 h1:c2BbWVkQ0hVqls6SruYCRxfN5W46qvL+hIg7VLhXpg8=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.1/go.mod h1:T6ndRfdhnXLIY5oKBHjYZDVj706los2zGdpThppquvA=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.295.0 h1:Au2QWaU5GbS30WY9WaBpV63erA3hz6gVSUvcC5iKyog=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.295.0/go.mod h1:T6ndRfdhnXLIY5oKBHjYZDVj706los2zGdpThppquvA=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.56.1 h1:aVrtUrtZN2aGNuI+Pt1XR9ofsochGVepv40nEl4D1dQ=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.56.1/go.mod h1:j2lU1Ko0NlsZRXXQ8rSs561bhAC+HN2ob+UREFuSfIA=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.12 h1:BRbWTsLEZasXhaRFF34kxopPk4yJmagffFs8lITm0xY=
@@ -245,8 +245,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.1 h1:tU0rtRt2Ap1
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.1/go.mod h1:JNnrlxQHM/xBd6uy+h9NcrekiIYvvMvga0l6d9K3mOM=
 github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 h1:ZD8Iw3WQlZYoCJtK3VBAUVO0DZFLSfHCKbze1xfYRdc=
 github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0/go.mod h1:1TkRQZaHJfi2GSj/kQNuxQVUyKLAErm+QXF6Dvz7iOs=
-github.com/aws/aws-sdk-go-v2/service/emr v1.57.8 h1:OA2cMUjjsbalDr3s1Oa6IE2DkLl+MRV+OeI5YxAuwQY=
-github.com/aws/aws-sdk-go-v2/service/emr v1.57.8/go.mod h1:FIgUc12CYjE0fe7kib/84J9Irl+sp8Yc/pYEgwPFmJ4=
+github.com/aws/aws-sdk-go-v2/service/emr v1.58.0 h1:PVhnyvqAuV0Y9BdfeU9EjhMG7SEYPYra6BfdLC9BhFw=
+github.com/aws/aws-sdk-go-v2/service/emr v1.58.0/go.mod h1:FIgUc12CYjE0fe7kib/84J9Irl+sp8Yc/pYEgwPFmJ4=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.16 h1:vbAULLsn84HQkDNLKpJmKQFRw3iNryGB0SWEjZHGRFg=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.16/go.mod h1:1fJ4lYHFa1iosFrZrOeT3cKU2W0PcqdLqyU1YbrOqVw=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.5 h1:bqKTAB3h3swzCQnGGMgkx3k88sfOPtoiawH/62S9gec=
@@ -273,8 +273,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.32.5 h1:buNdVjBTr+GJah0DH/9/Uqks
 github.com/aws/aws-sdk-go-v2/service/glacier v1.32.5/go.mod h1:0/TJQe68U00WYgoJymnyr0Nx8/txePlfZqjS/4ovFo8=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.14 h1:4x5La2Q5H8MDMjXIqJsUNd8MEeIEzheUwBcHbm9aV84=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.14/go.mod h1:aAS2m5DpOtkiblEYWiYyb84JPXmQNYYDid14pSNjkJc=
-github.com/aws/aws-sdk-go-v2/service/glue v1.138.0 h1:NX8ZJ4NkVDc5ZFXONzIVs++WxcUTrCaGhr/hwxXki1k=
-github.com/aws/aws-sdk-go-v2/service/glue v1.138.0/go.mod h1:qxiAi9p9Vv/LsD7F8p+XnyaFCPHy/F77igUM1iT3abU=
+github.com/aws/aws-sdk-go-v2/service/glue v1.139.0 h1:yO8PcdOhX62FYXAGb6oULH8LGV8THi1bQg8/zJZQEG4=
+github.com/aws/aws-sdk-go-v2/service/glue v1.139.0/go.mod h1:qxiAi9p9Vv/LsD7F8p+XnyaFCPHy/F77igUM1iT3abU=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.33.3 h1:+e3VhDgHXL6r/YJM1zj2jqHTF+YtnY04eL2Kl65B3j4=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.33.3/go.mod h1:9yv2C4ijaU4xvLgnG7zJ2rxs/i716o/o/+3LggjXPmY=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.20 h1:EJ+VYPKnxlFohBb8rDpyWfOkbsIL0iHa4X9ddtFESMs=
@@ -355,8 +355,8 @@ github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.12 h1:a9DbBWqsbu+wyiO7YWx1DvC5
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.12/go.mod h1:h0n7EaY6ZTC4zRxOuSpXUJD/wPp5fBohPqO9MaDy48U=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.3 h1:o2GKrAUuBf03s/kY8dKqxLkbOcyjQ24BwyY5Zr4R1A8=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.3/go.mod h1:cD22CnsIjYiC/64gIrf4q/0wtccjI45SvAtLZJPIyE4=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.88.0 h1:+7PT5GQCjE9cmLCI1xDPCXjVyaNzk7hUwtGkJhpDVFs=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.88.0/go.mod h1:LXWz5QQ6nDV9icyL7Nu58vx6SXy40kdsiwqwF8d2D30=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.0 h1:m2tBHopZrq6uhbb5127hQefekbL3UgNZBdINgitzF64=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.0/go.mod h1:LXWz5QQ6nDV9icyL7Nu58vx6SXy40kdsiwqwF8d2D30=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.93.2 h1:5vSfjtyauxINB13fDveMbD934zGgUzp8DLVXPtBPP5c=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.93.2/go.mod h1:zLtl6lJctZOc7q0lJuL/7T7mtjjFWhrurfr7JvOAiaI=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.20 h1:uV2kYQ1GfZ9oe5hzHoWOM00Lpln//f0BUI9z7k1X/Zo=
@@ -887,8 +887,8 @@ google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAs
 google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJffLiz/Ds=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 h1:gRkg/vSppuSQoDjxyiGfN4Upv/h/DQmIR10ZU8dh4Ww=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217/go.mod h1:7i2o+ce6H/6BluujYR+kqX3GKH+dChPTQU19wjRPiGk=
-google.golang.org/grpc v1.79.2 h1:fRMD94s2tITpyJGtBBn7MkMseNpOZU8ZxgC3MMBaXRU=
-google.golang.org/grpc v1.79.2/go.mod h1:KmT0Kjez+0dde/v2j9vzwoAScgEPx/Bw1CYChhHLrHQ=
+google.golang.org/grpc v1.79.3 h1:sybAEdRIEtvcD68Gx7dmnwjZKlyfuc61Dyo9pGXXkKE=
+google.golang.org/grpc v1.79.3/go.mod h1:KmT0Kjez+0dde/v2j9vzwoAScgEPx/Bw1CYChhHLrHQ=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.36.11 h1:fV6ZwhNocDyBLK0dj+fg8ektcVegBBuEolpbTQyBNVE=
