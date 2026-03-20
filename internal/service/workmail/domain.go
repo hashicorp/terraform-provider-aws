@@ -58,35 +58,35 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		Attributes: map[string]schema.Attribute{
 			names.AttrDomainName: schema.StringAttribute{
 				Description: "Mail domain name to register.",
-				Required: true,
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"dkim_verification_status": schema.StringAttribute{
 				Description: "DKIM verification status for the domain.",
-				CustomType: fwtypes.StringEnumType[awstypes.DnsRecordVerificationStatus](),
-				Computed:   true,
+				CustomType:  fwtypes.StringEnumType[awstypes.DnsRecordVerificationStatus](),
+				Computed:    true,
 			},
 			"is_default": schema.BoolAttribute{
 				Description: "Whether this domain is the default mail domain for the organization.",
-				Computed: true,
+				Computed:    true,
 			},
 			"is_test_domain": schema.BoolAttribute{
 				Description: "Whether this is the auto-provisioned test domain.",
-				Computed: true,
+				Computed:    true,
 			},
 			"organization_id": schema.StringAttribute{
 				Description: "Identifier of the WorkMail organization.",
-				Required: true,
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"ownership_verification_status": schema.StringAttribute{
 				Description: "Domain ownership verification status.",
-				CustomType: fwtypes.StringEnumType[awstypes.DnsRecordVerificationStatus](),
-				Computed:   true,
+				CustomType:  fwtypes.StringEnumType[awstypes.DnsRecordVerificationStatus](),
+				Computed:    true,
 			},
 			"records": framework.ResourceComputedListOfObjectsAttribute[dnsRecordModel](ctx),
 		},
