@@ -2,12 +2,19 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New List Resource:** `aws_msk_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New List Resource:** `aws_msk_serverless_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New List Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
 * **New List Resource:** `aws_vpc_endpoint` ([#46977](https://github.com/hashicorp/terraform-provider-aws/issues/46977))
+* **New Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 
 ENHANCEMENTS:
 
 * resource/aws_mq_broker: Change `user` block to Optional ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
+* resource/aws_msk_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* resource/aws_msk_serverless_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 
 BUG FIXES:
 
