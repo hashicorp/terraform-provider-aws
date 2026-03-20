@@ -34,20 +34,18 @@ func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIns
 	}
 }
 
-func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.RouteTable, error] {
-	return func(yield func(awstypes.RouteTable, error) bool) {
+func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.RouteTable, error] {
+	return func(yield func([]awstypes.RouteTable, error) bool) {
 		pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.RouteTable](), fmt.Errorf("listing EC2 Route Tables: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 Route Tables: %w", err))
 				return
 			}
 
-			for _, v := range page.RouteTables {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.RouteTables, nil) {
+				return
 			}
 		}
 	}

@@ -2015,7 +2015,7 @@ func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRo
 }
 
 func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
-	output, err := tfslices.CollectWithError(listRouteTables(ctx, conn, input))
+	output, err := tfslices.CollectAndConcatWithError(listRouteTables(ctx, conn, input))
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil, &retry.NotFoundError{
