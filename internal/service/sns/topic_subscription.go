@@ -400,7 +400,7 @@ func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.L
 }
 
 func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...tfslices.FinderOptionsFunc[types.Subscription]) ([]types.Subscription, error) {
-	output, err := tfslices.CollectAndConcatWithError(listSubscriptionsByTopic(ctx, conn, input), optFns...)
+	output, err := tfslices.CollectAndConcatWithError(listSubscriptionPagesByTopic(ctx, conn, input), optFns...)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -415,7 +415,7 @@ func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.
 	return output, nil
 }
 
-func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...func(*sns.Options)) iter.Seq2[[]types.Subscription, error] {
+func listSubscriptionPagesByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...func(*sns.Options)) iter.Seq2[[]types.Subscription, error] {
 	return func(yield func([]types.Subscription, error) bool) {
 		pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
 		for pages.HasMorePages() {

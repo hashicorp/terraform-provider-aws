@@ -5,9 +5,11 @@ package sns
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -66,7 +68,7 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 	tflog.Info(ctx, "Listing SNS Topic Subscriptions")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for subscription, err := range tfiter.ConcatValuesWithError(listSubscriptionsByTopic(ctx, conn, &input)) {
+		for subscription, err := range listSubscriptionsByTopic(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -116,4 +118,8 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 			}
 		}
 	}
+}
+
+func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...func(*sns.Options)) iter.Seq2[awstypes.Subscription, error] {
+	return tfiter.ConcatValuesWithError(listSubscriptionPagesByTopic(ctx, conn, input, optFns...))
 }
