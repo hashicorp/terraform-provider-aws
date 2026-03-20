@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // DescribeInstances is an "All-Or-Some" call.
@@ -155,20 +154,18 @@ func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, i
 	}
 }
 
-func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Vpc, error] {
-	return func(yield func(awstypes.Vpc, error) bool) {
+func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) iter.Seq2[[]awstypes.Vpc, error] {
+	return func(yield func([]awstypes.Vpc, error) bool) {
 		pages := ec2.NewDescribeVpcsPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Vpc](), fmt.Errorf("listing EC2 VPCs: %w", err))
+				yield(nil, fmt.Errorf("listing EC2 VPCs: %w", err))
 				return
 			}
 
-			for _, v := range page.Vpcs {
-				if !yield(v, nil) {
-					return
-				}
+			if !yield(page.Vpcs, nil) {
+				return
 			}
 		}
 	}

@@ -146,20 +146,18 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 	tflog.Info(ctx, "Listing resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		pages := ec2.NewDescribeVpcsPaginator(conn, &input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+		for page, err := range listVPCs(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			vpcIDs := tfslices.ApplyToAll(page.Vpcs, func(v awstypes.Vpc) string {
+			vpcIDs := tfslices.ApplyToAll(page, func(v awstypes.Vpc) string {
 				return aws.ToString(v.VpcId)
 			})
 
-			var defaultNetworkACLs map[string]*awstypes.NetworkAcl
+			var defaultNetworkACLs map[string]awstypes.NetworkAcl
 			if request.IncludeResource {
 				defaultNetworkACLs, err = batchFindVPCDefaultNetworkACLs(ctx, conn, vpcIDs)
 				if err != nil {
@@ -169,7 +167,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 			}
 
-			var mainRouteTables map[string]*awstypes.RouteTable
+			var mainRouteTables map[string]awstypes.RouteTable
 			if request.IncludeResource {
 				mainRouteTables, err = batchFindVPCMainRouteTables(ctx, conn, vpcIDs)
 				if err != nil {
@@ -179,7 +177,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 			}
 
-			var defaultSecurityGroups map[string]*awstypes.SecurityGroup
+			var defaultSecurityGroups map[string]awstypes.SecurityGroup
 			if request.IncludeResource {
 				defaultSecurityGroups, err = batchFindVPCDefaultSecurityGroups(ctx, conn, vpcIDs)
 				if err != nil {
@@ -189,7 +187,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 			}
 
-			for _, vpc := range page.Vpcs {
+			for _, vpc := range page {
 				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
 
 				result := request.NewListResult(ctx)
