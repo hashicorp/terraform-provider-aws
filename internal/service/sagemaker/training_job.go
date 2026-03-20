@@ -1481,7 +1481,7 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
 	}, func(err error) (bool, error) {
-		if errMessageContainsAny(err, ErrCodeValidationException, []string{
+		if tfawserr.ErrMessageContainsAny(err, ErrCodeValidationException, []string{
 			"Could not assume role",
 			"Unauthorized to List objects under S3 URL",
 			"Access denied to OutputDataConfig S3 bucket",
@@ -1830,20 +1830,12 @@ func serverlessJobConfigEqualityFunc(
 		!oldConfig.EvaluationType.Equal(newConfig.EvaluationType) ||
 		!oldConfig.EvaluatorARN.Equal(newConfig.EvaluatorARN) ||
 		!oldConfig.JobType.Equal(newConfig.JobType) ||
-		!oldConfig.Peft.Equal(newConfig.Peft) {
+		!oldConfig.Peft.Equal(newConfig.Peft) ||
+		!serverlessBaseModelARNsEqual(oldConfig.BaseModelARN, newConfig.BaseModelARN) {
 		return false, diags
 	}
 
-	return serverlessBaseModelARNsEqual(oldConfig.BaseModelARN, newConfig.BaseModelARN), diags
-}
-
-func errMessageContainsAny(err error, code string, messages []string) bool {
-	for _, message := range messages {
-		if tfawserr.ErrMessageContains(err, code, message) {
-			return true
-		}
-	}
-	return false
+	return true, diags
 }
 
 func serverlessBaseModelARNsEqual(oldValue, newValue types.String) bool {
