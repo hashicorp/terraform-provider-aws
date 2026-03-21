@@ -7,6 +7,7 @@ package sagemaker
 var (
 	ResourceApp                                    = resourceApp
 	ResourceAppImageConfig                         = resourceAppImageConfig
+	ResourceAlgorithm                              = newAlgorithmResource
 	ResourceCodeRepository                         = resourceCodeRepository
 	ResourceDataQualityJobDefinition               = resourceDataQualityJobDefinition
 	ResourceDevice                                 = resourceDevice
@@ -39,6 +40,7 @@ var (
 	ResourceWorkteam                               = resourceWorkteam
 
 	FindAppByName                             = findAppByName
+	FindAlgorithmByName                       = findAlgorithmByName
 	FindAppImageConfigByName                  = findAppImageConfigByName
 	FindCodeRepositoryByName                  = findCodeRepositoryByName
 	FindDataQualityJobDefinitionByName        = findDataQualityJobDefinitionByName

@@ -5,16 +5,6 @@ page_title: "AWS: aws_sagemaker_algorithm"
 description: |-
   Manages an AWS SageMaker AI Algorithm.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_sagemaker_algorithm
 
@@ -50,9 +40,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -62,9 +51,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sagemaker_algorithm.example
   identity = {
-<!---
-Add only required attributes in this example.
---->
+    algorithm_name = "example-algorithm"
   }
 }
 
@@ -76,35 +63,25 @@ resource "aws_sagemaker_algorithm" "example" {
 ### Identity Schema
 
 #### Required
-<!---
-Required attributes here:
-> ARN Identity:
-* `arn` - ARN of the Algorithm.
-> Parameterized Identity:
-* `example_id_arg` - ID argument of the Algorithm.
-> Singleton Identity: no required attributes.
---->
+
+* `algorithm_name` - (String) Name of the Algorithm.
 
 #### Optional
-<!---
-Optional attributes here:
-> ARN Identity: no optional attributes.
-> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
---->
+
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Algorithm using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Algorithm using the `algorithm_name`. For example:
 
 ```terraform
 import {
   to = aws_sagemaker_algorithm.example
-  id = "algorithm-id-12345678"
+  id = "example-algorithm"
 }
 ```
 
-Using `terraform import`, import SageMaker AI Algorithm using the `example_id_arg`. For example:
+Using `terraform import`, import SageMaker AI Algorithm using the `algorithm_name`. For example:
 
 ```console
-% terraform import aws_sagemaker_algorithm.example algorithm-id-12345678
+% terraform import aws_sagemaker_algorithm.example example-algorithm
 ```

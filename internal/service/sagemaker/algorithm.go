@@ -14,6 +14,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -22,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -36,8 +38,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,6 +46,7 @@ import (
 // @FrameworkResource("aws_sagemaker_algorithm", name="Algorithm")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("algorithm_name")
+// @Testing(hasNoPreExistingResource=true)
 func newAlgorithmResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &algorithmResource{}
 
@@ -350,13 +351,21 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				},
 			},
 			"validation_specification": schema.ListNestedBlock{
-				CustomType:    fwtypes.NewListNestedObjectTypeOf[algorithmValidationSpecificationModel](ctx),
-				Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-				PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[algorithmValidationSpecificationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"validation_role": schema.StringAttribute{
-							Required:      true,
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(20, 2048),
+								stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`), "validation role must be a valid IAM role ARN"),
+							},
 							PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 						},
 					},
@@ -748,7 +757,9 @@ func categoricalParameterRangeSpecificationBlock(ctx context.Context) schema.Lis
 							stringvalidator.LengthAtMost(256),
 						),
 					},
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -825,17 +836,27 @@ func integerParameterRangeSpecificationBlock(ctx context.Context) schema.ListNes
 
 func supportedTuningJobObjectiveMetricsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobObjectiveModel](ctx),
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobObjectiveModel](ctx),
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"metric_name": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 255),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"type": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobObjectiveType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -920,14 +941,26 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 
 func validationProfilesBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[algorithmValidationProfileModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[algorithmValidationProfileModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"profile_name": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 63),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "profile name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -940,20 +973,40 @@ func validationProfilesBlock(ctx context.Context) schema.ListNestedBlock {
 
 func trainingJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[trainingJobDefinitionModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobDefinitionModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"hyper_parameters": schema.MapAttribute{
-					CustomType:    fwtypes.MapOfStringType,
-					ElementType:   types.StringType,
-					Optional:      true,
-					PlanModifiers: []planmodifier.Map{mapplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.MapOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(100),
+						mapvalidator.KeysAre(
+							stringvalidator.LengthAtMost(256),
+						),
+						mapvalidator.ValueStringsAre(
+							stringvalidator.LengthAtMost(2500),
+						),
+					},
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.RequiresReplace(),
+					},
 				},
 				"training_input_mode": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -968,30 +1021,55 @@ func trainingJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 
 func inputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[channelModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[channelModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"channel_name": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 64),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z0-9\.\-_]+`), "channel name must contain only letters, numbers, periods, hyphens, and underscores"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"compression_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"content_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"input_mode": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"record_wrapper_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.RecordWrapper](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -1004,9 +1082,15 @@ func inputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func dataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[dataSourceModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"file_system_data_source": fileSystemDataSourceBlock(ctx),
@@ -1018,26 +1102,47 @@ func dataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func fileSystemDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[fileSystemDataSourceModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[fileSystemDataSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"directory_path": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(4096),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"file_system_access_mode": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.FileSystemAccessMode](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"file_system_id": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(11, 21),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^(fs-[0-9a-f]{8,})$`), "file system ID must match the required pattern"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"file_system_type": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.FileSystemType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1056,28 +1161,57 @@ func trainingS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"attribute_names": schema.ListAttribute{
-					CustomType:    fwtypes.ListOfStringType,
-					ElementType:   types.StringType,
-					Optional:      true,
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(16),
+						listvalidator.ValueStringsAre(
+							stringvalidator.LengthBetween(1, 256),
+							stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "attribute names must not be empty"),
+						),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 				},
 				"instance_group_names": schema.ListAttribute{
-					CustomType:    fwtypes.ListOfStringType,
-					ElementType:   types.StringType,
-					Optional:      true,
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(5),
+						listvalidator.ValueStringsAre(
+							stringvalidator.LengthBetween(1, 64),
+						),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 				},
 				"s3_data_distribution_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.S3DataDistribution](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"s3_data_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.S3DataType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"s3_uri": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(1024),
+						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -1090,14 +1224,23 @@ func trainingS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func shuffleConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[shuffleConfigModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[shuffleConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"seed": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+				"seed": schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1106,22 +1249,43 @@ func shuffleConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[outputDataConfigModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[outputDataConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"compression_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.OutputCompressionType](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"kms_key_id": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(2048),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"s3_output_path": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(1024),
+						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 output path must be HTTPS or Amazon S3 URI"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1130,34 +1294,70 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[resourceConfigModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[resourceConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"instance_count": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"instance_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"keep_alive_period_in_seconds": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.Between(0, 3600),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"training_plan_arn": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(50, 2048),
+						stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*`), "training plan ARN must match the required SageMaker training plan ARN pattern"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"volume_kms_key_id": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(2048),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "volume KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"volume_size_in_gb": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -1170,21 +1370,39 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func instanceGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[instanceGroupModel](ctx),
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[instanceGroupModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(5),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"instance_count": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"instance_group_name": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 64),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"instance_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1193,14 +1411,20 @@ func instanceGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 
 func instancePlacementConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[instancePlacementConfigModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[instancePlacementConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"enable_multiple_jobs": schema.BoolAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -1212,16 +1436,25 @@ func instancePlacementConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func placementSpecificationsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[placementSpecificationModel](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[placementSpecificationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(10),
+		},
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"instance_count": schema.Int32Attribute{
-					Optional:      true,
+					Required: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(0),
+					},
 					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
 				},
 				"ultra_server_id": schema.StringAttribute{
-					Optional:      true,
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
 			},
@@ -1231,22 +1464,42 @@ func placementSpecificationsBlock(ctx context.Context) schema.ListNestedBlock {
 
 func stoppingConditionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[stoppingConditionModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[stoppingConditionModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"max_pending_time_in_seconds": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.Between(7200, 2419200),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"max_runtime_in_seconds": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(1),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"max_wait_time_in_seconds": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(1),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1255,28 +1508,57 @@ func stoppingConditionBlock(ctx context.Context) schema.ListNestedBlock {
 
 func transformJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[transformJobDefinitionModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[transformJobDefinitionModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"batch_strategy": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.BatchStrategy](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"environment": schema.MapAttribute{
-					CustomType:    fwtypes.MapOfStringType,
-					ElementType:   types.StringType,
-					Optional:      true,
-					PlanModifiers: []planmodifier.Map{mapplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.MapOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(16),
+						mapvalidator.KeysAre(
+							stringvalidator.LengthAtMost(1024),
+							stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]{0,1023}`), "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
+						),
+						mapvalidator.ValueStringsAre(
+							stringvalidator.LengthAtMost(10240),
+						),
+					},
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.RequiresReplace(),
+					},
 				},
 				"max_concurrent_transforms": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"max_payload_in_mb": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.Int32{
+						int32validator.AtLeast(0),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -1290,22 +1572,39 @@ func transformJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 
 func transformInputBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[transformInputModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[transformInputModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"compression_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"content_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"split_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.SplitType](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -1317,9 +1616,15 @@ func transformInputBlock(ctx context.Context) schema.ListNestedBlock {
 
 func transformJobDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[transformJobDataSourceModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[transformJobDataSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"s3_data_source": transformS3DataSourceBlock(ctx),
@@ -1330,18 +1635,33 @@ func transformJobDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func transformS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[transformS3DataSourceModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[transformS3DataSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"s3_data_type": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.S3DataType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"s3_uri": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(1024),
+						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1350,26 +1670,52 @@ func transformS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func transformOutputBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[transformOutputModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[transformOutputModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"accept": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"assemble_with": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.AssemblyType](),
+					Optional:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"kms_key_id": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(2048),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"s3_output_path": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(1024),
+						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 output path must be HTTPS or Amazon S3 URI"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1378,26 +1724,52 @@ func transformOutputBlock(ctx context.Context) schema.ListNestedBlock {
 
 func transformResourcesBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[transformResourcesModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[transformResourcesModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"instance_count": schema.Int32Attribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Int32{int32planmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.Int32{
+						int32validator.Between(1, 100),
+					},
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.RequiresReplace(),
+					},
 				},
 				"instance_type": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.TransformInstanceType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"transform_ami_version": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 63),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*`), "transform AMI version must contain only alphanumeric characters and single hyphen-separated segments"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"volume_kms_key_id": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(2048),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "volume KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1498,40 +1870,6 @@ func (r *algorithmResource) Delete(ctx context.Context, request resource.DeleteR
 
 func (r *algorithmResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("algorithm_name"), request, response)
-}
-
-func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeAlgorithmOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.AlgorithmStatusPending), string(awstypes.AlgorithmStatusInProgress)},
-		Target:  []string{string(awstypes.AlgorithmStatusCompleted)},
-		Refresh: statusAlgorithm(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*sagemaker.DescribeAlgorithmOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitAlgorithmDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.AlgorithmStatusDeleting),
-			string(awstypes.AlgorithmStatusPending),
-			string(awstypes.AlgorithmStatusInProgress),
-			string(awstypes.AlgorithmStatusCompleted),
-			string(awstypes.AlgorithmStatusFailed),
-		},
-		Target:  []string{},
-		Refresh: statusAlgorithm(conn, name),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
 }
 
 func statusAlgorithm(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
@@ -1698,8 +2036,8 @@ type integerParameterRangeSpecificationModel struct {
 }
 
 type hyperParameterTuningJobObjectiveModel struct {
-	MetricName types.String `tfsdk:"metric_name"`
-	Type       types.String `tfsdk:"type"`
+	MetricName types.String                                                      `tfsdk:"metric_name"`
+	Type       fwtypes.StringEnum[awstypes.HyperParameterTuningJobObjectiveType] `tfsdk:"type"`
 }
 
 type channelSpecificationModel struct {
@@ -1728,16 +2066,16 @@ type trainingJobDefinitionModel struct {
 	OutputDataConfig  fwtypes.ListNestedObjectValueOf[outputDataConfigModel]  `tfsdk:"output_data_config"`
 	ResourceConfig    fwtypes.ListNestedObjectValueOf[resourceConfigModel]    `tfsdk:"resource_config"`
 	StoppingCondition fwtypes.ListNestedObjectValueOf[stoppingConditionModel] `tfsdk:"stopping_condition"`
-	TrainingInputMode types.String                                            `tfsdk:"training_input_mode"`
+	TrainingInputMode fwtypes.StringEnum[awstypes.TrainingInputMode]          `tfsdk:"training_input_mode"`
 }
 
 type channelModel struct {
 	ChannelName       types.String                                        `tfsdk:"channel_name"`
-	CompressionType   types.String                                        `tfsdk:"compression_type"`
+	CompressionType   fwtypes.StringEnum[awstypes.CompressionType]        `tfsdk:"compression_type"`
 	ContentType       types.String                                        `tfsdk:"content_type"`
 	DataSource        fwtypes.ListNestedObjectValueOf[dataSourceModel]    `tfsdk:"data_source"`
-	InputMode         types.String                                        `tfsdk:"input_mode"`
-	RecordWrapperType types.String                                        `tfsdk:"record_wrapper_type"`
+	InputMode         fwtypes.StringEnum[awstypes.TrainingInputMode]      `tfsdk:"input_mode"`
+	RecordWrapperType fwtypes.StringEnum[awstypes.RecordWrapper]          `tfsdk:"record_wrapper_type"`
 	ShuffleConfig     fwtypes.ListNestedObjectValueOf[shuffleConfigModel] `tfsdk:"shuffle_config"`
 }
 
@@ -1747,10 +2085,10 @@ type dataSourceModel struct {
 }
 
 type fileSystemDataSourceModel struct {
-	DirectoryPath        types.String `tfsdk:"directory_path"`
-	FileSystemAccessMode types.String `tfsdk:"file_system_access_mode"`
-	FileSystemID         types.String `tfsdk:"file_system_id"`
-	FileSystemType       types.String `tfsdk:"file_system_type"`
+	DirectoryPath        types.String                                      `tfsdk:"directory_path"`
+	FileSystemAccessMode fwtypes.StringEnum[awstypes.FileSystemAccessMode] `tfsdk:"file_system_access_mode"`
+	FileSystemID         types.String                                      `tfsdk:"file_system_id"`
+	FileSystemType       fwtypes.StringEnum[awstypes.FileSystemType]       `tfsdk:"file_system_type"`
 }
 
 type trainingS3DataSourceModel struct {
@@ -1758,26 +2096,26 @@ type trainingS3DataSourceModel struct {
 	HubAccessConfig        fwtypes.ListNestedObjectValueOf[hubAccessConfigModel]   `tfsdk:"hub_access_config"`
 	InstanceGroupNames     fwtypes.ListOfString                                    `tfsdk:"instance_group_names"`
 	ModelAccessConfig      fwtypes.ListNestedObjectValueOf[modelAccessConfigModel] `tfsdk:"model_access_config"`
-	S3DataDistributionType types.String                                            `tfsdk:"s3_data_distribution_type"`
-	S3DataType             types.String                                            `tfsdk:"s3_data_type"`
+	S3DataDistributionType fwtypes.StringEnum[awstypes.S3DataDistribution]         `tfsdk:"s3_data_distribution_type"`
+	S3DataType             fwtypes.StringEnum[awstypes.S3DataType]                 `tfsdk:"s3_data_type"`
 	S3URI                  types.String                                            `tfsdk:"s3_uri"`
 }
 
 type shuffleConfigModel struct {
-	Seed types.Int32 `tfsdk:"seed"`
+	Seed types.Int64 `tfsdk:"seed"`
 }
 
 type outputDataConfigModel struct {
-	CompressionType types.String `tfsdk:"compression_type"`
-	KMSKeyID        types.String `tfsdk:"kms_key_id"`
-	S3OutputPath    types.String `tfsdk:"s3_output_path"`
+	CompressionType fwtypes.StringEnum[awstypes.OutputCompressionType] `tfsdk:"compression_type"`
+	KMSKeyID        types.String                                       `tfsdk:"kms_key_id"`
+	S3OutputPath    types.String                                       `tfsdk:"s3_output_path"`
 }
 
 type resourceConfigModel struct {
 	InstanceCount            types.Int32                                                   `tfsdk:"instance_count"`
 	InstanceGroups           fwtypes.ListNestedObjectValueOf[instanceGroupModel]           `tfsdk:"instance_groups"`
 	InstancePlacementConfig  fwtypes.ListNestedObjectValueOf[instancePlacementConfigModel] `tfsdk:"instance_placement_config"`
-	InstanceType             types.String                                                  `tfsdk:"instance_type"`
+	InstanceType             fwtypes.StringEnum[awstypes.TrainingInstanceType]             `tfsdk:"instance_type"`
 	KeepAlivePeriodInSeconds types.Int32                                                   `tfsdk:"keep_alive_period_in_seconds"`
 	TrainingPlanARN          types.String                                                  `tfsdk:"training_plan_arn"`
 	VolumeKMSKeyID           types.String                                                  `tfsdk:"volume_kms_key_id"`
@@ -1785,9 +2123,9 @@ type resourceConfigModel struct {
 }
 
 type instanceGroupModel struct {
-	InstanceCount     types.Int32  `tfsdk:"instance_count"`
-	InstanceGroupName types.String `tfsdk:"instance_group_name"`
-	InstanceType      types.String `tfsdk:"instance_type"`
+	InstanceCount     types.Int32                                       `tfsdk:"instance_count"`
+	InstanceGroupName types.String                                      `tfsdk:"instance_group_name"`
+	InstanceType      fwtypes.StringEnum[awstypes.TrainingInstanceType] `tfsdk:"instance_type"`
 }
 
 type instancePlacementConfigModel struct {
@@ -1807,7 +2145,7 @@ type stoppingConditionModel struct {
 }
 
 type transformJobDefinitionModel struct {
-	BatchStrategy           types.String                                             `tfsdk:"batch_strategy"`
+	BatchStrategy           fwtypes.StringEnum[awstypes.BatchStrategy]               `tfsdk:"batch_strategy"`
 	Environment             fwtypes.MapOfString                                      `tfsdk:"environment"`
 	MaxConcurrentTransforms types.Int32                                              `tfsdk:"max_concurrent_transforms"`
 	MaxPayloadInMB          types.Int32                                              `tfsdk:"max_payload_in_mb"`
@@ -1817,10 +2155,10 @@ type transformJobDefinitionModel struct {
 }
 
 type transformInputModel struct {
-	CompressionType types.String                                                 `tfsdk:"compression_type"`
+	CompressionType fwtypes.StringEnum[awstypes.CompressionType]                 `tfsdk:"compression_type"`
 	ContentType     types.String                                                 `tfsdk:"content_type"`
 	DataSource      fwtypes.ListNestedObjectValueOf[transformJobDataSourceModel] `tfsdk:"data_source"`
-	SplitType       types.String                                                 `tfsdk:"split_type"`
+	SplitType       fwtypes.StringEnum[awstypes.SplitType]                       `tfsdk:"split_type"`
 }
 
 type transformJobDataSourceModel struct {
@@ -1828,42 +2166,20 @@ type transformJobDataSourceModel struct {
 }
 
 type transformS3DataSourceModel struct {
-	S3DataType types.String `tfsdk:"s3_data_type"`
-	S3URI      types.String `tfsdk:"s3_uri"`
+	S3DataType fwtypes.StringEnum[awstypes.S3DataType] `tfsdk:"s3_data_type"`
+	S3URI      types.String                            `tfsdk:"s3_uri"`
 }
 
 type transformOutputModel struct {
-	Accept       types.String `tfsdk:"accept"`
-	AssembleWith types.String `tfsdk:"assemble_with"`
-	KMSKeyID     types.String `tfsdk:"kms_key_id"`
-	S3OutputPath types.String `tfsdk:"s3_output_path"`
+	Accept       types.String                              `tfsdk:"accept"`
+	AssembleWith fwtypes.StringEnum[awstypes.AssemblyType] `tfsdk:"assemble_with"`
+	KMSKeyID     types.String                              `tfsdk:"kms_key_id"`
+	S3OutputPath types.String                              `tfsdk:"s3_output_path"`
 }
 
 type transformResourcesModel struct {
-	InstanceCount       types.Int32  `tfsdk:"instance_count"`
-	InstanceType        types.String `tfsdk:"instance_type"`
-	TransformAmiVersion types.String `tfsdk:"transform_ami_version"`
-	VolumeKMSKeyID      types.String `tfsdk:"volume_kms_key_id"`
-}
-
-func sweepAlgorithms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := sagemaker.ListAlgorithmsInput{}
-	conn := client.SageMakerClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := sagemaker.NewListAlgorithmsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.AlgorithmSummaryList {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAlgorithmResource, client,
-				sweepfw.NewAttribute("algorithm_name", aws.ToString(v.AlgorithmName))),
-			)
-		}
-	}
-
-	return sweepResources, nil
+	InstanceCount       types.Int32                                        `tfsdk:"instance_count"`
+	InstanceType        fwtypes.StringEnum[awstypes.TransformInstanceType] `tfsdk:"instance_type"`
+	TransformAmiVersion types.String                                       `tfsdk:"transform_ami_version"`
+	VolumeKMSKeyID      types.String                                       `tfsdk:"volume_kms_key_id"`
 }

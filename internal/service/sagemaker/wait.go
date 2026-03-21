@@ -751,3 +751,37 @@ func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn strin
 
 	return err
 }
+
+func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeAlgorithmOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{string(awstypes.AlgorithmStatusPending), string(awstypes.AlgorithmStatusInProgress)},
+		Target:  []string{string(awstypes.AlgorithmStatusCompleted)},
+		Refresh: statusAlgorithm(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*sagemaker.DescribeAlgorithmOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAlgorithmDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			string(awstypes.AlgorithmStatusDeleting),
+			string(awstypes.AlgorithmStatusPending),
+			string(awstypes.AlgorithmStatusInProgress),
+			string(awstypes.AlgorithmStatusCompleted),
+			string(awstypes.AlgorithmStatusFailed),
+		},
+		Target:  []string{},
+		Refresh: statusAlgorithm(conn, name),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
