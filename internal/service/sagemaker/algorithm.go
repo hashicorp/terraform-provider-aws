@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -395,22 +396,43 @@ func additionalS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func baseModelBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[baseModelModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[baseModelModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"hub_content_name": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(63),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "hub content name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"hub_content_version": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(5, 14),
+						stringvalidator.RegexMatches(regexache.MustCompile(`\d{1,4}\.\d{1,4}\.\d{1,4}`), "hub content version must be in major.minor.patch format with 1 to 4 digits per segment"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"recipe_name": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(255),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -419,40 +441,70 @@ func baseModelBlock(ctx context.Context) schema.ListNestedBlock {
 
 func modelDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[modelDataSourceModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[modelDataSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"s3_data_source": schema.ListNestedBlock{
-					CustomType:    fwtypes.NewListNestedObjectTypeOf[modelDataSourceS3DataSourceModel](ctx),
-					Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[modelDataSourceS3DataSourceModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"compression_type": schema.StringAttribute{
-								Optional:      true,
-								PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+								CustomType: fwtypes.StringEnumType[awstypes.ModelCompressionType](),
+								Required:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"etag": schema.StringAttribute{
-								Optional:      true,
-								PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+								Optional: true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"manifest_etag": schema.StringAttribute{
-								Optional:      true,
-								PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+								Optional: true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"manifest_s3_uri": schema.StringAttribute{
-								Optional:      true,
-								PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(1024),
+									stringvalidator.RegexMatches(httpsOrS3URIRegexp, "manifest S3 URI must be HTTPS or Amazon S3 URI"),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"s3_data_type": schema.StringAttribute{
-								Optional:      true,
-								PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+								CustomType: fwtypes.StringEnumType[awstypes.S3ModelDataType](),
+								Required:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"s3_uri": schema.StringAttribute{
-								Optional:      true,
-								PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(1024),
+									stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -468,14 +520,23 @@ func modelDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func hubAccessConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[hubAccessConfigModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[hubAccessConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"hub_content_arn": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						fwvalidators.ARN(),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -484,14 +545,20 @@ func hubAccessConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func modelAccessConfigBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[modelAccessConfigModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[modelAccessConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"accept_eula": schema.BoolAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1411,13 +1478,13 @@ type modelDataSourceModel struct {
 }
 
 type modelDataSourceS3DataSourceModel struct {
-	CompressionType   types.String                                            `tfsdk:"compression_type"`
+	CompressionType   fwtypes.StringEnum[awstypes.ModelCompressionType]       `tfsdk:"compression_type"`
 	ETag              types.String                                            `tfsdk:"etag"`
 	HubAccessConfig   fwtypes.ListNestedObjectValueOf[hubAccessConfigModel]   `tfsdk:"hub_access_config"`
 	ManifestETag      types.String                                            `tfsdk:"manifest_etag"`
 	ManifestS3URI     types.String                                            `tfsdk:"manifest_s3_uri"`
 	ModelAccessConfig fwtypes.ListNestedObjectValueOf[modelAccessConfigModel] `tfsdk:"model_access_config"`
-	S3DataType        types.String                                            `tfsdk:"s3_data_type"`
+	S3DataType        fwtypes.StringEnum[awstypes.S3ModelDataType]            `tfsdk:"s3_data_type"`
 	S3URI             types.String                                            `tfsdk:"s3_uri"`
 }
 
