@@ -2,17 +2,35 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New List Resource:** `aws_msk_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New List Resource:** `aws_msk_serverless_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New List Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
 * **New List Resource:** `aws_vpc_endpoint` ([#46977](https://github.com/hashicorp/terraform-provider-aws/issues/46977))
+* **New Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 
 ENHANCEMENTS:
 
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.api_gateway` configuration block ([#46916](https://github.com/hashicorp/terraform-provider-aws/issues/46916))
+* resource/aws_fis_experiment_template: Support `KinesisStreams` as a value for `action.target.key` ([#47010](https://github.com/hashicorp/terraform-provider-aws/issues/47010))
 * resource/aws_mq_broker: Change `user` block to Optional ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
+* resource/aws_msk_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* resource/aws_msk_serverless_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* resource/aws_securityhub_insight: Add `filters.aws_account_name` configuration block ([#47027](https://github.com/hashicorp/terraform-provider-aws/issues/47027))
+* resource/aws_securityhub_insight: Add `filters.compliance_associated_standards_id` configuration block ([#47027](https://github.com/hashicorp/terraform-provider-aws/issues/47027))
+* resource/aws_securityhub_insight: Add `filters.compliance_security_control_id` configuration block ([#47027](https://github.com/hashicorp/terraform-provider-aws/issues/47027))
+* resource/aws_securityhub_insight: Add `filters.compliance_security_control_parameters_name` configuration block ([#47027](https://github.com/hashicorp/terraform-provider-aws/issues/47027))
+* resource/aws_securityhub_insight: Add `filters.compliance_security_control_parameters_value` configuration block ([#47027](https://github.com/hashicorp/terraform-provider-aws/issues/47027))
 
 BUG FIXES:
 
 * resource/aws_cloudfront_distribution_tenant: Fix panic when managed certificate is not found during creation ([#46982](https://github.com/hashicorp/terraform-provider-aws/issues/46982))
+* resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` errors where computed attributes remained unknown after create ([#47012](https://github.com/hashicorp/terraform-provider-aws/issues/47012))
 * resource/aws_mq_broker: Fix non-idempotent behavior for RabbitMQ brokers with `user` block ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
+* resource/aws_route53recoverycontrolconfig_routing_control: Fix panic on concurrent creates when API returns ConflictException ([#47038](https://github.com/hashicorp/terraform-provider-aws/issues/47038))
+* resource/aws_wafv2_web_acl_rule: Fix `Unable to unmarshal DynamicValue` error when `statement.managed_rule_group_statement.rule_action_override` block is specified ([#46998](https://github.com/hashicorp/terraform-provider-aws/issues/46998))
+* resource/aws_wafv2_web_acl_rule_group_association: Fix `WAFOptimisticLockException` errors when multiple associations target the same Web ACL ([#47037](https://github.com/hashicorp/terraform-provider-aws/issues/47037))
 
 ## 6.37.0 (March 18, 2026)
 
