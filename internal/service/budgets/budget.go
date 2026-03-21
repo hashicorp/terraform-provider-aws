@@ -134,10 +134,11 @@ func resourceBudget() *schema.Resource {
 				},
 			},
 			"cost_types": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Computed:      true,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"metrics"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"include_credit": {
@@ -312,9 +313,21 @@ func resourceBudget() *schema.Resource {
 				Optional:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"cost_filter"},
+				RequiredWith:  []string{"metrics"},
 				// AWS Budgets API enforces: "Expression nested depth cannot be more than 2" which is not mentioned in docs
 				// Schema level 3 = AWS depth 2 (because operators added when level > 1)
 				Elem: filterExpressionElem(filterExpressionDepth),
+			},
+			"metrics": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"cost_types"},
+				RequiredWith:  []string{"filter_expression"},
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+				},
 			},
 		},
 	}
@@ -547,6 +560,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if err := d.Set("filter_expression", flattenFilterExpression(budget.FilterExpression)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter_expression: %s", err)
+	}
+
+	if err := d.Set("metrics", budget.Metrics); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting metrics: %s", err)
 	}
 
 	notifications, err := findNotificationsByTwoPartKey(ctx, conn, accountID, budgetName)
@@ -1143,6 +1160,10 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 
 	if v, ok := d.GetOk("filter_expression"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		budget.FilterExpression = expandFilterExpression(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("metrics"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		budget.Metrics = []awstypes.Metric{awstypes.Metric(v.([]any)[0].(string))}
 	}
 
 	return budget, nil
