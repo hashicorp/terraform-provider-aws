@@ -366,7 +366,7 @@ func testTrainingJobServerlessJobConfigValueWithOptions(ctx context.Context, bas
 	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.TrainingJobServerlessJobConfigModel{
 		{
 			AcceptEULA:             types.BoolNull(),
-			BaseModelARN:           types.StringValue(baseModelARN), //lintignore:AWSAT003,AWSAT005
+			BaseModelARN:           types.StringValue(baseModelARN),
 			CustomizationTechnique: fwtypes.StringEnumNull[awstypes.CustomizationTechnique](),
 			EvaluationType:         fwtypes.StringEnumNull[awstypes.EvaluationType](),
 			EvaluatorARN:           evaluatorARN,
