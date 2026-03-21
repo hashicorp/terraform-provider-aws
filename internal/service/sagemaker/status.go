@@ -270,3 +270,18 @@ func statusMlflowApp(conn *sagemaker.Client, arn string) retry.StateRefreshFunc 
 		return output, string(output.Status), nil
 	}
 }
+
+func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findTrainingJobByName(ctx, conn, id)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.TrainingJobStatus), nil
+	}
+}

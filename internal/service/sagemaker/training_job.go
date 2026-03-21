@@ -1889,21 +1889,6 @@ func normalizeServerlessBaseModelARN(v string) string {
 	return serverlessBaseModelARNVersionRegex.ReplaceAllString(v, "")
 }
 
-func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findTrainingJobByName(ctx, conn, id)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-
-		return out, string(out.TrainingJobStatus), nil
-	}
-}
-
 func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id string) (*sagemaker.DescribeTrainingJobOutput, error) {
 	input := sagemaker.DescribeTrainingJobInput{
 		TrainingJobName: aws.String(id),
