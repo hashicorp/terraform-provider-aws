@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -47,6 +47,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("algorithm_name")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="algorithm_name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeAlgorithmOutput")
 func newAlgorithmResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &algorithmResource{}
 
@@ -64,6 +66,7 @@ type algorithmResource struct {
 	framework.ResourceWithModel[algorithmResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -96,6 +99,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"certify_for_marketplace": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -316,6 +320,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 						},
 						"supports_distributed_training": schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.Bool{
 								boolplanmodifier.RequiresReplace(),
 							},
@@ -332,6 +337,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 						},
 						"training_image_digest": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(72),
 								stringvalidator.RegexMatches(regexache.MustCompile(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`), "training image digest must be a valid sha256 digest"),
@@ -681,12 +687,14 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 				"is_required": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
 				"is_tunable": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.RequiresReplace(),
 					},
@@ -888,6 +896,7 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 				"is_required": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.RequiresReplace(),
 					},
@@ -1532,7 +1541,7 @@ func transformJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 						mapvalidator.SizeAtMost(16),
 						mapvalidator.KeysAre(
 							stringvalidator.LengthAtMost(1024),
-							stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]{0,1023}`), "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
+							stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]`), "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
 						),
 						mapvalidator.ValueStringsAre(
 							stringvalidator.LengthAtMost(10240),
@@ -1792,13 +1801,11 @@ func (r *algorithmResource) Create(ctx context.Context, request resource.CreateR
 	}
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateAlgorithm(ctx, &input)
+	_, err := conn.CreateAlgorithm(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating SageMaker Algorithm (%s)", data.AlgorithmName.ValueString()), err.Error())
 		return
 	}
-
-	data.ARN = fwflex.StringToFramework(ctx, output.AlgorithmArn)
 
 	outputWait, err := waitAlgorithmCreated(ctx, conn, data.AlgorithmName.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
@@ -1806,7 +1813,7 @@ func (r *algorithmResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputWait, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputWait, &data, fwflex.WithFieldNamePrefix("Algorithm"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1834,7 +1841,7 @@ func (r *algorithmResource) Read(ctx context.Context, request resource.ReadReque
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("Algorithm"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1868,10 +1875,6 @@ func (r *algorithmResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *algorithmResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("algorithm_name"), request, response)
-}
-
 func statusAlgorithm(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAlgorithmByName(ctx, conn, name)
@@ -1892,7 +1895,7 @@ func findAlgorithmByName(ctx context.Context, conn *sagemaker.Client, name strin
 	}
 
 	output, err := conn.DescribeAlgorithm(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFound](err) {
+	if errs.IsA[*awstypes.ResourceNotFound](err) || tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 		return nil, &retry.NotFoundError{LastError: err}
 	}
 	if err != nil {

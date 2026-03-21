@@ -92,15 +92,20 @@ func testAccCheckAlgorithmDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			_, err := tfsagemaker.FindAlgorithmByName(ctx, conn, rs.Primary.ID)
+			name := rs.Primary.Attributes["algorithm_name"]
+			if name == "" {
+				name = rs.Primary.ID
+			}
+
+			_, err := tfsagemaker.FindAlgorithmByName(ctx, conn, name)
 			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
-				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, rs.Primary.ID, err)
+				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, name, err)
 			}
 
-			return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, name, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -114,15 +119,20 @@ func testAccCheckAlgorithmExists(ctx context.Context, t *testing.T, name string,
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameAlgorithm, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		algorithmName := rs.Primary.Attributes["algorithm_name"]
+		if algorithmName == "" {
+			algorithmName = rs.Primary.ID
+		}
+
+		if algorithmName == "" {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameAlgorithm, name, errors.New("not set"))
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
-		output, err := tfsagemaker.FindAlgorithmByName(ctx, conn, rs.Primary.ID)
+		output, err := tfsagemaker.FindAlgorithmByName(ctx, conn, algorithmName)
 		if err != nil {
-			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameAlgorithm, rs.Primary.ID, err)
+			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameAlgorithm, algorithmName, err)
 		}
 
 		if len(outputs) > 0 && outputs[0] != nil {
