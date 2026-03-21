@@ -656,7 +656,9 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2500),
 					},
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"description": schema.StringAttribute{
 					Optional: true,
@@ -664,15 +666,21 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 						stringvalidator.LengthAtMost(1024),
 						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
 					},
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"is_required": schema.BoolAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 				"is_tunable": schema.BoolAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 				"name": schema.StringAttribute{
 					Required: true,
@@ -680,12 +688,16 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 						stringvalidator.LengthAtMost(256),
 						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "name must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
 					},
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"type": schema.StringAttribute{
-					CustomType:    fwtypes.StringEnumType[awstypes.ParameterType](),
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					CustomType: fwtypes.StringEnumType[awstypes.ParameterType](),
+					Required:   true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -697,9 +709,13 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 
 func parameterRangeBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[parameterRangeModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[parameterRangeModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"categorical_parameter_range_specification": categoricalParameterRangeSpecificationBlock(ctx),
@@ -712,15 +728,26 @@ func parameterRangeBlock(ctx context.Context) schema.ListNestedBlock {
 
 func categoricalParameterRangeSpecificationBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[categoricalParameterRangeSpecificationModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[categoricalParameterRangeSpecificationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"values": schema.ListAttribute{
-					CustomType:    fwtypes.ListOfStringType,
-					ElementType:   types.StringType,
-					Required:      true,
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Required:    true,
+					Validators: []validator.List{
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(30),
+						listvalidator.ValueStringsAre(
+							stringvalidator.LengthAtMost(256),
+						),
+					},
 					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 				},
 			},
@@ -730,18 +757,32 @@ func categoricalParameterRangeSpecificationBlock(ctx context.Context) schema.Lis
 
 func continuousParameterRangeSpecificationBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[continuousParameterRangeSpecificationModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[continuousParameterRangeSpecificationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"max_value": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"min_value": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -750,18 +791,32 @@ func continuousParameterRangeSpecificationBlock(ctx context.Context) schema.List
 
 func integerParameterRangeSpecificationBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[integerParameterRangeSpecificationModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[integerParameterRangeSpecificationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"max_value": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"min_value": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
