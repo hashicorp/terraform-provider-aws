@@ -1875,20 +1875,6 @@ func (r *algorithmResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func statusAlgorithm(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findAlgorithmByName(ctx, conn, name)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.AlgorithmStatus), nil
-	}
-}
-
 func findAlgorithmByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeAlgorithmOutput, error) {
 	input := sagemaker.DescribeAlgorithmInput{
 		AlgorithmName: aws.String(name),
