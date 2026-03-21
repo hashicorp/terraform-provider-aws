@@ -286,7 +286,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 									"additional_s3_data_source": additionalS3DataSourceBlock(ctx),
 									"base_model":                baseModelBlock(ctx),
 									"model_data_source":         modelDataSourceBlock(ctx),
-									"model_input":               modelInputBlock(ctx),
+									"model_input":               modelInputBlock(ctx), // remove-later : all 4 done
 								},
 							},
 						},
@@ -294,28 +294,50 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				},
 			},
 			"training_specification": schema.ListNestedBlock{
-				CustomType:    fwtypes.NewListNestedObjectTypeOf[trainingSpecificationModel](ctx),
-				Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
-				PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[trainingSpecificationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"supported_training_instance_types": schema.ListAttribute{
-							CustomType:    fwtypes.ListOfStringType,
-							ElementType:   types.StringType,
-							Required:      true,
-							PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+							CustomType:  fwtypes.ListOfStringEnumType[awstypes.TrainingInstanceType](),
+							ElementType: types.StringType,
+							Required:    true,
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 						},
 						"supports_distributed_training": schema.BoolAttribute{
-							Optional:      true,
-							PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+							Optional: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
 						},
 						"training_image": schema.StringAttribute{
-							Required:      true,
-							PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(255),
+								stringvalidator.RegexMatches(regexache.MustCompile(`[\S]+`), "training image must not contain whitespace"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"training_image_digest": schema.StringAttribute{
-							Optional:      true,
-							PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(72),
+								stringvalidator.RegexMatches(regexache.MustCompile(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`), "training image digest must be a valid sha256 digest"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -592,16 +614,27 @@ func modelInputBlock(ctx context.Context) schema.ListNestedBlock {
 
 func metricDefinitionsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[metricDefinitionModel](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[metricDefinitionModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(40),
+		},
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"name": schema.StringAttribute{
-					Required:      true,
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 255),
+						stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "metric name must not be empty"),
+					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
 				"regex": schema.StringAttribute{
-					Required:      true,
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 500),
+						stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "metric regex must not be empty"),
+					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
 			},
@@ -1517,7 +1550,7 @@ type trainingSpecificationModel struct {
 	AdditionalS3DataSource             fwtypes.ListNestedObjectValueOf[additionalS3DataSourceModel]           `tfsdk:"additional_s3_data_source"`
 	MetricDefinitions                  fwtypes.ListNestedObjectValueOf[metricDefinitionModel]                 `tfsdk:"metric_definitions"`
 	SupportedHyperParameters           fwtypes.ListNestedObjectValueOf[hyperParameterSpecificationModel]      `tfsdk:"supported_hyper_parameters"`
-	SupportedTrainingInstanceTypes     fwtypes.ListOfString                                                   `tfsdk:"supported_training_instance_types"`
+	SupportedTrainingInstanceTypes     fwtypes.ListOfStringEnum[awstypes.TrainingInstanceType]                `tfsdk:"supported_training_instance_types"`
 	SupportedTuningJobObjectiveMetrics fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobObjectiveModel] `tfsdk:"supported_tuning_job_objective_metrics"`
 	SupportsDistributedTraining        types.Bool                                                             `tfsdk:"supports_distributed_training"`
 	TrainingChannels                   fwtypes.ListNestedObjectValueOf[channelSpecificationModel]             `tfsdk:"training_channels"`
