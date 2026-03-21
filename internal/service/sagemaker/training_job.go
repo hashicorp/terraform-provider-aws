@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -93,6 +94,11 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"delete_vpc_enis_on_destroy": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Whether to delete detached VPC ENIs that SageMaker may leave behind when destroying the training job.",
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(
+						path.MatchRoot(names.AttrVPCConfig),
+					),
+				},
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
@@ -100,6 +106,11 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"delete_model_packages_on_destroy": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Whether to delete model packages in the configured model package group when destroying the training job.",
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(
+						path.MatchRoot("model_package_config"),
+					),
+				},
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
