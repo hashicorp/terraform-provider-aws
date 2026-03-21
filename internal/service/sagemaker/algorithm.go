@@ -644,16 +644,26 @@ func metricDefinitionsBlock(ctx context.Context) schema.ListNestedBlock {
 
 func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[hyperParameterSpecificationModel](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterSpecificationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(100),
+		},
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"default_value": schema.StringAttribute{
-					Optional:      true,
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(2500),
+					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
 				"description": schema.StringAttribute{
-					Optional:      true,
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(1024),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
 				"is_required": schema.BoolAttribute{
@@ -665,10 +675,15 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 					PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
 				},
 				"name": schema.StringAttribute{
-					Required:      true,
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(256),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "name must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
 				"type": schema.StringAttribute{
+					CustomType:    fwtypes.StringEnumType[awstypes.ParameterType](),
 					Required:      true,
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
@@ -1570,7 +1585,7 @@ type hyperParameterSpecificationModel struct {
 	IsTunable    types.Bool                                           `tfsdk:"is_tunable"`
 	Name         types.String                                         `tfsdk:"name"`
 	Range        fwtypes.ListNestedObjectValueOf[parameterRangeModel] `tfsdk:"range"`
-	Type         types.String                                         `tfsdk:"type"`
+	Type         fwtypes.StringEnum[awstypes.ParameterType]           `tfsdk:"type"`
 }
 
 type parameterRangeModel struct {
