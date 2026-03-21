@@ -567,14 +567,23 @@ func modelAccessConfigBlock(ctx context.Context) schema.ListNestedBlock {
 
 func modelInputBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[modelInputModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[modelInputModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"data_input_config": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 63),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -900,9 +909,13 @@ func fileSystemDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 
 func trainingS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[trainingS3DataSourceModel](ctx),
-		Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingS3DataSourceModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"attribute_names": schema.ListAttribute{
