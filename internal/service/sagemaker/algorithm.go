@@ -844,40 +844,74 @@ func supportedTuningJobObjectiveMetricsBlock(ctx context.Context) schema.ListNes
 
 func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[channelSpecificationModel](ctx),
-		Validators:    []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1)},
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[channelSpecificationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.IsRequired(),
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(8),
+		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"description": schema.StringAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(1024),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"is_required": schema.BoolAttribute{
-					Optional:      true,
-					PlanModifiers: []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
+					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 				"name": schema.StringAttribute{
-					Required:      true,
-					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 64),
+						stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z0-9\.\-_]+`), "name must contain only letters, numbers, periods, hyphens, and underscores"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"supported_compression_types": schema.ListAttribute{
-					CustomType:    fwtypes.ListOfStringType,
-					ElementType:   types.StringType,
-					Optional:      true,
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.ListOfStringEnumType[awstypes.CompressionType](),
+					ElementType: types.StringType,
+					Optional:    true,
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 				},
 				"supported_content_types": schema.ListAttribute{
-					CustomType:    fwtypes.ListOfStringType,
-					ElementType:   types.StringType,
-					Required:      true,
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Required:    true,
+					Validators: []validator.List{
+						listvalidator.ValueStringsAre(
+							stringvalidator.LengthAtMost(256),
+						),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 				},
 				"supported_input_modes": schema.ListAttribute{
-					CustomType:    fwtypes.ListOfStringType,
-					ElementType:   types.StringType,
-					Required:      true,
-					PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+					CustomType:  fwtypes.ListOfStringEnumType[awstypes.TrainingInputMode](),
+					ElementType: types.StringType,
+					Required:    true,
+					Validators: []validator.List{
+						listvalidator.SizeAtLeast(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1669,12 +1703,12 @@ type hyperParameterTuningJobObjectiveModel struct {
 }
 
 type channelSpecificationModel struct {
-	Description               types.String         `tfsdk:"description"`
-	IsRequired                types.Bool           `tfsdk:"is_required"`
-	Name                      types.String         `tfsdk:"name"`
-	SupportedCompressionTypes fwtypes.ListOfString `tfsdk:"supported_compression_types"`
-	SupportedContentTypes     fwtypes.ListOfString `tfsdk:"supported_content_types"`
-	SupportedInputModes       fwtypes.ListOfString `tfsdk:"supported_input_modes"`
+	Description               types.String                                         `tfsdk:"description"`
+	IsRequired                types.Bool                                           `tfsdk:"is_required"`
+	Name                      types.String                                         `tfsdk:"name"`
+	SupportedCompressionTypes fwtypes.ListOfStringEnum[awstypes.CompressionType]   `tfsdk:"supported_compression_types"`
+	SupportedContentTypes     fwtypes.ListOfString                                 `tfsdk:"supported_content_types"`
+	SupportedInputModes       fwtypes.ListOfStringEnum[awstypes.TrainingInputMode] `tfsdk:"supported_input_modes"`
 }
 
 type algorithmValidationSpecificationModel struct {
