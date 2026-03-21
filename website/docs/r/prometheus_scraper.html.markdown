@@ -114,10 +114,24 @@ resource "aws_prometheus_scraper" "example" {
   scrape_configuration = <<EOT
 global:
   scrape_interval: 30s
+  scrape_timeout: 10s
+
 scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
+  - job_name: 'my-service-cloudmap'
+    dns_sd_configs:
+      - names: ['my-service.my-namespace']
+        type: A
+        port: 8080
+    
+    metrics_path: '/metrics'
+    
+    relabel_configs:
+      - target_label: service_name
+        replacement: 'my-service'
+      - target_label: cloudmap_namespace
+        replacement: 'my-namespace'
+      - target_label: discovery_method
+        replacement: 'cloudmap-dns'
 EOT
 }
 ```
