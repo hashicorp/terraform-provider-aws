@@ -64,14 +64,14 @@ type startReplicationTaskAssessmentRunAction struct {
 type startReplicationTaskAssessmentRunActionModel struct {
 	framework.WithRegionModel
 	AssessmentRunName    types.String         `tfsdk:"assessment_run_name"`
-	ReplicationTaskARN   types.String         `tfsdk:"replication_task_arn"`
-	ResultLocationBucket types.String         `tfsdk:"result_location_bucket"`
-	ServiceAccessRoleARN types.String         `tfsdk:"service_access_role_arn"`
-	IncludeOnly          fwtypes.ListOfString `tfsdk:"include_only"`
 	Exclude              fwtypes.ListOfString `tfsdk:"exclude"`
+	IncludeOnly          fwtypes.ListOfString `tfsdk:"include_only"`
+	ReplicationTaskARN   types.String         `tfsdk:"replication_task_arn"`
 	ResultEncryptionMode types.String         `tfsdk:"result_encryption_mode"`
 	ResultKMSKeyARN      types.String         `tfsdk:"result_kms_key_arn"`
+	ResultLocationBucket types.String         `tfsdk:"result_location_bucket"`
 	ResultLocationFolder types.String         `tfsdk:"result_location_folder"`
+	ServiceAccessRoleARN types.String         `tfsdk:"service_access_role_arn"`
 	Timeout              types.Int64          `tfsdk:"timeout"`
 }
 
@@ -83,23 +83,11 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 				Description: "Unique name for the assessment run.",
 				Required:    true,
 			},
-			"replication_task_arn": schema.StringAttribute{
-				Description: "ARN of the DMS replication task to assess.",
-				Required:    true,
-				Validators: []pfvalidator.String{
-					fwvalidators.ARN(),
-				},
-			},
-			"result_location_bucket": schema.StringAttribute{
-				Description: "Amazon S3 bucket where DMS stores the assessment results.",
-				Required:    true,
-			},
-			"service_access_role_arn": schema.StringAttribute{
-				Description: "ARN of the IAM role used by DMS to write assessment results and start the run.",
-				Required:    true,
-				Validators: []pfvalidator.String{
-					fwvalidators.ARN(),
-				},
+			"exclude": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				Description: "Specific individual assessments to exclude from the run. Cannot be set with include_only.",
+				Optional:    true,
+				ElementType: types.StringType,
 			},
 			"include_only": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -107,11 +95,12 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 				Optional:    true,
 				ElementType: types.StringType,
 			},
-			"exclude": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				Description: "Specific individual assessments to exclude from the run. Cannot be set with include_only.",
-				Optional:    true,
-				ElementType: types.StringType,
+			"replication_task_arn": schema.StringAttribute{
+				Description: "ARN of the DMS replication task to assess.",
+				Required:    true,
+				Validators: []pfvalidator.String{
+					fwvalidators.ARN(),
+				},
 			},
 			"result_encryption_mode": schema.StringAttribute{
 				Description: fmt.Sprintf("Encryption mode for assessment results. Valid values are %q and %q.", encryptionModeSseKMS, encryptionModeSseS3),
@@ -124,9 +113,20 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 					fwvalidators.ARN(),
 				},
 			},
+			"result_location_bucket": schema.StringAttribute{
+				Description: "Amazon S3 bucket where DMS stores the assessment results.",
+				Required:    true,
+			},
 			"result_location_folder": schema.StringAttribute{
 				Description: "Folder within the S3 bucket where DMS stores the assessment results.",
 				Optional:    true,
+			},
+			"service_access_role_arn": schema.StringAttribute{
+				Description: "ARN of the IAM role used by DMS to write assessment results and start the run.",
+				Required:    true,
+				Validators: []pfvalidator.String{
+					fwvalidators.ARN(),
+				},
 			},
 			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds to wait for the assessment run to complete.",
@@ -191,34 +191,13 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 	cb := fwactions.NewSendProgressFunc(resp)
 	cb(ctx, "Starting DMS assessment run %s...", assessmentRunName)
 
-	input := &dmssdk.StartReplicationTaskAssessmentRunInput{
-		AssessmentRunName:    aws.String(assessmentRunName),
-		ReplicationTaskArn:   aws.String(replicationTaskARN),
-		ResultLocationBucket: aws.String(fwflex.StringValueFromFramework(ctx, config.ResultLocationBucket)),
-		ServiceAccessRoleArn: aws.String(fwflex.StringValueFromFramework(ctx, config.ServiceAccessRoleARN)),
+	var input dmssdk.StartReplicationTaskAssessmentRunInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, config, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !config.IncludeOnly.IsNull() && !config.IncludeOnly.IsUnknown() {
-		input.IncludeOnly = fwflex.ExpandFrameworkStringValueList(ctx, config.IncludeOnly)
-	}
-
-	if !config.Exclude.IsNull() && !config.Exclude.IsUnknown() {
-		input.Exclude = fwflex.ExpandFrameworkStringValueList(ctx, config.Exclude)
-	}
-
-	if !config.ResultEncryptionMode.IsNull() {
-		input.ResultEncryptionMode = config.ResultEncryptionMode.ValueStringPointer()
-	}
-
-	if !config.ResultKMSKeyARN.IsNull() {
-		input.ResultKmsKeyArn = config.ResultKMSKeyARN.ValueStringPointer()
-	}
-
-	if !config.ResultLocationFolder.IsNull() {
-		input.ResultLocationFolder = config.ResultLocationFolder.ValueStringPointer()
-	}
-
-	output, err := conn.StartReplicationTaskAssessmentRun(ctx, input)
+	output, err := conn.StartReplicationTaskAssessmentRun(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to Start DMS Assessment Run",
