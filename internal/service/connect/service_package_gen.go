@@ -150,6 +150,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
+			Factory:  resourceApprovedOrigin,
+			TypeName: "aws_connect_approved_origin",
+			Name:     "Approved Origin",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceBotAssociation,
 			TypeName: "aws_connect_bot_association",
 			Name:     "Bot Association",
