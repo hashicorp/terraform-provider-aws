@@ -712,7 +712,7 @@ func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserPoolConfig_mfaEmailConfigurationConfigurationDisabled(rName, true, updatedMessage, updatedSubject, replyTo, sourceARN, emailTo, "DEVELOPER"),
+				Config: testAccUserPoolConfig_mfaEmailConfigurationConfigurationDisabled(rName, replyTo, sourceARN, emailTo, "DEVELOPER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
@@ -766,7 +766,17 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAAndEmail(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.1.priority", "2"), resource.TestCheckResourceAttr(sesConfigurationSetResourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(sesConfigurationSetResourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(sesConfigurationSetResourceName, "delivery_options.0.tls_policy", "Optional"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", replyTo),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.source_arn", sourceARN),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.from_email_address", emailTo),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "DEVELOPER"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabledAndEmailMFAConfigurationRemoved(rName, true, message, subject, replyTo, sourceARN, emailTo, "DEVELOPER"),
@@ -783,28 +793,18 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAAndEmail(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.0.name", "verified_email"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.0.priority", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.1.name", "verified_phone_number"),
-					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.1.priority", "2"), resource.TestCheckResourceAttr(sesConfigurationSetResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.1.priority", "2"),
+					resource.TestCheckResourceAttr(sesConfigurationSetResourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(sesConfigurationSetResourceName, "delivery_options.#", "1"),
 					resource.TestCheckResourceAttr(sesConfigurationSetResourceName, "delivery_options.0.tls_policy", "Optional"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", replyTo),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.source_arn", sourceARN),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.from_email_address", emailTo),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "DEVELOPER"),
 				),
 			},
-			{
-				Config: testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabledAndEmailMFAConfigurationRemoved(
-					rName,
-					true,
-					message,
-					subject,
-					replyTo,
-					sourceARN,
-					emailTo,
-					"DEVELOPER",
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-			}},
+		},
 	})
 }
 
@@ -2676,7 +2676,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName, enabled, message, subject, email, arn, from, account)
 }
 
-func testAccUserPoolConfig_mfaEmailConfigurationConfigurationDisabled(rName string, enabled bool, message, subject, email, arn, from, account string) string {
+func testAccUserPoolConfig_mfaEmailConfigurationConfigurationDisabled(rName string, email, arn, from, account string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
@@ -2690,10 +2690,10 @@ resource "aws_cognito_user_pool" "test" {
   name              = %[1]q
 
   email_configuration {
-    reply_to_email_address = %[5]q
-    source_arn             = %[6]q
-    from_email_address     = %[7]q
-    email_sending_account  = %[8]q
+    reply_to_email_address = %[2]q
+    source_arn             = %[3]q
+    from_email_address     = %[4]q
+    email_sending_account  = %[5]q
     configuration_set      = aws_ses_configuration_set.test.name
   }
 
@@ -2707,7 +2707,7 @@ resource "aws_cognito_user_pool" "test" {
       priority = 2
     }
   }
-}	`, rName, enabled, message, subject, email, arn, from, account)
+}	`, rName, email, arn, from, account)
 }
 
 func testAccUserPoolConfig_mfaEmailConfigurationEmptyConfiguration(rName string, email, arn, from, account string) string {
