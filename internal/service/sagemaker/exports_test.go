@@ -3,6 +3,22 @@
 
 package sagemaker
 
+type (
+	AlgorithmResourceModel                = algorithmResourceModel
+	AlgorithmValidationSpecificationModel = algorithmValidationSpecificationModel
+	AlgorithmValidationProfileModel       = algorithmValidationProfileModel
+	TrainingJobDefinitionModel            = trainingJobDefinitionModel
+	ChannelModel                          = channelModel
+	DataSourceModel                       = dataSourceModel
+	ShuffleConfigModel                    = shuffleConfigModel
+	OutputDataConfigModel                 = outputDataConfigModel
+	ResourceConfigModel                   = resourceConfigModel
+	InstanceGroupModel                    = instanceGroupModel
+	InstancePlacementConfigModel          = instancePlacementConfigModel
+	StoppingConditionModel                = stoppingConditionModel
+	TransformJobDefinitionModel           = transformJobDefinitionModel
+)
+
 // Exports for use in tests only.
 var (
 	ResourceApp                                    = resourceApp
@@ -90,6 +106,7 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
 
 	ValidName   = validName
 	ValidPrefix = validPrefix

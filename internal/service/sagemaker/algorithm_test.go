@@ -11,16 +11,243 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestPreserveAlgorithmValidationSpecification(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name    string
+		current *tfsagemaker.AlgorithmResourceModel
+		prior   *tfsagemaker.AlgorithmResourceModel
+		check   func(context.Context, *testing.T, *tfsagemaker.AlgorithmResourceModel)
+	}{
+		{
+			name:    "preserves omitted training job fields from prior state",
+			current: testAlgorithmValidationResourceModel(ctx, testAlgorithmValidationValues{}),
+			prior: testAlgorithmValidationResourceModel(ctx, testAlgorithmValidationValues{
+				inputMode:   awstypes.TrainingInputModeFile,
+				shuffleSeed: aws.Int64(1),
+				compression: awstypes.OutputCompressionTypeGzip,
+				keepAlive:   aws.Int32(60),
+				maxPending:  aws.Int32(7200),
+				maxWait:     aws.Int32(3600),
+			}),
+			check: func(ctx context.Context, t *testing.T, got *tfsagemaker.AlgorithmResourceModel) {
+				t.Helper()
+
+				training := testAlgorithmValidationTrainingJobDefinition(ctx, t, got)
+
+				inputs, diags := training.InputDataConfig.ToSlice(ctx)
+				if diags.HasError() {
+					t.Fatalf("unexpected input data error: %v", diags)
+				}
+				if got, want := inputs[0].InputMode.ValueString(), string(awstypes.TrainingInputModeFile); got != want {
+					t.Fatalf("input mode = %q, want %q", got, want)
+				}
+
+				shuffleConfig, diags := inputs[0].ShuffleConfig.ToPtr(ctx)
+				if diags.HasError() {
+					t.Fatalf("unexpected shuffle config error: %v", diags)
+				}
+				if shuffleConfig == nil {
+					t.Fatal("expected shuffle config to be preserved")
+				}
+				if got, want := shuffleConfig.Seed.ValueInt64(), int64(1); got != want {
+					t.Fatalf("shuffle seed = %d, want %d", got, want)
+				}
+
+				outputDataConfig, diags := training.OutputDataConfig.ToPtr(ctx)
+				if diags.HasError() {
+					t.Fatalf("unexpected output data config error: %v", diags)
+				}
+				if outputDataConfig == nil {
+					t.Fatal("expected output data config to be preserved")
+				}
+				if got, want := outputDataConfig.CompressionType.ValueString(), string(awstypes.OutputCompressionTypeGzip); got != want {
+					t.Fatalf("compression type = %q, want %q", got, want)
+				}
+
+				resourceConfig, diags := training.ResourceConfig.ToPtr(ctx)
+				if diags.HasError() {
+					t.Fatalf("unexpected resource config error: %v", diags)
+				}
+				if resourceConfig == nil {
+					t.Fatal("expected resource config to be preserved")
+				}
+				if got, want := resourceConfig.KeepAlivePeriodInSeconds.ValueInt32(), int32(60); got != want {
+					t.Fatalf("keep alive period = %d, want %d", got, want)
+				}
+
+				stoppingCondition, diags := training.StoppingCondition.ToPtr(ctx)
+				if diags.HasError() {
+					t.Fatalf("unexpected stopping condition error: %v", diags)
+				}
+				if stoppingCondition == nil {
+					t.Fatal("expected stopping condition to be preserved")
+				}
+				if got, want := stoppingCondition.MaxPendingTimeInSeconds.ValueInt32(), int32(7200); got != want {
+					t.Fatalf("max pending time = %d, want %d", got, want)
+				}
+				if got, want := stoppingCondition.MaxWaitTimeInSeconds.ValueInt32(), int32(3600); got != want {
+					t.Fatalf("max wait time = %d, want %d", got, want)
+				}
+			},
+		},
+		{
+			name:    "ignores nil models",
+			current: nil,
+			prior:   nil,
+			check: func(_ context.Context, _ *testing.T, _ *tfsagemaker.AlgorithmResourceModel) {
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := tfsagemaker.PreserveAlgorithmValidationSpecification(ctx, tt.current, tt.prior)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %v", diags)
+			}
+
+			tt.check(ctx, t, tt.current)
+		})
+	}
+}
+
+type testAlgorithmValidationValues struct {
+	inputMode   awstypes.TrainingInputMode
+	shuffleSeed *int64
+	compression awstypes.OutputCompressionType
+	keepAlive   *int32
+	maxPending  *int32
+	maxWait     *int32
+}
+
+func testAlgorithmValidationResourceModel(ctx context.Context, v testAlgorithmValidationValues) *tfsagemaker.AlgorithmResourceModel {
+	channel := tfsagemaker.ChannelModel{
+		ChannelName:       types.StringNull(),
+		CompressionType:   fwtypes.StringEnumNull[awstypes.CompressionType](),
+		ContentType:       types.StringNull(),
+		DataSource:        fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.DataSourceModel](ctx),
+		InputMode:         fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
+		RecordWrapperType: fwtypes.StringEnumNull[awstypes.RecordWrapper](),
+		ShuffleConfig:     fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.ShuffleConfigModel](ctx),
+	}
+
+	if v.inputMode != "" {
+		channel.InputMode = fwtypes.StringEnumValue(v.inputMode)
+	}
+
+	if v.shuffleSeed != nil {
+		channel.ShuffleConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.ShuffleConfigModel{
+			Seed: types.Int64Value(*v.shuffleSeed),
+		})
+	}
+
+	outputDataConfig := tfsagemaker.OutputDataConfigModel{
+		CompressionType: fwtypes.StringEnumNull[awstypes.OutputCompressionType](),
+		KMSKeyID:        types.StringNull(),
+		S3OutputPath:    types.StringNull(),
+	}
+	if v.compression != "" {
+		outputDataConfig.CompressionType = fwtypes.StringEnumValue(v.compression)
+	}
+
+	resourceConfig := tfsagemaker.ResourceConfigModel{
+		InstanceCount:            types.Int32Null(),
+		InstanceGroups:           fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.InstanceGroupModel](ctx),
+		InstancePlacementConfig:  fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.InstancePlacementConfigModel](ctx),
+		InstanceType:             fwtypes.StringEnumNull[awstypes.TrainingInstanceType](),
+		KeepAlivePeriodInSeconds: types.Int32Null(),
+		TrainingPlanARN:          types.StringNull(),
+		VolumeKMSKeyID:           types.StringNull(),
+		VolumeSizeInGB:           types.Int32Null(),
+	}
+	if v.keepAlive != nil {
+		resourceConfig.KeepAlivePeriodInSeconds = types.Int32Value(*v.keepAlive)
+	}
+
+	stoppingCondition := tfsagemaker.StoppingConditionModel{
+		MaxPendingTimeInSeconds: types.Int32Null(),
+		MaxRuntimeInSeconds:     types.Int32Null(),
+		MaxWaitTimeInSeconds:    types.Int32Null(),
+	}
+	if v.maxPending != nil {
+		stoppingCondition.MaxPendingTimeInSeconds = types.Int32Value(*v.maxPending)
+	}
+	if v.maxWait != nil {
+		stoppingCondition.MaxWaitTimeInSeconds = types.Int32Value(*v.maxWait)
+	}
+
+	return &tfsagemaker.AlgorithmResourceModel{
+		ValidationSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.AlgorithmValidationSpecificationModel{
+			ValidationRole: types.StringNull(),
+			ValidationProfiles: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.AlgorithmValidationProfileModel{
+				ProfileName:            types.StringNull(),
+				TransformJobDefinition: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.TransformJobDefinitionModel](ctx),
+				TrainingJobDefinition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfsagemaker.TrainingJobDefinitionModel{
+					HyperParameters:   fwtypes.NewMapValueOfNull[basetypes.StringValue](ctx),
+					InputDataConfig:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &channel),
+					OutputDataConfig:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &outputDataConfig),
+					ResourceConfig:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &resourceConfig),
+					StoppingCondition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &stoppingCondition),
+					TrainingInputMode: fwtypes.StringEnumNull[awstypes.TrainingInputMode](),
+				}),
+			}),
+		}),
+	}
+}
+
+func testAlgorithmValidationTrainingJobDefinition(ctx context.Context, t *testing.T, data *tfsagemaker.AlgorithmResourceModel) *tfsagemaker.TrainingJobDefinitionModel {
+	t.Helper()
+
+	validationSpecification, diags := data.ValidationSpecification.ToPtr(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected validation specification error: %v", diags)
+	}
+	if validationSpecification == nil {
+		t.Fatal("expected validation specification")
+	}
+
+	validationProfile, diags := validationSpecification.ValidationProfiles.ToPtr(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected validation profile error: %v", diags)
+	}
+	if validationProfile == nil {
+		t.Fatal("expected validation profile")
+	}
+
+	trainingJobDefinition, diags := validationProfile.TrainingJobDefinition.ToPtr(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected training job definition error: %v", diags)
+	}
+	if trainingJobDefinition == nil {
+		t.Fatal("expected training job definition")
+	}
+
+	return trainingJobDefinition
+}
 
 func TestAccSageMakerAlgorithm_basic(t *testing.T) {
 	ctx := acctest.Context(t)
