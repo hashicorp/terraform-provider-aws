@@ -605,8 +605,45 @@ resource "aws_prometheus_scraper" "test" {
 
 func testAccScraperConfig_vpcConfiguration(rName string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "%[1]s.local"
+  vpc  = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[1]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+  }
+}
+
 resource "aws_prometheus_scraper" "test" {
-  scrape_configuration = %[1]q
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+
+scrape_configs:
+  - job_name: 'test-service'
+    dns_sd_configs:
+      - names: ['${aws_service_discovery_service.test.name}.${aws_service_discovery_private_dns_namespace.test.name}']
+        type: A
+        port: 80
+    metrics_path: '/metrics'
+    relabel_configs:
+      - target_label: service_name
+        replacement: 'test-service'
+      - target_label: discovery_method
+        replacement: 'cloudmap-dns'
+EOT
 
   source {
     vpc {
@@ -621,15 +658,13 @@ resource "aws_prometheus_scraper" "test" {
     }
   }
 }
-`, scrapeConfigBlob))
+`, rName))
 }
 
 func testAccScraperConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -640,7 +675,7 @@ resource "aws_subnet" "test" {
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
+  cidr_block        = "10.1.${count.index}.0/24"
   vpc_id            = aws_vpc.test.id
 
   tags = {
