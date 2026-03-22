@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -101,6 +102,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
@@ -240,16 +242,19 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 									},
 									"image_digest": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(72),
 											stringvalidator.RegexMatches(regexache.MustCompile(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`), "image digest must be a valid sha256 digest"),
 										},
 										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
 									"is_checkpoint": schema.BoolAttribute{
 										Optional: true,
+										Computed: true,
 										PlanModifiers: []planmodifier.Bool{
 											boolplanmodifier.RequiresReplace(),
 										},
@@ -291,7 +296,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 									"additional_s3_data_source": additionalS3DataSourceBlock(ctx),
 									"base_model":                baseModelBlock(ctx),
 									"model_data_source":         modelDataSourceBlock(ctx),
-									"model_input":               modelInputBlock(ctx), // remove-later : all 4 done
+									"model_input":               modelInputBlock(ctx),
 								},
 							},
 						},
@@ -322,6 +327,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 							Optional: true,
 							Computed: true,
 							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.UseStateForUnknown(),
 								boolplanmodifier.RequiresReplace(),
 							},
 						},
@@ -343,6 +349,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 								stringvalidator.RegexMatches(regexache.MustCompile(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`), "training image digest must be a valid sha256 digest"),
 							},
 							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
@@ -689,6 +696,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.UseStateForUnknown(),
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
@@ -696,6 +704,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.UseStateForUnknown(),
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
@@ -898,6 +907,7 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.UseStateForUnknown(),
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
@@ -1069,6 +1079,7 @@ func inputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 				"input_mode": schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -1272,6 +1283,7 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 				"compression_type": schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.OutputCompressionType](),
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -1332,6 +1344,7 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 				"keep_alive_period_in_seconds": schema.Int32Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int32{
 						int32validator.Between(0, 3600),
 					},
@@ -1485,6 +1498,7 @@ func stoppingConditionBlock(ctx context.Context) schema.ListNestedBlock {
 			Attributes: map[string]schema.Attribute{
 				"max_pending_time_in_seconds": schema.Int32Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int32{
 						int32validator.Between(7200, 2419200),
 					},
@@ -1503,6 +1517,7 @@ func stoppingConditionBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 				"max_wait_time_in_seconds": schema.Int32Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int32{
 						int32validator.AtLeast(1),
 					},
@@ -1791,6 +1806,7 @@ func (r *algorithmResource) Create(ctx context.Context, request resource.CreateR
 	if response.Diagnostics.HasError() {
 		return
 	}
+	plan := data
 
 	conn := r.Meta().SageMakerClient(ctx)
 
@@ -1813,7 +1829,7 @@ func (r *algorithmResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputWait, &data, fwflex.WithFieldNamePrefix("Algorithm"))...)
+	response.Diagnostics.Append(r.flatten(ctx, outputWait, &data, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1827,6 +1843,7 @@ func (r *algorithmResource) Read(ctx context.Context, request resource.ReadReque
 	if response.Diagnostics.HasError() {
 		return
 	}
+	state := data
 
 	conn := r.Meta().SageMakerClient(ctx)
 
@@ -1841,7 +1858,7 @@ func (r *algorithmResource) Read(ctx context.Context, request resource.ReadReque
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNamePrefix("Algorithm"))...)
+	response.Diagnostics.Append(r.flatten(ctx, output, &data, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1857,12 +1874,21 @@ func (r *algorithmResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 
 	conn := r.Meta().SageMakerClient(ctx)
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	input := sagemaker.DeleteAlgorithmInput{
 		AlgorithmName: data.AlgorithmName.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteAlgorithm(ctx, &input)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, deleteTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteAlgorithm(ctx, &input)
+		},
+		ErrCodeValidationException, "Cannot delete Algorithm in InProgress status")
+
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
+		return
+	}
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "does not exist") {
 		return
 	}
 	if err != nil {
@@ -1870,9 +1896,146 @@ func (r *algorithmResource) Delete(ctx context.Context, request resource.DeleteR
 		return
 	}
 
-	if err := waitAlgorithmDeleted(ctx, conn, data.AlgorithmName.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if err := waitAlgorithmDeleted(ctx, conn, data.AlgorithmName.ValueString(), deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Algorithm (%s) delete", data.AlgorithmName.ValueString()), err.Error())
 	}
+}
+
+func (r *algorithmResource) flatten(ctx context.Context, apiObject any, data, prior *algorithmResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, apiObject, data, fwflex.WithFieldNamePrefix("Algorithm"))...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(preserveAlgorithmValidationSpecification(ctx, data, prior)...)
+
+	return diags
+}
+
+// AWS does not seem to return :
+// 1. validation_specification.validation_profiles.training_job_definition.resource_config.keep_alive_period_in_seconds
+// 2. validation_specification.validation_profiles.training_job_definition.stopping_condition.max_pending_time_in_seconds
+// 3. validation_specification.validation_profiles.training_job_definition.stopping_condition.max_wait_time_in_seconds
+// 4. validation_specification.validation_profiles.training_job_definition.input_data_config.shuffle_config (block)
+// 5. validation_specification.validation_profiles.training_job_definition.output_data_config.compression_type
+func preserveAlgorithmValidationSpecification(ctx context.Context, current, prior *algorithmResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if current == nil || prior == nil {
+		return diags
+	}
+
+	currentValidation, d := current.ValidationSpecification.ToPtr(ctx)
+	diags.Append(d...)
+	priorValidation, d := prior.ValidationSpecification.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || currentValidation == nil || priorValidation == nil {
+		return diags
+	}
+
+	currentProfile, d := currentValidation.ValidationProfiles.ToPtr(ctx)
+	diags.Append(d...)
+	priorProfile, d := priorValidation.ValidationProfiles.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || currentProfile == nil || priorProfile == nil {
+		return diags
+	}
+
+	currentTraining, d := currentProfile.TrainingJobDefinition.ToPtr(ctx)
+	diags.Append(d...)
+	priorTraining, d := priorProfile.TrainingJobDefinition.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || currentTraining == nil || priorTraining == nil {
+		return diags
+	}
+
+	currentInputs, d := currentTraining.InputDataConfig.ToSlice(ctx)
+	diags.Append(d...)
+	priorInputs, d := priorTraining.InputDataConfig.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if len(currentInputs) > 0 && len(priorInputs) > 0 && currentInputs[0] != nil && priorInputs[0] != nil {
+		currentInputs[0].InputMode = priorInputs[0].InputMode
+		currentInputs[0].ShuffleConfig = priorInputs[0].ShuffleConfig
+
+		currentTraining.InputDataConfig, d = fwtypes.NewListNestedObjectValueOfSlice(ctx, currentInputs, nil)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	currentOutput, d := currentTraining.OutputDataConfig.ToPtr(ctx)
+	diags.Append(d...)
+	priorOutput, d := priorTraining.OutputDataConfig.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	if currentOutput != nil && priorOutput != nil {
+		currentOutput.CompressionType = priorOutput.CompressionType
+		currentTraining.OutputDataConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, currentOutput)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	currentResource, d := currentTraining.ResourceConfig.ToPtr(ctx)
+	diags.Append(d...)
+	priorResource, d := priorTraining.ResourceConfig.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	if currentResource != nil && priorResource != nil {
+		currentResource.KeepAlivePeriodInSeconds = priorResource.KeepAlivePeriodInSeconds
+		currentTraining.ResourceConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, currentResource)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	currentStopping, d := currentTraining.StoppingCondition.ToPtr(ctx)
+	diags.Append(d...)
+	priorStopping, d := priorTraining.StoppingCondition.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	if currentStopping != nil && priorStopping != nil {
+		currentStopping.MaxPendingTimeInSeconds = priorStopping.MaxPendingTimeInSeconds
+		currentStopping.MaxWaitTimeInSeconds = priorStopping.MaxWaitTimeInSeconds
+
+		currentTraining.StoppingCondition, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, currentStopping)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	currentProfile.TrainingJobDefinition, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, currentTraining)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	currentValidation.ValidationProfiles, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, currentProfile)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	current.ValidationSpecification, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, currentValidation)
+	diags.Append(d...)
+
+	return diags
 }
 
 func findAlgorithmByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeAlgorithmOutput, error) {
