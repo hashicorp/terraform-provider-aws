@@ -754,8 +754,8 @@ func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn strin
 
 func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeAlgorithmOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.AlgorithmStatusPending)},
-		Target:  []string{string(awstypes.AlgorithmStatusInProgress), string(awstypes.AlgorithmStatusCompleted)},
+		Pending: enum.Slice(awstypes.AlgorithmStatusPending),
+		Target:  enum.Slice(awstypes.AlgorithmStatusInProgress, awstypes.AlgorithmStatusCompleted),
 		Refresh: statusAlgorithm(conn, name),
 		Timeout: timeout,
 	}
@@ -770,13 +770,12 @@ func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name stri
 
 func waitAlgorithmDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.AlgorithmStatusDeleting),
-			string(awstypes.AlgorithmStatusPending),
-			string(awstypes.AlgorithmStatusInProgress),
-			string(awstypes.AlgorithmStatusCompleted),
-			string(awstypes.AlgorithmStatusFailed),
-		},
+		Pending: enum.Slice(
+			awstypes.AlgorithmStatusDeleting,
+			awstypes.AlgorithmStatusPending,
+			awstypes.AlgorithmStatusInProgress,
+			awstypes.AlgorithmStatusCompleted,
+		),
 		Target:  []string{},
 		Refresh: statusAlgorithm(conn, name),
 		Timeout: timeout,
