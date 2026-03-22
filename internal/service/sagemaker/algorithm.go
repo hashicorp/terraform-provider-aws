@@ -53,7 +53,7 @@ import (
 func newAlgorithmResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &algorithmResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
