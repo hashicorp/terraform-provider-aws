@@ -213,10 +213,9 @@ func resourceUserPool() *schema.Resource {
 				},
 			},
 			"email_mfa_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrMessage: {
@@ -878,11 +877,15 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if mfaConfig != awstypes.UserPoolMfaTypeOff {
 			input.MfaConfiguration = mfaConfig
-			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any))
 		}
 
-		if v, ok := d.Get("email_mfa_configuration").([]any); ok && len(v) > 0 {
+		// Don't check v[0] != nil since {} is valid input for this field
+		if v, ok := d.Get("email_mfa_configuration").([]any); ok && len(v) > 0 && mfaConfig != awstypes.UserPoolMfaTypeOff {
 			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
+		}
+
+		if v, ok := d.Get("software_token_mfa_configuration").([]any); ok && len(v) > 0 && v[0] != nil && mfaConfig != awstypes.UserPoolMfaTypeOff {
+			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(v)
 		}
 
 		if v := d.Get("sms_configuration").([]any); len(v) > 0 && v[0] != nil {
@@ -1027,10 +1030,9 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	) {
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-			MfaConfiguration:              mfaConfiguration,
-			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any)),
-			UserPoolId:                    aws.String(d.Id()),
-			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]any)),
+			MfaConfiguration:      mfaConfiguration,
+			UserPoolId:            aws.String(d.Id()),
+			WebAuthnConfiguration: expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]any)),
 		}
 
 		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
@@ -1046,11 +1048,16 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		// Since Email MFA configuration applies to MFA, only include if MFA is enabled.
+		// Since Email MFA configuration applies to both verification and MFA, only include if MFA is enabled.
 		// Otherwise, the API will return the following error:
 		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
-		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
+		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
 			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
+		}
+
+		// Since SoftwareToken MFA configuration applies to MFA only include if MFA is enabled.
+		if v := d.Get("software_token_mfa_configuration").([]any); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
+			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(v)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
@@ -1362,8 +1369,12 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
-	if len(tfList) == 0 || tfList[0] == nil {
+	if len(tfList) == 0 {
 		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.EmailMfaConfigType{}
 	}
 
 	tfMap := tfList[0].(map[string]any)
@@ -1375,10 +1386,6 @@ func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
 
 	if v, ok := tfMap["subject"].(string); ok && v != "" {
 		apiObject.Subject = aws.String(v)
-	}
-
-	if apiObject.Message == nil && apiObject.Subject == nil {
-		return nil
 	}
 
 	return apiObject
@@ -1471,20 +1478,17 @@ func flattenEmailMFAConfigType(apiObject *awstypes.EmailMfaConfigType) []any {
 
 	tfMap := map[string]any{}
 
-	if v := apiObject.Message; v != nil && aws.ToString(v) != "" {
+	if v := apiObject.Message; v != nil {
 		tfMap[names.AttrMessage] = aws.ToString(v)
 	}
 
-	if v := apiObject.Subject; v != nil && aws.ToString(v) != "" {
+	if v := apiObject.Subject; v != nil {
 		tfMap["subject"] = aws.ToString(v)
-	}
-
-	if len(tfMap) == 0 {
-		return nil
 	}
 
 	return []any{tfMap}
 }
+
 func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfigType) []any {
 	if apiObject == nil {
 		return nil
