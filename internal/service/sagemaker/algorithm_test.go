@@ -120,8 +120,6 @@ func TestPreserveAlgorithmValidationSpecification(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -644,30 +642,30 @@ func testAccAlgorithmConfig_base(rName string) string {
 data "aws_partition" "current" {}
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
-	repository_name = "linear-learner"
-	image_tag       = "1"
+  repository_name = "linear-learner"
+  image_tag       = "1"
 }
 
 data "aws_iam_policy_document" "test" {
-	statement {
-		actions = ["sts:AssumeRole"]
+  statement {
+    actions = ["sts:AssumeRole"]
 
-		principals {
-			type        = "Service"
-			identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
-		}
-	}
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
 }
 
 resource "aws_iam_role" "test" {
-	name               = %[1]q
-	path               = "/"
-	assume_role_policy = data.aws_iam_policy_document.test.json
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-	role       = aws_iam_role.test.name
-	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 `, rName)
 }
@@ -675,37 +673,37 @@ resource "aws_iam_role_policy_attachment" "test" {
 func testAccAlgorithmConfig_validationDataBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-	bucket        = "tf-acc-test-validation-%[1]s"
-	force_destroy = true
+  bucket        = "tf-acc-test-validation-%[1]s"
+  force_destroy = true
 }
 
 data "aws_iam_policy_document" "s3_access" {
-	statement {
-		effect = "Allow"
+  statement {
+    effect = "Allow"
 
-		actions = [
-			"s3:GetBucketLocation",
-			"s3:ListBucket",
-			"s3:GetObject",
-			"s3:PutObject",
-		]
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject",
+    ]
 
-		resources = [
-			aws_s3_bucket.test.arn,
-			"${aws_s3_bucket.test.arn}/*",
-		]
-	}
+    resources = [
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "s3_access" {
-	role   = aws_iam_role.test.name
-	policy = data.aws_iam_policy_document.s3_access.json
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3_access.json
 }
 
 resource "aws_s3_object" "training" {
-	bucket  = aws_s3_bucket.test.bucket
-	key     = "algorithm/training/data.csv"
-	content = <<-EOT
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "algorithm/training/data.csv"
+  content = <<-EOT
 1,1.0,0.0
 0,0.0,1.0
 1,1.0,1.0
@@ -714,9 +712,9 @@ EOT
 }
 
 resource "aws_s3_object" "transform" {
-	bucket  = aws_s3_bucket.test.bucket
-	key     = "algorithm/transform/input.csv"
-	content = <<-EOT
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "algorithm/transform/input.csv"
+  content = <<-EOT
 1.0,0.0
 0.0,1.0
 EOT
@@ -727,10 +725,10 @@ EOT
 func testAccAlgorithmConfig_resource(rName string, bodies ...string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_algorithm" "test" {
-	algorithm_name = %[1]q
-	depends_on = [
-		aws_iam_role_policy_attachment.test,
-	]
+  algorithm_name = %[1]q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
 
 %[2]s
 }
@@ -740,13 +738,13 @@ resource "aws_sagemaker_algorithm" "test" {
 func testAccAlgorithmConfig_validationResource(rName string, bodies ...string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_algorithm" "test" {
-	algorithm_name = %[1]q
-	depends_on = [
-		aws_iam_role_policy_attachment.test,
-		aws_iam_role_policy.s3_access,
-		aws_s3_object.training,
-		aws_s3_object.transform,
-	]
+  algorithm_name = %[1]q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+    aws_iam_role_policy.s3_access,
+    aws_s3_object.training,
+    aws_s3_object.transform,
+  ]
 
 %[2]s
 }
