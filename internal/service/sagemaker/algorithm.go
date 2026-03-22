@@ -106,7 +106,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"creation_time": schema.StringAttribute{
+			names.AttrCreationTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
@@ -195,7 +195,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"environment": schema.MapAttribute{
+									names.AttrEnvironment: schema.MapAttribute{
 										CustomType:  fwtypes.MapOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
@@ -643,7 +643,7 @@ func metricDefinitionsBlock(ctx context.Context) schema.ListNestedBlock {
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
@@ -673,7 +673,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"default_value": schema.StringAttribute{
+				names.AttrDefaultValue: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2500),
@@ -682,7 +682,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"description": schema.StringAttribute{
+				names.AttrDescription: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
@@ -708,7 +708,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(256),
@@ -718,7 +718,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"type": schema.StringAttribute{
+				names.AttrType: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.ParameterType](),
 					Required:   true,
 					PlanModifiers: []planmodifier.String{
@@ -763,7 +763,7 @@ func categoricalParameterRangeSpecificationBlock(ctx context.Context) schema.Lis
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"values": schema.ListAttribute{
+				names.AttrValues: schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
 					Required:    true,
@@ -859,7 +859,7 @@ func supportedTuningJobObjectiveMetricsBlock(ctx context.Context) schema.ListNes
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"metric_name": schema.StringAttribute{
+				names.AttrMetricName: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
@@ -868,7 +868,7 @@ func supportedTuningJobObjectiveMetricsBlock(ctx context.Context) schema.ListNes
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"type": schema.StringAttribute{
+				names.AttrType: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobObjectiveType](),
 					Required:   true,
 					PlanModifiers: []planmodifier.String{
@@ -893,7 +893,7 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"description": schema.StringAttribute{
+				names.AttrDescription: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
@@ -911,7 +911,7 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 64),
@@ -1067,7 +1067,7 @@ func inputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"content_type": schema.StringAttribute{
+				names.AttrContentType: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(256),
@@ -1147,7 +1147,7 @@ func fileSystemDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"file_system_id": schema.StringAttribute{
+				names.AttrFileSystemID: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(11, 21),
@@ -1288,7 +1288,7 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"kms_key_id": schema.StringAttribute{
+				names.AttrKMSKeyID: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2048),
@@ -1326,7 +1326,7 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_count": schema.Int32Attribute{
+				names.AttrInstanceCount: schema.Int32Attribute{
 					Optional: true,
 					Validators: []validator.Int32{
 						int32validator.AtLeast(0),
@@ -1335,7 +1335,7 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 						int32planmodifier.RequiresReplace(),
 					},
 				},
-				"instance_type": schema.StringAttribute{
+				names.AttrInstanceType: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
 					Optional:   true,
 					PlanModifiers: []planmodifier.String{
@@ -1401,7 +1401,7 @@ func instanceGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_count": schema.Int32Attribute{
+				names.AttrInstanceCount: schema.Int32Attribute{
 					Required: true,
 					Validators: []validator.Int32{
 						int32validator.AtLeast(0),
@@ -1419,7 +1419,7 @@ func instanceGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"instance_type": schema.StringAttribute{
+				names.AttrInstanceType: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
 					Required:   true,
 					PlanModifiers: []planmodifier.String{
@@ -1465,7 +1465,7 @@ func placementSpecificationsBlock(ctx context.Context) schema.ListNestedBlock {
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_count": schema.Int32Attribute{
+				names.AttrInstanceCount: schema.Int32Attribute{
 					Required: true,
 					Validators: []validator.Int32{
 						int32validator.AtLeast(0),
@@ -1548,7 +1548,7 @@ func transformJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"environment": schema.MapAttribute{
+				names.AttrEnvironment: schema.MapAttribute{
 					CustomType:  fwtypes.MapOfStringType,
 					ElementType: types.StringType,
 					Optional:    true,
@@ -1614,7 +1614,7 @@ func transformInputBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"content_type": schema.StringAttribute{
+				names.AttrContentType: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(256),
@@ -1721,7 +1721,7 @@ func transformOutputBlock(ctx context.Context) schema.ListNestedBlock {
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"kms_key_id": schema.StringAttribute{
+				names.AttrKMSKeyID: schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2048),
@@ -1759,7 +1759,7 @@ func transformResourcesBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"instance_count": schema.Int32Attribute{
+				names.AttrInstanceCount: schema.Int32Attribute{
 					Required: true,
 					Validators: []validator.Int32{
 						int32validator.Between(1, 100),
@@ -1768,7 +1768,7 @@ func transformResourcesBlock(ctx context.Context) schema.ListNestedBlock {
 						int32planmodifier.RequiresReplace(),
 					},
 				},
-				"instance_type": schema.StringAttribute{
+				names.AttrInstanceType: schema.StringAttribute{
 					CustomType: fwtypes.StringEnumType[awstypes.TransformInstanceType](),
 					Required:   true,
 					PlanModifiers: []planmodifier.String{

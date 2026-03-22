@@ -121,7 +121,7 @@ func TestAccSageMakerAlgorithm_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_name"), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_status"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("creation_time"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_specification"), knownvalue.ListSizeExact(1)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_specification").AtSliceIndex(0).AtMapKey("supported_training_instance_types").AtSliceIndex(0), knownvalue.StringExact("ml.m5.large")),
