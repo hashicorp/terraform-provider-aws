@@ -754,8 +754,8 @@ func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn strin
 
 func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeAlgorithmOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.AlgorithmStatusPending), string(awstypes.AlgorithmStatusInProgress)},
-		Target:  []string{string(awstypes.AlgorithmStatusCompleted)},
+		Pending: []string{string(awstypes.AlgorithmStatusPending)},
+		Target:  []string{string(awstypes.AlgorithmStatusInProgress), string(awstypes.AlgorithmStatusCompleted)},
 		Refresh: statusAlgorithm(conn, name),
 		Timeout: timeout,
 	}
