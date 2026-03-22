@@ -239,8 +239,8 @@ resource "aws_iam_role_policy" "example" {
 }
 
 resource "aws_s3_object" "training" {
-  bucket = aws_s3_bucket.example.bucket
-  key    = "algorithm/training/data.csv"
+  bucket  = aws_s3_bucket.example.bucket
+  key     = "algorithm/training/data.csv"
   content = <<-EOT
 1,1.0,0.0
 0,0.0,1.0
@@ -250,8 +250,8 @@ EOT
 }
 
 resource "aws_s3_object" "transform" {
-  bucket = aws_s3_bucket.example.bucket
-  key    = "algorithm/transform/input.csv"
+  bucket  = aws_s3_bucket.example.bucket
+  key     = "algorithm/transform/input.csv"
   content = <<-EOT
 1.0,0.0
 0.0,1.0
