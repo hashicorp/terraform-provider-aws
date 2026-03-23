@@ -185,7 +185,7 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 	tflog.Info(ctx, "Starting DMS replication task assessment run", map[string]any{
 		"assessment_run_name":  assessmentRunName,
 		"replication_task_arn": replicationTaskARN,
-		"timeout":              timeout.String(),
+		names.AttrTimeout:      timeout.String(),
 	})
 
 	cb := fwactions.NewSendProgressFunc(resp)
@@ -302,7 +302,7 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 	logFields := map[string]any{
 		"assessment_run_arn":  assessmentRunARN,
 		"assessment_run_name": assessmentRunName,
-		"status":              fr.Status,
+		names.AttrStatus:      fr.Status,
 	}
 	if fr.Value != nil && fr.Value.AssessmentProgress != nil {
 		logFields["individual_assessment_completed_count"] = fr.Value.AssessmentProgress.IndividualAssessmentCompletedCount

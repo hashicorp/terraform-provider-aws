@@ -88,7 +88,7 @@ func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *test
 
 		conn := acctest.ProviderMeta(ctx, t).DMSClient(ctx)
 		replicationTaskARN := taskRS.Primary.Attributes["replication_task_arn"]
-		resultBucket := bucketRS.Primary.Attributes["bucket"]
+		resultBucket := bucketRS.Primary.Attributes[names.AttrBucket]
 		serviceAccessRoleARN := roleRS.Primary.Attributes[names.AttrARN]
 
 		timeout := time.After(10 * time.Minute)
@@ -100,14 +100,15 @@ func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *test
 			case <-timeout:
 				return fmt.Errorf("timeout waiting for DMS assessment run %q for replication task %s", assessmentRunName, replicationTaskARN)
 			case <-ticker.C:
-				output, err := conn.DescribeReplicationTaskAssessmentRuns(ctx, &dmssdk.DescribeReplicationTaskAssessmentRunsInput{
+				input := dmssdk.DescribeReplicationTaskAssessmentRunsInput{
 					Filters: []awstypes.Filter{
 						{
 							Name:   aws.String("replication-task-arn"),
 							Values: []string{replicationTaskARN},
 						},
 					},
-				})
+				}
+				output, err := conn.DescribeReplicationTaskAssessmentRuns(ctx, &input)
 				if err != nil {
 					continue
 				}
@@ -198,7 +199,7 @@ action "aws_dms_start_replication_task_assessment_run" "test" {
   config {
     assessment_run_name     = %[2]q
     replication_task_arn    = aws_dms_replication_task.test.replication_task_arn
-	include_only            = [%[3]q]
+    include_only            = [%[3]q]
     result_location_bucket  = aws_s3_bucket.test.bucket
     result_location_folder  = "assessment-results"
     service_access_role_arn = aws_iam_role.test.arn
