@@ -31,15 +31,15 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_account_assignment", name="Account Assignment")
+// @IdentityAttribute("id")
+// @Testing(requireEnvVarValue="AWS_IDENTITY_STORE_GROUP_NAME")
+// @Testing(preCheck="acctest.PreCheckSSOAdminInstances")
+// @Testing(preIdentityVersion="v6.37.0")
 func resourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountAssignmentCreate,
 		ReadWithoutTimeout:   resourceAccountAssignmentRead,
 		DeleteWithoutTimeout: resourceAccountAssignmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
