@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"iter"
 	"log"
 	"strings"
 	"time"
@@ -281,25 +280,6 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	}
 
 	return output.ResolverRule, nil
-}
-
-func listResolverRules(ctx context.Context, conn *route53resolver.Client, input *route53resolver.ListResolverRulesInput) iter.Seq2[awstypes.ResolverRule, error] {
-	return func(yield func(awstypes.ResolverRule, error) bool) {
-		pages := route53resolver.NewListResolverRulesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.ResolverRule{}, fmt.Errorf("listing Route53 Resolver Rules: %w", err))
-				return
-			}
-
-			for _, rule := range page.ResolverRules {
-				if !yield(rule, nil) {
-					return
-				}
-			}
-		}
-	}
 }
 
 func resourceRuleFlatten(ctx context.Context, awsClient *conns.AWSClient, rule *awstypes.ResolverRule, d *schema.ResourceData) error {

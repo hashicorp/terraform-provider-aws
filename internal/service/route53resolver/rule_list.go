@@ -5,9 +5,12 @@ package route53resolver
 
 import (
 	"context"
+	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -89,6 +92,25 @@ func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, s
 
 			if !yield(result) {
 				return
+			}
+		}
+	}
+}
+
+func listResolverRules(ctx context.Context, conn *route53resolver.Client, input *route53resolver.ListResolverRulesInput) iter.Seq2[awstypes.ResolverRule, error] {
+	return func(yield func(awstypes.ResolverRule, error) bool) {
+		pages := route53resolver.NewListResolverRulesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.ResolverRule{}, fmt.Errorf("listing Route53 Resolver Rules: %w", err))
+				return
+			}
+
+			for _, rule := range page.ResolverRules {
+				if !yield(rule, nil) {
+					return
+				}
 			}
 		}
 	}
