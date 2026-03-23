@@ -84,13 +84,6 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrRoleARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"delete_vpc_enis_on_destroy": schema.BoolAttribute{
 				Optional:            true,
 				MarkdownDescription: "Whether to delete detached VPC ENIs that SageMaker may leave behind when destroying the training job.",
@@ -172,6 +165,13 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrRoleARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"training_job_name": schema.StringAttribute{
@@ -205,12 +205,12 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"session_chaining_config":      sessionChainingConfigBlock(ctx),
 			"stopping_condition":           stoppingConditionBlock(ctx),
 			"tensor_board_output_config":   tensorBoardOutputConfigBlock(ctx),
-			names.AttrVPCConfig:            vpcConfigBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
 			}),
+			names.AttrVPCConfig: vpcConfigBlock(ctx),
 		},
 	}
 }
@@ -1603,6 +1603,17 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName)
 			return
 		}
+
+		out, err := findTrainingJobByName(ctx, conn, plan.TrainingJobName.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName)
+			return
+		}
+
+		r.flatten(ctx, out, &plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -1654,7 +1665,7 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	if state.DeleteVPCENIsOnDestroy.ValueBool() && !state.VPCConfig.IsNull() && !state.VPCConfig.IsUnknown() {
+	if state.DeleteVPCENIsOnDestroy.ValueBool() {
 		sgIDs, subnetIDs, diags := VPCConfigFromState(ctx, state.VPCConfig)
 		resp.Diagnostics.Append(diags...)
 		if !resp.Diagnostics.HasError() && len(sgIDs) > 0 && len(subnetIDs) > 0 {
@@ -1692,18 +1703,25 @@ func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, security
 		return fmt.Errorf("finding ENIs: %w", err)
 	}
 
+	var errs []error
+
 	for _, ni := range networkInterfaces {
 		networkInterfaceID := aws.ToString(ni.NetworkInterfaceId)
 
 		if ni.Attachment != nil {
 			if err := tfec2.DetachNetworkInterface(ctx, ec2Conn, networkInterfaceID, aws.ToString(ni.Attachment.AttachmentId), timeout); err != nil {
-				return fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err)
+				errs = append(errs, fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err))
+				continue
 			}
 		}
 
 		if err := tfec2.DeleteNetworkInterface(ctx, ec2Conn, networkInterfaceID); err != nil {
-			return fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err)
+			errs = append(errs, fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err))
 		}
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
 	return nil
@@ -1713,6 +1731,8 @@ func deleteModelPackages(ctx context.Context, conn *sagemaker.Client, groupNameO
 	pages := sagemaker.NewListModelPackagesPaginator(conn, &sagemaker.ListModelPackagesInput{
 		ModelPackageGroupName: aws.String(groupNameOrARN),
 	})
+	var allErrs []error
+
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
@@ -1723,11 +1743,16 @@ func deleteModelPackages(ctx context.Context, conn *sagemaker.Client, groupNameO
 				ModelPackageName: mp.ModelPackageArn,
 			}); err != nil {
 				if !errs.Contains(err, "does not exist") {
-					return fmt.Errorf("deleting SageMaker AI Model Package (%s): %w", aws.ToString(mp.ModelPackageArn), err)
+					allErrs = append(allErrs, fmt.Errorf("deleting SageMaker AI Model Package (%s): %w", aws.ToString(mp.ModelPackageArn), err))
 				}
 			}
 		}
 	}
+
+	if len(allErrs) > 0 {
+		return errors.Join(allErrs...)
+	}
+
 	return nil
 }
 
@@ -1861,7 +1886,7 @@ func serverlessJobConfigEqualityFunc(
 	}
 
 	if oldConfig == nil || newConfig == nil {
-		return oldConfig == nil && newConfig == nil, diags
+		return oldConfig == newConfig, diags
 	}
 
 	if !oldConfig.AcceptEULA.Equal(newConfig.AcceptEULA) ||
@@ -1913,9 +1938,6 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 }
 
 func isTrainingJobInTerminalState(err error) bool {
-	if !tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
-		return false
-	}
 	return tfawserr.ErrMessageContainsAny(
 		err,
 		ErrCodeValidationException,
