@@ -10,8 +10,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
   principal_id       = data.aws_identitystore_group.test.group_id
 }
 
-data "aws_ssoadmin_instances" "test" {
-}
+data "aws_ssoadmin_instances" "test" {}
 
 data "aws_caller_identity" "current" {}
 

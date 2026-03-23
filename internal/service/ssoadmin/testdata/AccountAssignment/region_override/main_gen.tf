@@ -14,7 +14,6 @@ resource "aws_ssoadmin_account_assignment" "test" {
 
 data "aws_ssoadmin_instances" "test" {
   region = var.region
-
 }
 
 data "aws_caller_identity" "current" {}

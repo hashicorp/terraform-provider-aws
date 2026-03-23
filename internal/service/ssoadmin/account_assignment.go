@@ -33,7 +33,7 @@ import (
 // @SDKResource("aws_ssoadmin_account_assignment", name="Account Assignment")
 // @IdentityAttribute("id")
 // @Testing(requireEnvVarValue="AWS_IDENTITY_STORE_GROUP_NAME")
-// @Testing(preCheck="acctest.PreCheckSSOAdminInstances")
+// @Testing(preCheckWithRegion="acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(preIdentityVersion="v6.37.0")
 func resourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{

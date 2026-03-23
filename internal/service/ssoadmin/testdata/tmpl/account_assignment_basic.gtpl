@@ -9,8 +9,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
 }
 
 data "aws_ssoadmin_instances" "test" {
-{{- template "region" }}
-}
+{{- template "region" }}}
 
 data "aws_caller_identity" "current" {}
 
