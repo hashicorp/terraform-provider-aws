@@ -155,6 +155,7 @@ func TestAccS3Object_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrContentType), knownvalue.StringExact("application/octet-stream")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("etag"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrForceDestroy), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"/"+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("metadata"), knownvalue.MapSizeExact(0)),

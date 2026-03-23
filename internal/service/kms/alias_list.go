@@ -79,7 +79,7 @@ func (l *aliasListResource) List(ctx context.Context, request list.ListRequest, 
 
 			result.DisplayName = id
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

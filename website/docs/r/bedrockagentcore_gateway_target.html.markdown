@@ -376,10 +376,42 @@ The `target_configuration` block supports the following:
 
 The `mcp` block supports exactly one of the following:
 
+* `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway`](#api_gateway) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda`](#lambda) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server`](#mcp_server) below.
 * `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
 * `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration`](#api_schema_configuration) below.
+
+### `api_gateway`
+
+The `api_gateway` block supports the following:
+
+* `api_gateway_tool_configuration` - (Required) Configuration for API Gateway tools. See [`api_gateway_tool_configuration`](#api_gateway_tool_configuration) below.
+* `rest_api_id` - (Required) ID of the API Gateway REST API to invoke.
+* `stage` - (Required) Stage name of the REST API to add as a target.
+
+### `api_gateway_tool_configuration`
+
+The `api_gateway_tool_configuration` block supports the following:
+
+* `tool_filter` - (Required) Repeatable block of path and method patterns to expose as tools. See [`tool_filter`](#tool_filter) below.
+* `tool_override` - (Required) Repeatable block of explicit tool definitions with optional custom names and descriptions. See [`tool_override`](#tool_override) below.
+
+### `tool_filter`
+
+The `tool_filter` block supports the following:
+
+* `filter_path` - (Required) Resource path to match in the REST API. Supports exact paths (for example, `/pets`) or wildcard paths (for example, `/pets/*` to match all paths under `/pets`). Must match existing paths in the REST API.
+* `methods` - (Required) List of HTTP methods to filter for. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
+
+### `tool_override`
+
+The `tool_override` block supports the following:
+
+* `description` - (Optional) Description of the tool. Provides information about the purpose and usage of the tool. If not provided, uses the description from the API's OpenAPI specification.
+* `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
+* `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
+* `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
 ### `lambda`
 

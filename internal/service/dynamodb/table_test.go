@@ -1796,6 +1796,112 @@ func normalizeGSIMapValue(v map[string]any) map[string]any {
 	return result
 }
 
+func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		Old      map[string]any
+		New      map[string]any
+		Expected bool
+	}{
+		"key_schema syntax unchanged": {
+			// State has hash_key/range_key, config only has key_schema
+			Old: map[string]any{
+				names.AttrName:    "gsi2",
+				"hash_key":        "gsi2pk",
+				"range_key":       "gsi2sk",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "gsi2pk", "key_type": "HASH"},
+					map[string]any{"attribute_name": "gsi2sk", "key_type": "RANGE"},
+				},
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi2",
+				"hash_key":        "",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "gsi2pk", "key_type": "HASH"},
+					map[string]any{"attribute_name": "gsi2sk", "key_type": "RANGE"},
+				},
+			},
+			Expected: false,
+		},
+		"hash_key syntax unchanged": {
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "pk", "key_type": "HASH"},
+				},
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "pk", "key_type": "HASH"},
+				},
+			},
+			Expected: false,
+		},
+		"hash_key changed with nil key_schema": {
+			// Both maps have key_schema: nil (hash_key syntax), but hash_key differs
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk1",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk2",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema":      nil,
+			},
+			Expected: true,
+		},
+		"key_schema changed": {
+			Old: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "pk1",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "pk1", "key_type": "HASH"},
+				},
+			},
+			New: map[string]any{
+				names.AttrName:    "gsi1",
+				"hash_key":        "",
+				"range_key":       "",
+				"projection_type": "ALL",
+				"key_schema": []any{
+					map[string]any{"attribute_name": "pk2", "key_type": "HASH"},
+				},
+			},
+			Expected: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfdynamodb.CheckIfGSIRecreateAttributesChanged(tc.Old, tc.New)
+			if got != tc.Expected {
+				t.Errorf("expected %v, got %v", tc.Expected, got)
+			}
+		})
+	}
+}
+
 func TestAccDynamoDBTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -3038,6 +3144,101 @@ func TestAccDynamoDBTable_GSI_keySchema_removeRangeKey(t *testing.T) {
 							names.AttrName:    knownvalue.StringExact("GSI"),
 							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
 							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_removeGSI(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_threeGSIs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:    knownvalue.StringExact("att1-index"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("att1"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:    knownvalue.StringExact("att2-index"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("att2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:    knownvalue.StringExact("att3-index"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("att3"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_twoGSIs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:    knownvalue.StringExact("att2-index"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("att2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrName:    knownvalue.StringExact("att3-index"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("att3"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
 						}),
 					})),
 				},
@@ -9304,6 +9505,106 @@ resource "aws_dynamodb_table" "test" {
     projection_type = "ALL"
     write_capacity  = 1
     read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_threeGSIs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "att1"
+    type = "S"
+  }
+
+  attribute {
+    name = "att2"
+    type = "S"
+  }
+
+  attribute {
+    name = "att3"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "att1-index"
+    key_schema {
+      attribute_name = "att1"
+      key_type       = "HASH"
+    }
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "att2-index"
+    key_schema {
+      attribute_name = "att2"
+      key_type       = "HASH"
+    }
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "att3-index"
+    key_schema {
+      attribute_name = "att3"
+      key_type       = "HASH"
+    }
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_twoGSIs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "att2"
+    type = "S"
+  }
+
+  attribute {
+    name = "att3"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "att2-index"
+    key_schema {
+      attribute_name = "att2"
+      key_type       = "HASH"
+    }
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "att3-index"
+    key_schema {
+      attribute_name = "att3"
+      key_type       = "HASH"
+    }
+    projection_type = "ALL"
   }
 }
 `, rName)

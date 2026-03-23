@@ -1463,6 +1463,22 @@ func statusTransitGatewayRouteTable(conn *ec2.Client, id string) retry.StateRefr
 	}
 }
 
+func statusTransitGatewayMeteringPolicy(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTransitGatewayMeteringPolicyByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusTransitGatewayPolicyTable(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayPolicyTableByID(ctx, conn, id)

@@ -69,7 +69,7 @@ func (l *listResourceConnectorProfile) List(ctx context.Context, request list.Li
 
 			result.DisplayName = aws.ToString(item.ConnectorProfileName)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

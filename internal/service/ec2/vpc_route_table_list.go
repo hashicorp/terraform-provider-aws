@@ -140,7 +140,7 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 				result.DisplayName = aws.ToString(routeTable.RouteTableId)
 			}
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting result", map[string]any{
 					names.AttrID: aws.ToString(routeTable.RouteTableId),

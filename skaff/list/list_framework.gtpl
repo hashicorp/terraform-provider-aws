@@ -32,7 +32,7 @@ type {{ template "ListResourceStructName" . }} struct {
 			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 			{{- end }}
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(r.flatten(ctx, bucket, &data)...)
+				result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
 				if result.Diagnostics.HasError() {
 					return
 				}

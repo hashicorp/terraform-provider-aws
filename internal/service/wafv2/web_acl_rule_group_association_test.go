@@ -169,6 +169,35 @@ func TestAccWAFV2WebACLRuleGroupAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRuleGroupAssociation_multipleAssociations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName1 := "aws_wafv2_web_acl_rule_group_association.test1"
+	resourceName2 := "aws_wafv2_web_acl_rule_group_association.test2"
+	resourceName3 := "aws_wafv2_web_acl_rule_group_association.test3"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName1, &v),
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName2, &v),
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName3, &v),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPriority, "10"),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPriority, "20"),
+					resource.TestCheckResourceAttr(resourceName3, names.AttrPriority, "30"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRuleGroupAssociation_withVisibilityConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
@@ -2352,6 +2381,101 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
         enable_machine_learning = true
       }
     }
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_multiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_rule_group" "test1" {
+  capacity = 10
+  name     = "%[1]s-1"
+  scope    = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-1"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_rule_group" "test2" {
+  capacity = 10
+  name     = "%[1]s-2"
+  scope    = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-2"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_rule_group" "test3" {
+  capacity = 10
+  name     = "%[1]s-3"
+  scope    = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-3"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test1" {
+  rule_name   = "%[1]s-association-1"
+  priority    = 10
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.test1.arn
+  }
+
+  override_action = "none"
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test2" {
+  rule_name   = "%[1]s-association-2"
+  priority    = 20
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.test2.arn
+  }
+
+  override_action = "none"
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test3" {
+  rule_name   = "%[1]s-association-3"
+  priority    = 30
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.test3.arn
   }
 
   override_action = "none"
