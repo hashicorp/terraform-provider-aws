@@ -626,76 +626,8 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		}
 	}
 
-	hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
-		!isNullOrUnknown(data.Bucket) ||
-		!isNullOrUnknown(data.DeploymentType) ||
-		!isNullOrUnknown(data.Organization) ||
-		!isNullOrUnknown(data.Password) ||
-		!isNullOrUnknown(data.Username)
-
-	var isV3Cluster bool
-	if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
-		meta := r.Meta()
-		if meta == nil {
-			return
-		}
-		paramGroupID := data.DBParameterGroupIdentifier.ValueString()
-		isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		isV3Cluster = isV3
-
-		if !hasV2Fields && !isV3Cluster {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("db_parameter_group_identifier"),
-				"Invalid Parameter Group Type",
-				"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
-			)
-		}
-	}
-
-	if isV3Cluster {
-		for _, v := range []struct {
-			val  attr.Value
-			path string
-		}{
-			{data.AllocatedStorage, names.AttrAllocatedStorage},
-			{data.Bucket, names.AttrBucket},
-			{data.DeploymentType, "deployment_type"},
-			{data.Organization, "organization"},
-			{data.Password, names.AttrPassword},
-			{data.Username, names.AttrUsername},
-		} {
-			if !isNullOrUnknown(v.val) {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(v.path),
-					"Invalid Configuration for InfluxDB V3",
-					v.path+" must not be set when using an InfluxDB V3 db parameter group",
-				)
-			}
-		}
-	} else {
-		for _, v := range []struct {
-			val  attr.Value
-			path string
-		}{
-			{data.AllocatedStorage, names.AttrAllocatedStorage},
-			{data.Bucket, names.AttrBucket},
-			{data.Organization, "organization"},
-			{data.Password, names.AttrPassword},
-			{data.Username, names.AttrUsername},
-		} {
-			if isNullOrUnknown(v.val) {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(v.path),
-					"Missing Required Configuration for InfluxDB V2",
-					v.path+" is required for InfluxDB V2 clusters",
-				)
-			}
-		}
-	}
+	// Note: Parameter group V3 validation is deferred to ModifyPlan where variables are fully resolved
+	// and the AWS client is properly initialized for API calls
 }
 
 func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -706,14 +638,63 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 			return
 		}
 
+		isNullOrUnknown := func(val attr.Value) bool {
+			return val.IsNull() || val.IsUnknown()
+		}
+
 		var isV3Cluster bool
-		if !data.DBParameterGroupIdentifier.IsNull() {
-			isV3, diags := isParameterGroupV3(ctx, r.Meta().TimestreamInfluxDBClient(ctx), data.DBParameterGroupIdentifier.ValueString())
+		if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
+			meta := r.Meta()
+			if meta == nil {
+				return
+			}
+			paramGroupID := data.DBParameterGroupIdentifier.ValueString()
+			isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
 			resp.Diagnostics.Append(diags...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 			isV3Cluster = isV3
+
+			// Check for V2 fields when using non-V3 parameter group
+			hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
+				!isNullOrUnknown(data.Bucket) ||
+				!isNullOrUnknown(data.DeploymentType) ||
+				!isNullOrUnknown(data.Organization) ||
+				!isNullOrUnknown(data.Password) ||
+				!isNullOrUnknown(data.Username)
+
+			if !hasV2Fields && !isV3Cluster {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("db_parameter_group_identifier"),
+					"Invalid Parameter Group Type",
+					"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
+				)
+				return
+			}
+
+			// Validate V3-specific field restrictions
+			if isV3Cluster {
+				for _, v := range []struct {
+					val  attr.Value
+					path string
+				}{
+					{data.AllocatedStorage, names.AttrAllocatedStorage},
+					{data.Bucket, names.AttrBucket},
+					{data.DeploymentType, "deployment_type"},
+					{data.Organization, "organization"},
+					{data.Password, names.AttrPassword},
+					{data.Username, names.AttrUsername},
+				} {
+					if !isNullOrUnknown(v.val) {
+						resp.Diagnostics.AddAttributeError(
+							path.Root(v.path),
+							"Invalid Configuration for InfluxDB V3",
+							v.path+" must not be set when using an InfluxDB V3 db parameter group",
+						)
+					}
+				}
+			}
 		}
 
 		if !isV3Cluster && data.DeploymentType.IsUnknown() {
