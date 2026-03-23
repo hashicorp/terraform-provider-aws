@@ -17,10 +17,7 @@ data "aws_ssoadmin_instances" "test" {
 
 }
 
-data "aws_caller_identity" "current" {
-  region = var.region
-
-}
+data "aws_caller_identity" "current" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   region = var.region

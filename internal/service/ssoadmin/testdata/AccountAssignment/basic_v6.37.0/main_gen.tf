@@ -13,8 +13,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
 data "aws_ssoadmin_instances" "test" {
 }
 
-data "aws_caller_identity" "current" {
-}
+data "aws_caller_identity" "current" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = var.rName

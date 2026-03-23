@@ -12,9 +12,7 @@ data "aws_ssoadmin_instances" "test" {
 {{- template "region" }}
 }
 
-data "aws_caller_identity" "current" {
-{{- template "region" }}
-}
+data "aws_caller_identity" "current" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
 {{- template "region" }}
