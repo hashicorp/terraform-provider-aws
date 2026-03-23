@@ -8,6 +8,7 @@ package route53resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -161,7 +162,8 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.Route53ResolverClient(ctx)
 
 	rule, err := findResolverRuleByID(ctx, conn, d.Id())
 
@@ -175,17 +177,8 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.Arn)
-	// To be consistent with other AWS services that do not accept a trailing period,
-	// we remove the suffix from the Domain Name returned from the API
-	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
-	d.Set(names.AttrName, rule.Name)
-	d.Set(names.AttrOwnerID, rule.OwnerId)
-	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
-	d.Set("rule_type", rule.RuleType)
-	d.Set("share_status", rule.ShareStatus)
-	if err := d.Set("target_ip", flattenRuleTargetIPs(rule.TargetIps)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_ip: %s", err)
+	if err := resourceRuleFlatten(ctx, awsClient, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -287,6 +280,40 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	}
 
 	return output.ResolverRule, nil
+}
+
+func resourceRuleFlatten(ctx context.Context, awsClient *conns.AWSClient, rule *awstypes.ResolverRule, d *schema.ResourceData) error {
+	conn := awsClient.Route53ResolverClient(ctx)
+	ignoreTagsConfig := awsClient.IgnoreTagsConfig(ctx)
+
+	arn := aws.ToString(rule.Arn)
+	d.Set(names.AttrARN, arn)
+	// To be consistent with other AWS services that do not accept a trailing period,
+	// we remove the suffix from the Domain Name returned from the API
+	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
+	d.Set(names.AttrName, rule.Name)
+	d.Set(names.AttrOwnerID, rule.OwnerId)
+	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
+	d.Set("rule_type", rule.RuleType)
+	shareStatus := rule.ShareStatus
+	d.Set("share_status", shareStatus)
+	if err := d.Set("target_ip", flattenRuleTargetIPs(rule.TargetIps)); err != nil {
+		return fmt.Errorf("setting target_ip: %w", err)
+	}
+
+	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
+	if shareStatus != awstypes.ShareStatusSharedWithMe {
+		tags, err := listTags(ctx, conn, arn)
+		if err != nil {
+			return fmt.Errorf("listing tags for Route53 Resolver Rule (%s): %w", arn, err)
+		}
+
+		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("setting tags: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func statusRule(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
