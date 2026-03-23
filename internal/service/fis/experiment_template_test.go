@@ -699,6 +699,56 @@ func TestAccFISExperimentTemplate_kinesisStreams(t *testing.T) {
 	})
 }
 
+func TestAccFISExperimentTemplate_vpcEndpoints(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf awstypes.ExperimentTemplate
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_vpcEndpoints(rName, "vpc endpoint service connectivity disruption", "vpc-endpoint-disruption", "vpc endpoint service connectivity disruption", "aws:network:disrupt-vpc-endpoint", "VPCEndpoints", "target-1", "PT1M", "aws:ec2:vpc-endpoint", "ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "vpc endpoint service connectivity disruption"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "vpc-endpoint-disruption"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "vpc endpoint service connectivity disruption"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:network:disrupt-vpc-endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.parameter.*", map[string]string{
+						names.AttrKey:   names.AttrDuration,
+						names.AttrValue: "PT1M",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "VPCEndpoints"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "target-1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "target-1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:ec2:vpc-endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_vpc_endpoint.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName+"-fis"),
+				),
+			},
+		},
+	})
+}
+
 func testAccExperimentTemplateConfig_basic(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1840,4 +1890,83 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, duration, percentage, targetResType, targetSelectMode)
+}
+
+func testAccExperimentTemplateConfig_vpcEndpoints(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, duration, targetResType, targetSelectMode string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+
+    parameter {
+      key   = "duration"
+      value = %[8]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[9]q
+    selection_mode = %[10]q
+
+    resource_arns = [aws_vpc_endpoint.test.arn]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, duration, targetResType, targetSelectMode)
 }
