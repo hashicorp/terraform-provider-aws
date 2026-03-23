@@ -153,7 +153,7 @@ func testAccStartReplicationTaskAssessmentRunActionConfig_includeOnly(rName, ass
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
