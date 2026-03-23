@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newCatalogLevelTableOptimizerResource,
+			TypeName: "aws_glue_catalog_level_table_optimizer",
+			Name:     "Catalog Level Table Optimizer",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newCatalogTableOptimizerResource,
 			TypeName: "aws_glue_catalog_table_optimizer",
 			Name:     "Catalog Table Optimizer",
