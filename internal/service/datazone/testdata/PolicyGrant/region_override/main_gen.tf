@@ -51,9 +51,8 @@ resource "aws_datazone_policy_grant" "test" {
   }
 
   principal {
-    domain_unit {
-      domain_unit_designation = "OWNER"
-      domain_unit_identifier  = aws_datazone_domain.test.root_domain_unit_id
+    user {
+      all_users_grant_filter {}
     }
   }
 }

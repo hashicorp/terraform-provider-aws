@@ -26,9 +26,8 @@ resource "aws_datazone_policy_grant" "example" {
   }
 
   principal {
-    domain_unit {
-      domain_unit_designation = "OWNER"
-      domain_unit_identifier  = aws_datazone_domain.example.root_domain_unit_id
+    user {
+      all_users_grant_filter {}
     }
   }
 }
@@ -50,9 +49,8 @@ resource "aws_datazone_policy_grant" "example" {
   }
 
   principal {
-    domain_unit {
-      domain_unit_designation = "OWNER"
-      domain_unit_identifier  = aws_datazone_domain.example.root_domain_unit_id
+    user {
+      all_users_grant_filter {}
     }
   }
 }
@@ -65,10 +63,10 @@ resource "aws_datazone_policy_grant" "example" {
   domain_identifier = aws_datazone_domain.example.id
   entity_type       = "DOMAIN_UNIT"
   entity_identifier = aws_datazone_domain.example.root_domain_unit_id
-  policy_type       = "CREATE_PROJECT"
+  policy_type       = "CREATE_GLOSSARY"
 
   detail {
-    create_project {}
+    create_glossary {}
   }
 
   principal {
@@ -85,7 +83,7 @@ resource "aws_datazone_policy_grant" "example" {
 The following arguments are required:
 
 * `domain_identifier` - (Required) Identifier of the domain where the policy grant is created.
-* `entity_type` - (Required) Type of entity to which the policy grant applies. Valid values: `DOMAIN_UNIT`, `ENVIRONMENT_BLUEPRINT_CONFIGURATION`, `ENVIRONMENT_PROFILE`.
+* `entity_type` - (Required) Type of entity to which the policy grant applies. Valid values: `ASSET_TYPE`, `DOMAIN_UNIT`, `ENVIRONMENT_BLUEPRINT_CONFIGURATION`, `ENVIRONMENT_PROFILE`.
 * `entity_identifier` - (Required) Identifier of the entity to which the policy grant applies.
 * `policy_type` - (Required) Type of the managed policy. Valid values: `ADD_TO_PROJECT_MEMBER_POOL`, `CREATE_ASSET_TYPE`, `CREATE_DOMAIN_UNIT`, `CREATE_ENVIRONMENT`, `CREATE_ENVIRONMENT_FROM_BLUEPRINT`, `CREATE_ENVIRONMENT_PROFILE`, `CREATE_FORM_TYPE`, `CREATE_GLOSSARY`, `CREATE_PROJECT`, `CREATE_PROJECT_FROM_PROJECT_PROFILE`, `DELEGATE_CREATE_ENVIRONMENT_PROFILE`, `OVERRIDE_DOMAIN_UNIT_OWNERS`, `OVERRIDE_PROJECT_OWNERS`, `USE_ASSET_TYPE`.
 * `detail` - (Required) Policy grant detail. See [`detail`](#detail) below.
@@ -152,7 +150,7 @@ Exactly one of the following sub-blocks must be specified:
 
 ### `project`
 
-* `project_designation` - (Required) Designation of the project principal. Valid values: `OWNER`, `CONTRIBUTOR`.
+* `project_designation` - (Required) Designation of the project principal. Valid values: `CONTRIBUTOR`, `OWNER`, `PROJECT_CATALOG_STEWARD`.
 * `project_identifier` - (Optional) Identifier of the project.
 * `domain_unit_filter` - (Optional) Filter for domain unit scoping. See [`domain_unit_filter`](#domain_unit_filter) below.
 

@@ -46,6 +46,8 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone/types;types.PolicyGrantMember")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(importStateIdAttributes="domain_identifier;entity_type;entity_identifier;policy_type;grant_id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdAttribute="grant_id")
 func newPolicyGrantResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &policyGrantResource{}, nil
 }
@@ -266,21 +268,37 @@ func (r *policyGrantResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
+	var principal awstypes.PolicyGrantPrincipal
+
 	principalData, d := state.Principal.ToSlice(ctx)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if len(principalData) == 0 {
-		resp.Diagnostics.AddError("Missing principal", "The principal block is required for deletion.")
-		return
-	}
-
-	principal, d := expandPolicyGrantPrincipal(ctx, principalData[0])
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
+	if len(principalData) > 0 {
+		p, d := expandPolicyGrantPrincipal(ctx, principalData[0])
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		principal = p
+	} else {
+		grant, err := findPolicyGrantByID(ctx, conn,
+			state.DomainIdentifier.ValueString(),
+			state.EntityType.ValueString(),
+			state.EntityIdentifier.ValueString(),
+			state.PolicyType.ValueString(),
+			state.GrantID.ValueString(),
+		)
+		if retry.NotFound(err) {
+			return
+		}
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.GrantID.String())
+			return
+		}
+		principal = grant.Principal
 	}
 
 	input := &datazone.RemovePolicyGrantInput{
@@ -298,6 +316,9 @@ func (r *policyGrantResource) Delete(ctx context.Context, req resource.DeleteReq
 			return
 		}
 		if isResourceMissing(err) {
+			return
+		}
+		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is not part of the existing Grant list") {
 			return
 		}
 
@@ -379,8 +400,8 @@ type domainUnitIDDetailModel struct {
 }
 
 type createProjectFromProjectProfileDetailModel struct {
-	IncludeChildDomainUnits types.Bool `tfsdk:"include_child_domain_units"`
-	ProjectProfiles         types.List `tfsdk:"project_profiles"`
+	IncludeChildDomainUnits types.Bool                        `tfsdk:"include_child_domain_units"`
+	ProjectProfiles         fwtypes.ListValueOf[types.String] `tfsdk:"project_profiles"`
 }
 
 type principalModel struct {
@@ -509,6 +530,7 @@ func createProjectFromProjectProfileDetailBlockSchema(ctx context.Context) schem
 					},
 				},
 				"project_profiles": schema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
 					Optional:    true,
 					ElementType: types.StringType,
 					PlanModifiers: []planmodifier.List{
@@ -946,14 +968,14 @@ func flattenPolicyGrantDetail(ctx context.Context, detail awstypes.PolicyGrantDe
 	case *awstypes.PolicyGrantDetailMemberCreateProjectFromProjectProfile:
 		ppModel := &createProjectFromProjectProfileDetailModel{
 			IncludeChildDomainUnits: types.BoolPointerValue(v.Value.IncludeChildDomainUnits),
-			ProjectProfiles:         types.ListNull(types.StringType),
+			ProjectProfiles:         fwtypes.NewListValueOfNull[types.String](ctx),
 		}
 		if len(v.Value.ProjectProfiles) > 0 {
 			elements := make([]attr.Value, len(v.Value.ProjectProfiles))
 			for i, p := range v.Value.ProjectProfiles {
 				elements[i] = types.StringValue(p)
 			}
-			listVal, d := types.ListValue(types.StringType, elements)
+			listVal, d := fwtypes.NewListValueOf[types.String](ctx, elements)
 			diags.Append(d...)
 			ppModel.ProjectProfiles = listVal
 		}

@@ -52,10 +52,11 @@ func TestAccDataZonePolicyGrant_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyGrantImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccPolicyGrantImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "grant_id",
 			},
 		},
 	})
@@ -98,7 +99,7 @@ func TestAccDataZonePolicyGrant_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataZonePolicyGrant_domainUnitPrincipal(t *testing.T) {
+func TestAccDataZonePolicyGrant_includeChildDomainUnits(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -119,21 +120,61 @@ func TestAccDataZonePolicyGrant_domainUnitPrincipal(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyGrantConfig_domainUnitPrincipal(rName),
+				Config: testAccPolicyGrantConfig_includeChildDomainUnits(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyGrantExists(ctx, t, resourceName, &policygrant),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_id"),
 					resource.TestCheckResourceAttr(resourceName, "entity_type", "DOMAIN_UNIT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "CREATE_DOMAIN_UNIT"),
 					resource.TestCheckResourceAttr(resourceName, "detail.0.create_domain_unit.0.include_child_domain_units", "true"),
-					resource.TestCheckResourceAttr(resourceName, "principal.0.domain_unit.0.domain_unit_designation", "OWNER"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyGrantImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccPolicyGrantImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "grant_id",
+			},
+		},
+	})
+}
+
+func TestAccDataZonePolicyGrant_projectPrincipal(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policygrant awstypes.PolicyGrantMember
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_datazone_policy_grant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyGrantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyGrantConfig_projectPrincipal(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyGrantExists(ctx, t, resourceName, &policygrant),
+					resource.TestCheckResourceAttrSet(resourceName, "grant_id"),
+					resource.TestCheckResourceAttr(resourceName, "entity_type", "DOMAIN_UNIT"),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "CREATE_GLOSSARY"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccPolicyGrantImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "grant_id",
 			},
 		},
 	})
@@ -229,16 +270,43 @@ resource "aws_datazone_policy_grant" "test" {
   }
 
   principal {
-    domain_unit {
-      domain_unit_designation = "OWNER"
-      domain_unit_identifier  = aws_datazone_domain.test.root_domain_unit_id
+    user {
+      all_users_grant_filter {}
     }
   }
 }
 `)
 }
 
-func testAccPolicyGrantConfig_domainUnitPrincipal(rName string) string {
+func testAccPolicyGrantConfig_projectPrincipal(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), fmt.Sprintf(`
+resource "aws_datazone_project" "test" {
+  domain_identifier   = aws_datazone_domain.test.id
+  name                = %[1]q
+  skip_deletion_check = true
+}
+
+resource "aws_datazone_policy_grant" "test" {
+  domain_identifier = aws_datazone_domain.test.id
+  entity_type       = "DOMAIN_UNIT"
+  entity_identifier = aws_datazone_domain.test.root_domain_unit_id
+  policy_type       = "CREATE_GLOSSARY"
+
+  detail {
+    create_glossary {}
+  }
+
+  principal {
+    project {
+      project_designation = "OWNER"
+      project_identifier  = aws_datazone_project.test.id
+    }
+  }
+}
+`, rName))
+}
+
+func testAccPolicyGrantConfig_includeChildDomainUnits(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), `
 resource "aws_datazone_policy_grant" "test" {
   domain_identifier = aws_datazone_domain.test.id
@@ -253,9 +321,8 @@ resource "aws_datazone_policy_grant" "test" {
   }
 
   principal {
-    domain_unit {
-      domain_unit_designation = "OWNER"
-      domain_unit_identifier  = aws_datazone_domain.test.root_domain_unit_id
+    user {
+      all_users_grant_filter {}
     }
   }
 }
