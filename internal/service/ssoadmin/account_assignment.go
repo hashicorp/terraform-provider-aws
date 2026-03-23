@@ -187,8 +187,7 @@ func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData
 	targetType := idParts[3]
 	permissionSetARN := idParts[4]
 	instanceARN := idParts[5]
-
-	input := &ssoadmin.DeleteAccountAssignmentInput{
+	input := ssoadmin.DeleteAccountAssignmentInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
 		PrincipalId:      aws.String(principalID),
@@ -197,7 +196,7 @@ func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData
 		TargetType:       awstypes.TargetType(targetType),
 	}
 
-	output, err := conn.DeleteAccountAssignment(ctx, input)
+	output, err := conn.DeleteAccountAssignment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -207,7 +206,14 @@ func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
-	if _, err := waitAccountAssignmentDeleted(ctx, conn, instanceARN, aws.ToString(output.AccountAssignmentDeletionStatus.RequestId), d.Timeout(schema.TimeoutDelete)); err != nil {
+	_, err = waitAccountAssignmentDeleted(ctx, conn, instanceARN, aws.ToString(output.AccountAssignmentDeletionStatus.RequestId), d.Timeout(schema.TimeoutDelete))
+
+	// "unexpected state 'FAILED', wanted target 'SUCCEEDED'. last error: Received a 404 status error: EntitlementItem doesn't exist with the given entitlement key EntitlementKey{accessorId=AccessorId{value=...}, resourceId=ResourceId{value=...}, auxiliaryResourceId=AuxiliaryResourceId{value=...}, containerId=ContainerId{value=...}}".
+	if errs.Contains(err, "EntitlementItem doesn't exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for Principal (%s) delete: %s", principalID, err)
 	}
 
@@ -283,17 +289,7 @@ func findAccountAssignments(
 	return output, nil
 }
 
-func findAccountAssignmentCreationStatus(
-	ctx context.Context,
-	conn *ssoadmin.Client,
-	instanceARN,
-	requestID string,
-) (*awstypes.AccountAssignmentOperationStatus, error) {
-	input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
-		AccountAssignmentCreationRequestId: aws.String(requestID),
-		InstanceArn:                        aws.String(instanceARN),
-	}
-
+func findAccountAssignmentCreationStatus(ctx context.Context, conn *ssoadmin.Client, input *ssoadmin.DescribeAccountAssignmentCreationStatusInput) (*awstypes.AccountAssignmentOperationStatus, error) {
 	output, err := conn.DescribeAccountAssignmentCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -313,9 +309,18 @@ func findAccountAssignmentCreationStatus(
 	return output.AccountAssignmentCreationStatus, nil
 }
 
+func findAccountAssignmentCreationStatusByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) (*awstypes.AccountAssignmentOperationStatus, error) {
+	input := ssoadmin.DescribeAccountAssignmentCreationStatusInput{
+		AccountAssignmentCreationRequestId: aws.String(requestID),
+		InstanceArn:                        aws.String(instanceARN),
+	}
+
+	return findAccountAssignmentCreationStatus(ctx, conn, &input)
+}
+
 func statusAccountAssignmentCreation(conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findAccountAssignmentCreationStatus(ctx, conn, instanceARN, requestID)
+		output, err := findAccountAssignmentCreationStatusByTwoPartKey(ctx, conn, instanceARN, requestID)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -329,12 +334,7 @@ func statusAccountAssignmentCreation(conn *ssoadmin.Client, instanceARN, request
 	}
 }
 
-func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) (*awstypes.AccountAssignmentOperationStatus, error) {
-	input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
-		AccountAssignmentDeletionRequestId: aws.String(requestID),
-		InstanceArn:                        aws.String(instanceARN),
-	}
-
+func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Client, input *ssoadmin.DescribeAccountAssignmentDeletionStatusInput) (*awstypes.AccountAssignmentOperationStatus, error) {
 	output, err := conn.DescribeAccountAssignmentDeletionStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -354,9 +354,18 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	return output.AccountAssignmentDeletionStatus, nil
 }
 
+func findAccountAssignmentDeletionStatusByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) (*awstypes.AccountAssignmentOperationStatus, error) {
+	input := ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
+		AccountAssignmentDeletionRequestId: aws.String(requestID),
+		InstanceArn:                        aws.String(instanceARN),
+	}
+
+	return findAccountAssignmentDeletionStatus(ctx, conn, &input)
+}
+
 func statusAccountAssignmentDeletion(conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findAccountAssignmentDeletionStatus(ctx, conn, instanceARN, requestID)
+		output, err := findAccountAssignmentDeletionStatusByTwoPartKey(ctx, conn, instanceARN, requestID)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
