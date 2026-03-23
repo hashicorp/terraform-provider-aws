@@ -1391,10 +1391,6 @@ func testAccCheckTrainingJobExists(ctx context.Context, t *testing.T, name strin
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.Attributes["training_job_name"] == "" {
-			return fmt.Errorf("No SageMaker Training Job name is set")
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		trainingJobName := rs.Primary.Attributes["training_job_name"]
@@ -1496,16 +1492,7 @@ resource "aws_sagemaker_training_job" "test" {
 }
 
 func testAccTrainingJobConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
@@ -1537,7 +1524,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets            = [aws_subnet.test.id]
+    subnets            = [aws_subnet.test[0].id]
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1546,21 +1533,7 @@ resource "aws_sagemaker_training_job" "test" {
 }
 
 func testAccTrainingJobConfig_vpcUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.2.0/24"
-}
-
+	return acctest.ConfigCompose(testAccTrainingJobConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
@@ -1592,7 +1565,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets            = [aws_subnet.test.id, aws_subnet.test2.id]
+    subnets            = [aws_subnet.test[0].id, aws_subnet.test[1].id]
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
