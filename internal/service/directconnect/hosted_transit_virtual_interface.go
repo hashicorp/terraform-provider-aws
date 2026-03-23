@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -212,16 +211,9 @@ func resourceHostedTransitVirtualInterfaceDelete(ctx context.Context, d *schema.
 }
 
 func resourceHostedTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	// Import ID optionally ends with "@<region>".
-	id, region, _ := strings.Cut(d.Id(), "@")
-	d.SetId(id)
-	if region != "" {
-		d.Set(names.AttrRegion, region)
-	}
-
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := findVirtualInterfaceByID(ctx, conn, id)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return nil, err

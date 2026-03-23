@@ -172,16 +172,9 @@ func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.Resource
 }
 
 func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	// Import ID optionally ends with "@<region>".
-	id, region, _ := strings.Cut(d.Id(), "@")
-	d.SetId(id)
-	if region != "" {
-		d.Set(names.AttrRegion, region)
-	}
-
-	parts := strings.Split(id, "/")
+	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", id)
+		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
 	}
 
 	targetID := parts[0]
