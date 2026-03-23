@@ -1,81 +1,5 @@
 ```release-note:bug
-resource/aws_acmpca_certificate: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_acmpca_certificate_authority: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ami_launch_permission: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_authorizer: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_deployment: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_gateway_response: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_integration: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_integration_response: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_api_gateway_method: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_method_response: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_method_settings: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_model: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_request_validator: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_resource: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_rest_api: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_stage: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_api_gateway_usage_plan_key: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_apigatewayv2_api_mapping: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_apigatewayv2_authorizer: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_apigatewayv2_deployment: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
@@ -83,31 +7,11 @@ resource/aws_apigatewayv2_integration: Fix import to honor `@region` suffix when
 ```
 
 ```release-note:bug
-resource/aws_apigatewayv2_integration_response: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_apigatewayv2_model: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_apigatewayv2_route: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
-resource/aws_apigatewayv2_route_response: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_apigatewayv2_stage: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_appautoscaling_policy: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_appautoscaling_target: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
@@ -135,95 +39,7 @@ resource/aws_appmesh_virtual_service: Fix import to honor `@region` suffix when 
 ```
 
 ```release-note:bug
-resource/aws_autoscaling_lifecycle_hook: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_autoscaling_policy: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_autoscaling_schedule: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_autoscalingplans_scaling_plan: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_backup_selection: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_batch_job_definition: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cloudformation_stack_instances: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cloudformation_stack_set: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cloudwatch_event_bus_policy: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cloudwatch_log_resource_policy: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cloudwatch_log_subscription_filter: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cloudwatch_query_definition: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_codedeploy_app: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_codedeploy_deployment_group: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_cognito_user: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_controltower_control: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_customerprofiles_profile: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_datasync_location_fsx_lustre_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_datasync_location_fsx_ontap_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_datasync_location_fsx_openzfs_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_datasync_location_fsx_windows_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_db_instance: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_default_network_acl: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
@@ -231,19 +47,7 @@ resource/aws_default_route_table: Fix import to honor `@region` suffix when usin
 ```
 
 ```release-note:bug
-resource/aws_default_vpc: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_docdb_cluster: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_dx_gateway_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_dx_gateway_association_proposal: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
@@ -283,159 +87,7 @@ resource/aws_dx_transit_virtual_interface: Fix import to honor `@region` suffix 
 ```
 
 ```release-note:bug
-resource/aws_ec2_client_vpn_network_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ec2_managed_prefix_list_entry: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ec2_subnet_cidr_reservation: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ec2_traffic_mirror_filter_rule: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ecs_account_setting_default: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ecs_cluster: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ecs_service: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ecs_task_definition: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_elasticache_global_replication_group: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_elasticsearch_domain: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_emr_instance_fleet: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_emr_instance_group: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_fsx_lustre_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_fsx_ontap_volume: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_fsx_openzfs_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_fsx_openzfs_volume: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_fsx_windows_file_system: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_instance: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_iot_thing_type: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_kinesis_analytics_application: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_kinesis_firehose_delivery_stream: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_kinesis_stream: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_kinesisanalyticsv2_application: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_kms_grant: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_lambda_alias: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_lambda_function: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_lambda_invocation: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_lex_bot: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_lex_bot_alias: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_lightsail_database: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_network_acl: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_network_acl_rule: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_network_interface_sg_attachment: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_opensearch_domain: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_opensearch_domain_saml_options: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_opensearch_inbound_connection_accepter: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_quicksight_analysis: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_rds_cluster: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_redshift_cluster: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
@@ -443,31 +95,23 @@ resource/aws_route_table_association: Fix import to honor `@region` suffix when 
 ```
 
 ```release-note:bug
-resource/aws_s3_bucket: Fix import to honor `@region` suffix when using resource-level `region` attribute
+resource/aws_network_interface_sg_attachment: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
-resource/aws_s3control_access_point_policy: Fix import to honor `@region` suffix when using resource-level `region` attribute
+resource/aws_vpc_dhcp_options_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
-resource/aws_s3outposts_endpoint: Fix import to honor `@region` suffix when using resource-level `region` attribute
+resource/aws_kinesis_stream: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
-resource/aws_security_group_rule: Fix import to honor `@region` suffix when using resource-level `region` attribute
+resource/aws_opensearch_domain: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
 resource/aws_serverlessapplicationrepository_cloudformation_stack: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_service_discovery_instance: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_service_discovery_private_dns_namespace: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
 
 ```release-note:bug
@@ -479,85 +123,5 @@ resource/aws_ses_active_receipt_rule_set: Fix import to honor `@region` suffix w
 ```
 
 ```release-note:bug
-resource/aws_ses_event_destination: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ses_receipt_rule: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_signer_signing_profile_permission: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_spot_fleet_request: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_spot_instance_request: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
 resource/aws_ssm_default_patch_baseline: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_ssm_parameter: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_volume_attachment: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_dhcp_options_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_endpoint_route_table_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_endpoint_security_group_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_endpoint_subnet_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_ipv4_cidr_block_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_ipv6_cidr_block_association: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpc_peering_connection_accepter: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_vpclattice_listener_rule: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_wafv2_ip_set: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_wafv2_regex_pattern_set: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_wafv2_rule_group: Fix import to honor `@region` suffix when using resource-level `region` attribute
-```
-
-```release-note:bug
-resource/aws_wafv2_web_acl: Fix import to honor `@region` suffix when using resource-level `region` attribute
 ```
