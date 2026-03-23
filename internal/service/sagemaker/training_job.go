@@ -1506,7 +1506,7 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
 	}, func(err error) (bool, error) {
-		if ErrMessageContainsAny(err, ErrCodeValidationException,
+		if tfawserr.ErrMessageContainsAny(err, ErrCodeValidationException,
 			"Could not assume role",
 			"Unauthorized to List objects under S3 URL",
 			"Access denied to OutputDataConfig S3 bucket",
@@ -1912,22 +1912,11 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 	return out, nil
 }
 
-// TODO : use tfawserr.ErrMessageContainsAny after releasing new version of aws-sdk-go-base
-// https://github.com/hashicorp/terraform-provider-aws/issues/47033
-func ErrMessageContainsAny(err error, code string, messages ...string) bool {
-	for _, message := range messages {
-		if tfawserr.ErrMessageContains(err, code, message) {
-			return true
-		}
-	}
-	return false
-}
-
 func isTrainingJobInTerminalState(err error) bool {
 	if !tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
 		return false
 	}
-	return ErrMessageContainsAny(
+	return tfawserr.ErrMessageContainsAny(
 		err,
 		ErrCodeValidationException,
 		"The request was rejected because the training job is in status",
