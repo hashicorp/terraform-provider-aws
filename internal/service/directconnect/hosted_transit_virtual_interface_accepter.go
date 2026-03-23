@@ -150,7 +150,7 @@ func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d 
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "transit" {
-		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", id, vifType)
+		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
 	arn := arn.ARN{
@@ -158,7 +158,7 @@ func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d 
 		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("dxvif/%s", id),
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
 

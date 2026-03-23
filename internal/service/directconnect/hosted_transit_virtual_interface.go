@@ -220,7 +220,7 @@ func resourceHostedTransitVirtualInterfaceImport(ctx context.Context, d *schema.
 	}
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "transit" {
-		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", id, vifType)
+		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
 	return []*schema.ResourceData{d}, nil
