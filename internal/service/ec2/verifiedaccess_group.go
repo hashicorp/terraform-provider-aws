@@ -14,9 +14,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -106,7 +106,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
-		ClientToken:              aws.String(sdkid.UniqueId()),
+		ClientToken:              aws.String(create.UniqueId(ctx)),
 		TagSpecifications:        getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
@@ -185,7 +185,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll, "sse_configuration") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
-			ClientToken:           aws.String(sdkid.UniqueId()),
+			ClientToken:           aws.String(create.UniqueId(ctx)),
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
@@ -243,7 +243,7 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessGroupInput{
-		ClientToken:           aws.String(sdkid.UniqueId()),
+		ClientToken:           aws.String(create.UniqueId(ctx)),
 		VerifiedAccessGroupId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessGroup(ctx, &input)

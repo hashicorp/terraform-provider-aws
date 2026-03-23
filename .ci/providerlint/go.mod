@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	github.com/bflad/tfproviderlint v0.31.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.71
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.72
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.0
 	golang.org/x/tools v0.43.0
 )
@@ -52,6 +52,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.17.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.42.0 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/net v0.52.0 // indirect

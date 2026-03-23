@@ -2,18 +2,25 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_dynamodb_backups` ([#47036](https://github.com/hashicorp/terraform-provider-aws/issues/47036))
 * **New Data Source:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_serverless_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
 * **New List Resource:** `aws_vpc_endpoint` ([#46977](https://github.com/hashicorp/terraform-provider-aws/issues/46977))
+* **New List Resource:** `aws_workmail_domain` ([#46931](https://github.com/hashicorp/terraform-provider-aws/issues/46931))
 * **New Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New Resource:** `aws_workmail_default_domain` ([#46931](https://github.com/hashicorp/terraform-provider-aws/issues/46931))
+* **New Resource:** `aws_workmail_domain` ([#46931](https://github.com/hashicorp/terraform-provider-aws/issues/46931))
 
 ENHANCEMENTS:
 
+* resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim` configuration block ([#47049](https://github.com/hashicorp/terraform-provider-aws/issues/47049))
+* resource/aws_bedrockagentcore_gateway: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim` configuration block ([#47049](https://github.com/hashicorp/terraform-provider-aws/issues/47049))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.api_gateway` configuration block ([#46916](https://github.com/hashicorp/terraform-provider-aws/issues/46916))
 * resource/aws_fis_experiment_template: Support `KinesisStreams` as a value for `action.target.key` ([#47010](https://github.com/hashicorp/terraform-provider-aws/issues/47010))
+* resource/aws_fis_experiment_template: Support `VPCEndpoints` as a value for `action.target.key` ([#47045](https://github.com/hashicorp/terraform-provider-aws/issues/47045))
 * resource/aws_mq_broker: Change `user` block to Optional ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
 * resource/aws_msk_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * resource/aws_msk_serverless_cluster: Add resource identity support ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
