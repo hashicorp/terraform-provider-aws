@@ -2059,7 +2059,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
     tls_inspection_configuration_arn   = %[2]q
 
-    enable_tls_session_holding         = %[3]t
+    enable_tls_session_holding = %[3]t
   }
 }
 `, rName, tlsInspectionConfigurationArn, enableTLSSessionHolding)
