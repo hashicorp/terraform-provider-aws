@@ -13,7 +13,7 @@ func {{ template "FactoryFunctionName" . }}() list.ListResourceWithConfigure {
 {{- define "ListResourceStruct" -}}
 type {{ template "ListResourceStructName" . }} struct {
 	{{ .ListResourceLowerCamel }}Resource
-	framework.WithList
+	framework.WithList[{{ .ListResourceLowerCamel }}ResourceModel]
 }
 {{- end }}
 
@@ -31,7 +31,7 @@ type {{ template "ListResourceStructName" . }} struct {
 			// TIP: -- 6. Set the ID, arguments, and attributes
 			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 			{{- end }}
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
 				if result.Diagnostics.HasError() {
 					return
