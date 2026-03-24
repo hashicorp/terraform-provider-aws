@@ -55,11 +55,9 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 				continue
 			}
 
-			var data resourceCapacityProviderModel
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
-				if diags := flex.Flatten(ctx, capacityProvider, &data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *resourceCapacityProviderModel) {
+				if diags := flex.Flatten(ctx, capacityProvider, data, flex.WithFieldNamePrefix(capacityProviderNamePrefix)); diags.HasError() {
 					result.Diagnostics.Append(diags...)
-					yield(result)
 					return
 				}
 

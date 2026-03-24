@@ -21,25 +21,25 @@ type bucketPropertyListHandlerFramework interface {
 	list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult]
 }
 
-type listResourceFramework interface {
+type listResourceFramework[T any] interface {
 	framework.WithMeta
-	SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f framework.FlattenFunc)
+	SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, f framework.FlattenFunc[T]) T
 }
 
-type baseBucketPropertyListHandlerFramework struct {
-	lister listResourceFramework
+type baseBucketPropertyListHandlerFramework[T any] struct {
+	lister listResourceFramework[T]
 }
 
-func newBaseBucketPropertyListHandlerFramework(lister listResourceFramework) baseBucketPropertyListHandlerFramework {
-	return baseBucketPropertyListHandlerFramework{
+func newBaseBucketPropertyListHandlerFramework[T any](lister listResourceFramework[T]) baseBucketPropertyListHandlerFramework[T] {
+	return baseBucketPropertyListHandlerFramework[T]{
 		lister: lister,
 	}
 }
 
-func (l baseBucketPropertyListHandlerFramework) Meta() *conns.AWSClient {
+func (l baseBucketPropertyListHandlerFramework[T]) Meta() *conns.AWSClient {
 	return l.lister.Meta()
 }
 
-func (l baseBucketPropertyListHandlerFramework) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f framework.FlattenFunc) {
-	l.lister.SetResult(ctx, awsClient, includeResource, data, result, f)
+func (l baseBucketPropertyListHandlerFramework[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, f framework.FlattenFunc[T]) {
+	l.lister.SetResult(ctx, awsClient, includeResource, result, f)
 }

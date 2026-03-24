@@ -57,15 +57,19 @@ func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, req
 
 			result := request.NewListResult(ctx)
 
-			var data transitGatewayMeteringPolicyResourceModel
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
-				result.Diagnostics.Append(l.flatten(ctx, c, &item, &data)...)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *transitGatewayMeteringPolicyResourceModel) {
+				result.Diagnostics.Append(l.flatten(ctx, c, &item, data)...)
 				if result.Diagnostics.HasError() {
 					return
 				}
 
 				result.DisplayName = fwflex.StringValueFromFramework(ctx, data.ARN)
 			})
+
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
 			if !yield(result) {
 				return

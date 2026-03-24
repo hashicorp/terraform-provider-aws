@@ -50,12 +50,9 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 				return
 			}
 
-			var data secondaryNetworkResourceModel
-
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *secondaryNetworkResourceModel) {
 				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("SecondaryNetwork")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
-					yield(result)
 					return
 				}
 
@@ -66,6 +63,11 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 				// Fields with mismatched names missed by AutoFlex
 				data.NetworkType = fwflex.StringValueToFramework(ctx, item.Type)
 			})
+
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
 			if !yield(result) {
 				return

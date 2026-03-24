@@ -76,8 +76,7 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 
 			result := request.NewListResult(ctx)
 
-			var data topicResourceModel
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *topicResourceModel) {
 				topicName := aws.ToString(item.TopicName)
 				out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
 				if err != nil {
@@ -86,13 +85,18 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 				}
 
 				data.ClusterARN = fwtypes.ARNValue(clusterARN)
-				result.Diagnostics.Append(l.flatten(ctx, out, &data, true)...)
+				result.Diagnostics.Append(l.flatten(ctx, out, data, true)...)
 				if result.Diagnostics.HasError() {
 					return
 				}
 
 				result.DisplayName = topicName
 			})
+
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
 			if !yield(result) {
 				return

@@ -68,12 +68,10 @@ func (r *listResourceKeyValueStore) List(ctx context.Context, request list.ListR
 				continue
 			}
 
-			var data keyValueStoreResourceModel
-			r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func(ctx context.Context) {
-				diags := fwflex.Flatten(ctx, output.KeyValueStore, &data)
+			r.SetResult(ctx, awsClient, request.IncludeResource, &result, func(ctx context.Context, data *keyValueStoreResourceModel) {
+				diags := fwflex.Flatten(ctx, output.KeyValueStore, data)
 				if diags.HasError() {
 					result.Diagnostics.Append(diags...)
-					yield(result)
 					return
 				}
 

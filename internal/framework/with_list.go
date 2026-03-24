@@ -32,7 +32,7 @@ type WithList[T any] struct {
 	interceptors []listresource.ListResultInterceptor[listresource.InterceptorParams]
 }
 
-type FlattenFunc func(context.Context)
+type FlattenFunc[T any] func(context.Context, *T)
 
 func (w *WithList[T]) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
 	w.interceptors = append(w.interceptors, interceptor)
@@ -62,37 +62,40 @@ func (w *WithList[T]) runResultInterceptors(ctx context.Context, when listresour
 	return diags
 }
 
-func (w *WithList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f FlattenFunc) {
+func (w *WithList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, f FlattenFunc[T]) T {
 	var diags diag.Diagnostics
+	var data T // TODO: Zero out
 
-	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, includeResource, data, result)...)
+	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, includeResource, &data, result)...)
 	if diags.HasError() {
 		result.Diagnostics.Append(diags...)
-		return
+		return data
 	}
 
-	f(ctx)
+	f(ctx, &data)
 	if result.Diagnostics.HasError() {
-		return
+		return data
 	}
 
-	diags.Append(setZeroValueAttrFieldsToNull(ctx, data)...)
+	diags.Append(setZeroValueAttrFieldsToNull(ctx, &data)...)
 	if diags.HasError() {
 		result.Diagnostics.Append(diags...)
-		return
+		return data
 	}
 
-	diags.Append(result.Resource.Set(ctx, data)...)
+	diags.Append(result.Resource.Set(ctx, &data)...)
 	if diags.HasError() {
 		result.Diagnostics.Append(diags...)
-		return
+		return data
 	}
 
-	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, includeResource, data, result)...)
+	diags.Append(w.runResultInterceptors(ctx, listresource.After, awsClient, includeResource, &data, result)...)
 	if diags.HasError() {
 		result.Diagnostics.Append(diags...)
-		return
+		return data
 	}
+
+	return data
 }
 
 func setZeroValueAttrFieldsToNull(ctx context.Context, target any) diag.Diagnostics {

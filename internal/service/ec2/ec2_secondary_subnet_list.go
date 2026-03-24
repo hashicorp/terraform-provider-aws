@@ -86,12 +86,9 @@ func (l *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 				return
 			}
 
-			var data secondarySubnetResourceModel
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
-				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("SecondarySubnet")); diags.HasError() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *secondarySubnetResourceModel) {
+				if diags := fwflex.Flatten(ctx, item, data, fwflex.WithFieldNamePrefix("SecondarySubnet")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
-					yield(result)
 					return
 				}
 
@@ -99,6 +96,11 @@ func (l *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 				data.ID = fwflex.StringValueToFramework(ctx, id)
 				result.DisplayName = id
 			})
+
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
 			if !yield(result) {
 				return

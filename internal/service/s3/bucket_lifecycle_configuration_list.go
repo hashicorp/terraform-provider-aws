@@ -81,14 +81,14 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 
 var _ bucketPropertyListHandlerFramework = bucketLifecycleConfigurationListHandler{}
 
-func newBucketLifecycleConfigurationListHandler(lister listResourceFramework) bucketPropertyListHandlerFramework {
+func newBucketLifecycleConfigurationListHandler(lister listResourceFramework[bucketLifecycleConfigurationResourceModel]) bucketPropertyListHandlerFramework {
 	return bucketLifecycleConfigurationListHandler{
 		baseBucketPropertyListHandlerFramework: newBaseBucketPropertyListHandlerFramework(lister),
 	}
 }
 
 type bucketLifecycleConfigurationListHandler struct {
-	baseBucketPropertyListHandlerFramework
+	baseBucketPropertyListHandlerFramework[bucketLifecycleConfigurationResourceModel]
 }
 
 func (l bucketLifecycleConfigurationListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {
@@ -121,10 +121,8 @@ func (l bucketLifecycleConfigurationListHandler) list(ctx context.Context, reque
 				continue
 			}
 
-			var data bucketLifecycleConfigurationResourceModel
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
-				flattenBucketLifecycleConfigurationResource(ctx, item, &data, &result.Diagnostics)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *bucketLifecycleConfigurationResourceModel) {
+				flattenBucketLifecycleConfigurationResource(ctx, item, data, &result.Diagnostics)
 				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
 				data.ID = data.Bucket
 
