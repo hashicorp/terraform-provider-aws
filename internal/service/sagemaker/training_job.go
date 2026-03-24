@@ -56,6 +56,7 @@ import (
 // @Testing(plannableImportAction="NoOp")
 // @Testing(importStateIdAttribute="training_job_name")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
 
@@ -1703,25 +1704,25 @@ func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, security
 		return fmt.Errorf("finding ENIs: %w", err)
 	}
 
-	var errs []error
+	var eniErrs []error
 
 	for _, ni := range networkInterfaces {
 		networkInterfaceID := aws.ToString(ni.NetworkInterfaceId)
 
 		if ni.Attachment != nil {
 			if err := tfec2.DetachNetworkInterface(ctx, ec2Conn, networkInterfaceID, aws.ToString(ni.Attachment.AttachmentId), timeout); err != nil {
-				errs = append(errs, fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err))
+				eniErrs = append(eniErrs, fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err))
 				continue
 			}
 		}
 
 		if err := tfec2.DeleteNetworkInterface(ctx, ec2Conn, networkInterfaceID); err != nil {
-			errs = append(errs, fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err))
+			eniErrs = append(eniErrs, fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err))
 		}
 	}
 
-	if len(errs) > 0 {
-		return errors.Join(errs...)
+	if len(eniErrs) > 0 {
+		return errors.Join(eniErrs...)
 	}
 
 	return nil

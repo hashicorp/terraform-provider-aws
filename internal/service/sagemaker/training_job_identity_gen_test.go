@@ -21,14 +21,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSageMakerTrainingJob_Identity_basic(t *testing.T) {
+func testAccSageMakerTrainingJob_identitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccSageMakerTrainingJob_Identity_basic,
+		"RegionOverride": testAccSageMakerTrainingJob_Identity_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSageMakerTrainingJob_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeTrainingJobOutput
 	resourceName := "aws_sagemaker_training_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -109,13 +120,13 @@ func TestAccSageMakerTrainingJob_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_Identity_regionOverride(t *testing.T) {
+func testAccSageMakerTrainingJob_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sagemaker_training_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

@@ -21,7 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSageMakerTrainingJob_List_basic(t *testing.T) {
+func TestAccSageMakerTrainingJob_List_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:   testAccSageMakerTrainingJob_List_basic,
+		"includeResource": testAccSageMakerTrainingJob_List_includeResource,
+		"regionOverride":  testAccSageMakerTrainingJob_List_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSageMakerTrainingJob_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_sagemaker_training_job.test[0]"
@@ -31,7 +43,7 @@ func TestAccSageMakerTrainingJob_List_basic(t *testing.T) {
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -81,7 +93,7 @@ func TestAccSageMakerTrainingJob_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
+func testAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_sagemaker_training_job.test[0]"
@@ -89,7 +101,7 @@ func TestAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
 
 	identity1 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
@@ -136,17 +148,29 @@ func TestAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRoleARN), tfknownvalue.GlobalARNExact("iam", "role/"+rName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_job_name"), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_specification"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_specification").AtSliceIndex(0).AtMapKey("training_input_mode"), knownvalue.StringExact("File")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_specification").AtSliceIndex(0).AtMapKey("training_image"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("output_data_config"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("output_data_config").AtSliceIndex(0).AtMapKey("s3_output_path"), knownvalue.StringExact("s3://"+rName+"/output/")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("resource_config"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("resource_config").AtSliceIndex(0).AtMapKey(names.AttrInstanceType), knownvalue.StringExact("ml.m5.large")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("resource_config").AtSliceIndex(0).AtMapKey(names.AttrInstanceCount), knownvalue.Int64Exact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("resource_config").AtSliceIndex(0).AtMapKey("volume_size_in_gb"), knownvalue.Int64Exact(30)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("stopping_condition"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("stopping_condition").AtSliceIndex(0).AtMapKey("max_runtime_in_seconds"), knownvalue.Int64Exact(3600)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_specification"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"training_input_mode": knownvalue.StringExact("File"),
+								"training_image":      knownvalue.NotNull(),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("output_data_config"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"s3_output_path": knownvalue.StringExact("s3://" + rName + "/output/"),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("resource_config"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
+								names.AttrInstanceCount: knownvalue.Int64Exact(1),
+								"volume_size_in_gb":     knownvalue.Int64Exact(30),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("stopping_condition"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"max_runtime_in_seconds": knownvalue.Int64Exact(3600),
+							}),
+						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -160,7 +184,7 @@ func TestAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_List_regionOverride(t *testing.T) {
+func testAccSageMakerTrainingJob_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_sagemaker_training_job.test[0]"
@@ -170,7 +194,7 @@ func TestAccSageMakerTrainingJob_List_regionOverride(t *testing.T) {
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},

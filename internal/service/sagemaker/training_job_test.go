@@ -403,7 +403,35 @@ func testTrainingJobModelPackageConfigValue(ctx context.Context, modelPackageGro
 	})
 }
 
-func TestAccSageMakerTrainingJob_basic(t *testing.T) {
+func TestAccSageMakerTrainingJob_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                 testAccSageMakerTrainingJob_basic,
+		acctest.CtDisappears:            testAccSageMakerTrainingJob_disappears,
+		"vpc":                           testAccSageMakerTrainingJob_vpc,
+		"debugConfig":                   testAccSageMakerTrainingJob_debugConfig,
+		"profilerConfig":                testAccSageMakerTrainingJob_profilerConfig,
+		"environmentAndHyperParameters": testAccSageMakerTrainingJob_environmentAndHyperParameters,
+		"checkpointConfig":              testAccSageMakerTrainingJob_checkpointConfig,
+		"tensorBoardOutputConfig":       testAccSageMakerTrainingJob_tensorBoardOutputConfig,
+		"inputDataConfig":               testAccSageMakerTrainingJob_inputDataConfig,
+		"outputDataConfig":              testAccSageMakerTrainingJob_outputDataConfig,
+		"algorithmSpecificationMetrics": testAccSageMakerTrainingJob_algorithmSpecificationMetrics,
+		"retryStrategy":                 testAccSageMakerTrainingJob_retryStrategy,
+		"serverless":                    testAccSageMakerTrainingJob_serverless,
+		"tags":                          testAccSageMakerTrainingJob_tags,
+		"infraCheckConfig":              testAccSageMakerTrainingJob_infraCheckConfig,
+		"mlflowConfig":                  testAccSageMakerTrainingJob_mlflowConfig,
+		"remoteDebugConfig":             testAccSageMakerTrainingJob_remoteDebugConfig,
+		"sessionChainingConfig":         testAccSageMakerTrainingJob_sessionChainingConfig,
+		"Identity":                      testAccSageMakerTrainingJob_identitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSageMakerTrainingJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -453,7 +481,7 @@ func TestAccSageMakerTrainingJob_basic(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_disappears(t *testing.T) {
+func testAccSageMakerTrainingJob_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -484,7 +512,7 @@ func TestAccSageMakerTrainingJob_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
+func testAccSageMakerTrainingJob_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -539,7 +567,7 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -592,7 +620,7 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -645,7 +673,7 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
+func testAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -701,7 +729,7 @@ func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -751,7 +779,7 @@ func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -801,7 +829,7 @@ func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -853,7 +881,7 @@ func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -903,7 +931,7 @@ func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
+func testAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -958,7 +986,7 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
+func testAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1006,7 +1034,7 @@ func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
+func testAccSageMakerTrainingJob_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1071,7 +1099,7 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_tags(t *testing.T) {
+func testAccSageMakerTrainingJob_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1149,7 +1177,7 @@ func TestAccSageMakerTrainingJob_tags(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1198,7 +1226,7 @@ func TestAccSageMakerTrainingJob_infraCheckConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1255,7 +1283,7 @@ func TestAccSageMakerTrainingJob_mlflowConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1305,7 +1333,7 @@ func TestAccSageMakerTrainingJob_remoteDebugConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_sessionChainingConfig(t *testing.T) {
+func testAccSageMakerTrainingJob_sessionChainingConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
