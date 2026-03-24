@@ -281,30 +281,8 @@ func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	naclID, ruleNumber, egress, protocol := d.Get("network_acl_id").(string), d.Get("rule_number").(int), d.Get("egress").(bool), d.Get(names.AttrProtocol).(string)
-	//parts := strings.Split(d.Id(), networkACLRuleImportIDSeparator)
-	//
-	//if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
-	//	return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), networkACLRuleImportIDSeparator)
-	//}
-	//
-	//naclID := parts[0]
-	//ruleNumber, err := strconv.Atoi(parts[1])
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//protocol := parts[2]
-	//egress, err := strconv.ParseBool(parts[3])
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
-	//d.Set("egress", egress)
-	//d.Set("network_acl_id", naclID)
-	//d.Set("rule_number", ruleNumber)
 
 	return []*schema.ResourceData{d}, nil
 }
