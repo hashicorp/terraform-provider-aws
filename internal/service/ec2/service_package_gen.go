@@ -1540,6 +1540,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_network_acl_rule",
 			Name:     "Network ACL Rule",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("network_acl_id", true),
+				inttypes.BoolIdentityAttribute("egress", true),
+				inttypes.IntIdentityAttribute("rule_number", true),
+				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+				ImportID:     networkACLRuleImportID{},
+			},
 		},
 		{
 			Factory:  resourceNetworkInterface,
