@@ -9,10 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
@@ -23,7 +25,7 @@ func TestAccObservabilityAdminTelemetryEnrichment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_enrichment.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryEnrichmentPreCheck(ctx, t)
@@ -52,7 +54,7 @@ func TestAccObservabilityAdminTelemetryEnrichment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_enrichment.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryEnrichmentPreCheck(ctx, t)
@@ -82,12 +84,16 @@ func testAccCheckTelemetryEnrichmentDestroy(ctx context.Context, t *testing.T) r
 				continue
 			}
 
-			_, err := tfobservabilityadmin.FindTelemetryEnrichmentStatus(ctx, conn)
+			out, err := tfobservabilityadmin.FindTelemetryEnrichmentStatus(ctx, conn)
 			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
 				return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingDestroyed, tfobservabilityadmin.ResNameTelemetryEnrichment, rs.Primary.ID, err)
+			}
+			// Stopped means the feature is disabled — treat as destroyed.
+			if out.Status != awstypes.TelemetryEnrichmentStatusRunning {
+				return nil
 			}
 
 			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingDestroyed, tfobservabilityadmin.ResNameTelemetryEnrichment, rs.Primary.ID, errors.New("not destroyed"))
@@ -123,7 +129,10 @@ func testAccTelemetryEnrichmentPreCheck(ctx context.Context, t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 	// ResourceNotFoundException is expected when enrichment is not yet enabled — that's fine.
-	if err != nil && !retry.NotFound(err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
