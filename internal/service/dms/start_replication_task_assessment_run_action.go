@@ -24,8 +24,8 @@ import (
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -66,12 +66,13 @@ type startReplicationTaskAssessmentRunActionModel struct {
 	AssessmentRunName    types.String         `tfsdk:"assessment_run_name"`
 	Exclude              fwtypes.ListOfString `tfsdk:"exclude"`
 	IncludeOnly          fwtypes.ListOfString `tfsdk:"include_only"`
-	ReplicationTaskARN   types.String         `tfsdk:"replication_task_arn"`
+	ReplicationTaskARN   fwtypes.ARN          `tfsdk:"replication_task_arn"`
 	ResultEncryptionMode types.String         `tfsdk:"result_encryption_mode"`
-	ResultKMSKeyARN      types.String         `tfsdk:"result_kms_key_arn"`
+	ResultKMSKeyARN      fwtypes.ARN          `tfsdk:"result_kms_key_arn"`
 	ResultLocationBucket types.String         `tfsdk:"result_location_bucket"`
 	ResultLocationFolder types.String         `tfsdk:"result_location_folder"`
-	ServiceAccessRoleARN types.String         `tfsdk:"service_access_role_arn"`
+	ServiceAccessRoleARN fwtypes.ARN          `tfsdk:"service_access_role_arn"`
+	Tags                 tftags.Map           `tfsdk:"tags"`
 	Timeout              types.Int64          `tfsdk:"timeout"`
 }
 
@@ -98,9 +99,7 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 			"replication_task_arn": schema.StringAttribute{
 				Description: "ARN of the DMS replication task to assess.",
 				Required:    true,
-				Validators: []pfvalidator.String{
-					fwvalidators.ARN(),
-				},
+				CustomType:  fwtypes.ARNType,
 			},
 			"result_encryption_mode": schema.StringAttribute{
 				Description: fmt.Sprintf("Encryption mode for assessment results. Valid values are %q and %q.", encryptionModeSseKMS, encryptionModeSseS3),
@@ -109,9 +108,7 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 			"result_kms_key_arn": schema.StringAttribute{
 				Description: "ARN of the KMS key used when result_encryption_mode is SSE_KMS.",
 				Optional:    true,
-				Validators: []pfvalidator.String{
-					fwvalidators.ARN(),
-				},
+				CustomType:  fwtypes.ARNType,
 			},
 			"result_location_bucket": schema.StringAttribute{
 				Description: "Amazon S3 bucket where DMS stores the assessment results.",
@@ -124,10 +121,9 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 			"service_access_role_arn": schema.StringAttribute{
 				Description: "ARN of the IAM role used by DMS to write assessment results and start the run.",
 				Required:    true,
-				Validators: []pfvalidator.String{
-					fwvalidators.ARN(),
-				},
+				CustomType:  fwtypes.ARNType,
 			},
+			names.AttrTags: tftags.TagsAttribute(),
 			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds to wait for the assessment run to complete.",
 				Optional:    true,
@@ -195,6 +191,13 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 	resp.Diagnostics.Append(fwflex.Expand(ctx, config, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	defaultTagsConfig := a.Meta().DefaultTagsConfig(ctx)
+	tags := tftags.New(ctx, getContextTags(ctx)).Merge(tftags.New(ctx, config.Tags))
+	tags = defaultTagsConfig.MergeTags(tags)
+	if len(tags) > 0 {
+		input.Tags = svcTags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.StartReplicationTaskAssessmentRun(ctx, &input)
@@ -353,4 +356,11 @@ func findReplicationTaskAssessmentRuns(ctx context.Context, conn *dmssdk.Client,
 	}
 
 	return output, nil
+}
+
+func getContextTags(ctx context.Context) tftags.KeyValueTags {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		return inContext.TagsIn.UnwrapOrDefault()
+	}
+	return nil
 }

@@ -104,6 +104,7 @@ This action supports the following arguments:
 * `result_location_bucket` - (Required) Name of the S3 bucket where DMS stores assessment results.
 * `result_location_folder` - (Optional) Folder prefix within the S3 bucket where DMS stores assessment results.
 * `service_access_role_arn` - (Required) ARN of the IAM role that DMS assumes to write assessment results and start the run.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Timeout in seconds to wait for the assessment run to complete. Defaults to 1800 seconds (30 minutes). Must be at least 60 seconds.
 
 ~> **Note:** `result_kms_key_arn` can only be specified when `result_encryption_mode` is `SSE_KMS`.

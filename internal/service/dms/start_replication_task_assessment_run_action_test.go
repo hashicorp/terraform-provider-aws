@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const testTagKey1 = "tf-acc-test"
+
 func TestAccDMSStartReplicationTaskAssessmentRunAction_includeOnlySuccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -40,7 +42,7 @@ func TestAccDMSStartReplicationTaskAssessmentRunAction_includeOnlySuccess(t *tes
 				Config: testAccStartReplicationTaskAssessmentRunActionConfig_includeOnly(rName, assessmentRunName, "mysql-check-binlog-format"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
-					testAccCheckReplicationTaskAssessmentRunExists(ctx, t, resourceName, "aws_s3_bucket.test", "aws_iam_role.test", assessmentRunName),
+					testAccCheckReplicationTaskAssessmentRunExists(ctx, t, resourceName, "aws_s3_bucket.test", "aws_iam_role.test", assessmentRunName, map[string]string{testTagKey1: rName}),
 				),
 			},
 		},
@@ -69,7 +71,7 @@ func TestAccDMSStartReplicationTaskAssessmentRunAction_includeOnlyFailure(t *tes
 	})
 }
 
-func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *testing.T, replicationTaskResourceName, bucketResourceName, roleResourceName, assessmentRunName string) resource.TestCheckFunc {
+func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *testing.T, replicationTaskResourceName, bucketResourceName, roleResourceName, assessmentRunName string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		taskRS, ok := s.RootModule().Resources[replicationTaskResourceName]
 		if !ok {
@@ -132,6 +134,30 @@ func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *test
 
 					if aws.ToString(run.ServiceAccessRoleArn) != serviceAccessRoleARN {
 						return fmt.Errorf("expected service access role ARN %s, got %s", serviceAccessRoleARN, aws.ToString(run.ServiceAccessRoleArn))
+					}
+
+					if len(expectedTags) > 0 {
+						tagsOutput, err := conn.ListTagsForResource(ctx, &dmssdk.ListTagsForResourceInput{
+							ResourceArn: run.ReplicationTaskAssessmentRunArn,
+						})
+						if err != nil {
+							return fmt.Errorf("listing tags for assessment run %q: %w", assessmentRunName, err)
+						}
+
+						actualTags := make(map[string]string, len(tagsOutput.TagList))
+						for _, tag := range tagsOutput.TagList {
+							actualTags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
+						}
+
+						for key, expectedValue := range expectedTags {
+							actualValue, ok := actualTags[key]
+							if !ok {
+								return fmt.Errorf("expected assessment run %q to have tag %q", assessmentRunName, key)
+							}
+							if actualValue != expectedValue {
+								return fmt.Errorf("expected assessment run %q tag %q to be %q, got %q", assessmentRunName, key, expectedValue, actualValue)
+							}
+						}
 					}
 
 					switch status := aws.ToString(run.Status); status {
@@ -203,7 +229,10 @@ action "aws_dms_start_replication_task_assessment_run" "test" {
     result_location_bucket  = aws_s3_bucket.test.bucket
     result_location_folder  = "assessment-results"
     service_access_role_arn = aws_iam_role.test.arn
-    timeout                 = 1800
+    tags = {
+      %[4]q = %[1]q
+    }
+    timeout = 1800
   }
 }
 
@@ -220,5 +249,5 @@ resource "terraform_data" "trigger" {
     aws_iam_role_policy.test
   ]
 }
-`, rName, assessmentRunName, includeOnly))
+`, rName, assessmentRunName, includeOnly, testTagKey1))
 }
