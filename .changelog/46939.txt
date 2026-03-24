@@ -17,3 +17,15 @@ aws_networkfirewall_proxy_rules_exclusive
 ```release-note:new-resource
 aws_networkfirewall_proxy_configuration_rule_group_attachments_exclusive
 ```
+
+```release-note:new-list-resource
+aws_networkfirewall_proxy
+```
+
+```release-note:new-list-resource
+aws_networkfirewall_proxy_configuration
+```
+
+```release-note:new-list-resource
+aws_networkfirewall_proxy_rule_group
+```
