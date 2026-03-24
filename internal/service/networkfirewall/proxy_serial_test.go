@@ -21,15 +21,30 @@ func TestAccNetworkFirewallProxy_serial(t *testing.T) {
 			"tlsInterceptEnabled": testAccNetworkFirewallProxy_tlsInterceptEnabled,
 			"logging":             testAccNetworkFirewallProxy_logging,
 		},
+		"ProxyList": {
+			"basic":           testAccNetworkFirewallProxy_List_basic,
+			"includeResource": testAccNetworkFirewallProxy_List_includeResource,
+			"regionOverride":  testAccNetworkFirewallProxy_List_regionOverride,
+		},
 		"ProxyConfiguration": {
 			acctest.CtBasic:      testAccNetworkFirewallProxyConfiguration_basic,
 			acctest.CtDisappears: testAccNetworkFirewallProxyConfiguration_disappears,
 			"tags":               testAccNetworkFirewallProxyConfiguration_tags,
 		},
+		"ProxyConfigurationList": {
+			"basic":           testAccNetworkFirewallProxyConfiguration_List_basic,
+			"includeResource": testAccNetworkFirewallProxyConfiguration_List_includeResource,
+			"regionOverride":  testAccNetworkFirewallProxyConfiguration_List_regionOverride,
+		},
 		"ProxyRuleGroup": {
 			acctest.CtBasic:      testAccNetworkFirewallProxyRuleGroup_basic,
 			acctest.CtDisappears: testAccNetworkFirewallProxyRuleGroup_disappears,
 			"tags":               testAccNetworkFirewallProxyRuleGroup_tags,
+		},
+		"ProxyRuleGroupList": {
+			"basic":           testAccNetworkFirewallProxyRuleGroup_List_basic,
+			"includeResource": testAccNetworkFirewallProxyRuleGroup_List_includeResource,
+			"regionOverride":  testAccNetworkFirewallProxyRuleGroup_List_regionOverride,
 		},
 		"ProxyRulesExclusive": {
 			acctest.CtBasic:         testAccNetworkFirewallProxyRulesExclusive_basic,
