@@ -264,7 +264,8 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		d.Set("ptr_record", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
 	case retry.NotFound(err):
 		d.Set("ptr_record", nil)
-	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service"):
+	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service") ||
+		tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not available in this region"):
 		d.Set("ptr_record", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
