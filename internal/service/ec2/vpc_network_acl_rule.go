@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
 // @IdentityAttribute("network_acl_id")
-// @IdentityAttribute("egress", valueType="bool")
+// @IdentityAttribute("egress", valueType="bool", optional="true", testNotNull="true")
 // @IdentityAttribute("rule_number", valueType="int")
 // @IdentityAttribute("protocol")
 // @ImportIDHandler("networkACLRuleImportID")
@@ -280,7 +280,13 @@ func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	naclID, ruleNumber, egress, protocol := d.Get("network_acl_id").(string), d.Get("rule_number").(int), d.Get("egress").(bool), d.Get(names.AttrProtocol).(string)
+	naclID, ruleNumber, protocol := d.Get("network_acl_id").(string), d.Get("rule_number").(int), d.Get(names.AttrProtocol).(string)
+
+	// egress is optional. If not set, it will default to false.
+	var egress bool
+	if eg, ok := d.GetOk("egress"); ok {
+		egress = eg.(bool)
+	}
 
 	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
 
@@ -333,10 +339,10 @@ func (networkACLRuleImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	results := map[string]any{
-		"rule_number":    ruleNumber,
-		"protocol":       protocol,
-		"egress":         egress,
-		"network_acl_id": naclID,
+		"rule_number":      ruleNumber,
+		names.AttrProtocol: protocol,
+		"egress":           egress,
+		"network_acl_id":   naclID,
 	}
 	return id, results, nil
 }
