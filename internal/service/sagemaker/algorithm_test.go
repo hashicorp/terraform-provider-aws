@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -33,89 +34,96 @@ func TestPreserveAlgorithmValidationSpecification(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name    string
-		current *tfsagemaker.AlgorithmResourceModel
-		prior   *tfsagemaker.AlgorithmResourceModel
-		check   func(context.Context, *testing.T, *tfsagemaker.AlgorithmResourceModel)
+		name     string
+		current  *testAlgorithmValidationValues
+		prior    *testAlgorithmValidationValues
+		expected *testAlgorithmValidationValues
 	}{
 		{
-			name:    "preserves omitted training job fields from prior state",
-			current: testAlgorithmValidationResourceModel(ctx, testAlgorithmValidationValues{}),
-			prior: testAlgorithmValidationResourceModel(ctx, testAlgorithmValidationValues{
+			name:    "preserves input mode",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
+				inputMode: awstypes.TrainingInputModeFile,
+			},
+			expected: &testAlgorithmValidationValues{
+				inputMode: awstypes.TrainingInputModeFile,
+			},
+		},
+		{
+			name:    "preserves shuffle config",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
+				shuffleSeed: aws.Int64(1),
+			},
+			expected: &testAlgorithmValidationValues{
+				shuffleSeed: aws.Int64(1),
+			},
+		},
+		{
+			name:    "preserves output data compression type",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
+				compression: awstypes.OutputCompressionTypeGzip,
+			},
+			expected: &testAlgorithmValidationValues{
+				compression: awstypes.OutputCompressionTypeGzip,
+			},
+		},
+		{
+			name:    "preserves resource config keep alive period",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
+				keepAlive: aws.Int32(60),
+			},
+			expected: &testAlgorithmValidationValues{
+				keepAlive: aws.Int32(60),
+			},
+		},
+		{
+			name:    "preserves stopping condition max pending time",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
+				maxPending: aws.Int32(7200),
+			},
+			expected: &testAlgorithmValidationValues{
+				maxPending: aws.Int32(7200),
+			},
+		},
+		{
+			name:    "preserves stopping condition max wait time",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
+				maxWait: aws.Int32(3600),
+			},
+			expected: &testAlgorithmValidationValues{
+				maxWait: aws.Int32(3600),
+			},
+		},
+		{
+			name:    "preserves all omitted training job fields from prior state",
+			current: &testAlgorithmValidationValues{},
+			prior: &testAlgorithmValidationValues{
 				inputMode:   awstypes.TrainingInputModeFile,
 				shuffleSeed: aws.Int64(1),
 				compression: awstypes.OutputCompressionTypeGzip,
 				keepAlive:   aws.Int32(60),
 				maxPending:  aws.Int32(7200),
 				maxWait:     aws.Int32(3600),
-			}),
-			check: func(ctx context.Context, t *testing.T, got *tfsagemaker.AlgorithmResourceModel) {
-				t.Helper()
-
-				training := testAlgorithmValidationTrainingJobDefinition(ctx, t, got)
-
-				inputs, diags := training.InputDataConfig.ToSlice(ctx)
-				if diags.HasError() {
-					t.Fatalf("unexpected input data error: %v", diags)
-				}
-				if got, want := inputs[0].InputMode.ValueString(), string(awstypes.TrainingInputModeFile); got != want {
-					t.Fatalf("input mode = %q, want %q", got, want)
-				}
-
-				shuffleConfig, diags := inputs[0].ShuffleConfig.ToPtr(ctx)
-				if diags.HasError() {
-					t.Fatalf("unexpected shuffle config error: %v", diags)
-				}
-				if shuffleConfig == nil {
-					t.Fatal("expected shuffle config to be preserved")
-				}
-				if got, want := shuffleConfig.Seed.ValueInt64(), int64(1); got != want {
-					t.Fatalf("shuffle seed = %d, want %d", got, want)
-				}
-
-				outputDataConfig, diags := training.OutputDataConfig.ToPtr(ctx)
-				if diags.HasError() {
-					t.Fatalf("unexpected output data config error: %v", diags)
-				}
-				if outputDataConfig == nil {
-					t.Fatal("expected output data config to be preserved")
-				}
-				if got, want := outputDataConfig.CompressionType.ValueString(), string(awstypes.OutputCompressionTypeGzip); got != want {
-					t.Fatalf("compression type = %q, want %q", got, want)
-				}
-
-				resourceConfig, diags := training.ResourceConfig.ToPtr(ctx)
-				if diags.HasError() {
-					t.Fatalf("unexpected resource config error: %v", diags)
-				}
-				if resourceConfig == nil {
-					t.Fatal("expected resource config to be preserved")
-				}
-				if got, want := resourceConfig.KeepAlivePeriodInSeconds.ValueInt32(), int32(60); got != want {
-					t.Fatalf("keep alive period = %d, want %d", got, want)
-				}
-
-				stoppingCondition, diags := training.StoppingCondition.ToPtr(ctx)
-				if diags.HasError() {
-					t.Fatalf("unexpected stopping condition error: %v", diags)
-				}
-				if stoppingCondition == nil {
-					t.Fatal("expected stopping condition to be preserved")
-				}
-				if got, want := stoppingCondition.MaxPendingTimeInSeconds.ValueInt32(), int32(7200); got != want {
-					t.Fatalf("max pending time = %d, want %d", got, want)
-				}
-				if got, want := stoppingCondition.MaxWaitTimeInSeconds.ValueInt32(), int32(3600); got != want {
-					t.Fatalf("max wait time = %d, want %d", got, want)
-				}
+			},
+			expected: &testAlgorithmValidationValues{
+				inputMode:   awstypes.TrainingInputModeFile,
+				shuffleSeed: aws.Int64(1),
+				compression: awstypes.OutputCompressionTypeGzip,
+				keepAlive:   aws.Int32(60),
+				maxPending:  aws.Int32(7200),
+				maxWait:     aws.Int32(3600),
 			},
 		},
 		{
-			name:    "ignores nil models",
-			current: nil,
-			prior:   nil,
-			check: func(_ context.Context, _ *testing.T, _ *tfsagemaker.AlgorithmResourceModel) {
-			},
+			name:     "ignores nil models",
+			current:  nil,
+			prior:    nil,
+			expected: nil,
 		},
 	}
 
@@ -123,12 +131,29 @@ func TestPreserveAlgorithmValidationSpecification(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			diags := tfsagemaker.PreserveAlgorithmValidationSpecification(ctx, tt.current, tt.prior)
+			var current *tfsagemaker.AlgorithmResourceModel
+			if tt.current != nil {
+				current = newAlgorithmValidationStateModel(ctx, *tt.current)
+			}
+
+			var prior *tfsagemaker.AlgorithmResourceModel
+			if tt.prior != nil {
+				prior = newAlgorithmValidationStateModel(ctx, *tt.prior)
+			}
+
+			diags := tfsagemaker.PreserveAlgorithmValidationSpecification(ctx, current, prior)
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %v", diags)
 			}
 
-			tt.check(ctx, t, tt.current)
+			if tt.expected == nil {
+				return
+			}
+
+			got := algorithmValidationValuesFromStateModel(ctx, t, current)
+			if !reflect.DeepEqual(got, *tt.expected) {
+				t.Fatalf("got %#v, want %#v", got, *tt.expected)
+			}
 		})
 	}
 }
@@ -142,7 +167,9 @@ type testAlgorithmValidationValues struct {
 	maxWait     *int32
 }
 
-func testAlgorithmValidationResourceModel(ctx context.Context, v testAlgorithmValidationValues) *tfsagemaker.AlgorithmResourceModel {
+// newAlgorithmValidationStateModel builds the minimal provider state shape used by
+// PreserveAlgorithmValidationSpecification.
+func newAlgorithmValidationStateModel(ctx context.Context, v testAlgorithmValidationValues) *tfsagemaker.AlgorithmResourceModel {
 	channel := tfsagemaker.ChannelModel{
 		ChannelName:       types.StringNull(),
 		CompressionType:   fwtypes.StringEnumNull[awstypes.CompressionType](),
@@ -245,6 +272,61 @@ func testAlgorithmValidationTrainingJobDefinition(ctx context.Context, t *testin
 	}
 
 	return trainingJobDefinition
+}
+
+func algorithmValidationValuesFromStateModel(ctx context.Context, t *testing.T, data *tfsagemaker.AlgorithmResourceModel) testAlgorithmValidationValues {
+	t.Helper()
+
+	training := testAlgorithmValidationTrainingJobDefinition(ctx, t, data)
+
+	got := testAlgorithmValidationValues{}
+
+	inputs, diags := training.InputDataConfig.ToSlice(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected input data error: %v", diags)
+	}
+	if len(inputs) > 0 && inputs[0] != nil {
+		got.inputMode = awstypes.TrainingInputMode(inputs[0].InputMode.ValueString())
+
+		shuffleConfig, diags := inputs[0].ShuffleConfig.ToPtr(ctx)
+		if diags.HasError() {
+			t.Fatalf("unexpected shuffle config error: %v", diags)
+		}
+		if shuffleConfig != nil {
+			got.shuffleSeed = aws.Int64(shuffleConfig.Seed.ValueInt64())
+		}
+	}
+
+	outputDataConfig, diags := training.OutputDataConfig.ToPtr(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected output data config error: %v", diags)
+	}
+	if outputDataConfig != nil {
+		got.compression = awstypes.OutputCompressionType(outputDataConfig.CompressionType.ValueString())
+	}
+
+	resourceConfig, diags := training.ResourceConfig.ToPtr(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected resource config error: %v", diags)
+	}
+	if resourceConfig != nil && !resourceConfig.KeepAlivePeriodInSeconds.IsNull() {
+		got.keepAlive = aws.Int32(resourceConfig.KeepAlivePeriodInSeconds.ValueInt32())
+	}
+
+	stoppingCondition, diags := training.StoppingCondition.ToPtr(ctx)
+	if diags.HasError() {
+		t.Fatalf("unexpected stopping condition error: %v", diags)
+	}
+	if stoppingCondition != nil {
+		if !stoppingCondition.MaxPendingTimeInSeconds.IsNull() {
+			got.maxPending = aws.Int32(stoppingCondition.MaxPendingTimeInSeconds.ValueInt32())
+		}
+		if !stoppingCondition.MaxWaitTimeInSeconds.IsNull() {
+			got.maxWait = aws.Int32(stoppingCondition.MaxWaitTimeInSeconds.ValueInt32())
+		}
+	}
+
+	return got
 }
 
 func TestAccSageMakerAlgorithm_basic(t *testing.T) {

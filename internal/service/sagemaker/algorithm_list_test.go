@@ -123,8 +123,15 @@ func TestAccSageMakerAlgorithm_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_status"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_specification"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_specification").AtSliceIndex(0).AtMapKey("supported_training_instance_types").AtSliceIndex(0), knownvalue.StringExact("ml.m5.large")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_specification"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"training_image":                    knownvalue.NotNull(),
+							"supported_training_instance_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("ml.m5.large")}),
+							"training_channels": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"name":                    knownvalue.StringExact("train"),
+								"supported_content_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
+								"supported_input_modes":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("File")}),
+							})}),
+						})})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
