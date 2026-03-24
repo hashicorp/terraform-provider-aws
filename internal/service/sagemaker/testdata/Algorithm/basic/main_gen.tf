@@ -1,11 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_sagemaker_prebuilt_ecr_image" "test" {
-  repository_name = "linear-learner"
-  image_tag       = "1"
-}
-
 resource "aws_sagemaker_algorithm" "test" {
   algorithm_name = var.rName
 
@@ -19,6 +14,11 @@ resource "aws_sagemaker_algorithm" "test" {
       supported_input_modes   = ["File"]
     }
   }
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "linear-learner"
+  image_tag       = "1"
 }
 variable "rName" {
   description = "Name for resource"

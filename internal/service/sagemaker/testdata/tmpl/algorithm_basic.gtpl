@@ -1,9 +1,3 @@
-data "aws_sagemaker_prebuilt_ecr_image" "test" {
-{{- template "region" }}
-  repository_name = "linear-learner"
-  image_tag       = "1"
-}
-
 resource "aws_sagemaker_algorithm" "test" {
 {{- template "region" }}
   algorithm_name = var.rName
@@ -20,4 +14,10 @@ resource "aws_sagemaker_algorithm" "test" {
   }
 
 {{- template "tags" . }}
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+{{- template "region" }}
+  repository_name = "linear-learner"
+  image_tag       = "1"
 }
