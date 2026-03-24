@@ -26,13 +26,12 @@ type {{ template "ListResourceStructName" . }} struct {
 
 			result := request.NewListResult(ctx)
 			
-			var data {{ .ListResourceLowerCamel }}ResourceModel
 			{{ if .IncludeComments -}}
 			// TIP: -- 6. Set the ID, arguments, and attributes
 			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 			{{- end }}
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
-				result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, func(ctx context.Context, data *{{ .ListResourceLowerCamel }}ResourceModel) {
+				result.Diagnostics.Append(l.flatten(ctx, &item, data)...)
 				if result.Diagnostics.HasError() {
 					return
 				}
