@@ -146,21 +146,12 @@ func objectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
 }
 
 // NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
-func NullOutObjectPtrFields(ctx context.Context, target any) diag.Diagnostics {
+func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	var diags diag.Diagnostics
-	val := reflect.ValueOf(target)
+	val := reflect.ValueOf(t)
+	typ := val.Type().Elem()
 
-	if kind := val.Kind(); kind != reflect.Ptr {
-		diags.AddError("NullOutObjectPtrFields", fmt.Sprintf("target must be a pointer, got %T (Kind: %s)", target, kind.String()))
-		return diags
-	}
-
-	if kind := val.Type().Elem().Kind(); kind != reflect.Struct {
-		diags.AddError("NullOutObjectPtrFields", fmt.Sprintf("target must be a pointer to struct, got %T", target))
-		return diags
-	}
-
-	if val.IsNil() {
+	if typ.Kind() != reflect.Struct {
 		return diags
 	}
 
