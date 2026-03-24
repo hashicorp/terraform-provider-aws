@@ -30,7 +30,7 @@ var _ list.ListResource = &listResourceSecurityGroupEgressRule{}
 
 type listResourceSecurityGroupEgressRule struct {
 	securityGroupEgressRuleResource
-	framework.WithList
+	framework.WithList[securityGroupRuleResourceModel]
 }
 
 type securityGroupEgressRuleListModel struct {

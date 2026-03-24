@@ -30,7 +30,7 @@ var _ list.ListResource = &secondarySubnetListResource{}
 
 type secondarySubnetListResource struct {
 	secondarySubnetResource
-	framework.WithList
+	framework.WithList[secondarySubnetResourceModel]
 }
 
 type listSecondarySubnetModel struct {

@@ -26,7 +26,7 @@ var _ list.ListResource = &transitGatewayMeteringPolicyListResource{}
 
 type transitGatewayMeteringPolicyListResource struct {
 	transitGatewayMeteringPolicyResource
-	framework.WithList
+	framework.WithList[transitGatewayMeteringPolicyResourceModel]
 }
 
 func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

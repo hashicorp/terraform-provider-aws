@@ -30,7 +30,7 @@ var _ list.ListResource = &listResourceKeyValueStore{}
 
 type listResourceKeyValueStore struct {
 	keyValueStoreResource
-	framework.WithList
+	framework.WithList[keyValueStoreResourceModel]
 }
 
 func (r *listResourceKeyValueStore) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

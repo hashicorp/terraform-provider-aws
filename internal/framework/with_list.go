@@ -23,25 +23,26 @@ type Lister[T listresource.InterceptorParams | listresource.InterceptorParamsSDK
 	AppendResultInterceptor(listresource.ListResultInterceptor[T])
 }
 
-var _ Lister[listresource.InterceptorParams] = &WithList{}
+var _ Lister[listresource.InterceptorParams] = &WithList[any]{}
 
-// WithList provides common functionality for ListResources
-type WithList struct {
+// WithList provides common functionality for ListResources.
+// `T` is type that is flattened into. Usually the resource model.
+type WithList[T any] struct {
 	withListResourceConfigSchema
 	interceptors []listresource.ListResultInterceptor[listresource.InterceptorParams]
 }
 
 type FlattenFunc func()
 
-func (w *WithList) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
+func (w *WithList[T]) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
 	w.interceptors = append(w.interceptors, interceptor)
 }
 
-func (w WithList) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
+func (w WithList[T]) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
 	return w.interceptors
 }
 
-func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult) diag.Diagnostics {
+func (w *WithList[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult) diag.Diagnostics {
 	var diags diag.Diagnostics
 	params := listresource.InterceptorParams{
 		C:               awsClient,
@@ -65,7 +66,7 @@ func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.
 	return diags
 }
 
-func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f FlattenFunc) {
+func (w *WithList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f FlattenFunc) {
 	var diags diag.Diagnostics
 
 	diags.Append(w.runResultInterceptors(ctx, listresource.Before, awsClient, includeResource, data, result)...)

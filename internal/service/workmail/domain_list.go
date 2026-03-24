@@ -32,7 +32,7 @@ var _ list.ListResource = &domainListResource{}
 
 type domainListResource struct {
 	domainResource
-	framework.WithList
+	framework.WithList[domainResourceModel]
 }
 
 func (l *domainListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {

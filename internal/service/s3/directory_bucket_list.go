@@ -29,7 +29,7 @@ var _ list.ListResource = &directoryBucketListResource{}
 
 type directoryBucketListResource struct {
 	directoryBucketResource
-	framework.WithList
+	framework.WithList[directoryBucketResourceModel]
 }
 
 func (r *directoryBucketListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

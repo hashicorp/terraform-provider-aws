@@ -32,7 +32,7 @@ var _ list.ListResource = &topicListResource{}
 
 type topicListResource struct {
 	topicResource
-	framework.WithList
+	framework.WithList[topicResourceModel]
 }
 
 func (l *topicListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {

@@ -27,7 +27,7 @@ var _ list.ListResource = &listResourceCapacityProvider{}
 
 type listResourceCapacityProvider struct {
 	resourceCapacityProvider
-	framework.WithList
+	framework.WithList[resourceCapacityProviderModel]
 }
 
 func (r *listResourceCapacityProvider) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

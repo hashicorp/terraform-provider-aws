@@ -34,7 +34,7 @@ var _ list.ListResource = &bucketLifecycleConfigurationListResource{}
 
 type bucketLifecycleConfigurationListResource struct {
 	bucketLifecycleConfigurationResource
-	framework.WithList
+	framework.WithList[bucketLifecycleConfigurationResourceModel]
 	handler bucketPropertyListHandlerFramework
 }
 

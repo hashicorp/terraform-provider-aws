@@ -27,7 +27,7 @@ var _ list.ListResource = &organizationListResource{}
 
 type organizationListResource struct {
 	organizationResource
-	framework.WithList
+	framework.WithList[organizationResourceModel]
 }
 
 func (r *organizationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

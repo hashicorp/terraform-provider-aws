@@ -26,7 +26,7 @@ var _ list.ListResource = &secondaryNetworkListResource{}
 
 type secondaryNetworkListResource struct {
 	secondaryNetworkResource
-	framework.WithList
+	framework.WithList[secondaryNetworkResourceModel]
 }
 
 func (r *secondaryNetworkListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

@@ -27,7 +27,7 @@ var _ list.ListResource = &collectionListResource{}
 
 type collectionListResource struct {
 	collectionResource
-	framework.WithList
+	framework.WithList[collectionResourceModel]
 }
 
 func (r *collectionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

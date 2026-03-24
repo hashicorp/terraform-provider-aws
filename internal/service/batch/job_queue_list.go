@@ -25,7 +25,7 @@ var _ list.ListResource = &listResourceJobQueue{}
 
 type listResourceJobQueue struct {
 	jobQueueResource
-	framework.WithList
+	framework.WithList[jobQueueResourceModel]
 }
 
 func (r *listResourceJobQueue) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

@@ -28,7 +28,7 @@ var _ list.ListResource = &webACLRuleListResource{}
 
 type webACLRuleListResource struct {
 	resourceWebACLRule
-	framework.WithList
+	framework.WithList[webACLRuleModel]
 }
 
 func (r *webACLRuleListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
