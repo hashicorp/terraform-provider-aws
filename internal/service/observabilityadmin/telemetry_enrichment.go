@@ -91,7 +91,7 @@ func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.C
 	data.ID = types.StringValue(r.Meta().Region(ctx))
 	data.AwsResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
 }
 
 func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -121,7 +121,7 @@ func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.Rea
 
 	data.AwsResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *telemetryEnrichmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -150,9 +150,6 @@ func (r *telemetryEnrichmentResource) Delete(ctx context.Context, req resource.D
 
 func (r *telemetryEnrichmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	r.WithImportByIdentity.ImportState(ctx, req, resp)
-
-	// Touch a value to bypass a Framework check.
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("aws_resource_explorer_managed_view_arn"), types.StringUnknown())...)
 }
 
 func findTelemetryEnrichmentStatus(ctx context.Context, conn *observabilityadmin.Client) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) {
