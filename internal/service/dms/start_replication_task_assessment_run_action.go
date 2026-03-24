@@ -13,9 +13,10 @@ import (
 	dmssdk "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
-	pfvalidator "github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
@@ -72,8 +73,8 @@ type startReplicationTaskAssessmentRunActionModel struct {
 	ResultLocationBucket types.String         `tfsdk:"result_location_bucket"`
 	ResultLocationFolder types.String         `tfsdk:"result_location_folder"`
 	ServiceAccessRoleARN fwtypes.ARN          `tfsdk:"service_access_role_arn"`
-	Tags                 tftags.Map           `tfsdk:"tags"`
-	Timeout              types.Int64          `tfsdk:"timeout"`
+	Tags                 tftags.Map           `tfsdk:"tags" autoflex:"-"`
+	Timeout              types.Int64          `tfsdk:"timeout" autoflex:"-"`
 }
 
 func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
@@ -104,6 +105,9 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 			"result_encryption_mode": schema.StringAttribute{
 				Description: fmt.Sprintf("Encryption mode for assessment results. Valid values are %q and %q.", encryptionModeSseKMS, encryptionModeSseS3),
 				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(encryptionModeSseKMS, encryptionModeSseS3),
+				},
 			},
 			"result_kms_key_arn": schema.StringAttribute{
 				Description: "ARN of the KMS key used when result_encryption_mode is SSE_KMS.",
@@ -127,7 +131,7 @@ func (a *startReplicationTaskAssessmentRunAction) Schema(ctx context.Context, re
 			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds to wait for the assessment run to complete.",
 				Optional:    true,
-				Validators: []pfvalidator.Int64{
+				Validators: []validator.Int64{
 					int64validator.AtLeast(60),
 				},
 			},
@@ -152,22 +156,11 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 	}
 
 	if !config.ResultKMSKeyARN.IsNull() {
-		mode := fwflex.StringValueOr(ctx, config.ResultEncryptionMode, "")
+		mode := config.ResultEncryptionMode.ValueString()
 		if mode != encryptionModeSseKMS {
 			resp.Diagnostics.AddError(
 				"Invalid KMS Encryption Configuration",
 				"result_kms_key_arn can only be specified when result_encryption_mode is SSE_KMS.",
-			)
-			return
-		}
-	}
-
-	if !config.ResultEncryptionMode.IsNull() {
-		mode := config.ResultEncryptionMode.ValueString()
-		if mode != encryptionModeSseKMS && mode != encryptionModeSseS3 {
-			resp.Diagnostics.AddError(
-				"Invalid Encryption Mode",
-				fmt.Sprintf("result_encryption_mode must be one of %q or %q.", encryptionModeSseKMS, encryptionModeSseS3),
 			)
 			return
 		}

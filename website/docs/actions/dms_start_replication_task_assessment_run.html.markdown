@@ -3,7 +3,7 @@ subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_start_replication_task_assessment_run"
 description: |-
-  Starts pre-migration assessment for existing replication task.
+  Starts an AWS DMS premigration assessment run for a replication task and waits for it to reach a terminal state.
 ---
 
 # Action: aws_dms_start_replication_task_assessment_run

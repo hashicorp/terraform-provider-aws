@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-const testTagKey1 = "tf-acc-test"
 
 func TestAccDMSStartReplicationTaskAssessmentRunAction_includeOnlySuccess(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -42,7 +39,7 @@ func TestAccDMSStartReplicationTaskAssessmentRunAction_includeOnlySuccess(t *tes
 				Config: testAccStartReplicationTaskAssessmentRunActionConfig_includeOnly(rName, assessmentRunName, "mysql-check-binlog-format"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, t, resourceName, &v),
-					testAccCheckReplicationTaskAssessmentRunExists(ctx, t, resourceName, "aws_s3_bucket.test", "aws_iam_role.test", assessmentRunName, map[string]string{testTagKey1: rName}),
+					testAccCheckReplicationTaskAssessmentRunExists(ctx, t, resourceName, "aws_s3_bucket.test", "aws_iam_role.test", assessmentRunName, map[string]string{acctest.CtKey1: acctest.CtValue1}),
 				),
 			},
 		},
@@ -93,85 +90,74 @@ func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *test
 		resultBucket := bucketRS.Primary.Attributes[names.AttrBucket]
 		serviceAccessRoleARN := roleRS.Primary.Attributes[names.AttrARN]
 
-		timeout := time.After(10 * time.Minute)
-		ticker := time.NewTicker(15 * time.Second)
-		defer ticker.Stop()
+		input := dmssdk.DescribeReplicationTaskAssessmentRunsInput{
+			Filters: []awstypes.Filter{
+				{
+					Name:   aws.String("replication-task-arn"),
+					Values: []string{replicationTaskARN},
+				},
+			},
+		}
+		output, err := conn.DescribeReplicationTaskAssessmentRuns(ctx, &input)
+		if err != nil {
+			return fmt.Errorf("describing DMS assessment runs for replication task %s: %w", replicationTaskARN, err)
+		}
 
-		for {
-			select {
-			case <-timeout:
-				return fmt.Errorf("timeout waiting for DMS assessment run %q for replication task %s", assessmentRunName, replicationTaskARN)
-			case <-ticker.C:
-				input := dmssdk.DescribeReplicationTaskAssessmentRunsInput{
-					Filters: []awstypes.Filter{
-						{
-							Name:   aws.String("replication-task-arn"),
-							Values: []string{replicationTaskARN},
-						},
-					},
+		for _, run := range output.ReplicationTaskAssessmentRuns {
+			if aws.ToString(run.AssessmentRunName) != assessmentRunName {
+				continue
+			}
+
+			if aws.ToString(run.ReplicationTaskAssessmentRunArn) == "" {
+				return fmt.Errorf("assessment run %q returned an empty ARN", assessmentRunName)
+			}
+
+			if aws.ToString(run.ReplicationTaskArn) != replicationTaskARN {
+				return fmt.Errorf("expected replication task ARN %s, got %s", replicationTaskARN, aws.ToString(run.ReplicationTaskArn))
+			}
+
+			if aws.ToString(run.ResultLocationBucket) != resultBucket {
+				return fmt.Errorf("expected result bucket %s, got %s", resultBucket, aws.ToString(run.ResultLocationBucket))
+			}
+
+			if aws.ToString(run.ServiceAccessRoleArn) != serviceAccessRoleARN {
+				return fmt.Errorf("expected service access role ARN %s, got %s", serviceAccessRoleARN, aws.ToString(run.ServiceAccessRoleArn))
+			}
+
+			if len(expectedTags) > 0 {
+				input := dmssdk.ListTagsForResourceInput{
+					ResourceArn: run.ReplicationTaskAssessmentRunArn,
 				}
-				output, err := conn.DescribeReplicationTaskAssessmentRuns(ctx, &input)
+				tagsOutput, err := conn.ListTagsForResource(ctx, &input)
 				if err != nil {
-					continue
+					return fmt.Errorf("listing tags for assessment run %q: %w", assessmentRunName, err)
 				}
 
-				for _, run := range output.ReplicationTaskAssessmentRuns {
-					if aws.ToString(run.AssessmentRunName) != assessmentRunName {
-						continue
+				actualTags := make(map[string]string, len(tagsOutput.TagList))
+				for _, tag := range tagsOutput.TagList {
+					actualTags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
+				}
+
+				for key, expectedValue := range expectedTags {
+					actualValue, ok := actualTags[key]
+					if !ok {
+						return fmt.Errorf("expected assessment run %q to have tag %q", assessmentRunName, key)
 					}
-
-					if aws.ToString(run.ReplicationTaskAssessmentRunArn) == "" {
-						return fmt.Errorf("assessment run %q returned an empty ARN", assessmentRunName)
-					}
-
-					if aws.ToString(run.ReplicationTaskArn) != replicationTaskARN {
-						return fmt.Errorf("expected replication task ARN %s, got %s", replicationTaskARN, aws.ToString(run.ReplicationTaskArn))
-					}
-
-					if aws.ToString(run.ResultLocationBucket) != resultBucket {
-						return fmt.Errorf("expected result bucket %s, got %s", resultBucket, aws.ToString(run.ResultLocationBucket))
-					}
-
-					if aws.ToString(run.ServiceAccessRoleArn) != serviceAccessRoleARN {
-						return fmt.Errorf("expected service access role ARN %s, got %s", serviceAccessRoleARN, aws.ToString(run.ServiceAccessRoleArn))
-					}
-
-					if len(expectedTags) > 0 {
-						input := dmssdk.ListTagsForResourceInput{
-							ResourceArn: run.ReplicationTaskAssessmentRunArn,
-						}
-						tagsOutput, err := conn.ListTagsForResource(ctx, &input)
-						if err != nil {
-							return fmt.Errorf("listing tags for assessment run %q: %w", assessmentRunName, err)
-						}
-
-						actualTags := make(map[string]string, len(tagsOutput.TagList))
-						for _, tag := range tagsOutput.TagList {
-							actualTags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
-						}
-
-						for key, expectedValue := range expectedTags {
-							actualValue, ok := actualTags[key]
-							if !ok {
-								return fmt.Errorf("expected assessment run %q to have tag %q", assessmentRunName, key)
-							}
-							if actualValue != expectedValue {
-								return fmt.Errorf("expected assessment run %q tag %q to be %q, got %q", assessmentRunName, key, expectedValue, actualValue)
-							}
-						}
-					}
-
-					switch status := aws.ToString(run.Status); status {
-					case "passed", "warning":
-						return nil
-					case "starting", "provisioning", "running":
-						continue
-					default:
-						return fmt.Errorf("assessment run %q reached unexpected status %q: %s", assessmentRunName, status, aws.ToString(run.LastFailureMessage))
+					if actualValue != expectedValue {
+						return fmt.Errorf("expected assessment run %q tag %q to be %q, got %q", assessmentRunName, key, expectedValue, actualValue)
 					}
 				}
 			}
+
+			switch status := aws.ToString(run.Status); status {
+			case "passed", "warning":
+				return nil
+			default:
+				return fmt.Errorf("assessment run %q reached unexpected final status %q: %s", assessmentRunName, status, aws.ToString(run.LastFailureMessage))
+			}
 		}
+
+		return fmt.Errorf("assessment run %q not found for replication task %s", assessmentRunName, replicationTaskARN)
 	}
 }
 
@@ -231,7 +217,7 @@ action "aws_dms_start_replication_task_assessment_run" "test" {
     result_location_folder  = "assessment-results"
     service_access_role_arn = aws_iam_role.test.arn
     tags = {
-      %[4]q = %[1]q
+      %[4]q = %[5]q
     }
     timeout = 1800
   }
@@ -250,5 +236,5 @@ resource "terraform_data" "trigger" {
     aws_iam_role_policy.test
   ]
 }
-`, rName, assessmentRunName, includeOnly, testTagKey1))
+`, rName, assessmentRunName, includeOnly, acctest.CtKey1, acctest.CtValue1))
 }
