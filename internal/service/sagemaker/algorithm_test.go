@@ -295,7 +295,7 @@ func algorithmValidationValuesFromStateModel(ctx context.Context, t *testing.T, 
 			t.Fatalf("unexpected shuffle config error: %v", diags)
 		}
 		if shuffleConfig != nil {
-			got.shuffleSeed = aws.Int64(shuffleConfig.Seed.ValueInt64())
+			got.shuffleSeed = shuffleConfig.Seed.ValueInt64Pointer()
 		}
 	}
 
@@ -312,7 +312,7 @@ func algorithmValidationValuesFromStateModel(ctx context.Context, t *testing.T, 
 		t.Fatalf("unexpected resource config error: %v", diags)
 	}
 	if resourceConfig != nil && !resourceConfig.KeepAlivePeriodInSeconds.IsNull() {
-		got.keepAlive = aws.Int32(resourceConfig.KeepAlivePeriodInSeconds.ValueInt32())
+		got.keepAlive = resourceConfig.KeepAlivePeriodInSeconds.ValueInt32Pointer()
 	}
 
 	stoppingCondition, diags := training.StoppingCondition.ToPtr(ctx)
@@ -321,10 +321,10 @@ func algorithmValidationValuesFromStateModel(ctx context.Context, t *testing.T, 
 	}
 	if stoppingCondition != nil {
 		if !stoppingCondition.MaxPendingTimeInSeconds.IsNull() {
-			got.maxPending = aws.Int32(stoppingCondition.MaxPendingTimeInSeconds.ValueInt32())
+			got.maxPending = stoppingCondition.MaxPendingTimeInSeconds.ValueInt32Pointer()
 		}
 		if !stoppingCondition.MaxWaitTimeInSeconds.IsNull() {
-			got.maxWait = aws.Int32(stoppingCondition.MaxWaitTimeInSeconds.ValueInt32())
+			got.maxWait = stoppingCondition.MaxWaitTimeInSeconds.ValueInt32Pointer()
 		}
 	}
 

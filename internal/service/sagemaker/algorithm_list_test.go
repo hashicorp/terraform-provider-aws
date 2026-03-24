@@ -127,7 +127,7 @@ func TestAccSageMakerAlgorithm_List_includeResource(t *testing.T) {
 							"training_image":                    knownvalue.NotNull(),
 							"supported_training_instance_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("ml.m5.large")}),
 							"training_channels": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
-								"name":                    knownvalue.StringExact("train"),
+								acctest.CtName:            knownvalue.StringExact("train"),
 								"supported_content_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
 								"supported_input_modes":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("File")}),
 							})}),
