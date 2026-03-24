@@ -1934,6 +1934,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "range_key"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "restore_backup_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_date_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_source_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_to_latest_time"),
@@ -7972,6 +7973,44 @@ func TestAccDynamoDBTable_Replica_deletionProtection(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_restoreBackupARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	resourceNameRestore := "aws_dynamodb_table.test_restore"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameRestore := fmt.Sprintf("%s-restore", rName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_restoreBackupARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceNameRestore, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceNameRestore, "restore_backup_arn", "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+/backup/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var table awstypes.TableDescription
@@ -12880,6 +12919,51 @@ resource "aws_dynamodb_table" "test_restore" {
   }
 }
 `, rName))
+}
+
+func testAccTableConfig_restoreBackupARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+
+action "aws_dynamodb_create_backup" "test" {
+  config {
+    table_name  = aws_dynamodb_table.test.name
+    backup_name = "%[1]s-backup"
+  }
+}
+
+resource "terraform_data" "backup_trigger" {
+  input = "trigger-backup"
+
+  lifecycle {
+    action_trigger {
+      events  = [after_create]
+      actions = [action.aws_dynamodb_create_backup.test]
+    }
+  }
+}
+
+data "aws_dynamodb_backups" "test" {
+  table_name = aws_dynamodb_table.test.name
+
+  depends_on = [terraform_data.backup_trigger]
+}
+
+resource "aws_dynamodb_table" "test_restore" {
+  name               = "%[1]s-restore"
+  restore_backup_arn = data.aws_dynamodb_backups.test.backup_summaries[0].backup_arn
+}
+`, rName)
 }
 
 func testAccTableConfig_replica2_NoMultipleRegionProvider(rName string) string {
