@@ -111,14 +111,13 @@ func (l *accountAssignmentListResource) List(ctx context.Context, request list.L
 			rd := l.ResourceData()
 			rd.SetId(id)
 
-			if request.IncludeResource {
-				if err := resourceAccountAssignmentFlatten(rd, &item, instanceARN, string(awstypes.TargetTypeAwsAccount)); err != nil {
-					tflog.Error(ctx, "Flattening SSO Account Assignment", map[string]any{
-						"error":      err.Error(),
-						names.AttrID: id,
-					})
-					continue
-				}
+			// no need for IncludeResource since every identity attribute is required to be set.
+			if err := resourceAccountAssignmentFlatten(rd, &item, instanceARN, string(awstypes.TargetTypeAwsAccount)); err != nil {
+				tflog.Error(ctx, "Flattening SSO Account Assignment", map[string]any{
+					"error":      err.Error(),
+					names.AttrID: id,
+				})
+				continue
 			}
 
 			result.DisplayName = fmt.Sprintf("%s %s", item.PrincipalType, aws.ToString(item.PrincipalId))
