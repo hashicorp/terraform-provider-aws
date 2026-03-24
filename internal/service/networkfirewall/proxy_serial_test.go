@@ -22,7 +22,7 @@ func TestAccNetworkFirewallProxy_serial(t *testing.T) {
 			"logging":             testAccNetworkFirewallProxy_logging,
 		},
 		"ProxyList": {
-			"basic":           testAccNetworkFirewallProxy_List_basic,
+			acctest.CtBasic:  testAccNetworkFirewallProxy_List_basic,
 			"includeResource": testAccNetworkFirewallProxy_List_includeResource,
 			"regionOverride":  testAccNetworkFirewallProxy_List_regionOverride,
 		},
@@ -32,7 +32,7 @@ func TestAccNetworkFirewallProxy_serial(t *testing.T) {
 			"tags":               testAccNetworkFirewallProxyConfiguration_tags,
 		},
 		"ProxyConfigurationList": {
-			"basic":           testAccNetworkFirewallProxyConfiguration_List_basic,
+			acctest.CtBasic:  testAccNetworkFirewallProxyConfiguration_List_basic,
 			"includeResource": testAccNetworkFirewallProxyConfiguration_List_includeResource,
 			"regionOverride":  testAccNetworkFirewallProxyConfiguration_List_regionOverride,
 		},
@@ -42,7 +42,7 @@ func TestAccNetworkFirewallProxy_serial(t *testing.T) {
 			"tags":               testAccNetworkFirewallProxyRuleGroup_tags,
 		},
 		"ProxyRuleGroupList": {
-			"basic":           testAccNetworkFirewallProxyRuleGroup_List_basic,
+			acctest.CtBasic:  testAccNetworkFirewallProxyRuleGroup_List_basic,
 			"includeResource": testAccNetworkFirewallProxyRuleGroup_List_includeResource,
 			"regionOverride":  testAccNetworkFirewallProxyRuleGroup_List_regionOverride,
 		},
