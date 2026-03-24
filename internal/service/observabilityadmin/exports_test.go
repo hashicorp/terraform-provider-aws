@@ -6,8 +6,10 @@ package observabilityadmin
 // Exports for use in tests only.
 var (
 	ResourceCentralizationRuleForOrganization = newCentralizationRuleForOrganizationResource
+	ResourceTelemetryEnrichment               = newTelemetryEnrichmentResource
 	ResourceTelemetryPipeline                 = newTelemetryPipelineResource
 
 	FindCentralizationRuleForOrganizationByID = findCentralizationRuleForOrganizationByID
+	FindTelemetryEnrichmentStatus             = findTelemetryEnrichmentStatus
 	FindTelemetryPipelineByARN                = findTelemetryPipelineByARN
 )
