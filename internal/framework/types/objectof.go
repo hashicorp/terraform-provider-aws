@@ -149,9 +149,9 @@ func objectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
 func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	var diags diag.Diagnostics
 	val := reflect.ValueOf(t)
-	typ := val.Type().Elem()
 
-	if typ.Kind() != reflect.Struct {
+	if kind := val.Type().Elem().Kind(); kind != reflect.Struct {
+		diags.AddError("NullOutObjectPtrFields", fmt.Sprintf("target must be a pointer to struct, got %T", t))
 		return diags
 	}
 
