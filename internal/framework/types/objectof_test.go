@@ -4,7 +4,6 @@
 package types_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -25,7 +24,7 @@ type ObjectB struct {
 func TestObjectTypeOfEqual(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	testCases := map[string]struct {
 		other attr.Type
 		want  bool
@@ -78,7 +77,7 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 		"length": tftypes.NewValue(tftypes.Number, 42),
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	testCases := map[string]struct {
 		tfVal   tftypes.Value
 		wantVal attr.Value
@@ -138,7 +137,7 @@ func TestObjectValueOfEqual(t *testing.T) {
 		Name: types.StringValue("test2"),
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 	testCases := map[string]struct {
 		other attr.Value
 		want  bool
@@ -193,7 +192,7 @@ func TestNullOutObjectPtrFields(t *testing.T) {
 		b
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 	a := new(A)
 	a.F1 = types.BoolValue(true)
 	a.F2 = types.StringValue("test")
@@ -201,27 +200,68 @@ func TestNullOutObjectPtrFields(t *testing.T) {
 	a.F4 = fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{types.Int64Value(-1)})
 	a.F5 = types.StringValue("test")
 	a.F6 = types.Int32Value(42)
+	testCases := map[string]struct {
+		target  any
+		wantErr bool
+	}{
+		"nil": {
+			wantErr: true,
+		},
+		"nil ptr to int": {
+			target:  (*int)(nil),
+			wantErr: true,
+		},
+		"nil ptr to struct": {
+			target: (*struct{})(nil),
+		},
+		"int": {
+			target:  3,
+			wantErr: true,
+		},
+		"struct": {
+			target:  *a,
+			wantErr: true,
+		},
+		"valid object ptr": {
+			target: a,
+		},
+	}
 
-	diags := fwtypes.NullOutObjectPtrFields(ctx, a)
-	if diags.HasError() {
-		t.Fatalf("unexpected error: %v", diags)
-	}
-	if !a.F1.IsNull() {
-		t.Errorf("expected F1 to be null")
-	}
-	if !a.F2.IsNull() {
-		t.Errorf("expected F2 to be null")
-	}
-	if !a.F3.IsNull() {
-		t.Errorf("expected F3 to be null")
-	}
-	if !a.F4.IsNull() {
-		t.Errorf("expected F4 to be null")
-	}
-	if !a.F5.IsNull() {
-		t.Errorf("expected F5 to be null")
-	}
-	if !a.F6.IsNull() {
-		t.Errorf("expected F6 to be null")
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := fwtypes.NullOutObjectPtrFields(ctx, testCase.target)
+			gotErr, wantErr := diags.HasError(), testCase.wantErr
+
+			if gotErr != wantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, wantErr)
+			}
+
+			if gotErr {
+				if !testCase.wantErr {
+					t.Errorf("unexpected error: %v", diags)
+				}
+			} else if testCase.target == a {
+				if !a.F1.IsNull() {
+					t.Errorf("expected F1 to be null")
+				}
+				if !a.F2.IsNull() {
+					t.Errorf("expected F2 to be null")
+				}
+				if !a.F3.IsNull() {
+					t.Errorf("expected F3 to be null")
+				}
+				if !a.F4.IsNull() {
+					t.Errorf("expected F4 to be null")
+				}
+				if !a.F5.IsNull() {
+					t.Errorf("expected F5 to be null")
+				}
+				if !a.F6.IsNull() {
+					t.Errorf("expected F6 to be null")
+				}
+			}
+		})
 	}
 }
