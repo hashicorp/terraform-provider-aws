@@ -78,7 +78,7 @@ func (l *accountAssignmentListResource) List(ctx context.Context, request list.L
 	permissionSetARN := query.PermissionSetARN.ValueString()
 
 	tflog.Info(ctx, "Listing SSO Account Assignments", map[string]any{
-		logging.ResourceAttributeKey(names.AttrAccountID):         accountID,
+		logging.ResourceAttributeKey(names.AttrAccountID):  accountID,
 		logging.ResourceAttributeKey("instance_arn"):       instanceARN,
 		logging.ResourceAttributeKey("permission_set_arn"): permissionSetARN,
 	})
