@@ -3436,6 +3436,39 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterfaceSourceDestCheck(
 	})
 }
 
+func TestAccEC2Instance_PrimaryNetworkInterface_sourceDestCheckNoDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var instance awstypes.Instance
+	var eni awstypes.NetworkInterface
+	resourceName := "aws_instance.test"
+	eniResourceName := "aws_network_interface.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_primaryNetworkInterface_sourceDestCheck(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &instance),
+					testAccCheckENIExists(ctx, t, eniResourceName, &eni),
+					resource.TestCheckResourceAttr(eniResourceName, "source_dest_check", acctest.CtFalse),
+				),
+			},
+			// Re-plan same config — must produce no diff.
+			// Before the fix for #44768, this step fails because
+			// source_dest_check drifts from false to true on the instance.
+			{
+				Config:   testAccInstanceConfig_primaryNetworkInterface_sourceDestCheck(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.Instance
@@ -9357,6 +9390,36 @@ resource "aws_instance" "test" {
   network_interface {
     network_interface_id = aws_network_interface.test.id
     device_index         = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_primaryNetworkInterface_sourceDestCheck(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id         = aws_subnet.test.id
+  private_ips       = ["10.1.1.42"]
+  source_dest_check = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  primary_network_interface {
+    network_interface_id = aws_network_interface.test.id
   }
 
   tags = {
