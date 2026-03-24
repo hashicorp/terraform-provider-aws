@@ -312,14 +312,13 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					return nil, err
 				}
+				// Re-bootstrap context after each interceptor to pick up any changes.
+				// This allows later interceptors to see context modifications from earlier ones.
+				ctx, err = bootstrapContext(ctx, d.GetOk, nil, meta)
+				if err != nil {
+					return nil, err
+				}
 			}
-		}
-
-		// Re-bootstrap context after Before interceptors to pick up any region changes.
-		// The importRegion interceptor may have parsed @region suffix and set the region attribute.
-		ctx, err = bootstrapContext(ctx, d.GetOk, nil, meta)
-		if err != nil {
-			return nil, err
 		}
 
 		var errs []error
