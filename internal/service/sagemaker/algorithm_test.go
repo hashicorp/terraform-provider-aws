@@ -1048,7 +1048,7 @@ resource "aws_sagemaker_algorithm" "test" {
   ]
 
   tags = {
-    %[1]q = %[2]q
+	%[2]q = %[3]q
   }
 
   training_specification {
@@ -1077,8 +1077,8 @@ resource "aws_sagemaker_algorithm" "test" {
   ]
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+	%[2]q = %[3]q
+	%[4]q = %[5]q
   }
 
   training_specification {
