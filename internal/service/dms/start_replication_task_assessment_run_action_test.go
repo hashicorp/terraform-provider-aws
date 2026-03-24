@@ -137,9 +137,10 @@ func testAccCheckReplicationTaskAssessmentRunExists(ctx context.Context, t *test
 					}
 
 					if len(expectedTags) > 0 {
-						tagsOutput, err := conn.ListTagsForResource(ctx, &dmssdk.ListTagsForResourceInput{
+						input := dmssdk.ListTagsForResourceInput{
 							ResourceArn: run.ReplicationTaskAssessmentRunArn,
-						})
+						}
+						tagsOutput, err := conn.ListTagsForResource(ctx, &input)
 						if err != nil {
 							return fmt.Errorf("listing tags for assessment run %q: %w", assessmentRunName, err)
 						}
