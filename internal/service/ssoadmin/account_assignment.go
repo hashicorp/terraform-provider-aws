@@ -31,7 +31,13 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_account_assignment", name="Account Assignment")
-// @IdentityAttribute("id")
+// @IdentityAttribute("principal_id")
+// @IdentityAttribute("principal_type")
+// @IdentityAttribute("target_id")
+// @IdentityAttribute("target_type")
+// @IdentityAttribute("permission_set_arn")
+// @IdentityAttribute("instance_arn")
+// @ImportIDHandler("accountAssignmentImportID")
 // @Testing(requireEnvVarValue="AWS_IDENTITY_STORE_GROUP_NAME")
 // @Testing(preCheckWithRegion="acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(preIdentityVersion="v6.37.0")
@@ -448,4 +454,42 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.Client, in
 	}
 
 	return nil, err
+}
+
+type accountAssignmentImportID struct{}
+
+func (accountAssignmentImportID) Create(d *schema.ResourceData) string {
+	return accountAssignmentCreateResourceID(
+		d.Get("principal_id").(string),
+		d.Get("principal_type").(string),
+		d.Get("target_id").(string),
+		d.Get("target_type").(string),
+		d.Get("permission_set_arn").(string),
+		d.Get("instance_arn").(string),
+	)
+}
+
+func (accountAssignmentImportID) Parse(id string) (string, map[string]any, error) {
+	idParts, err := ParseAccountAssignmentID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	principalID := idParts[0]
+	principalType := idParts[1]
+	targetID := idParts[2]
+	targetType := idParts[3]
+	permissionSetARN := idParts[4]
+	instanceARN := idParts[5]
+
+	result := map[string]any{
+		"principal_id":       principalID,
+		"principal_type":     principalType,
+		"target_id":          targetID,
+		"target_type":        targetType,
+		"permission_set_arn": permissionSetARN,
+		"instance_arn":       instanceARN,
+	}
+
+	return id, result, nil
 }

@@ -160,9 +160,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ssoadmin_account_assignment",
 			Name:     "Account Assignment",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("principal_id", true),
+				inttypes.StringIdentityAttribute("principal_type", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+				inttypes.StringIdentityAttribute("target_type", true),
+				inttypes.StringIdentityAttribute("permission_set_arn", true),
+				inttypes.StringIdentityAttribute("instance_arn", true),
+			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
+				ImportID:      accountAssignmentImportID{},
 			},
 		},
 		{
@@ -212,7 +220,14 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_ssoadmin_account_assignment",
 			Name:     "Account Assignment",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("principal_id", true),
+				inttypes.StringIdentityAttribute("principal_type", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+				inttypes.StringIdentityAttribute("target_type", true),
+				inttypes.StringIdentityAttribute("permission_set_arn", true),
+				inttypes.StringIdentityAttribute("instance_arn", true),
+			}),
 		},
 	})
 }
