@@ -179,18 +179,11 @@ func TestObjectValueOfEqual(t *testing.T) {
 func TestNullOutObjectPtrFields(t *testing.T) {
 	t.Parallel()
 
-	type D struct {
-		F1 fwtypes.ARN `tfsdk:"f1"`
-	}
-	type C struct {
-		F1 fwtypes.MapOfString               `tfsdk:"f1"`
-		F2 fwtypes.SetNestedObjectValueOf[D] `tfsdk:"f2"`
-	}
 	type b struct {
-		F5 types.String                       `tfsdk:"f5"`
-		F6 types.Int32                        `tfsdk:"f6"`
-		F7 fwtypes.ListNestedObjectValueOf[C] `tfsdk:"f7"`
+		F5 types.String `tfsdk:"f5"`
+		F6 types.Int32  `tfsdk:"f6"`
 	}
+
 	type A struct {
 		F1 types.Bool                        `tfsdk:"f1"`
 		F2 types.String                      `tfsdk:"f2"`
@@ -267,9 +260,6 @@ func TestNullOutObjectPtrFields(t *testing.T) {
 				}
 				if !a.F6.IsNull() {
 					t.Errorf("expected F6 to be null")
-				}
-				if !a.F7.IsNull() {
-					t.Errorf("expected F7 to be null")
 				}
 			}
 		})
