@@ -52,7 +52,7 @@ func (r *listResourceJobQueue) List(ctx context.Context, request list.ListReques
 			}
 
 			var data jobQueueResourceModel
-			r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
+			r.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func(ctx context.Context) {
 				if diags := fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

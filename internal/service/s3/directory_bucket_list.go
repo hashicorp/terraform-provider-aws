@@ -65,7 +65,7 @@ func (r *directoryBucketListResource) List(ctx context.Context, request list.Lis
 			}
 
 			var data directoryBucketResourceModel
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
 
 				result.Diagnostics.Append(r.flatten(ctx, bucket, &data)...)

@@ -88,7 +88,7 @@ func (l *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 
 			var data secondarySubnetResourceModel
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("SecondarySubnet")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

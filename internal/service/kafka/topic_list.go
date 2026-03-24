@@ -77,7 +77,7 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 			result := request.NewListResult(ctx)
 
 			var data topicResourceModel
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				topicName := aws.ToString(item.TopicName)
 				out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
 				if err != nil {

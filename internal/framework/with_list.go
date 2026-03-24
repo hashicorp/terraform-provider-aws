@@ -32,14 +32,10 @@ type WithList[T any] struct {
 	interceptors []listresource.ListResultInterceptor[listresource.InterceptorParams]
 }
 
-type FlattenFunc func()
+type FlattenFunc func(context.Context)
 
 func (w *WithList[T]) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParams]) {
 	w.interceptors = append(w.interceptors, interceptor)
-}
-
-func (w WithList[T]) ResultInterceptors() []listresource.ListResultInterceptor[listresource.InterceptorParams] {
-	return w.interceptors
 }
 
 func (w *WithList[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult) diag.Diagnostics {
@@ -75,7 +71,7 @@ func (w *WithList[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient,
 		return
 	}
 
-	f()
+	f(ctx)
 	if result.Diagnostics.HasError() {
 		return
 	}

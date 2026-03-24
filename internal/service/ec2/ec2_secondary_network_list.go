@@ -52,7 +52,7 @@ func (r *secondaryNetworkListResource) List(ctx context.Context, request list.Li
 
 			var data secondaryNetworkResourceModel
 
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("SecondaryNetwork")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

@@ -123,7 +123,7 @@ func (l bucketLifecycleConfigurationListHandler) list(ctx context.Context, reque
 
 			var data bucketLifecycleConfigurationResourceModel
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				flattenBucketLifecycleConfigurationResource(ctx, item, &data, &result.Diagnostics)
 				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
 				data.ID = data.Bucket

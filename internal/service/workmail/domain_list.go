@@ -88,7 +88,7 @@ func (l *domainListResource) List(ctx context.Context, request list.ListRequest,
 			result := request.NewListResult(ctx)
 
 			var data domainResourceModel
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				result.Diagnostics.Append(l.flatten(ctx, out, &data)...)
 				if result.Diagnostics.HasError() {
 					return

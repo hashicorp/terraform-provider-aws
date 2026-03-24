@@ -81,7 +81,7 @@ func (r *webACLRuleListResource) List(ctx context.Context, request list.ListRequ
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), ruleName)
 
 			var data webACLRuleModel
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				result.Diagnostics.Append(r.flattenWebACLRule(ctx, rule, &data)...)
 				if result.Diagnostics.HasError() {
 					return

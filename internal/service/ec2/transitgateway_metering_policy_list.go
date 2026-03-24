@@ -58,7 +58,7 @@ func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, req
 			result := request.NewListResult(ctx)
 
 			var data transitGatewayMeteringPolicyResourceModel
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func(ctx context.Context) {
 				result.Diagnostics.Append(l.flatten(ctx, c, &item, &data)...)
 				if result.Diagnostics.HasError() {
 					return

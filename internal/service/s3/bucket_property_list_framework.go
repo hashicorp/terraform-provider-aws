@@ -40,6 +40,6 @@ func (l baseBucketPropertyListHandlerFramework) Meta() *conns.AWSClient {
 	return l.lister.Meta()
 }
 
-func (l baseBucketPropertyListHandlerFramework) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f func()) {
+func (l baseBucketPropertyListHandlerFramework) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, data any, result *list.ListResult, f framework.FlattenFunc) {
 	l.lister.SetResult(ctx, awsClient, includeResource, data, result, f)
 }
