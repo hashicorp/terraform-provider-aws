@@ -5,54 +5,43 @@ page_title: "AWS: aws_observabilityadmin_telemetry_enrichment"
 description: |-
   Manages an AWS CloudWatch Observability Admin Telemetry Enrichment.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_observabilityadmin_telemetry_enrichment
 
 Manages an AWS CloudWatch Observability Admin Telemetry Enrichment.
+
+Telemetry enrichment enables resource tags for telemetry data in your account, enhancing telemetry with additional resource metadata from AWS Resource Explorer to provide richer context for monitoring and observability.
+
+For more information, see the [AWS CloudWatch Observability Admin documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/what-is-observabilityadmin.html).
+
+~> **NOTE:** Only one telemetry enrichment can exist per account per region. Creating this resource enables the feature; destroying it disables the feature.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_observabilityadmin_telemetry_enrichment" "example" {
-}
+resource "aws_observabilityadmin_telemetry_enrichment" "example" {}
 ```
 
 ## Argument Reference
 
-The following arguments are required:
-
-* `example_arg` - (Required) Brief description of the required argument.
-
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Telemetry Enrichment.
-* `example_attribute` - Brief description of the attribute.
+* `aws_resource_explorer_managed_view_arn` - ARN of the AWS Resource Explorer managed view created for the telemetry enrichment feature.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+- `create` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -62,49 +51,31 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_observabilityadmin_telemetry_enrichment.example
   identity = {
-<!---
-Add only required attributes in this example.
---->
+    region = "us-west-2"
   }
 }
 
-resource "aws_observabilityadmin_telemetry_enrichment" "example" {
-  ### Configuration omitted for brevity ###
-}
+resource "aws_observabilityadmin_telemetry_enrichment" "example" {}
 ```
 
 ### Identity Schema
 
-#### Required
-<!---
-Required attributes here:
-> ARN Identity:
-* `arn` - ARN of the Telemetry Enrichment.
-> Parameterized Identity:
-* `example_id_arg` - ID argument of the Telemetry Enrichment.
-> Singleton Identity: no required attributes.
---->
-
 #### Optional
-<!---
-Optional attributes here:
-> ARN Identity: no optional attributes.
-> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
---->
+
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Enrichment using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Enrichment using the region name. For example:
 
 ```terraform
 import {
   to = aws_observabilityadmin_telemetry_enrichment.example
-  id = "telemetry_enrichment-id-12345678"
+  id = "us-west-2"
 }
 ```
 
-Using `terraform import`, import CloudWatch Observability Admin Telemetry Enrichment using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Observability Admin Telemetry Enrichment using the region name. For example:
 
 ```console
-% terraform import aws_observabilityadmin_telemetry_enrichment.example telemetry_enrichment-id-12345678
+% terraform import aws_observabilityadmin_telemetry_enrichment.example us-west-2
 ```
