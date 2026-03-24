@@ -35,6 +35,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `aws_resource_explorer_managed_view_arn` - ARN of the AWS Resource Explorer managed view created for the telemetry enrichment feature.
+* `id` - Region name (deprecated, use `region` instead).
 
 ## Timeouts
 
