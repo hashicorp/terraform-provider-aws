@@ -512,7 +512,7 @@ func TestAccSageMakerAlgorithm_inferenceSpecification(t *testing.T) {
 										}),
 									}),
 									"container_hostname": knownvalue.StringExact("test-host"),
-									"environment": knownvalue.MapExact(map[string]knownvalue.Check{
+									names.AttrEnvironment: knownvalue.MapExact(map[string]knownvalue.Check{
 										"TEST": knownvalue.StringExact(names.AttrValue),
 									}),
 									"framework":         knownvalue.StringExact("XGBOOST"),
@@ -692,18 +692,18 @@ func testAccAlgorithmTrainingSpecificationStateCheck() knownvalue.Check {
 			"additional_s3_data_source": knownvalue.ListSizeExact(0),
 			"metric_definitions": knownvalue.ListExact([]knownvalue.Check{
 				knownvalue.ObjectExact(map[string]knownvalue.Check{
-					"name":  knownvalue.StringExact("train:loss"),
-					"regex": knownvalue.StringExact("loss=(.*?);"),
+					acctest.CtName: knownvalue.StringExact("train:loss"),
+					"regex":        knownvalue.StringExact("loss=(.*?);"),
 				}),
 			}),
 			"supported_hyper_parameters": knownvalue.ListExact([]knownvalue.Check{
 				knownvalue.ObjectPartial(map[string]knownvalue.Check{
-					"default_value": knownvalue.StringExact("0.5"),
-					"description":   knownvalue.StringExact("Continuous learning rate"),
-					"is_required":   knownvalue.Bool(true),
-					"is_tunable":    knownvalue.Bool(true),
-					"name":          knownvalue.StringExact("eta"),
-					"type":          knownvalue.StringExact("Continuous"),
+					names.AttrDefaultValue: knownvalue.StringExact("0.5"),
+					names.AttrDescription:  knownvalue.StringExact("Continuous learning rate"),
+					"is_required":          knownvalue.Bool(true),
+					"is_tunable":           knownvalue.Bool(true),
+					acctest.CtName:         knownvalue.StringExact("eta"),
+					names.AttrType:         knownvalue.StringExact("Continuous"),
 					"range": knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"continuous_parameter_range_specification": knownvalue.ListExact([]knownvalue.Check{
@@ -716,12 +716,12 @@ func testAccAlgorithmTrainingSpecificationStateCheck() knownvalue.Check {
 					}),
 				}),
 				knownvalue.ObjectPartial(map[string]knownvalue.Check{
-					"default_value": knownvalue.StringExact("5"),
-					"description":   knownvalue.StringExact("Maximum tree depth"),
-					"is_required":   knownvalue.Bool(false),
-					"is_tunable":    knownvalue.Bool(true),
-					"name":          knownvalue.StringExact("max_depth"),
-					"type":          knownvalue.StringExact("Integer"),
+					names.AttrDefaultValue: knownvalue.StringExact("5"),
+					names.AttrDescription:  knownvalue.StringExact("Maximum tree depth"),
+					"is_required":          knownvalue.Bool(false),
+					"is_tunable":           knownvalue.Bool(true),
+					acctest.CtName:         knownvalue.StringExact("max_depth"),
+					names.AttrType:         knownvalue.StringExact("Integer"),
 					"range": knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"integer_parameter_range_specification": knownvalue.ListExact([]knownvalue.Check{
@@ -734,17 +734,17 @@ func testAccAlgorithmTrainingSpecificationStateCheck() knownvalue.Check {
 					}),
 				}),
 				knownvalue.ObjectPartial(map[string]knownvalue.Check{
-					"default_value": knownvalue.StringExact("reg:squarederror"),
-					"description":   knownvalue.StringExact("Objective function"),
-					"is_required":   knownvalue.Bool(false),
-					"is_tunable":    knownvalue.Bool(false),
-					"name":          knownvalue.StringExact("objective"),
-					"type":          knownvalue.StringExact("Categorical"),
+					names.AttrDefaultValue: knownvalue.StringExact("reg:squarederror"),
+					names.AttrDescription:  knownvalue.StringExact("Objective function"),
+					"is_required":          knownvalue.Bool(false),
+					"is_tunable":           knownvalue.Bool(false),
+					acctest.CtName:         knownvalue.StringExact("objective"),
+					names.AttrType:         knownvalue.StringExact("Categorical"),
 					"range": knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"categorical_parameter_range_specification": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"values": knownvalue.ListExact([]knownvalue.Check{
+									names.AttrValues: knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.StringExact("reg:squarederror"),
 										knownvalue.StringExact("binary:logistic"),
 									}),
@@ -760,16 +760,16 @@ func testAccAlgorithmTrainingSpecificationStateCheck() knownvalue.Check {
 			}),
 			"supported_tuning_job_objective_metrics": knownvalue.ListExact([]knownvalue.Check{
 				knownvalue.ObjectExact(map[string]knownvalue.Check{
-					"metric_name": knownvalue.StringExact("train:loss"),
-					"type":        knownvalue.StringExact("Minimize"),
+					names.AttrMetricName: knownvalue.StringExact("train:loss"),
+					names.AttrType:       knownvalue.StringExact("Minimize"),
 				}),
 			}),
 			"supports_distributed_training": knownvalue.Bool(true),
 			"training_channels": knownvalue.ListExact([]knownvalue.Check{
 				knownvalue.ObjectPartial(map[string]knownvalue.Check{
-					"description": knownvalue.StringExact("Training data channel"),
-					"is_required": knownvalue.Bool(true),
-					"name":        knownvalue.StringExact("train"),
+					names.AttrDescription: knownvalue.StringExact("Training data channel"),
+					"is_required":         knownvalue.Bool(true),
+					acctest.CtName:        knownvalue.StringExact("train"),
 					"supported_compression_types": knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.StringExact("None"),
 						knownvalue.StringExact("Gzip"),
@@ -778,7 +778,7 @@ func testAccAlgorithmTrainingSpecificationStateCheck() knownvalue.Check {
 					"supported_input_modes":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("File")}),
 				}),
 				knownvalue.ObjectPartial(map[string]knownvalue.Check{
-					"name":                    knownvalue.StringExact("validation"),
+					acctest.CtName:            knownvalue.StringExact("validation"),
 					"supported_content_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("application/json")}),
 					"supported_input_modes":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("Pipe")}),
 				}),
@@ -808,7 +808,7 @@ func testAccAlgorithmValidationSpecificationStateCheck() knownvalue.Check {
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"channel_name":        knownvalue.StringExact("train"),
 									"compression_type":    knownvalue.StringExact("None"),
-									"content_type":        knownvalue.StringExact("text/csv"),
+									names.AttrContentType: knownvalue.StringExact("text/csv"),
 									"input_mode":          knownvalue.StringExact("File"),
 									"record_wrapper_type": knownvalue.StringExact("None"),
 									"shuffle_config": knownvalue.ListExact([]knownvalue.Check{
@@ -838,8 +838,8 @@ func testAccAlgorithmValidationSpecificationStateCheck() knownvalue.Check {
 							}),
 							"resource_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"instance_count":               knownvalue.Int64Exact(1),
-									"instance_type":                knownvalue.StringExact("ml.m5.large"),
+									names.AttrInstanceCount:        knownvalue.Int64Exact(1),
+									names.AttrInstanceType:         knownvalue.StringExact("ml.m5.large"),
 									"keep_alive_period_in_seconds": knownvalue.Int64Exact(60),
 									"volume_size_in_gb":            knownvalue.Int64Exact(30),
 								}),
@@ -856,16 +856,16 @@ func testAccAlgorithmValidationSpecificationStateCheck() knownvalue.Check {
 					"transform_job_definition": knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"batch_strategy": knownvalue.StringExact("MultiRecord"),
-							"environment": knownvalue.MapExact(map[string]knownvalue.Check{
+							names.AttrEnvironment: knownvalue.MapExact(map[string]knownvalue.Check{
 								"Te": knownvalue.StringExact(names.AttrEnabled),
 							}),
 							"max_concurrent_transforms": knownvalue.Int64Exact(1),
 							"max_payload_in_mb":         knownvalue.Int64Exact(6),
 							"transform_input": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"compression_type": knownvalue.StringExact("None"),
-									"content_type":     knownvalue.StringExact("text/csv"),
-									"split_type":       knownvalue.StringExact("Line"),
+									"compression_type":    knownvalue.StringExact("None"),
+									names.AttrContentType: knownvalue.StringExact("text/csv"),
+									"split_type":          knownvalue.StringExact("Line"),
 									"data_source": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
 											"s3_data_source": knownvalue.ListExact([]knownvalue.Check{
@@ -887,8 +887,8 @@ func testAccAlgorithmValidationSpecificationStateCheck() knownvalue.Check {
 							}),
 							"transform_resources": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"instance_count": knownvalue.Int64Exact(1),
-									"instance_type":  knownvalue.StringExact("ml.m5.large"),
+									names.AttrInstanceCount: knownvalue.Int64Exact(1),
+									names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
 								}),
 							}),
 						}),
