@@ -1081,6 +1081,7 @@ func inputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional:   true,
 					Computed:   true,
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
@@ -1249,6 +1250,7 @@ func shuffleConfigBlock(ctx context.Context) schema.ListNestedBlock {
 			listvalidator.SizeAtMost(1),
 		},
 		PlanModifiers: []planmodifier.List{
+			listplanmodifier.UseStateForUnknown(),
 			listplanmodifier.RequiresReplace(),
 		},
 		NestedObject: schema.NestedBlockObject{
@@ -1285,6 +1287,7 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional:   true,
 					Computed:   true,
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
@@ -1349,6 +1352,7 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 						int32validator.Between(0, 3600),
 					},
 					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.UseStateForUnknown(),
 						int32planmodifier.RequiresReplace(),
 					},
 				},
@@ -1503,6 +1507,7 @@ func stoppingConditionBlock(ctx context.Context) schema.ListNestedBlock {
 						int32validator.Between(7200, 2419200),
 					},
 					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.UseStateForUnknown(),
 						int32planmodifier.RequiresReplace(),
 					},
 				},
@@ -1522,6 +1527,7 @@ func stoppingConditionBlock(ctx context.Context) schema.ListNestedBlock {
 						int32validator.AtLeast(1),
 					},
 					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.UseStateForUnknown(),
 						int32planmodifier.RequiresReplace(),
 					},
 				},
@@ -1914,12 +1920,13 @@ func (r *algorithmResource) flatten(ctx context.Context, apiObject any, data, pr
 	return diags
 }
 
-// AWS does not seem to return :
-// 1. validation_specification.validation_profiles.training_job_definition.resource_config.keep_alive_period_in_seconds
-// 2. validation_specification.validation_profiles.training_job_definition.stopping_condition.max_pending_time_in_seconds
-// 3. validation_specification.validation_profiles.training_job_definition.stopping_condition.max_wait_time_in_seconds
-// 4. validation_specification.validation_profiles.training_job_definition.input_data_config.shuffle_config (block)
-// 5. validation_specification.validation_profiles.training_job_definition.output_data_config.compression_type
+// AWS does not seem to return:
+// 1. validation_specification.validation_profiles.training_job_definition.input_data_config.input_mode
+// 2. validation_specification.validation_profiles.training_job_definition.input_data_config.shuffle_config (block)
+// 3. validation_specification.validation_profiles.training_job_definition.output_data_config.compression_type
+// 4. validation_specification.validation_profiles.training_job_definition.resource_config.keep_alive_period_in_seconds
+// 5. validation_specification.validation_profiles.training_job_definition.stopping_condition.max_pending_time_in_seconds
+// 6. validation_specification.validation_profiles.training_job_definition.stopping_condition.max_wait_time_in_seconds
 func preserveAlgorithmValidationSpecification(ctx context.Context, current, prior *algorithmResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
