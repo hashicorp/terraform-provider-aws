@@ -129,7 +129,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for %s (%s) create: %s", principalType, principalID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetARN, instanceARN))
+	d.SetId(accountAssignmentCreateResourceID(principalID, principalType, targetID, targetType, permissionSetARN, instanceARN))
 
 	return append(diags, resourceAccountAssignmentRead(ctx, d, meta)...)
 }
@@ -162,12 +162,9 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
-	d.Set("instance_arn", instanceARN)
-	d.Set("permission_set_arn", accountAssignment.PermissionSetArn)
-	d.Set("principal_id", accountAssignment.PrincipalId)
-	d.Set("principal_type", accountAssignment.PrincipalType)
-	d.Set("target_id", accountAssignment.AccountId)
-	d.Set("target_type", targetType)
+	if err := resourceAccountAssignmentFlatten(d, accountAssignment, instanceARN, targetType); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -227,6 +224,38 @@ func ParseAccountAssignmentID(id string) ([]string, error) {
 		return nil, fmt.Errorf("unexpected format for ID (%q), expected PRINCIPAL_ID,PRINCIPAL_TYPE,TARGET_ID,TARGET_TYPE,PERMISSION_SET_ARN,INSTANCE_ARN", id)
 	}
 	return idParts, nil
+}
+
+func accountAssignmentCreateResourceID(principalID, principalType, targetID, targetType, permissionSetARN, instanceARN string) string {
+	return fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetARN, instanceARN)
+}
+
+func resourceAccountAssignmentFlatten(d *schema.ResourceData, accountAssignment *awstypes.AccountAssignment, instanceARN, targetType string) error {
+	if err := d.Set("instance_arn", instanceARN); err != nil {
+		return fmt.Errorf("setting instance_arn: %w", err)
+	}
+
+	if err := d.Set("permission_set_arn", accountAssignment.PermissionSetArn); err != nil {
+		return fmt.Errorf("setting permission_set_arn: %w", err)
+	}
+
+	if err := d.Set("principal_id", accountAssignment.PrincipalId); err != nil {
+		return fmt.Errorf("setting principal_id: %w", err)
+	}
+
+	if err := d.Set("principal_type", accountAssignment.PrincipalType); err != nil {
+		return fmt.Errorf("setting principal_type: %w", err)
+	}
+
+	if err := d.Set("target_id", accountAssignment.AccountId); err != nil {
+		return fmt.Errorf("setting target_id: %w", err)
+	}
+
+	if err := d.Set("target_type", targetType); err != nil {
+		return fmt.Errorf("setting target_type: %w", err)
+	}
+
+	return nil
 }
 
 func findAccountAssignmentByFivePartKey(ctx context.Context, conn *ssoadmin.Client, principalID, principalType, accountID, permissionSetARN, instanceARN string) (*awstypes.AccountAssignment, error) {
