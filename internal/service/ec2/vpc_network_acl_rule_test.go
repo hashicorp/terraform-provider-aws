@@ -842,6 +842,7 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 	}
 }
 
+// testAccNetworkACLRuleImportStateIdentityFunc is used in resource identity testing
 func testAccNetworkACLRuleImportStateIdentityFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
