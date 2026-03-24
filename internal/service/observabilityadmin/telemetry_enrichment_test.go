@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccObservabilityAdminTelemetryEnrichment_basic(t *testing.T) {
@@ -124,14 +123,17 @@ func testAccCheckTelemetryEnrichmentExists(ctx context.Context, t *testing.T, n 
 func testAccTelemetryEnrichmentPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
-	_, err := conn.GetTelemetryEnrichmentStatus(ctx, &observabilityadmin.GetTelemetryEnrichmentStatusInput{})
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	// ResourceNotFoundException is expected when enrichment is not yet enabled — that's fine.
+	input := observabilityadmin.GetTelemetryEnrichmentStatusInput{}
+	_, err := conn.GetTelemetryEnrichmentStatus(ctx, &input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}

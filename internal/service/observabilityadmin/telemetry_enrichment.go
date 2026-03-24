@@ -69,14 +69,15 @@ func (r *telemetryEnrichmentResource) Schema(ctx context.Context, req resource.S
 
 func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data telemetryEnrichmentResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	_, err := conn.StartTelemetryEnrichment(ctx, &observabilityadmin.StartTelemetryEnrichmentInput{})
+	input := observabilityadmin.StartTelemetryEnrichmentInput{}
+	_, err := conn.StartTelemetryEnrichment(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
@@ -96,7 +97,7 @@ func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.C
 
 func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data telemetryEnrichmentResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -105,7 +106,7 @@ func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.Rea
 
 	out, err := findTelemetryEnrichmentStatus(ctx, conn)
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -114,7 +115,7 @@ func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 	if out.Status != awstypes.TelemetryEnrichmentStatusRunning {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(tfresource.NewEmptyResultError()))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(tfresource.NewEmptyResultError()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -126,14 +127,15 @@ func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.Rea
 
 func (r *telemetryEnrichmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data telemetryEnrichmentResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	_, err := conn.StopTelemetryEnrichment(ctx, &observabilityadmin.StopTelemetryEnrichmentInput{})
+	input := observabilityadmin.StopTelemetryEnrichmentInput{}
+	_, err := conn.StopTelemetryEnrichment(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -153,7 +155,8 @@ func (r *telemetryEnrichmentResource) ImportState(ctx context.Context, req resou
 }
 
 func findTelemetryEnrichmentStatus(ctx context.Context, conn *observabilityadmin.Client) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) {
-	out, err := conn.GetTelemetryEnrichmentStatus(ctx, &observabilityadmin.GetTelemetryEnrichmentStatusInput{})
+	input := observabilityadmin.GetTelemetryEnrichmentStatusInput{}
+	out, err := conn.GetTelemetryEnrichmentStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
