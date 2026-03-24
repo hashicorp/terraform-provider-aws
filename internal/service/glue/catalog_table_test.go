@@ -786,11 +786,31 @@ func TestAccGlueCatalogTable_icebergTableInput(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_type"), knownvalue.StringExact("EXTERNAL_TABLE")),
 				},
 			},
+			// Remove from state but leave remote resource to test persistent import
+			// in the next step.
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"open_table_format_input"},
+				Config: testAccCatalogTableConfig_icebergTableInputRemoved(rName),
+			},
+			// Persist the imported state.
+			{
+				Config:       testAccCatalogTableConfig_icebergTableInput(rName),
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s:%s:%s", acctest.AccountID(ctx), rName+"d", rName+"t"), nil
+				},
+				ImportStatePersist: true,
+				ImportStateVerify:  false,
+			},
+			// Post-import plan should be a no-op.
+			// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46999
+			{
+				Config: testAccCatalogTableConfig_icebergTableInput(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccCatalogTableConfig_icebergTableInputUpdated(rName),
@@ -1680,6 +1700,27 @@ EOF
         }
       }
     }
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_icebergTableInputRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%[1]sd"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = "%[1]sb"
+  force_destroy = true
+}
+
+removed {
+  from = aws_glue_catalog_table.test
+
+  lifecycle {
+    destroy = false
   }
 }
 `, rName)
