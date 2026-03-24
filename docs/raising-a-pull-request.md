@@ -36,9 +36,7 @@
 1. Once you believe your pull request is ready to be reviewed, ensure the
    pull request is not a draft pull request by [marking it ready for review](https://help.github.com/en/articles/changing-the-stage-of-a-pull-request)
    or removing `[WIP]` from the pull request title if necessary, and a
-   maintainer will review it. Follow [the checklists below](#resource-contribution-guidelines)
-   to help ensure that your contribution can be easily reviewed and potentially
-   merged.
+   maintainer will review it.
 
 1. One of the Terraform AWS provider team members will look over your contribution and
    either approve it or provide comments letting you know if there is anything
