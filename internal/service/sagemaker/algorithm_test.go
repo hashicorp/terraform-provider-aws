@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -18,8 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -395,7 +397,7 @@ func TestAccSageMakerAlgorithm_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerAlgorithm_descriptionTags(t *testing.T) {
+func TestAccSageMakerAlgorithm_description(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -408,13 +410,59 @@ func TestAccSageMakerAlgorithm_descriptionTags(t *testing.T) {
 		CheckDestroy:             testAccCheckAlgorithmDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAlgorithmConfig_descriptionTags(rName),
+				Config: testAccAlgorithmConfig_description(rName, "Acceptance test SageMaker algorithm"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAlgorithmExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_description", "Acceptance test SageMaker algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "certify_for_marketplace", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccAlgorithmConfig_description(rName, "Updated acceptance test SageMaker algorithm"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAlgorithmExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_description", "Updated acceptance test SageMaker algorithm"),
+					resource.TestCheckResourceAttr(resourceName, "certify_for_marketplace", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "algorithm_name"),
+				ImportStateVerifyIdentifierAttribute: "algorithm_name",
+			},
+		},
+	})
+}
+
+func TestAccSageMakerAlgorithm_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_algorithm.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAlgorithmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlgorithmConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAlgorithmExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				Config: testAccAlgorithmConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAlgorithmExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -444,34 +492,45 @@ func TestAccSageMakerAlgorithm_inferenceSpecification(t *testing.T) {
 				Config: testAccAlgorithmConfig_inferenceSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAlgorithmExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_content_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_content_types.0", "text/csv"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_realtime_inference_instance_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_realtime_inference_instance_types.0", "ml.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_response_mime_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_response_mime_types.0", "text/csv"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_transform_instance_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_transform_instance_types.0", "ml.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.container_hostname", "test-host"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.environment.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.environment.TEST", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.framework", "XGBOOST"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.framework_version", "1.5-1"),
-					resource.TestCheckResourceAttrPair(resourceName, "inference_specification.0.containers.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
-					resource.TestCheckResourceAttrSet(resourceName, "inference_specification.0.containers.0.image_digest"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.is_checkpoint", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.nearest_model_name", "nearest-model"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.additional_s3_data_source.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.base_model.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.base_model.0.hub_content_name", "basemodel"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.base_model.0.hub_content_version", "1.0.0"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.base_model.0.recipe_name", "recipe"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.model_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.model_input.0.data_input_config", "{}"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_specification"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("inference_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"supported_content_types":                     knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
+							"supported_realtime_inference_instance_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("ml.m5.large")}),
+							"supported_response_mime_types":               knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
+							"supported_transform_instance_types":          knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("ml.m5.large")}),
+							"containers": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"additional_s3_data_source": knownvalue.ListSizeExact(0),
+									"base_model": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"hub_content_name":    knownvalue.StringExact("basemodel"),
+											"hub_content_version": knownvalue.StringExact("1.0.0"),
+											"recipe_name":         knownvalue.StringExact("recipe"),
+										}),
+									}),
+									"container_hostname": knownvalue.StringExact("test-host"),
+									"environment": knownvalue.MapExact(map[string]knownvalue.Check{
+										"TEST": knownvalue.StringExact(names.AttrValue),
+									}),
+									"framework":         knownvalue.StringExact("XGBOOST"),
+									"framework_version": knownvalue.StringExact("1.5-1"),
+									"image":             knownvalue.NotNull(),
+									"image_digest":      knownvalue.NotNull(),
+									"is_checkpoint":     knownvalue.Bool(true),
+									"model_input": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"data_input_config": knownvalue.StringExact("{}"),
+										}),
+									}),
+									"nearest_model_name": knownvalue.StringExact("nearest-model"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -500,57 +559,10 @@ func TestAccSageMakerAlgorithm_trainingSpecification(t *testing.T) {
 				Config: testAccAlgorithmConfig_trainingSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAlgorithmExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_training_instance_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_training_instance_types.0", "ml.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_training_instance_types.1", "ml.c5.xlarge"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supports_distributed_training", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "training_specification.0.training_image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
-					resource.TestCheckResourceAttrSet(resourceName, "training_specification.0.training_image_digest"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.additional_s3_data_source.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.metric_definitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.metric_definitions.0.name", "train:loss"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.metric_definitions.0.regex", "loss=(.*?);"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.default_value", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.description", "Continuous learning rate"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.is_required", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.is_tunable", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.name", "eta"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.type", "Continuous"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.range.0.continuous_parameter_range_specification.0.min_value", "0.1"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.0.range.0.continuous_parameter_range_specification.0.max_value", "0.9"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.default_value", "5"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.description", "Maximum tree depth"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.is_required", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.is_tunable", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.name", "max_depth"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.type", "Integer"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.range.0.integer_parameter_range_specification.0.min_value", "1"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.1.range.0.integer_parameter_range_specification.0.max_value", "10"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.default_value", "reg:squarederror"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.description", "Objective function"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.is_required", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.is_tunable", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.name", "objective"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.type", "Categorical"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_hyper_parameters.2.range.0.categorical_parameter_range_specification.0.values.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_tuning_job_objective_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_tuning_job_objective_metrics.0.metric_name", "train:loss"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.supported_tuning_job_objective_metrics.0.type", "Minimize"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.description", "Training data channel"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.is_required", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.name", "train"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.supported_compression_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.supported_compression_types.0", "None"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.supported_compression_types.1", "Gzip"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.supported_content_types.0", "text/csv"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.0.supported_input_modes.0", "File"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.1.name", "validation"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.1.supported_content_types.0", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "training_specification.0.training_channels.1.supported_input_modes.0", "Pipe"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_specification"), testAccAlgorithmTrainingSpecificationStateCheck()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -579,66 +591,23 @@ func TestAccSageMakerAlgorithm_validationSpecification(t *testing.T) {
 				Config: testAccAlgorithmConfig_validationSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAlgorithmExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.supported_transform_instance_types.0", "ml.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "inference_specification.0.containers.0.is_checkpoint", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "validation_specification.0.validation_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.profile_name", "validation-profile"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.hyper_parameters.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.hyper_parameters.feature_dim", "2"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.hyper_parameters.mini_batch_size", "4"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.hyper_parameters.predictor_type", "binary_classifier"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.training_input_mode", "File"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.channel_name", "train"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.compression_type", "None"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.content_type", "text/csv"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.input_mode", "File"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.record_wrapper_type", "None"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.shuffle_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.shuffle_config.0.seed", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.data_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.data_source.0.s3_data_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.data_source.0.s3_data_source.0.attribute_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.data_source.0.s3_data_source.0.s3_data_distribution_type", "ShardedByS3Key"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.input_data_config.0.data_source.0.s3_data_source.0.s3_data_type", "S3Prefix"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.output_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.output_data_config.0.compression_type", "GZIP"),
-					resource.TestCheckResourceAttrSet(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.output_data_config.0.s3_output_path"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.resource_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.resource_config.0.instance_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.resource_config.0.instance_type", "ml.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.resource_config.0.keep_alive_period_in_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.resource_config.0.volume_size_in_gb", "30"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.stopping_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.stopping_condition.0.max_pending_time_in_seconds", "7200"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.stopping_condition.0.max_runtime_in_seconds", "1800"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.training_job_definition.0.stopping_condition.0.max_wait_time_in_seconds", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.batch_strategy", "MultiRecord"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.environment.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.environment.Te", names.AttrEnabled),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.max_concurrent_transforms", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.max_payload_in_mb", "6"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.compression_type", "None"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.content_type", "text/csv"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.split_type", "Line"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.data_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.data_source.0.s3_data_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.data_source.0.s3_data_source.0.s3_data_type", "S3Prefix"),
-					resource.TestCheckResourceAttrSet(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_input.0.data_source.0.s3_data_source.0.s3_uri"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_output.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_output.0.accept", "text/csv"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_output.0.assemble_with", "Line"),
-					resource.TestCheckResourceAttrSet(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_output.0.s3_output_path"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_resources.0.instance_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_specification.0.validation_profiles.0.transform_job_definition.0.transform_resources.0.instance_type", "ml.m5.large"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("validation_specification"), testAccAlgorithmValidationSpecificationStateCheck()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("inference_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"supported_content_types":            knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
+							"supported_response_mime_types":      knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
+							"supported_transform_instance_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("ml.m5.large")}),
+							"containers": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"image":         knownvalue.NotNull(),
+									"is_checkpoint": knownvalue.Bool(false),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -668,20 +637,21 @@ func testAccCheckAlgorithmDestroy(ctx context.Context, t *testing.T) resource.Te
 				continue
 			}
 
-			name := rs.Primary.Attributes["algorithm_name"]
-			if name == "" {
-				name = rs.Primary.ID
+			algorithmName := rs.Primary.Attributes["algorithm_name"]
+
+			if algorithmName == "" {
+				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, algorithmName, errors.New("not set"))
 			}
 
-			_, err := tfsagemaker.FindAlgorithmByName(ctx, conn, name)
+			_, err := tfsagemaker.FindAlgorithmByName(ctx, conn, algorithmName)
 			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
-				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, name, err)
+				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, algorithmName, err)
 			}
 
-			return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, name, errors.New("not destroyed"))
+			return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameAlgorithm, algorithmName, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -696,9 +666,6 @@ func testAccCheckAlgorithmExists(ctx context.Context, t *testing.T, name string,
 		}
 
 		algorithmName := rs.Primary.Attributes["algorithm_name"]
-		if algorithmName == "" {
-			algorithmName = rs.Primary.ID
-		}
 
 		if algorithmName == "" {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameAlgorithm, name, errors.New("not set"))
@@ -717,6 +684,219 @@ func testAccCheckAlgorithmExists(ctx context.Context, t *testing.T, name string,
 
 		return nil
 	}
+}
+
+func testAccAlgorithmTrainingSpecificationStateCheck() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			"additional_s3_data_source": knownvalue.ListSizeExact(0),
+			"metric_definitions": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.ObjectExact(map[string]knownvalue.Check{
+					"name":  knownvalue.StringExact("train:loss"),
+					"regex": knownvalue.StringExact("loss=(.*?);"),
+				}),
+			}),
+			"supported_hyper_parameters": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"default_value": knownvalue.StringExact("0.5"),
+					"description":   knownvalue.StringExact("Continuous learning rate"),
+					"is_required":   knownvalue.Bool(true),
+					"is_tunable":    knownvalue.Bool(true),
+					"name":          knownvalue.StringExact("eta"),
+					"type":          knownvalue.StringExact("Continuous"),
+					"range": knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"continuous_parameter_range_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"min_value": knownvalue.StringExact("0.1"),
+									"max_value": knownvalue.StringExact("0.9"),
+								}),
+							}),
+						}),
+					}),
+				}),
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"default_value": knownvalue.StringExact("5"),
+					"description":   knownvalue.StringExact("Maximum tree depth"),
+					"is_required":   knownvalue.Bool(false),
+					"is_tunable":    knownvalue.Bool(true),
+					"name":          knownvalue.StringExact("max_depth"),
+					"type":          knownvalue.StringExact("Integer"),
+					"range": knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"integer_parameter_range_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"min_value": knownvalue.StringExact("1"),
+									"max_value": knownvalue.StringExact("10"),
+								}),
+							}),
+						}),
+					}),
+				}),
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"default_value": knownvalue.StringExact("reg:squarederror"),
+					"description":   knownvalue.StringExact("Objective function"),
+					"is_required":   knownvalue.Bool(false),
+					"is_tunable":    knownvalue.Bool(false),
+					"name":          knownvalue.StringExact("objective"),
+					"type":          knownvalue.StringExact("Categorical"),
+					"range": knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"categorical_parameter_range_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"values": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.StringExact("reg:squarederror"),
+										knownvalue.StringExact("binary:logistic"),
+									}),
+								}),
+							}),
+						}),
+					}),
+				}),
+			}),
+			"supported_training_instance_types": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.StringExact("ml.m5.large"),
+				knownvalue.StringExact("ml.c5.xlarge"),
+			}),
+			"supported_tuning_job_objective_metrics": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.ObjectExact(map[string]knownvalue.Check{
+					"metric_name": knownvalue.StringExact("train:loss"),
+					"type":        knownvalue.StringExact("Minimize"),
+				}),
+			}),
+			"supports_distributed_training": knownvalue.Bool(true),
+			"training_channels": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"description": knownvalue.StringExact("Training data channel"),
+					"is_required": knownvalue.Bool(true),
+					"name":        knownvalue.StringExact("train"),
+					"supported_compression_types": knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.StringExact("None"),
+						knownvalue.StringExact("Gzip"),
+					}),
+					"supported_content_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("text/csv")}),
+					"supported_input_modes":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("File")}),
+				}),
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"name":                    knownvalue.StringExact("validation"),
+					"supported_content_types": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("application/json")}),
+					"supported_input_modes":   knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("Pipe")}),
+				}),
+			}),
+			"training_image":        knownvalue.NotNull(),
+			"training_image_digest": knownvalue.NotNull(),
+		}),
+	})
+}
+
+func testAccAlgorithmValidationSpecificationStateCheck() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			"validation_role": knownvalue.NotNull(),
+			"validation_profiles": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"profile_name": knownvalue.StringExact("validation-profile"),
+					"training_job_definition": knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hyper_parameters": knownvalue.MapExact(map[string]knownvalue.Check{
+								"feature_dim":     knownvalue.StringExact("2"),
+								"mini_batch_size": knownvalue.StringExact("4"),
+								"predictor_type":  knownvalue.StringExact("binary_classifier"),
+							}),
+							"training_input_mode": knownvalue.StringExact("File"),
+							"input_data_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"channel_name":        knownvalue.StringExact("train"),
+									"compression_type":    knownvalue.StringExact("None"),
+									"content_type":        knownvalue.StringExact("text/csv"),
+									"input_mode":          knownvalue.StringExact("File"),
+									"record_wrapper_type": knownvalue.StringExact("None"),
+									"shuffle_config": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"seed": knownvalue.Int64Exact(1),
+										}),
+									}),
+									"data_source": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"s3_data_source": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectPartial(map[string]knownvalue.Check{
+													"attribute_names":           knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("label")}),
+													"s3_data_distribution_type": knownvalue.StringExact("ShardedByS3Key"),
+													"s3_data_type":              knownvalue.StringExact("S3Prefix"),
+													"s3_uri":                    knownvalue.NotNull(),
+												}),
+											}),
+										}),
+									}),
+								}),
+							}),
+							"output_data_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"compression_type": knownvalue.StringExact("GZIP"),
+									"s3_output_path":   knownvalue.NotNull(),
+								}),
+							}),
+							"resource_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"instance_count":               knownvalue.Int64Exact(1),
+									"instance_type":                knownvalue.StringExact("ml.m5.large"),
+									"keep_alive_period_in_seconds": knownvalue.Int64Exact(60),
+									"volume_size_in_gb":            knownvalue.Int64Exact(30),
+								}),
+							}),
+							"stopping_condition": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"max_pending_time_in_seconds": knownvalue.Int64Exact(7200),
+									"max_runtime_in_seconds":      knownvalue.Int64Exact(1800),
+									"max_wait_time_in_seconds":    knownvalue.Int64Exact(3600),
+								}),
+							}),
+						}),
+					}),
+					"transform_job_definition": knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"batch_strategy": knownvalue.StringExact("MultiRecord"),
+							"environment": knownvalue.MapExact(map[string]knownvalue.Check{
+								"Te": knownvalue.StringExact(names.AttrEnabled),
+							}),
+							"max_concurrent_transforms": knownvalue.Int64Exact(1),
+							"max_payload_in_mb":         knownvalue.Int64Exact(6),
+							"transform_input": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"compression_type": knownvalue.StringExact("None"),
+									"content_type":     knownvalue.StringExact("text/csv"),
+									"split_type":       knownvalue.StringExact("Line"),
+									"data_source": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"s3_data_source": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectPartial(map[string]knownvalue.Check{
+													"s3_data_type": knownvalue.StringExact("S3Prefix"),
+													"s3_uri":       knownvalue.NotNull(),
+												}),
+											}),
+										}),
+									}),
+								}),
+							}),
+							"transform_output": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"accept":         knownvalue.StringExact("text/csv"),
+									"assemble_with":  knownvalue.StringExact("Line"),
+									"s3_output_path": knownvalue.NotNull(),
+								}),
+							}),
+							"transform_resources": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"instance_count": knownvalue.Int64Exact(1),
+									"instance_type":  knownvalue.StringExact("ml.m5.large"),
+								}),
+							}),
+						}),
+					}),
+				}),
+			}),
+		}),
+	})
 }
 
 func testAccAlgorithmConfig_base(rName string) string {
@@ -804,199 +984,261 @@ EOT
 `, rName)
 }
 
-func testAccAlgorithmConfig_resource(rName string, bodies ...string) string {
-	return fmt.Sprintf(`
-resource "aws_sagemaker_algorithm" "test" {
-  algorithm_name = %[1]q
-  depends_on = [
-    aws_iam_role_policy_attachment.test,
-  ]
-
-%[2]s
-}
-`, rName, strings.Join(bodies, "\n\n"))
-}
-
-func testAccAlgorithmConfig_validationResource(rName string, bodies ...string) string {
-	return fmt.Sprintf(`
-resource "aws_sagemaker_algorithm" "test" {
-  algorithm_name = %[1]q
-  depends_on = [
-    aws_iam_role_policy_attachment.test,
-    aws_iam_role_policy.s3_access,
-    aws_s3_object.training,
-    aws_s3_object.transform,
-  ]
-
-%[2]s
-}
-`, rName, strings.Join(bodies, "\n\n"))
-}
-
-func testAccAlgorithmConfig_trainingSpecificationBase() string {
-	return `
-	training_specification {
-		training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-		supported_training_instance_types = ["ml.m5.large"]
-
-		training_channels {
-			name                    = "train"
-			supported_content_types = ["text/csv"]
-			supported_input_modes   = ["File"]
-		}
-	}`
-}
-
-func testAccAlgorithmConfig_validationInferenceSpecificationBase() string {
-	return `
-	inference_specification {
-		supported_content_types            = ["text/csv"]
-		supported_response_mime_types      = ["text/csv"]
-		supported_transform_instance_types = ["ml.m5.large"]
-
-		containers {
-			image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-		}
-	}`
-}
-
 func testAccAlgorithmConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAlgorithmConfig_base(rName),
-		testAccAlgorithmConfig_resource(rName, testAccAlgorithmConfig_trainingSpecificationBase()),
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
+
+  training_specification {
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    supported_training_instance_types = ["ml.m5.large"]
+
+    training_channels {
+      name                    = "train"
+      supported_content_types = ["text/csv"]
+      supported_input_modes   = ["File"]
+    }
+  }
+}
+`, rName),
 	)
 }
 
-func testAccAlgorithmConfig_descriptionTags(rName string) string {
+func testAccAlgorithmConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(
 		testAccAlgorithmConfig_base(rName),
-		testAccAlgorithmConfig_resource(rName, fmt.Sprintf(`
-	algorithm_description    = "Acceptance test SageMaker algorithm"
-	certify_for_marketplace  = false
-	tags = {
-		%[1]q = %[2]q
-	}
-	`, acctest.CtKey1, acctest.CtValue1), testAccAlgorithmConfig_trainingSpecificationBase()),
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %[1]q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
+
+  algorithm_description   = %q
+  certify_for_marketplace = false
+
+  training_specification {
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    supported_training_instance_types = ["ml.m5.large"]
+
+    training_channels {
+      name                    = "train"
+      supported_content_types = ["text/csv"]
+      supported_input_modes   = ["File"]
+    }
+  }
+}
+`, rName, description),
+	)
+}
+
+func testAccAlgorithmConfig_tags1(rName, key, value string) string {
+	return acctest.ConfigCompose(
+		testAccAlgorithmConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
+
+  tags = {
+    %[1]q = %[2]q
+  }
+
+  training_specification {
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    supported_training_instance_types = ["ml.m5.large"]
+
+    training_channels {
+      name                    = "train"
+      supported_content_types = ["text/csv"]
+      supported_input_modes   = ["File"]
+    }
+  }
+}
+`, rName, key, value),
+	)
+}
+
+func testAccAlgorithmConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccAlgorithmConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+
+  training_specification {
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    supported_training_instance_types = ["ml.m5.large"]
+
+    training_channels {
+      name                    = "train"
+      supported_content_types = ["text/csv"]
+      supported_input_modes   = ["File"]
+    }
+  }
+}
+`, rName, key1, value1, key2, value2),
 	)
 }
 
 func testAccAlgorithmConfig_inferenceSpecification(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAlgorithmConfig_base(rName),
-		testAccAlgorithmConfig_resource(rName,
-			testAccAlgorithmConfig_trainingSpecificationBase(), `
-	inference_specification {
-		supported_content_types                     = ["text/csv"]
-		supported_realtime_inference_instance_types = ["ml.m5.large"]
-		supported_response_mime_types               = ["text/csv"]
-		supported_transform_instance_types          = ["ml.m5.large"]
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
 
-		containers {
-			container_hostname = "test-host"
-			environment = {
-				TEST = "value"
-			}
-			framework         = "XGBOOST"
-			framework_version = "1.5-1"
-			image             = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-			is_checkpoint     = true
-			nearest_model_name = "nearest-model"
+  training_specification {
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    supported_training_instance_types = ["ml.m5.large"]
 
-			base_model {
-				hub_content_name    = "basemodel"
-				hub_content_version = "1.0.0"
-				recipe_name         = "recipe"
-			}
+    training_channels {
+      name                    = "train"
+      supported_content_types = ["text/csv"]
+      supported_input_modes   = ["File"]
+    }
+  }
 
-			model_input {
-				data_input_config = "{}"
-			}
-		}
-	}`),
+  inference_specification {
+    supported_content_types                     = ["text/csv"]
+    supported_realtime_inference_instance_types = ["ml.m5.large"]
+    supported_response_mime_types               = ["text/csv"]
+    supported_transform_instance_types          = ["ml.m5.large"]
+
+    containers {
+      container_hostname = "test-host"
+      environment = {
+        TEST = "value"
+      }
+      framework          = "XGBOOST"
+      framework_version  = "1.5-1"
+      image              = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+      is_checkpoint      = true
+      nearest_model_name = "nearest-model"
+
+      base_model {
+        hub_content_name    = "basemodel"
+        hub_content_version = "1.0.0"
+        recipe_name         = "recipe"
+      }
+
+      model_input {
+        data_input_config = "{}"
+      }
+    }
+  }
+}
+`, rName),
 	)
 }
 
 func testAccAlgorithmConfig_trainingSpecification(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAlgorithmConfig_base(rName),
-		testAccAlgorithmConfig_resource(rName, `
-	training_specification {
-		supported_training_instance_types = ["ml.m5.large", "ml.c5.xlarge"]
-		supports_distributed_training     = true
-		training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+  ]
 
-		metric_definitions {
-			name  = "train:loss"
-			regex = "loss=(.*?);"
-		}
+  training_specification {
+    supported_training_instance_types = ["ml.m5.large", "ml.c5.xlarge"]
+    supports_distributed_training     = true
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
 
-		supported_hyper_parameters {
-			default_value = "0.5"
-			description   = "Continuous learning rate"
-			is_required   = true
-			is_tunable    = true
-			name          = "eta"
-			type          = "Continuous"
+    metric_definitions {
+      name  = "train:loss"
+      regex = "loss=(.*?);"
+    }
 
-			range {
-				continuous_parameter_range_specification {
-					min_value = "0.1"
-					max_value = "0.9"
-				}
-			}
-		}
+    supported_hyper_parameters {
+      default_value = "0.5"
+      description   = "Continuous learning rate"
+      is_required   = true
+      is_tunable    = true
+      name          = "eta"
+      type          = "Continuous"
 
-		supported_hyper_parameters {
-			default_value = "5"
-			description   = "Maximum tree depth"
-			is_required   = false
-			is_tunable    = true
-			name          = "max_depth"
-			type          = "Integer"
+      range {
+        continuous_parameter_range_specification {
+          min_value = "0.1"
+          max_value = "0.9"
+        }
+      }
+    }
 
-			range {
-				integer_parameter_range_specification {
-					min_value = "1"
-					max_value = "10"
-				}
-			}
-		}
+    supported_hyper_parameters {
+      default_value = "5"
+      description   = "Maximum tree depth"
+      is_required   = false
+      is_tunable    = true
+      name          = "max_depth"
+      type          = "Integer"
 
-		supported_hyper_parameters {
-			default_value = "reg:squarederror"
-			description   = "Objective function"
-			is_required   = false
-			is_tunable    = false
-			name          = "objective"
-			type          = "Categorical"
+      range {
+        integer_parameter_range_specification {
+          min_value = "1"
+          max_value = "10"
+        }
+      }
+    }
 
-			range {
-				categorical_parameter_range_specification {
-					values = ["reg:squarederror", "binary:logistic"]
-				}
-			}
-		}
+    supported_hyper_parameters {
+      default_value = "reg:squarederror"
+      description   = "Objective function"
+      is_required   = false
+      is_tunable    = false
+      name          = "objective"
+      type          = "Categorical"
 
-		supported_tuning_job_objective_metrics {
-			metric_name = "train:loss"
-			type        = "Minimize"
-		}
+      range {
+        categorical_parameter_range_specification {
+          values = ["reg:squarederror", "binary:logistic"]
+        }
+      }
+    }
 
-		training_channels {
-			description                 = "Training data channel"
-			is_required                 = true
-			name                        = "train"
-			supported_compression_types = ["None", "Gzip"]
-			supported_content_types     = ["text/csv"]
-			supported_input_modes       = ["File"]
-		}
+    supported_tuning_job_objective_metrics {
+      metric_name = "train:loss"
+      type        = "Minimize"
+    }
 
-		training_channels {
-			name                    = "validation"
-			supported_content_types = ["application/json"]
-			supported_input_modes   = ["Pipe"]
-		}
-	}`),
+    training_channels {
+      description                 = "Training data channel"
+      is_required                 = true
+      name                        = "train"
+      supported_compression_types = ["None", "Gzip"]
+      supported_content_types     = ["text/csv"]
+      supported_input_modes       = ["File"]
+    }
+
+    training_channels {
+      name                    = "validation"
+      supported_content_types = ["application/json"]
+      supported_input_modes   = ["Pipe"]
+    }
+  }
+}
+`, rName),
 	)
 }
 
@@ -1004,154 +1246,174 @@ func testAccAlgorithmConfig_validationSpecification(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAlgorithmConfig_base(rName),
 		testAccAlgorithmConfig_validationDataBase(rName),
-		testAccAlgorithmConfig_validationResource(rName,
-			`
-	training_specification {
-		training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-		supported_training_instance_types = ["ml.m5.large"]
+		fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+  algorithm_name = %q
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+    aws_iam_role_policy.s3_access,
+    aws_s3_object.training,
+    aws_s3_object.transform,
+  ]
 
-		supported_hyper_parameters {
-			default_value = "2"
-			description   = "Feature dimension"
-			is_required   = true
-			is_tunable    = false
-			name          = "feature_dim"
-			type          = "Integer"
+  training_specification {
+    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    supported_training_instance_types = ["ml.m5.large"]
 
-			range {
-				integer_parameter_range_specification {
-					min_value = "2"
-					max_value = "2"
-				}
-			}
-		}
+    supported_hyper_parameters {
+      default_value = "2"
+      description   = "Feature dimension"
+      is_required   = true
+      is_tunable    = false
+      name          = "feature_dim"
+      type          = "Integer"
 
-		supported_hyper_parameters {
-			default_value = "4"
-			description   = "Mini batch size"
-			is_required   = true
-			is_tunable    = false
-			name          = "mini_batch_size"
-			type          = "Integer"
+      range {
+        integer_parameter_range_specification {
+          min_value = "2"
+          max_value = "2"
+        }
+      }
+    }
 
-			range {
-				integer_parameter_range_specification {
-					min_value = "4"
-					max_value = "4"
-				}
-			}
-		}
+    supported_hyper_parameters {
+      default_value = "4"
+      description   = "Mini batch size"
+      is_required   = true
+      is_tunable    = false
+      name          = "mini_batch_size"
+      type          = "Integer"
 
-		supported_hyper_parameters {
-			default_value = "binary_classifier"
-			description   = "Predictor type"
-			is_required   = true
-			is_tunable    = false
-			name          = "predictor_type"
-			type          = "Categorical"
+      range {
+        integer_parameter_range_specification {
+          min_value = "4"
+          max_value = "4"
+        }
+      }
+    }
 
-			range {
-				categorical_parameter_range_specification {
-					values = ["binary_classifier"]
-				}
-			}
-		}
+    supported_hyper_parameters {
+      default_value = "binary_classifier"
+      description   = "Predictor type"
+      is_required   = true
+      is_tunable    = false
+      name          = "predictor_type"
+      type          = "Categorical"
 
-		training_channels {
-			name                    = "train"
-			supported_content_types = ["text/csv"]
-			supported_input_modes   = ["File"]
-		}
-	}`,
-			testAccAlgorithmConfig_validationInferenceSpecificationBase(), `
-	validation_specification {
-		validation_role = aws_iam_role.test.arn
+      range {
+        categorical_parameter_range_specification {
+          values = ["binary_classifier"]
+        }
+      }
+    }
 
-		validation_profiles {
-			profile_name = "validation-profile"
+    training_channels {
+      name                    = "train"
+      supported_content_types = ["text/csv"]
+      supported_input_modes   = ["File"]
+    }
+  }
 
-			training_job_definition {
-				hyper_parameters = {
-					feature_dim     = "2"
-					mini_batch_size = "4"
-					predictor_type  = "binary_classifier"
-				}
-				training_input_mode = "File"
+  inference_specification {
+    supported_content_types            = ["text/csv"]
+    supported_response_mime_types      = ["text/csv"]
+    supported_transform_instance_types = ["ml.m5.large"]
 
-				input_data_config {
-					channel_name        = "train"
-					compression_type    = "None"
-					content_type        = "text/csv"
-					input_mode          = "File"
-					record_wrapper_type = "None"
+    containers {
+      image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    }
+  }
 
-					shuffle_config {
-						seed = 1
-					}
+  validation_specification {
+    validation_role = aws_iam_role.test.arn
 
-					data_source {
-						s3_data_source {
-							attribute_names           = ["label"]
-							s3_data_distribution_type = "ShardedByS3Key"
-							s3_data_type              = "S3Prefix"
-							s3_uri                    = "s3://${aws_s3_bucket.test.bucket}/algorithm/training/"
-						}
-					}
+    validation_profiles {
+      profile_name = "validation-profile"
 
-				}
+      training_job_definition {
+        hyper_parameters = {
+          feature_dim     = "2"
+          mini_batch_size = "4"
+          predictor_type  = "binary_classifier"
+        }
+        training_input_mode = "File"
 
-				output_data_config {
-					compression_type = "GZIP"
-					s3_output_path   = "s3://${aws_s3_bucket.test.bucket}/algorithm/output"
-				}
+        input_data_config {
+          channel_name        = "train"
+          compression_type    = "None"
+          content_type        = "text/csv"
+          input_mode          = "File"
+          record_wrapper_type = "None"
 
-				resource_config {
-					instance_count               = 1
-					instance_type                = "ml.m5.large"
-					keep_alive_period_in_seconds = 60
-					volume_size_in_gb            = 30
-				}
+          shuffle_config {
+            seed = 1
+          }
 
-				stopping_condition {
-					max_pending_time_in_seconds = 7200
-					max_runtime_in_seconds = 1800
-					max_wait_time_in_seconds    = 3600
-				}
-			}
+          data_source {
+            s3_data_source {
+              attribute_names           = ["label"]
+              s3_data_distribution_type = "ShardedByS3Key"
+              s3_data_type              = "S3Prefix"
+              s3_uri                    = "s3://${aws_s3_bucket.test.bucket}/algorithm/training/"
+            }
+          }
 
-			transform_job_definition {
-				batch_strategy = "MultiRecord"
-				environment = {
-					Te = "enabled"
-				}
-				max_concurrent_transforms = 1
-				max_payload_in_mb         = 6
+        }
 
-				transform_input {
-					compression_type = "None"
-					content_type     = "text/csv"
-					split_type       = "Line"
+        output_data_config {
+          compression_type = "GZIP"
+          s3_output_path   = "s3://${aws_s3_bucket.test.bucket}/algorithm/output"
+        }
 
-					data_source {
-						s3_data_source {
-							s3_data_type = "S3Prefix"
-							s3_uri       = "s3://${aws_s3_bucket.test.bucket}/algorithm/transform/"
-						}
-					}
-				}
+        resource_config {
+          instance_count               = 1
+          instance_type                = "ml.m5.large"
+          keep_alive_period_in_seconds = 60
+          volume_size_in_gb            = 30
+        }
 
-				transform_output {
-					accept         = "text/csv"
-					assemble_with  = "Line"
-					s3_output_path = "s3://${aws_s3_bucket.test.bucket}/algorithm/transform-output"
-				}
+        stopping_condition {
+          max_pending_time_in_seconds = 7200
+          max_runtime_in_seconds      = 1800
+          max_wait_time_in_seconds    = 3600
+        }
+      }
 
-				transform_resources {
-					instance_count = 1
-					instance_type  = "ml.m5.large"
-				}
-			}
-		}
-		}`),
+      transform_job_definition {
+        batch_strategy = "MultiRecord"
+        environment = {
+          Te = "enabled"
+        }
+        max_concurrent_transforms = 1
+        max_payload_in_mb         = 6
+
+        transform_input {
+          compression_type = "None"
+          content_type     = "text/csv"
+          split_type       = "Line"
+
+          data_source {
+            s3_data_source {
+              s3_data_type = "S3Prefix"
+              s3_uri       = "s3://${aws_s3_bucket.test.bucket}/algorithm/transform/"
+            }
+          }
+        }
+
+        transform_output {
+          accept         = "text/csv"
+          assemble_with  = "Line"
+          s3_output_path = "s3://${aws_s3_bucket.test.bucket}/algorithm/transform-output"
+        }
+
+        transform_resources {
+          instance_count = 1
+          instance_type  = "ml.m5.large"
+        }
+      }
+    }
+  }
+}
+`, rName),
 	)
 }
