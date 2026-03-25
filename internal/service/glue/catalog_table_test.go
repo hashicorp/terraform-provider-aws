@@ -1816,7 +1816,7 @@ resource "aws_glue_catalog_table" "test" {
 
     representations {
       dialect            = "ATHENA"
-      dialect_version    = "10000"
+      dialect_version    = "3"
       view_original_text = "SELECT 1"
       view_expanded_text = "SELECT 1"
     }
