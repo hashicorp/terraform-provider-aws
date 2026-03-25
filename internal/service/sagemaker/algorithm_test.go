@@ -296,6 +296,11 @@ func TestAccSageMakerAlgorithm_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "algorithm_description", "Updated acceptance test SageMaker algorithm"),
 					resource.TestCheckResourceAttr(resourceName, "certify_for_marketplace", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -336,6 +341,11 @@ func TestAccSageMakerAlgorithm_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
