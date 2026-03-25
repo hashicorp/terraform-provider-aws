@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSageMakerTrainingJob_List_serial(t *testing.T) {
-	t.Parallel()
+func testAccSageMakerTrainingJob_listSerial(t *testing.T) {
+	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:   testAccSageMakerTrainingJob_List_basic,

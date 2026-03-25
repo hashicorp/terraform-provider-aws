@@ -426,6 +426,7 @@ func TestAccSageMakerTrainingJob_serial(t *testing.T) {
 		"remoteDebugConfig":             testAccSageMakerTrainingJob_remoteDebugConfig,
 		"sessionChainingConfig":         testAccSageMakerTrainingJob_sessionChainingConfig,
 		"Identity":                      testAccSageMakerTrainingJob_identitySerial,
+		"List":                          testAccSageMakerTrainingJob_listSerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
