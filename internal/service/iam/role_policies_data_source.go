@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
 
 // @FrameworkDataSource("aws_iam_role_policies", name="Role Policies")
@@ -31,8 +33,9 @@ func (d *rolePoliciesDataSource) Schema(ctx context.Context, request datasource.
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"policy_names": schema.SetAttribute{
-				Computed:    true,
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
+				Computed:    true,
 			},
 			"role_name": schema.StringAttribute{
 				Required: true,
@@ -46,40 +49,26 @@ func (d *rolePoliciesDataSource) Schema(ctx context.Context, request datasource.
 }
 
 func (d *rolePoliciesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data rolePoliciesDataSourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	conn := d.Meta().IAMClient(ctx)
-	roleName := data.RoleName.ValueString()
+	var data rolePoliciesDataSourceModel
 
-	out, err := findRolePoliciesByName(ctx, conn, roleName)
-	if retry.NotFound(err) {
-		response.Diagnostics.AddError("reading IAM Role Policies", "role not found: "+roleName)
-		return
-	}
-	if err != nil {
-		response.Diagnostics.AddError("reading IAM Role Policies", err.Error())
-		return
-	}
-
-	if out == nil {
-		out = []string{}
-	}
-
-	policyNames, diags := types.SetValueFrom(ctx, types.StringType, out)
-	response.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.PolicyNames = policyNames
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	roleName := data.RoleName.ValueString()
+	out, err := findRolePoliciesByName(ctx, conn, roleName)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, "role_name", roleName)
+		return
+	}
+
+	data.PolicyNames = flex.FlattenFrameworkStringValueSetOfString(ctx, out)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data), "role_name", roleName)
 }
 
 type rolePoliciesDataSourceModel struct {
-	RoleName    types.String `tfsdk:"role_name"`
-	PolicyNames types.Set    `tfsdk:"policy_names"`
+	PolicyNames fwtypes.SetOfString `tfsdk:"policy_names"`
+	RoleName    types.String        `tfsdk:"role_name"`
 }
