@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,7 +26,7 @@ import (
 )
 
 // @FrameworkResource("aws_observabilityadmin_telemetry_enrichment", name="Telemetry Enrichment")
-// @SingletonIdentity
+// @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(preCheck="testAccTelemetryEnrichmentPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
@@ -50,6 +51,7 @@ func (r *telemetryEnrichmentResource) Schema(ctx context.Context, req resource.S
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"aws_resource_explorer_managed_view_arn": framework.ARNAttributeComputedOnly(),
+			names.AttrID:                             framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -83,6 +85,7 @@ func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.C
 	}
 
 	data.AWSResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
 }
@@ -229,5 +232,6 @@ func waitTelemetryEnrichmentStopped(ctx context.Context, conn *observabilityadmi
 type telemetryEnrichmentResourceModel struct {
 	framework.WithRegionModel
 	AWSResourceExplorerManagedViewARN types.String   `tfsdk:"aws_resource_explorer_managed_view_arn"`
+	ID                                types.String   `tfsdk:"id"`
 	Timeouts                          timeouts.Value `tfsdk:"timeouts"`
 }
