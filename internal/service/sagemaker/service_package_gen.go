@@ -106,6 +106,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity("algorithm_name"),
 		},
+		{
+			Factory:  newTrainingJobResourceAsListResource,
+			TypeName: "aws_sagemaker_training_job",
+			Name:     "Training Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("training_job_name"),
+		},
 	})
 }
 

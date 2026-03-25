@@ -193,18 +193,18 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"debug_rule_configurations":    debugRuleConfigurationsBlock(ctx),
 			"experiment_config":            experimentConfigBlock(ctx),
 			"infra_check_config":           infraCheckConfigBlock(ctx),
-			"input_data_config":            inputDataConfigBlock(ctx),
+			"input_data_config":            trainingJobInputDataConfigBlock(ctx),
 			"mlflow_config":                mlflowConfigBlock(ctx),
 			"model_package_config":         modelPackageConfigBlock(ctx),
-			"output_data_config":           outputDataConfigBlock(ctx),
+			"output_data_config":           trainingJobOutputDataConfigBlock(ctx),
 			"profiler_config":              profilerConfigBlock(ctx),
 			"profiler_rule_configurations": profilerRuleConfigurationsBlock(ctx),
 			"remote_debug_config":          remoteDebugConfigBlock(ctx),
-			"resource_config":              resourceConfigBlock(ctx),
+			"resource_config":              trainingJobResourceConfigBlock(ctx),
 			"retry_strategy":               retryStrategyBlock(ctx),
 			"serverless_job_config":        serverlessJobConfigBlock(ctx),
 			"session_chaining_config":      sessionChainingConfigBlock(ctx),
-			"stopping_condition":           stoppingConditionBlock(ctx),
+			"stopping_condition":           trainingJobStoppingConditionBlock(ctx),
 			"tensor_board_output_config":   tensorBoardOutputConfigBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
@@ -619,7 +619,7 @@ func infraCheckConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func inputDataConfigBlock(ctx context.Context) schema.Block {
+func trainingJobInputDataConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobInputDataConfigModel](ctx),
 		Validators: []validator.List{
@@ -924,7 +924,7 @@ func modelPackageConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func outputDataConfigBlock(ctx context.Context) schema.Block {
+func trainingJobOutputDataConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobOutputDataConfigModel](ctx),
 		Validators: []validator.List{
@@ -1091,7 +1091,7 @@ func remoteDebugConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func resourceConfigBlock(ctx context.Context) schema.Block {
+func trainingJobResourceConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobResourceConfigModel](ctx),
 		Validators: []validator.List{
@@ -1367,7 +1367,7 @@ func sessionChainingConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func stoppingConditionBlock(ctx context.Context) schema.Block {
+func trainingJobStoppingConditionBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobStoppingConditionModel](ctx),
 		Validators: []validator.List{
