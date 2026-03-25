@@ -74,6 +74,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_network_acl_rule.my_rule
   identity = {
+    egress         = false
     network_acl_id = "acl-7aaabd18"
     rule_number    = 100
     protocol       = "tcp"
@@ -89,6 +90,7 @@ resource "aws_network_acl_rule" "my_rule" {
 
 #### Required
 
+* `egress` (Boolean) Indicates whether this is an egress rule.
 * `network_acl_id` (String) The ID of the network ACL.
 * `protocol` (String) The protocol. This can be a decimal value such as `6` or a keyword such as `tcp`.
 * `rule_number` (Number) The rule number for the entry.
@@ -96,7 +98,6 @@ resource "aws_network_acl_rule" "my_rule" {
 #### Optional
 
 * `account_id` (String) AWS account where this resource is managed.
-* `egress` (Boolean) Indicates whether this is an egress rule. Defaults to `false`.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as `"6"`) or string (such as `"tcp"`) value. For example:

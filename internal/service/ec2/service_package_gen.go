@@ -1542,7 +1542,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("network_acl_id", true),
-				inttypes.BoolIdentityAttribute("egress", false),
+				inttypes.BoolIdentityAttribute("egress", true),
 				inttypes.IntIdentityAttribute("rule_number", true),
 				inttypes.StringIdentityAttribute(names.AttrProtocol, true),
 			}),
