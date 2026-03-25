@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.20
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.19
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.21
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.6
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.1
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.5
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.14
 	github.com/aws/aws-sdk-go-v2/service/glue v1.139.0
@@ -170,7 +170,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.93.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.20
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.5
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.20
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.20
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.13
@@ -191,13 +191,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.5
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.13
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.57.14
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.20
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.16.3
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.20
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.19
@@ -208,7 +208,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.105.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.8
-	github.com/aws/aws-sdk-go-v2/service/rds v1.116.3
+	github.com/aws/aws-sdk-go-v2/service/rds v1.117.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.20
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.38.7
