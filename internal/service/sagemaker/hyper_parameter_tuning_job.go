@@ -47,8 +47,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -542,30 +544,109 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"definition_name": schema.StringAttribute{Optional: true},
-				"enable_inter_container_traffic_encryption": schema.BoolAttribute{Optional: true},
-				"enable_managed_spot_training":              schema.BoolAttribute{Optional: true},
-				"enable_network_isolation":                  schema.BoolAttribute{Optional: true},
-				"environment":                               schema.MapAttribute{ElementType: types.StringType, Optional: true},
-				names.AttrRoleARN:                           schema.StringAttribute{Required: true},
-				"static_hyper_parameters":                   schema.MapAttribute{ElementType: types.StringType, Optional: true},
+				"definition_name": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 64),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}$`), "must be 1-64 characters long, start with an alphanumeric character, and contain only letters, numbers, and hyphens"),
+					},
+				},
+				"enable_inter_container_traffic_encryption": schema.BoolAttribute{
+					Optional: true,
+				},
+				"enable_managed_spot_training": schema.BoolAttribute{
+					Optional: true,
+				},
+				"enable_network_isolation": schema.BoolAttribute{
+					Optional: true,
+				},
+				"environment": schema.MapAttribute{
+					CustomType:  fwtypes.MapOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(48),
+						mapvalidator.KeysAre(
+							stringvalidator.LengthAtMost(512),
+							stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`), "must start with a letter or underscore and contain only letters, numbers, and underscores"),
+						),
+						mapvalidator.ValueStringsAre(
+							stringvalidator.LengthAtMost(512),
+						),
+					},
+				},
+				names.AttrRoleARN: schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(20, 2048),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN"),
+					},
+				},
+				"static_hyper_parameters": schema.MapAttribute{
+					CustomType:  fwtypes.MapOfStringType,
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(100),
+						mapvalidator.KeysAre(
+							stringvalidator.LengthAtMost(256),
+						),
+						mapvalidator.ValueStringsAre(
+							stringvalidator.LengthAtMost(2500),
+						),
+					},
+				},
 			},
 			Blocks: map[string]schema.Block{
 				"algorithm_specification": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[algorithmSpecificationModel](ctx),
-					Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"algorithm_name":      schema.StringAttribute{Optional: true},
-							"training_image":      schema.StringAttribute{Optional: true},
-							"training_input_mode": schema.StringAttribute{Required: true},
+							"algorithm_name": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 170),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*/)?([a-zA-Z0-9]([a-zA-Z0-9-]){0,62})(?<!-)$`), "must be a valid SageMaker algorithm name or ARN"),
+									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("training_image")),
+								},
+							},
+							"training_image": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(255),
+									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("algorithm_name")),
+								},
+							},
+							"training_input_mode": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
+								Required:   true,
+							},
 						},
 						Blocks: map[string]schema.Block{
 							"metric_definitions": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[metricDefinitionModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(40),
+								},
 								NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-									"name":  schema.StringAttribute{Required: true},
-									"regex": schema.StringAttribute{Required: true},
+									"name": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 255),
+										},
+									},
+									"regex": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 500),
+										},
+									},
 								}},
 							},
 						},
@@ -575,48 +656,160 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					CustomType: fwtypes.NewListNestedObjectTypeOf[checkpointConfigModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"local_path": schema.StringAttribute{Optional: true},
-						"s3_uri":     schema.StringAttribute{Optional: true},
+						"local_path": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(4096),
+							},
+						},
+						"s3_uri": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(1024),
+								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+							},
+						},
 					}},
 				},
 				"hyper_parameter_ranges": parameterRangesBlock(ctx),
 				"input_data_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[inputDataConfigModel](ctx),
-					Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1)},
+					Validators: []validator.List{
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(20),
+					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"channel_name":        schema.StringAttribute{Required: true},
-							"compression_type":    schema.StringAttribute{Optional: true},
-							"content_type":        schema.StringAttribute{Optional: true},
-							"input_mode":          schema.StringAttribute{Optional: true},
-							"record_wrapper_type": schema.StringAttribute{Optional: true},
+							"channel_name": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 64),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9\.\-_]+$`), "must contain only letters, numbers, periods, hyphens, and underscores"),
+								},
+							},
+							"compression_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+								Optional:   true,
+							},
+							"content_type": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(256),
+								},
+							},
+							"input_mode": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
+								Optional:   true,
+							},
+							"record_wrapper_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.RecordWrapper](),
+								Optional:   true,
+							},
 						},
 						Blocks: map[string]schema.Block{
 							"data_source": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceModel](ctx),
-								Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+								Validators: []validator.List{
+									listvalidator.IsRequired(),
+									listvalidator.SizeAtLeast(1),
+									listvalidator.SizeAtMost(1),
+								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
 										"file_system_data_source": schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[fileSystemDataSourceModel](ctx),
 											Validators: []validator.List{listvalidator.SizeAtMost(1)},
 											NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-												"directory_path":          schema.StringAttribute{Required: true},
-												"file_system_access_mode": schema.StringAttribute{Required: true},
-												"file_system_id":          schema.StringAttribute{Required: true},
-												"file_system_type":        schema.StringAttribute{Required: true},
+												"directory_path": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthAtMost(4096),
+													},
+												},
+												"file_system_access_mode": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.FileSystemAccessMode](),
+													Required:   true,
+												},
+												"file_system_id": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(11, 21),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^(fs-[0-9a-f]{8,})$`), "must be a valid file system ID"),
+													},
+												},
+												"file_system_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.FileSystemType](),
+													Required:   true,
+												},
 											}},
 										},
 										"s3_data_source": schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[s3DataSourceModel](ctx),
-											Validators: []validator.List{listvalidator.SizeAtMost(1)},
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
 											NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-												"attribute_names":           schema.SetAttribute{CustomType: fwtypes.SetOfStringType, ElementType: types.StringType, Optional: true},
-												"instance_group_names":      schema.SetAttribute{CustomType: fwtypes.SetOfStringType, ElementType: types.StringType, Optional: true},
-												"s3_data_distribution_type": schema.StringAttribute{Optional: true},
-												"s3_data_type":              schema.StringAttribute{Required: true},
-												"s3_uri":                    schema.StringAttribute{Required: true},
-											}},
+												"attribute_names": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeAtMost(16),
+														setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
+													},
+												},
+												"instance_group_names": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Set{
+														setvalidator.SizeAtMost(5),
+														setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 64)),
+													},
+												},
+												"s3_data_distribution_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.S3DataDistribution](),
+													Optional:   true,
+												},
+												"s3_data_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.S3DataType](),
+													Required:   true,
+												},
+												"s3_uri": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthAtMost(1024),
+														stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+													},
+												},
+											},
+												Blocks: map[string]schema.Block{
+													"hub_access_config": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[hubAccessConfigModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtMost(1),
+														},
+														NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+															"hub_content_arn": schema.StringAttribute{
+																CustomType: fwtypes.ARNType,
+																Required:   true,
+															},
+														}},
+													},
+													"model_access_config": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[modelAccessConfigModel](ctx),
+														Validators: []validator.List{listvalidator.SizeAtMost(1)},
+														NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+															"accept_eula": schema.BoolAttribute{
+																Required: true,
+																Validators: []validator.Bool{
+																	boolvalidator.Equals(true),
+																},
+															},
+														}},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -1225,11 +1418,11 @@ type checkpointConfigModel struct {
 
 type inputDataConfigModel struct {
 	ChannelName       types.String                                        `tfsdk:"channel_name"`
-	CompressionType   types.String                                        `tfsdk:"compression_type"`
+	CompressionType   fwtypes.StringEnum[awstypes.CompressionType]        `tfsdk:"compression_type"`
 	ContentType       types.String                                        `tfsdk:"content_type"`
 	DataSource        fwtypes.ListNestedObjectValueOf[dataSourceModel]    `tfsdk:"data_source"`
-	InputMode         types.String                                        `tfsdk:"input_mode"`
-	RecordWrapperType types.String                                        `tfsdk:"record_wrapper_type"`
+	InputMode         fwtypes.StringEnum[awstypes.TrainingInputMode]      `tfsdk:"input_mode"`
+	RecordWrapperType fwtypes.StringEnum[awstypes.RecordWrapper]          `tfsdk:"record_wrapper_type"`
 	ShuffleConfig     fwtypes.ListNestedObjectValueOf[shuffleConfigModel] `tfsdk:"shuffle_config"`
 }
 
@@ -1238,19 +1431,29 @@ type dataSourceModel struct {
 	S3DataSource         fwtypes.ListNestedObjectValueOf[s3DataSourceModel]         `tfsdk:"s3_data_source"`
 }
 
+type hubAccessConfigModel struct {
+	HubContentARN types.String `tfsdk:"hub_content_arn"`
+}
+
+type modelAccessConfigModel struct {
+	AcceptEULA types.Bool `tfsdk:"accept_eula"`
+}
+
 type fileSystemDataSourceModel struct {
-	DirectoryPath        types.String `tfsdk:"directory_path"`
-	FileSystemAccessMode types.String `tfsdk:"file_system_access_mode"`
-	FileSystemID         types.String `tfsdk:"file_system_id"`
-	FileSystemType       types.String `tfsdk:"file_system_type"`
+	DirectoryPath        types.String                                      `tfsdk:"directory_path"`
+	FileSystemAccessMode fwtypes.StringEnum[awstypes.FileSystemAccessMode] `tfsdk:"file_system_access_mode"`
+	FileSystemID         types.String                                      `tfsdk:"file_system_id"`
+	FileSystemType       fwtypes.StringEnum[awstypes.FileSystemType]       `tfsdk:"file_system_type"`
 }
 
 type s3DataSourceModel struct {
-	AttributeNames         types.Set    `tfsdk:"attribute_names"`
-	InstanceGroupNames     types.Set    `tfsdk:"instance_group_names"`
-	S3DataDistributionType types.String `tfsdk:"s3_data_distribution_type"`
-	S3DataType             types.String `tfsdk:"s3_data_type"`
-	S3URI                  types.String `tfsdk:"s3_uri"`
+	AttributeNames         types.Set                                               `tfsdk:"attribute_names"`
+	HubAccessConfig        fwtypes.ListNestedObjectValueOf[hubAccessConfigModel]   `tfsdk:"hub_access_config"`
+	InstanceGroupNames     types.Set                                               `tfsdk:"instance_group_names"`
+	ModelAccessConfig      fwtypes.ListNestedObjectValueOf[modelAccessConfigModel] `tfsdk:"model_access_config"`
+	S3DataDistributionType fwtypes.StringEnum[awstypes.S3DataDistribution]         `tfsdk:"s3_data_distribution_type"`
+	S3DataType             fwtypes.StringEnum[awstypes.S3DataType]                 `tfsdk:"s3_data_type"`
+	S3URI                  types.String                                            `tfsdk:"s3_uri"`
 }
 
 type shuffleConfigModel struct {
