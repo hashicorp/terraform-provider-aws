@@ -1,3 +1,5 @@
+## 6.39.0 (Unreleased)
+
 ## 6.38.0 (March 25, 2026)
 
 FEATURES:
