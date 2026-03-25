@@ -6,6 +6,9 @@ package reflect
 import (
 	"iter"
 	"reflect"
+	"strings"
+
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 )
 
 // StructFields returns an iterator that lists all fields in a struct, including unexported fields.
@@ -13,17 +16,17 @@ import (
 // index components from each struct as used by `reflect.Value.FieldByIndex`
 func StructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return func(yield func(reflect.StructField) bool) {
-		structFieldsHelper(typ, []int{}, yield)
+		structFields_(typ, []int{}, yield)
 	}
 }
 
-func structFieldsHelper(typ reflect.Type, parentIndex []int, yield func(reflect.StructField) bool) bool {
+func structFields_(typ reflect.Type, parentIndex []int, yield func(reflect.StructField) bool) bool {
 	for i := range typ.NumField() {
 		field := typ.Field(i)
 
 		if field.Anonymous {
 			fieldIndexSequence := append(parentIndex, i)
-			if !structFieldsHelper(field.Type, fieldIndexSequence, yield) {
+			if !structFields_(field.Type, fieldIndexSequence, yield) {
 				return false
 			}
 			continue
@@ -38,17 +41,9 @@ func structFieldsHelper(typ reflect.Type, parentIndex []int, yield func(reflect.
 }
 
 func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.StructField] {
-	return func(yield func(reflect.StructField) bool) {
-		for field := range fields {
-			if !field.IsExported() && !field.Anonymous {
-				continue
-			}
-
-			if !yield(field) {
-				return
-			}
-		}
-	}
+	return tfiter.Filtered(fields, func(field reflect.StructField) bool {
+		return field.IsExported() || field.Anonymous
+	})
 }
 
 // ExportedStructFields returns an iterator that lists all exported fields in a struct. If an unexported embedded field
@@ -57,4 +52,25 @@ func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.Struc
 // index components from each struct as used by `reflect.Value.FieldByIndex`
 func ExportedStructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return exportedFields(StructFields(typ))
+}
+
+// FieldByTag returns the struct field whose tag under tagKey matches tagValue.
+// Tag options (e.g. ",omitempty") are stripped before comparison.
+func FieldByTag(v any, tagKey, tagValue string) (reflect.StructField, bool) {
+	t := reflect.TypeOf(v)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return reflect.StructField{}, false
+	}
+	for i := range t.NumField() {
+		f := t.Field(i)
+		if val, ok := f.Tag.Lookup(tagKey); ok {
+			if name, _, _ := strings.Cut(val, ","); name == tagValue {
+				return f, true
+			}
+		}
+	}
+	return reflect.StructField{}, false
 }
