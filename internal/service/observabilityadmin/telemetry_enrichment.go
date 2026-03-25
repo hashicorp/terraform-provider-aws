@@ -27,10 +27,9 @@ import (
 // @FrameworkResource("aws_observabilityadmin_telemetry_enrichment", name="Telemetry Enrichment")
 // @SingletonIdentity
 // @Testing(preCheck="testAccTelemetryEnrichmentPreCheck")
-// @Testing(tagsTest=false)
-// @Testing(identityTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
+// @Testing(serialize=true)
 func newTelemetryEnrichmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &telemetryEnrichmentResource{}
 
