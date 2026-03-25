@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_dynamodb_backups` ([#47036](https://github.com/hashicorp/terraform-provider-aws/issues/47036))
 * **New Data Source:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New Data Source:** `aws_savingsplans_offerings` ([#47081](https://github.com/hashicorp/terraform-provider-aws/issues/47081))
 * **New List Resource:** `aws_msk_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_serverless_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
