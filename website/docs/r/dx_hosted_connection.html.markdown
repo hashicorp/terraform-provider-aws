@@ -10,15 +10,29 @@ description: |-
 
 Provides a hosted connection on the specified interconnect or a link aggregation group (LAG) of interconnects. Intended for use by AWS Direct Connect Partners only.
 
+With the hosted connection created, the receiver account needs to confirm the creation by using the [aws_dx_connection_confirmation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dx_connection_confirmation) resource.
+
 ## Example Usage
 
 ```terraform
+provider "aws" {}
+
+provider "aws" {
+  alias = "receiver"
+}
+
 resource "aws_dx_hosted_connection" "hosted" {
   connection_id    = "dxcon-ffabc123"
   bandwidth        = "100Mbps"
   name             = "tf-dx-hosted-connection"
   owner_account_id = "123456789012"
   vlan             = 1
+}
+
+resource "aws_dx_connection_confirmation" "confirmation" {
+  provider = aws.receiver
+
+  connection_id = aws_dx_hosted_connection.hosted.id
 }
 ```
 
@@ -41,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `id` - The ID of the hosted connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
-* `lag_id` - The ID of the LAG.
+* `lag_id` - (**Deprecated**) The ID of the LAG. You will find the information under `connection_id`.
 * `loa_issue_time` - The time of the most recent call to [DescribeLoa](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLoa.html) for this connection.
 * `location` - The location of the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
