@@ -47,7 +47,6 @@ func (d *coreNetworkDataSource) Schema(ctx context.Context, req datasource.Schem
 			"global_network_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID:              framework.IDAttribute(),
 			"network_function_groups": framework.DataSourceComputedListOfObjectAttribute[networkFunctionGroupModel](ctx),
 			"segments":                framework.DataSourceComputedListOfObjectAttribute[segmentModel](ctx),
 			names.AttrState: schema.StringAttribute{
@@ -73,8 +72,6 @@ func (d *coreNetworkDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	data.ID = data.CoreNetworkID
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("CoreNetwork")))
 	if resp.Diagnostics.HasError() {
 		return
@@ -90,7 +87,6 @@ type coreNetworkDataSourceModel struct {
 	Description           types.String                                               `tfsdk:"description"`
 	Edges                 fwtypes.ListNestedObjectValueOf[edgeModel]                 `tfsdk:"edges"`
 	GlobalNetworkID       types.String                                               `tfsdk:"global_network_id"`
-	ID                    types.String                                               `tfsdk:"id"`
 	NetworkFunctionGroups fwtypes.ListNestedObjectValueOf[networkFunctionGroupModel] `tfsdk:"network_function_groups"`
 	Segments              fwtypes.ListNestedObjectValueOf[segmentModel]              `tfsdk:"segments"`
 	State                 types.String                                               `tfsdk:"state"`
