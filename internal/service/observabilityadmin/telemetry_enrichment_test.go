@@ -24,7 +24,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAdminTelemetryEnrichment_basic(t *testing.T) {
+func TestAccObservabilityAdminTelemetryEnrichment_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccTelemetryEnrichment_basic,
+		acctest.CtDisappears: testAccTelemetryEnrichment_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccTelemetryEnrichment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_enrichment.test"
 
@@ -60,7 +71,7 @@ func TestAccObservabilityAdminTelemetryEnrichment_basic(t *testing.T) {
 	})
 }
 
-func TestAccObservabilityAdminTelemetryEnrichment_disappears(t *testing.T) {
+func testAccTelemetryEnrichment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_observabilityadmin_telemetry_enrichment.test"
 
