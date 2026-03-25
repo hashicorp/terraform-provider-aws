@@ -123,7 +123,12 @@ func (r *telemetryEnrichmentResource) Delete(ctx context.Context, req resource.D
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	var input observabilityadmin.StopTelemetryEnrichmentInput
-	_, err := conn.StopTelemetryEnrichment(ctx, &input)
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.StopTelemetryEnrichment(ctx, &input)
+	})
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}

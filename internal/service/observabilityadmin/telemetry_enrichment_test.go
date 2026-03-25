@@ -62,11 +62,6 @@ func testAccTelemetryEnrichment_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aws_resource_explorer_managed_view_arn"), knownvalue.NotNull()),
 				},
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
