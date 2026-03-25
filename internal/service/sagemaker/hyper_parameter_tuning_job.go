@@ -56,8 +56,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -225,6 +230,9 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						"mode": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AutotuneMode](),
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -246,14 +254,23 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 							Validators: []validator.Int64{
 								int64validator.AtLeast(0),
 							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
 						},
 						"strategy": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobStrategyType](),
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"training_job_early_stopping_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.TrainingJobEarlyStoppingType](),
 							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -271,10 +288,16 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 255),
 										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"type": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobObjectiveType](),
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -294,11 +317,17 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 										Validators: []validator.Int64{
 											int64validator.AtLeast(1),
 										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
 									},
 									"max_parallel_training_jobs": schema.Int64Attribute{
 										Required: true,
 										Validators: []validator.Int64{
 											int64validator.AtLeast(1),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
 										},
 									},
 									"max_runtime_in_seconds": schema.Int64Attribute{
@@ -306,19 +335,30 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 										Validators: []validator.Int64{
 											int64validator.Between(120, 15768000),
 										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
 						},
 						"strategy_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[strategyConfigModel](ctx),
-							Validators: []validator.List{listvalidator.SizeAtMost(1)},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"hyperband_strategy_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[hyperbandStrategyConfigModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -327,11 +367,17 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 													Validators: []validator.Int64{
 														int64validator.AtLeast(1),
 													},
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.RequiresReplace(),
+													},
 												},
 												"min_resource": schema.Int64Attribute{
 													Optional: true,
 													Validators: []validator.Int64{
 														int64validator.AtLeast(1),
+													},
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.RequiresReplace(),
 													},
 												},
 											},
@@ -345,16 +391,27 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"target_objective_metric_value": schema.Float64Attribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.Float64{
+											float64planmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
 									"best_objective_not_improving": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[bestObjectiveNotImprovingModel](ctx),
-										Validators: []validator.List{listvalidator.SizeAtMost(1)},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"max_number_of_training_jobs_not_improving": schema.Int64Attribute{
@@ -362,18 +419,29 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 													Validators: []validator.Int64{
 														int64validator.AtLeast(3),
 													},
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
 									},
 									"convergence_detected": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[convergenceDetectedModel](ctx),
-										Validators: []validator.List{listvalidator.SizeAtMost(1)},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"complete_on_convergence": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.CompleteOnConvergence](),
 													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -387,20 +455,36 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 			"training_job_definition":  hyperParameterTrainingJobDefinitionBlock(ctx, false),
 			"training_job_definitions": hyperParameterTrainingJobDefinitionBlock(ctx, true),
 			"warm_start_config": schema.ListNestedBlock{
-				CustomType:    fwtypes.NewListNestedObjectTypeOf[warmStartConfigModel](ctx),
-				Validators:    []validator.List{listvalidator.SizeAtMost(1)},
-				PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[warmStartConfigModel](ctx),
+				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"warm_start_type": schema.StringAttribute{Optional: true},
+						"warm_start_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobWarmStartType](),
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
 					},
 					Blocks: map[string]schema.Block{
 						"parent_hyper_parameter_tuning_jobs": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[parentHyperParameterTuningJobModel](ctx),
 							Validators: []validator.List{listvalidator.SizeAtMost(5)},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"hyper_parameter_tuning_job_name": schema.StringAttribute{Required: true},
+									"hyper_parameter_tuning_job_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
 								},
 							},
 						},
@@ -418,6 +502,9 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"auto_parameters": schema.ListNestedBlock{
@@ -425,17 +512,26 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(100),
 					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"value_hint": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
 							},
 						},
 					}},
@@ -445,14 +541,20 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(30),
 					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
-						"values": schema.SetAttribute{
+						names.AttrValues: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							ElementType: types.StringType,
 							Required:    true,
@@ -462,6 +564,9 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 									stringvalidator.LengthAtMost(256),
 								),
 							},
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 					}},
 				},
@@ -470,11 +575,17 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(30),
 					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 						"max_value": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"min_value": schema.StringAttribute{
@@ -482,16 +593,25 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"name": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"scaling_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterScalingType](),
 							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					}},
 				},
@@ -500,11 +620,17 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(30),
 					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 						"max_value": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"min_value": schema.StringAttribute{
@@ -512,16 +638,25 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"name": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(256),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"scaling_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterScalingType](),
 							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					}},
 				},
@@ -539,9 +674,11 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 	}
 
 	return schema.ListNestedBlock{
-		CustomType:    fwtypes.NewListNestedObjectTypeOf[hyperParameterTrainingJobDefinitionModel](ctx),
-		Validators:    validators,
-		PlanModifiers: []planmodifier.List{listplanmodifier.RequiresReplace()},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTrainingJobDefinitionModel](ctx),
+		Validators: validators,
+		PlanModifiers: []planmodifier.List{
+			listplanmodifier.RequiresReplace(),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"definition_name": schema.StringAttribute{
@@ -550,15 +687,27 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						stringvalidator.LengthBetween(1, 64),
 						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}$`), "must be 1-64 characters long, start with an alphanumeric character, and contain only letters, numbers, and hyphens"),
 					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"enable_inter_container_traffic_encryption": schema.BoolAttribute{
 					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 				"enable_managed_spot_training": schema.BoolAttribute{
 					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 				"enable_network_isolation": schema.BoolAttribute{
 					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 				"environment": schema.MapAttribute{
 					CustomType:  fwtypes.MapOfStringType,
@@ -574,6 +723,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							stringvalidator.LengthAtMost(512),
 						),
 					},
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.RequiresReplace(),
+					},
 				},
 				names.AttrRoleARN: schema.StringAttribute{
 					CustomType: fwtypes.ARNType,
@@ -581,6 +733,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(20, 2048),
 						stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"static_hyper_parameters": schema.MapAttribute{
@@ -596,6 +751,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							stringvalidator.LengthAtMost(2500),
 						),
 					},
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 			Blocks: map[string]schema.Block{
@@ -606,6 +764,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						listvalidator.SizeAtLeast(1),
 						listvalidator.SizeAtMost(1),
 					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"algorithm_name": schema.StringAttribute{
@@ -615,6 +776,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 									stringvalidator.RegexMatches(regexache.MustCompile(`^(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*/)?([a-zA-Z0-9]([a-zA-Z0-9-]){0,62})(?<!-)$`), "must be a valid SageMaker algorithm name or ARN"),
 									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("training_image")),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"training_image": schema.StringAttribute{
 								Optional: true,
@@ -622,10 +786,16 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 									stringvalidator.LengthAtMost(255),
 									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("algorithm_name")),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"training_input_mode": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
 								Required:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -634,17 +804,26 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(40),
 								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
 								NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 									"name": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 255),
 										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"regex": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 500),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
 										},
 									},
 								}},
@@ -655,11 +834,17 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 				"checkpoint_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[checkpointConfigModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 						"local_path": schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(4096),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"s3_uri": schema.StringAttribute{
@@ -668,8 +853,114 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								stringvalidator.LengthAtMost(1024),
 								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
 							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					}},
+				},
+				"hyper_parameter_tuning_resource_config": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningResourceConfigModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"allocation_strategy": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningAllocationStrategy](),
+								Optional:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
+							},
+							"instance_count": schema.Int64Attribute{
+								Optional: true,
+								Validators: []validator.Int64{
+									int64validator.AtLeast(0),
+									int64validator.ConflictsWith(path.MatchRelative().AtParent().AtName("instance_configs")),
+								},
+								PlanModifiers: []planmodifier.Int64{
+									int64planmodifier.RequiresReplace(),
+								},
+							},
+							"instance_type": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+								Optional:   true,
+								Validators: []validator.String{
+									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("instance_configs")),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
+							},
+							"volume_kms_key_id": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(0, 2048),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9:/_-]*$`), "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
+							},
+							"volume_size_in_gb": schema.Int64Attribute{
+								Optional: true,
+								Validators: []validator.Int64{
+									int64validator.AtLeast(0),
+									int64validator.ConflictsWith(path.MatchRelative().AtParent().AtName("instance_configs")),
+								},
+								PlanModifiers: []planmodifier.Int64{
+									int64planmodifier.RequiresReplace(),
+								},
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"instance_configs": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningInstanceConfigModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeBetween(1, 6),
+									listvalidator.ConflictsWith(
+										path.MatchRelative().AtParent().AtName("instance_count"),
+										path.MatchRelative().AtParent().AtName("instance_type"),
+										path.MatchRelative().AtParent().AtName("volume_size_in_gb"),
+									),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
+								NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+									"instance_count": schema.Int64Attribute{
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.AtLeast(0),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
+									},
+									"instance_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"volume_size_in_gb": schema.Int64Attribute{
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.AtLeast(0),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
+									},
+								}},
+							},
+						},
+					},
 				},
 				"hyper_parameter_ranges": parameterRangesBlock(ctx),
 				"input_data_config": schema.ListNestedBlock{
@@ -677,6 +968,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					Validators: []validator.List{
 						listvalidator.SizeAtLeast(1),
 						listvalidator.SizeAtMost(20),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
@@ -686,24 +980,39 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 									stringvalidator.LengthBetween(1, 64),
 									stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9\.\-_]+$`), "must contain only letters, numbers, periods, hyphens, and underscores"),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"compression_type": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
 								Optional:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"content_type": schema.StringAttribute{
 								Optional: true,
 								Validators: []validator.String{
 									stringvalidator.LengthAtMost(256),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"input_mode": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
 								Optional:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"record_wrapper_type": schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.RecordWrapper](),
 								Optional:   true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -714,21 +1023,35 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 									listvalidator.SizeAtLeast(1),
 									listvalidator.SizeAtMost(1),
 								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
 										"file_system_data_source": schema.ListNestedBlock{
 											CustomType: fwtypes.NewListNestedObjectTypeOf[fileSystemDataSourceModel](ctx),
-											Validators: []validator.List{listvalidator.SizeAtMost(1)},
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
+											PlanModifiers: []planmodifier.List{
+												listplanmodifier.RequiresReplace(),
+											},
 											NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 												"directory_path": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthAtMost(4096),
 													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"file_system_access_mode": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.FileSystemAccessMode](),
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"file_system_id": schema.StringAttribute{
 													Required: true,
@@ -736,10 +1059,16 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 														stringvalidator.LengthBetween(11, 21),
 														stringvalidator.RegexMatches(regexache.MustCompile(`^(fs-[0-9a-f]{8,})$`), "must be a valid file system ID"),
 													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"file_system_type": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.FileSystemType](),
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											}},
 										},
@@ -748,6 +1077,9 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),
 											},
+											PlanModifiers: []planmodifier.List{
+												listplanmodifier.RequiresReplace(),
+											},
 											NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 												"attribute_names": schema.SetAttribute{
 													CustomType:  fwtypes.SetOfStringType,
@@ -755,7 +1087,12 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 													Optional:    true,
 													Validators: []validator.Set{
 														setvalidator.SizeAtMost(16),
-														setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 256)),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 256),
+														),
+													},
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
 													},
 												},
 												"instance_group_names": schema.SetAttribute{
@@ -764,22 +1101,36 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 													Optional:    true,
 													Validators: []validator.Set{
 														setvalidator.SizeAtMost(5),
-														setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 64)),
+														setvalidator.ValueStringsAre(
+															stringvalidator.LengthBetween(1, 64),
+														),
+													},
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
 													},
 												},
 												"s3_data_distribution_type": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.S3DataDistribution](),
 													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"s3_data_type": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.S3DataType](),
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"s3_uri": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthAtMost(1024),
 														stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
 													},
 												},
 											},
@@ -789,21 +1140,35 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 														Validators: []validator.List{
 															listvalidator.SizeAtMost(1),
 														},
+														PlanModifiers: []planmodifier.List{
+															listplanmodifier.RequiresReplace(),
+														},
 														NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 															"hub_content_arn": schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														}},
 													},
 													"model_access_config": schema.ListNestedBlock{
 														CustomType: fwtypes.NewListNestedObjectTypeOf[modelAccessConfigModel](ctx),
-														Validators: []validator.List{listvalidator.SizeAtMost(1)},
+														Validators: []validator.List{
+															listvalidator.SizeAtMost(1),
+														},
+														PlanModifiers: []planmodifier.List{
+															listplanmodifier.RequiresReplace(),
+														},
 														NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 															"accept_eula": schema.BoolAttribute{
 																Required: true,
 																Validators: []validator.Bool{
 																	boolvalidator.Equals(true),
+																},
+																PlanModifiers: []planmodifier.Bool{
+																	boolplanmodifier.RequiresReplace(),
 																},
 															},
 														}},
@@ -816,9 +1181,19 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							},
 							"shuffle_config": schema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[shuffleConfigModel](ctx),
-								Validators: []validator.List{listvalidator.SizeAtMost(1)},
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
 								NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-									"seed": schema.Int64Attribute{Required: true},
+									"seed": schema.Int64Attribute{
+										Required: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
+									},
 								}},
 							},
 						},
@@ -826,55 +1201,316 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 				},
 				"output_data_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[outputDataConfigModel](ctx),
-					Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"compression_type": schema.StringAttribute{Optional: true},
-						"kms_key_id":       schema.StringAttribute{Optional: true},
-						"s3_output_path":   schema.StringAttribute{Required: true},
+						"compression_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"kms_key_id": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(0, 2048),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9:/_-]*$`), "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"s3_output_path": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(0, 1024),
+								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
 					}},
 				},
 				"resource_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[trainingResourceConfigModel](ctx),
-					Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"instance_count":               schema.Int64Attribute{Required: true},
-						"instance_type":                schema.StringAttribute{Required: true},
-						"keep_alive_period_in_seconds": schema.Int64Attribute{Optional: true},
-						"training_plan_arn":            schema.StringAttribute{Optional: true},
-						"volume_kms_key_id":            schema.StringAttribute{Optional: true},
-						"volume_size_in_gb":            schema.Int64Attribute{Required: true},
-					}},
+						"instance_count": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.AtLeast(0),
+							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+						"instance_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"keep_alive_period_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.Between(0, 3600),
+							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+						"training_plan_arn": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(50, 2048),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*$`), "must be a valid SageMaker training plan ARN"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"volume_kms_key_id": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(0, 2048),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9:/_-]*$`), "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"volume_size_in_gb": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.AtLeast(0),
+							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+					},
+						Blocks: map[string]schema.Block{
+							"instance_groups": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[instanceGroupModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(5),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
+								NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+									"instance_count": schema.Int64Attribute{
+										Required: true,
+										Validators: []validator.Int64{
+											int64validator.AtLeast(0),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
+									},
+									"instance_group_name": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 64),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"instance_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								}},
+							},
+							"instance_placement_config": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[instancePlacementConfigModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								PlanModifiers: []planmodifier.List{
+									listplanmodifier.RequiresReplace(),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"enable_multiple_jobs": schema.BoolAttribute{
+											Optional: true,
+											PlanModifiers: []planmodifier.Bool{
+												boolplanmodifier.RequiresReplace(),
+											},
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"placement_specifications": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[placementSpecificationModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(10),
+											},
+											PlanModifiers: []planmodifier.List{
+												listplanmodifier.RequiresReplace(),
+											},
+											NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
+												"instance_count": schema.Int64Attribute{
+													Required: true,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(0),
+													},
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.RequiresReplace(),
+													},
+												},
+												"ultra_server_id": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(0, 256),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											}},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				"retry_strategy": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[retryStrategyModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"maximum_retry_attempts": schema.Int64Attribute{Optional: true},
+						"maximum_retry_attempts": schema.Int64Attribute{
+							Optional: true,
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
 					}},
 				},
 				"stopping_condition": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[stoppingConditionModel](ctx),
-					Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"max_pending_time_in_seconds": schema.Int64Attribute{Optional: true},
-						"max_runtime_in_seconds":      schema.Int64Attribute{Required: true},
-						"max_wait_time_in_seconds":    schema.Int64Attribute{Optional: true},
+						"max_pending_time_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.Between(7200, 2419200),
+							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+						"max_runtime_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.AtLeast(1),
+							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+						"max_wait_time_in_seconds": schema.Int64Attribute{
+							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.AtLeast(1),
+							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
 					}},
 				},
 				"tuning_objective": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[tuningObjectiveModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"metric_name": schema.StringAttribute{Required: true},
-						"type":        schema.StringAttribute{Required: true},
+						"metric_name": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 255),
+								stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "must not be empty"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobObjectiveType](),
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
 					}},
 				},
-				"vpc_config": schema.ListNestedBlock{
+				names.AttrVPCConfig: schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobVPCConfigModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"security_group_ids": schema.SetAttribute{CustomType: fwtypes.SetOfStringType, ElementType: types.StringType, Required: true},
-						"subnets":            schema.SetAttribute{CustomType: fwtypes.SetOfStringType, ElementType: types.StringType, Required: true},
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 5),
+								setvalidator.ValueStringsAre(
+									stringvalidator.LengthBetween(0, 32),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^[-0-9a-zA-Z]+$`), "must contain only letters, numbers, and hyphens"),
+								),
+							},
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+						},
+						names.AttrSubnets: schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 16),
+								setvalidator.ValueStringsAre(
+									stringvalidator.LengthBetween(0, 32),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^[-0-9a-zA-Z]+$`), "must contain only letters, numbers, and hyphens"),
+								),
+							},
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+						},
 					}},
 				},
 			},
@@ -883,57 +1519,35 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 }
 
 func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().SageMakerClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan hyperParameterTuningJobResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	var input sagemaker.CreateHyperParameterTuningJobInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `HyperParameterTuningJobId`
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("HyperParameterTuningJob")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CreateHyperParameterTuningJob(ctx, &input)
 	if err != nil {
-		// TIP: Use the resource identity attribute in error messages at this point.
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.HyperParameterTuningJobName.String())
 		return
 	}
-	if out == nil || out.HyperParameterTuningJob == nil {
+	if out == nil || out.HyperParameterTuningJobArn == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.HyperParameterTuningJobName.String())
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitHyperParameterTuningJobCreated(ctx, conn, plan.HyperParameterTuningJobName.ValueString(), createTimeout)
 	if err != nil {
@@ -941,7 +1555,6 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -1380,23 +1993,24 @@ type convergenceDetectedModel struct {
 }
 
 type hyperParameterTrainingJobDefinitionModel struct {
-	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel]           `tfsdk:"algorithm_specification"`
-	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[checkpointConfigModel]                 `tfsdk:"checkpoint_config"`
-	DefinitionName                        types.String                                                           `tfsdk:"definition_name"`
-	EnableInterContainerTrafficEncryption types.Bool                                                             `tfsdk:"enable_inter_container_traffic_encryption"`
-	EnableManagedSpotTraining             types.Bool                                                             `tfsdk:"enable_managed_spot_training"`
-	EnableNetworkIsolation                types.Bool                                                             `tfsdk:"enable_network_isolation"`
-	Environment                           types.Map                                                              `tfsdk:"environment"`
-	HyperParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                  `tfsdk:"hyper_parameter_ranges"`
-	InputDataConfig                       fwtypes.ListNestedObjectValueOf[inputDataConfigModel]                  `tfsdk:"input_data_config"`
-	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[outputDataConfigModel]                 `tfsdk:"output_data_config"`
-	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingResourceConfigModel]           `tfsdk:"resource_config"`
-	RetryStrategy                         fwtypes.ListNestedObjectValueOf[retryStrategyModel]                    `tfsdk:"retry_strategy"`
-	RoleARN                               types.String                                                           `tfsdk:"role_arn"`
-	StaticHyperParameters                 types.Map                                                              `tfsdk:"static_hyper_parameters"`
-	StoppingCondition                     fwtypes.ListNestedObjectValueOf[stoppingConditionModel]                `tfsdk:"stopping_condition"`
-	TuningObjective                       fwtypes.ListNestedObjectValueOf[tuningObjectiveModel]                  `tfsdk:"tuning_objective"`
-	VPCConfig                             fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobVPCConfigModel] `tfsdk:"vpc_config"`
+	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel]             `tfsdk:"algorithm_specification"`
+	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[checkpointConfigModel]                   `tfsdk:"checkpoint_config"`
+	DefinitionName                        types.String                                                             `tfsdk:"definition_name"`
+	EnableInterContainerTrafficEncryption types.Bool                                                               `tfsdk:"enable_inter_container_traffic_encryption"`
+	EnableManagedSpotTraining             types.Bool                                                               `tfsdk:"enable_managed_spot_training"`
+	EnableNetworkIsolation                types.Bool                                                               `tfsdk:"enable_network_isolation"`
+	Environment                           types.Map                                                                `tfsdk:"environment"`
+	HyperParameterTuningResourceConfig    fwtypes.ListNestedObjectValueOf[hyperParameterTuningResourceConfigModel] `tfsdk:"hyper_parameter_tuning_resource_config"`
+	HyperParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                    `tfsdk:"hyper_parameter_ranges"`
+	InputDataConfig                       fwtypes.ListNestedObjectValueOf[inputDataConfigModel]                    `tfsdk:"input_data_config"`
+	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[outputDataConfigModel]                   `tfsdk:"output_data_config"`
+	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingResourceConfigModel]             `tfsdk:"resource_config"`
+	RetryStrategy                         fwtypes.ListNestedObjectValueOf[retryStrategyModel]                      `tfsdk:"retry_strategy"`
+	RoleARN                               types.String                                                             `tfsdk:"role_arn"`
+	StaticHyperParameters                 types.Map                                                                `tfsdk:"static_hyper_parameters"`
+	StoppingCondition                     fwtypes.ListNestedObjectValueOf[stoppingConditionModel]                  `tfsdk:"stopping_condition"`
+	TuningObjective                       fwtypes.ListNestedObjectValueOf[tuningObjectiveModel]                    `tfsdk:"tuning_objective"`
+	VPCConfig                             fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobVPCConfigModel]   `tfsdk:"vpc_config"`
 }
 
 type algorithmSpecificationModel struct {
@@ -1461,18 +2075,51 @@ type shuffleConfigModel struct {
 }
 
 type outputDataConfigModel struct {
-	CompressionType types.String `tfsdk:"compression_type"`
-	KMSKeyID        types.String `tfsdk:"kms_key_id"`
-	S3OutputPath    types.String `tfsdk:"s3_output_path"`
+	CompressionType fwtypes.StringEnum[awstypes.CompressionType] `tfsdk:"compression_type"`
+	KMSKeyID        types.String                                 `tfsdk:"kms_key_id"`
+	S3OutputPath    types.String                                 `tfsdk:"s3_output_path"`
+}
+
+type hyperParameterTuningResourceConfigModel struct {
+	AllocationStrategy fwtypes.StringEnum[awstypes.HyperParameterTuningAllocationStrategy]      `tfsdk:"allocation_strategy"`
+	InstanceConfigs    fwtypes.ListNestedObjectValueOf[hyperParameterTuningInstanceConfigModel] `tfsdk:"instance_configs"`
+	InstanceCount      types.Int64                                                              `tfsdk:"instance_count"`
+	InstanceType       fwtypes.StringEnum[awstypes.TrainingInstanceType]                        `tfsdk:"instance_type"`
+	VolumeKMSKeyID     types.String                                                             `tfsdk:"volume_kms_key_id"`
+	VolumeSizeInGB     types.Int64                                                              `tfsdk:"volume_size_in_gb"`
+}
+
+type hyperParameterTuningInstanceConfigModel struct {
+	InstanceCount  types.Int64                                       `tfsdk:"instance_count"`
+	InstanceType   fwtypes.StringEnum[awstypes.TrainingInstanceType] `tfsdk:"instance_type"`
+	VolumeSizeInGB types.Int64                                       `tfsdk:"volume_size_in_gb"`
 }
 
 type trainingResourceConfigModel struct {
-	InstanceCount            types.Int64  `tfsdk:"instance_count"`
-	InstanceType             types.String `tfsdk:"instance_type"`
-	KeepAlivePeriodInSeconds types.Int64  `tfsdk:"keep_alive_period_in_seconds"`
-	TrainingPlanARN          types.String `tfsdk:"training_plan_arn"`
-	VolumeKMSKeyID           types.String `tfsdk:"volume_kms_key_id"`
-	VolumeSizeInGB           types.Int64  `tfsdk:"volume_size_in_gb"`
+	InstanceCount            types.Int64                                                   `tfsdk:"instance_count"`
+	InstanceGroups           fwtypes.ListNestedObjectValueOf[instanceGroupModel]           `tfsdk:"instance_groups"`
+	InstancePlacementConfig  fwtypes.ListNestedObjectValueOf[instancePlacementConfigModel] `tfsdk:"instance_placement_config"`
+	InstanceType             fwtypes.StringEnum[awstypes.TrainingInstanceType]             `tfsdk:"instance_type"`
+	KeepAlivePeriodInSeconds types.Int64                                                   `tfsdk:"keep_alive_period_in_seconds"`
+	TrainingPlanARN          types.String                                                  `tfsdk:"training_plan_arn"`
+	VolumeKMSKeyID           types.String                                                  `tfsdk:"volume_kms_key_id"`
+	VolumeSizeInGB           types.Int64                                                   `tfsdk:"volume_size_in_gb"`
+}
+
+type instanceGroupModel struct {
+	InstanceCount     types.Int64                                       `tfsdk:"instance_count"`
+	InstanceGroupName types.String                                      `tfsdk:"instance_group_name"`
+	InstanceType      fwtypes.StringEnum[awstypes.TrainingInstanceType] `tfsdk:"instance_type"`
+}
+
+type instancePlacementConfigModel struct {
+	EnableMultipleJobs      types.Bool                                                   `tfsdk:"enable_multiple_jobs"`
+	PlacementSpecifications fwtypes.ListNestedObjectValueOf[placementSpecificationModel] `tfsdk:"placement_specifications"`
+}
+
+type placementSpecificationModel struct {
+	InstanceCount types.Int64  `tfsdk:"instance_count"`
+	UltraServerID types.String `tfsdk:"ultra_server_id"`
 }
 
 type retryStrategyModel struct {
@@ -1486,8 +2133,8 @@ type stoppingConditionModel struct {
 }
 
 type tuningObjectiveModel struct {
-	MetricName types.String `tfsdk:"metric_name"`
-	Type       types.String `tfsdk:"type"`
+	MetricName types.String                                                      `tfsdk:"metric_name"`
+	Type       fwtypes.StringEnum[awstypes.HyperParameterTuningJobObjectiveType] `tfsdk:"type"`
 }
 
 type hyperParameterTuningJobVPCConfigModel struct {
@@ -1497,7 +2144,7 @@ type hyperParameterTuningJobVPCConfigModel struct {
 
 type warmStartConfigModel struct {
 	ParentHyperParameterTuningJobs fwtypes.ListNestedObjectValueOf[parentHyperParameterTuningJobModel] `tfsdk:"parent_hyper_parameter_tuning_jobs"`
-	WarmStartType                  types.String                                                        `tfsdk:"warm_start_type"`
+	WarmStartType                  fwtypes.StringEnum[awstypes.HyperParameterTuningJobWarmStartType]   `tfsdk:"warm_start_type"`
 }
 
 type parentHyperParameterTuningJobModel struct {
