@@ -65,7 +65,6 @@ const (
 
 type algorithmResource struct {
 	framework.ResourceWithModel[algorithmResourceModel]
-	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
@@ -96,6 +95,10 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			"algorithm_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AlgorithmStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"certify_for_marketplace": schema.BoolAttribute{
@@ -109,11 +112,17 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 			names.AttrCreationTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"product_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			names.AttrTags:    tftags.TagsAttributeForceNew(),
+			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
