@@ -59,7 +59,7 @@ func TestAccIAMRolePoliciesDataSource_empty(t *testing.T) {
 	})
 }
 
-func TestAccIAMRolePoliciesDataSource_multipule(t *testing.T) {
+func TestAccIAMRolePoliciesDataSource_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_role_policies.test"
