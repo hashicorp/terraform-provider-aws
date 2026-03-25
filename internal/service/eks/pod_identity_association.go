@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -132,7 +132,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
@@ -213,7 +213,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 		}
 
 		// Set values for unknowns.
-		input.ClientRequestToken = aws.String(sdkid.UniqueId())
+		input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, &input)

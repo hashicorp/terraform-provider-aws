@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appintegrations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -87,7 +87,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateEventIntegrationInput{
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]any)),
 		Name:           aws.String(name),

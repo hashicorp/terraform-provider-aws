@@ -15,9 +15,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -526,7 +526,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = sdkid.UniqueId()
+		name = create.UniqueId(ctx)
 	}
 
 	createOpts := &sagemaker.CreateModelInput{

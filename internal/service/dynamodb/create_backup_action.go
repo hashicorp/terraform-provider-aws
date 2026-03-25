@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
@@ -95,7 +95,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 	backupName := fwflex.StringValueFromFramework(ctx, config.BackupName)
 
 	if backupName == "" {
-		backupName = fmt.Sprintf("%s-backup-%s", tableName, sdkid.UniqueId())
+		backupName = fmt.Sprintf("%s-backup-%s", tableName, create.UniqueId(ctx))
 	}
 
 	tflog.Info(ctx, "Starting DynamoDB create backup action", map[string]any{
