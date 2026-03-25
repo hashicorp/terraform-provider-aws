@@ -1084,7 +1084,7 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
