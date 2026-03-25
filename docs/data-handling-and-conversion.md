@@ -52,7 +52,7 @@ Typically these types of drift detection issues can be discovered by implementin
 ## Terraform Plugin Framework versus Plugin SDK V2
 
 Perhaps the most distinct difference between [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) and [Terraform Plugin SDKv2](https://developer.hashicorp.com/terraform/plugin/sdkv2) is data handling.
-With Terraform Plugin Framework state data is strongly typed, while Plugin SDK V2 based resources represent state data generically (each attribute is an `interface{}`) and types must be asserted at runtime.
+With Terraform Plugin Framework state data is strongly typed, while Plugin SDK V2 based resources represent state data generically (each attribute is an `any`) and types must be asserted at runtime.
 Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile type declarations and a slightly different approach to reading and writing data.
 The sections below contain examples for both plugin libraries, but Terraform Plugin Framework is **required for all net-new resources**.
 
@@ -109,10 +109,10 @@ To further understand the necessary data conversions used throughout the Terrafo
     | `boolean` | `*bool` | `TypeBool` (`bool`) | `bool` |
     | `float` | `*float64` | `TypeFloat` (`float64`) | `number` |
     | `integer` | `*int64` | `TypeInt` (`int`) | `number` |
-    | `list` | `[]*T` | `TypeList` (`[]interface{}` of `T`)<br/>`TypeSet` (`*schema.Set` of `T`) | `list(any)`<br/>`set(any)` |
-    | `map` | `map[T1]*T2` | `TypeMap` (`map[string]interface{}`) | `map(any)` |
+    | `list` | `[]*T` | `TypeList` (`[]any` of `T`)<br/>`TypeSet` (`*schema.Set` of `T`) | `list(any)`<br/>`set(any)` |
+    | `map` | `map[T1]*T2` | `TypeMap` (`map[string]any`) | `map(any)` |
     | `string` | `*string` | `TypeString` (`string`) | `string` |
-    | `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) with `MaxItems: 1` | `list(object(any))` |
+    | `structure` | `struct` | `TypeList` (`[]any` of `map[string]any`) with `MaxItems: 1` | `list(object(any))` |
     | `timestamp` | `*time.Time` | `TypeString` (typically RFC3339 formatted) | `string` |
 
     <!-- markdownlint-enable no-inline-html --->
@@ -508,7 +508,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
 
 === "Terraform Plugin SDK V2"
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         if tfMap == nil {
             return nil
         }
@@ -520,16 +520,15 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         return apiObject
     }
 
-    func expandStructures(tfList []interface{}) []*service.Structure {
+    func expandStructures(tfList []any) []service.Structure {
         if len(tfList) == 0 {
             return nil
         }
 
-        var apiObjects []*service.Structure
+        var apiObjects []service.Structure
 
         for _, tfMapRaw := range tfList {
-            tfMap, ok := tfMapRaw.(map[string]interface{})
-
+            tfMap, ok := tfMapRaw.(map[string]any)
             if !ok {
                 continue
             }
@@ -540,7 +539,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
                 continue
             }
 
-            apiObjects = append(apiObjects, apiObject)
+            apiObjects = append(apiObjects, *apiObject)
         }
 
         return apiObjects
@@ -603,31 +602,27 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
 
 === "Terraform Plugin SDK V2"
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         if apiObject == nil {
             return nil
         }
 
-        tfMap := map[string]interface{}{}
+        tfMap := map[string]any{}
     
         // ... nested attribute handling ...
     
         return tfMap
     }
     
-    func flattenStructures(apiObjects []*service.Structure) []interface{} {
+    func flattenStructures(apiObjects []service.Structure) []any {
         if len(apiObjects) == 0 {
             return nil
         }
     
-        var tfList []interface{}
+        var tfList []any
     
-        for _, apiObject := range apiObjects {
-            if apiObject == nil {
-                continue
-            }
-    
-            tfList = append(tfList, flattenStructure(apiObject))
+        for _, apiObject := range apiObjects {    
+            tfList = append(tfList, flattenStructure(&apiObject))
         }
     
         return tfList
@@ -801,8 +796,8 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     ```go
     input := service.ExampleOperationInput{}
     
-    if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
-        input.AttributeName = expandStructures(v.([]interface{}))
+    if v, ok := d.GetOk("attribute_name"); ok && len(v.([]any)) > 0 {
+        input.AttributeName = expandStructures(v.([]any))
     }
     ```
     
@@ -849,16 +844,16 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     ```go
     input := service.ExampleOperationInput{}
     
-    if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-        input.AttributeName = expandStructure(v.([]interface{})[0].(map[string]interface{}))
+    if v, ok := d.GetOk("attribute_name"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+        input.AttributeName = expandStructure(v.([]any)[0].(map[string]any))
     }
     ```
     
-    To write (_likely to have helper function introduced soon_):
+    To write:
     
     ```go
     if output.Thing.AttributeName != nil {
-        if err := d.Set("attribute_name", []interface{}{flattenStructure(output.Thing.AttributeName)}); err != nil {
+        if err := d.Set("attribute_name", []any{flattenStructure(output.Thing.AttributeName)}); err != nil {
             return sdkdiag.AppendErrorf(diags, "setting attribute_name: %s", err)
         }
     } else {
@@ -891,15 +886,15 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     ```go
     input := service.ExampleOperationInput{}
     
-    if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
-        input.AttributeName = flex.ExpandStringList(v.([]interface{}))
+    if v, ok := d.GetOk("attribute_name"); ok && len(v.([]any)) > 0 {
+        input.AttributeName = flex.ExpandStringValueList(v.([]any))
     }
     ```
     
     To write:
     
     ```go
-    d.Set("attribute_name", aws.StringValueSlice(output.Thing.AttributeName))
+    d.Set("attribute_name", output.Thing.AttributeName)
     ```
 
 ### Root Map of String and AWS Map of String
@@ -927,15 +922,15 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     ```go
     input := service.ExampleOperationInput{}
     
-    if v, ok := d.GetOk("attribute_name"); ok && len(v.(map[string]interface{})) > 0 {
-        input.AttributeName = flex.ExpandStringMap(v.(map[string]interface{}))
+    if v, ok := d.GetOk("attribute_name"); ok && len(v.(map[string]any)) > 0 {
+        input.AttributeName = flex.ExpandStringValueMap(v.(map[string]any))
     }
     ```
 
     To write:
 
     ```go
-    d.Set("attribute_name", aws.StringValueMap(output.Thing.AttributeName))
+    d.Set("attribute_name", output.Thing.AttributeName)
     ```
 
 ### Root Set of Resource and AWS List of Structure
@@ -1011,14 +1006,14 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if v, ok := d.GetOk("attribute_name"); ok && v.(*schema.Set).Len() > 0 {
-        input.AttributeName = flex.ExpandStringSet(v.(*schema.Set))
+        input.AttributeName = flex.ExpandStringValueSet(v.(*schema.Set))
     }
     ```
 
     To write:
 
     ```go
-    d.Set("attribute_name", aws.StringValueSlice(output.Thing.AttributeName))
+    d.Set("attribute_name", output.Thing.AttributeName)
     ```
 
 ### Root String and AWS String
@@ -1159,7 +1154,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read, if always sending the attribute value is correct:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(bool); ok {
@@ -1173,7 +1168,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read, if only sending the attribute value when `true` is preferred (`!v` for opposite):
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(bool); ok && v {
@@ -1187,7 +1182,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1232,7 +1227,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(float64); ok && v != 0.0 {
@@ -1246,7 +1241,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1291,7 +1286,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(int); ok && v != 0 {
@@ -1305,7 +1300,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1352,10 +1347,10 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
-        if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
+        if v, ok := tfMap["nested_attribute_name"].([]any); ok && len(v) > 0 {
             apiObject.NestedAttributeName = expandStructures(v)
         }
     
@@ -1366,7 +1361,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1413,11 +1408,11 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
-        if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-            apiObject.NestedAttributeName = expandStructure(v[0].(map[string]interface{}))
+        if v, ok := tfMap["nested_attribute_name"].([]any); ok && len(v) > 0 && v[0] != nil {
+            apiObject.NestedAttributeName = expandStructure(v[0].(map[string]any))
         }
     
         // ...
@@ -1427,11 +1422,11 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = []interface{}{flattenNestedStructure(v)}
+            tfMap["nested_attribute_name"] = []any{flattenNestedStructure(v)}
         }
     
         // ...
@@ -1472,11 +1467,11 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
-        if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
-            apiObject.NestedAttributeName = flex.ExpandStringList(v)
+        if v, ok := tfMap["nested_attribute_name"].([]any); ok && len(v) > 0 {
+            apiObject.NestedAttributeName = flex.ExpandStringValueList(v)
         }
     
         // ...
@@ -1486,11 +1481,11 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.StringValueSlice(v)
+            tfMap["nested_attribute_name"] = v
         }
     
         // ...
@@ -1533,19 +1528,19 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     ```go
     input := service.ExampleOperationInput{}
     
-    if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v) > 0 {
-        apiObject.NestedAttributeName = flex.ExpandStringMap(v)
+    if v, ok := tfMap["nested_attribute_name"].(map[string]any); ok && len(v) > 0 {
+        apiObject.NestedAttributeName = flex.ExpandStringValueMap(v)
     }
     ```
 
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.StringValueMap(v)
+            tfMap["nested_attribute_name"] = v
         }
     
         // ...
@@ -1588,7 +1583,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(*schema.Set); ok && v.Len() > 0 {
@@ -1602,7 +1597,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1647,11 +1642,11 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(*schema.Set); ok && v.Len() > 0 {
-            apiObject.NestedAttributeName = flex.ExpandStringSet(v)
+            apiObject.NestedAttributeName = flex.ExpandStringValueSet(v)
         }
     
         // ...
@@ -1661,11 +1656,11 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.StringValueSlice(v)
+            tfMap["nested_attribute_name"] = v
         }
     
         // ...
@@ -1706,7 +1701,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
@@ -1720,7 +1715,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1780,7 +1775,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To read:
 
     ```go
-    func expandStructure(tfMap map[string]interface{}) *service.Structure {
+    func expandStructure(tfMap map[string]any) *service.Structure {
         // ...
     
         if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
@@ -1796,7 +1791,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     To write:
 
     ```go
-    func flattenStructure(apiObject *service.Structure) map[string]interface{} {
+    func flattenStructure(apiObject *service.Structure) map[string]any {
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
@@ -1869,7 +1864,7 @@ If a virtual attribute has a default value that does not match the [Zero Value M
     &schema.Resource{
         // ... other fields ...
         Importer: &schema.ResourceImporter{
-            State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+            State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
                 d.Set("skip_waiting", true)
 
     			return []*schema.ResourceData{d}, nil

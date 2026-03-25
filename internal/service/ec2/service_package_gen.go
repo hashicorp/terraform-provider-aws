@@ -2028,6 +2028,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
+		{
+			Factory:  newVPCEndpointResourceAsListResource,
+			TypeName: "aws_vpc_endpoint",
+			Name:     "VPC Endpoint",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
 	})
 }
 

@@ -66,12 +66,12 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_route53_resolver_rule_association.test", map[string]knownvalue.Check{
-						names.AttrID:        id1.Value(),
+						names.AttrID:        id1.ValueCheck(),
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 					querycheck.ExpectIdentity("aws_route53_resolver_rule_association.test", map[string]knownvalue.Check{
-						names.AttrID:        id2.Value(),
+						names.AttrID:        id2.ValueCheck(),
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),

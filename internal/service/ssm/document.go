@@ -326,69 +326,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
 
-	documentType, name := doc.DocumentType, aws.ToString(doc.Name)
-	d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
-	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
-	d.Set("default_version", doc.DefaultVersion)
-	d.Set(names.AttrDescription, doc.Description)
-	d.Set("document_format", doc.DocumentFormat)
-	d.Set("document_type", documentType)
-	d.Set("document_version", doc.DocumentVersion)
-	d.Set("hash", doc.Hash)
-	d.Set("hash_type", doc.HashType)
-	d.Set("latest_version", doc.LatestVersion)
-	d.Set(names.AttrName, name)
-	d.Set(names.AttrOwner, doc.Owner)
-	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-	d.Set("platform_types", doc.PlatformTypes)
-	d.Set("schema_version", doc.SchemaVersion)
-	d.Set(names.AttrStatus, doc.Status)
-	d.Set("target_type", doc.TargetType)
-	d.Set("version_name", doc.VersionName)
-
-	{
-		input := &ssm.GetDocumentInput{
-			DocumentFormat:  awstypes.DocumentFormat(d.Get("document_format").(string)),
-			DocumentVersion: aws.String("$LATEST"),
-			Name:            aws.String(d.Id()),
-		}
-
-		output, err := conn.GetDocument(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
-		}
-
-		d.Set(names.AttrContent, output.Content)
-	}
-
-	{
-		input := &ssm.DescribeDocumentPermissionInput{
-			Name:           aws.String(d.Id()),
-			PermissionType: awstypes.DocumentPermissionTypeShare,
-		}
-
-		output, err := conn.DescribeDocumentPermission(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
-		}
-
-		if accountsIDs := output.AccountIds; len(accountsIDs) > 0 {
-			d.Set(names.AttrPermissions, map[string]any{
-				"account_ids":  strings.Join(accountsIDs, ","),
-				names.AttrType: awstypes.DocumentPermissionTypeShare,
-			})
-		} else {
-			d.Set(names.AttrPermissions, nil)
-		}
-	}
-
-	setTagsOut(ctx, doc.Tags)
-
-	return diags
+	return append(diags, resourceDocumentFlatten(ctx, conn, d, meta.(*conns.AWSClient), doc)...)
 }
 
 func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -722,4 +660,72 @@ func documentARN(ctx context.Context, c *conns.AWSClient, documentType awstypes.
 	}
 
 	return c.RegionalARN(ctx, "ssm", resource)
+}
+
+func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.ResourceData, awsClient *conns.AWSClient, output *awstypes.DocumentDescription) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	documentType, name := output.DocumentType, aws.ToString(output.Name)
+	d.Set(names.AttrARN, documentARN(ctx, awsClient, documentType, name))
+	d.Set(names.AttrCreatedDate, aws.ToTime(output.CreatedDate).Format(time.RFC3339))
+	d.Set("default_version", output.DefaultVersion)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("document_format", output.DocumentFormat)
+	d.Set("document_type", documentType)
+	d.Set("document_version", output.DocumentVersion)
+	d.Set("hash", output.Hash)
+	d.Set("hash_type", output.HashType)
+	d.Set("latest_version", output.LatestVersion)
+	d.Set(names.AttrName, name)
+	d.Set(names.AttrOwner, output.Owner)
+	if err := d.Set(names.AttrParameter, flattenDocumentParameters(output.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+	}
+	d.Set("platform_types", output.PlatformTypes)
+	d.Set("schema_version", output.SchemaVersion)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set("target_type", output.TargetType)
+	d.Set("version_name", output.VersionName)
+
+	{
+		input := &ssm.GetDocumentInput{
+			DocumentFormat:  awstypes.DocumentFormat(d.Get("document_format").(string)),
+			DocumentVersion: aws.String("$LATEST"),
+			Name:            aws.String(d.Id()),
+		}
+
+		output, err := conn.GetDocument(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
+		}
+
+		d.Set(names.AttrContent, output.Content)
+	}
+
+	{
+		input := &ssm.DescribeDocumentPermissionInput{
+			Name:           aws.String(d.Id()),
+			PermissionType: awstypes.DocumentPermissionTypeShare,
+		}
+
+		output, err := conn.DescribeDocumentPermission(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)
+		}
+
+		if accountsIDs := output.AccountIds; len(accountsIDs) > 0 {
+			d.Set(names.AttrPermissions, map[string]any{
+				"account_ids":  strings.Join(accountsIDs, ","),
+				names.AttrType: awstypes.DocumentPermissionTypeShare,
+			})
+		} else {
+			d.Set(names.AttrPermissions, nil)
+		}
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	return diags
 }

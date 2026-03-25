@@ -354,6 +354,108 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 	})
 }
 
+// TestAccECSExpressGatewayService_environmentVariableOrdering verifies that
+// non-alphabetical environment variables don't cause inconsistent apply errors.
+// See: https://github.com/hashicorp/terraform-provider-aws/issues/45792
+func TestAccECSExpressGatewayService_environmentVariableOrdering(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create with env vars in non-alphabetical order.
+				Config: testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.name", "ZULU"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.value", "third"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.name", "BETA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.value", "second"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.2.name", "ALPHA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.2.value", "first"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Re-apply same config to verify no diff.
+			{
+				Config: testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Import (env var ordering may differ due to alphabetical default).
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+					// Import uses alphabetical ordering (no prior state to preserve).
+					"primary_container.0.environment.0.name",
+					"primary_container.0.environment.0.value",
+					"primary_container.0.environment.1.name",
+					"primary_container.0.environment.1.value",
+					"primary_container.0.environment.2.name",
+					"primary_container.0.environment.2.value",
+					"ingress_paths.0.endpoint",
+					"network_configuration.0.security_groups.#",
+					"network_configuration.0.security_groups.0",
+				},
+			},
+			{
+				// Update env vars.
+				Config: testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.name", "ZULU"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.value", "third"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.name", "GAMMA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.value", "fourth"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Re-apply updated config to verify no diff.
+			{
+				Config: testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -704,6 +806,61 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
   depends_on = [
     aws_ecs_express_gateway_service.test
   ]
+}
+`)
+}
+
+// testAccExpressGatewayServiceConfig_environmentVariableOrdering creates a service
+// with env vars in non-alphabetical order.
+func testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+
+    environment {
+      name  = "ZULU"
+      value = "third"
+    }
+
+    environment {
+      name  = "BETA"
+      value = "second"
+    }
+
+    environment {
+      name  = "ALPHA"
+      value = "first"
+    }
+  }
+}
+`)
+}
+
+// testAccExpressGatewayServiceConfig_environmentVariableUpdated creates a service
+// with updated env vars to test ordering after add/remove.
+func testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+
+    environment {
+      name  = "ZULU"
+      value = "third"
+    }
+
+    environment {
+      name  = "GAMMA"
+      value = "fourth"
+    }
+  }
 }
 `)
 }

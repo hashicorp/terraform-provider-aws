@@ -177,8 +177,13 @@ Run the acceptance tests for the new list resource to ensure everything is funct
 Replace `<service-name>` and `<resource-name>` with the appropriate service and resource names.
 
 ```sh
-  make testacc PKG=<service-name> TESTARGS='-run=TestAcc<service-name><resource-name>_List_'
+make testacc PKG=<service-name> TESTARGS='-run=TestAcc<service-name><resource-name>_List_'
 ```
+
+### Create Documentation
+
+`skaff` will create a stub documentation file.
+Ensure that it is accurate and documents any additional attributes on the `list` block.
 
 ## Troubleshooting
 

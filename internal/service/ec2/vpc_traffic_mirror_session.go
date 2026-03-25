@@ -14,10 +14,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -91,7 +91,7 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
-		ClientToken:           aws.String(sdkid.UniqueId()),
+		ClientToken:           aws.String(create.UniqueId(ctx)),
 		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),

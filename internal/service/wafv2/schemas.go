@@ -1364,7 +1364,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 							"enable_machine_learning": {
 								Type:     schema.TypeBool,
 								Optional: true,
-								Default:  false,
+								Computed: true,
 							},
 							"inspection_level": {
 								Type:             schema.TypeString,
