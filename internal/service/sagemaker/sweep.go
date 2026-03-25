@@ -52,8 +52,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_pipeline", sweepPipelines)
 	awsv2.Register("aws_sagemaker_hub", sweepHubs)
 	awsv2.Register("aws_sagemaker_model_card", sweepModelCards)
-	awsv2.Register("aws_sagemaker_algorithm", sweepAlgorithms)
-	awsv2.Register("aws_sagemaker_training_job", sweepTrainingJobs)
+	awsv2.Register("aws_sagemaker_hyper_parameter_tuning_job", sweepHyperParameterTuningJobs)
 }
 
 func sweepAppImagesConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -734,44 +733,22 @@ func sweepModelCards(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 	return sweepResources, nil
 }
 
-func sweepAlgorithms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := sagemaker.ListAlgorithmsInput{}
+func sweepHyperParameterTuningJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SageMakerClient(ctx)
-	var sweepResources []sweep.Sweepable
+	var input sagemaker.ListHyperParameterTuningJobsInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := sagemaker.NewListAlgorithmsPaginator(conn, &input)
+	pages := sagemaker.NewListHyperParameterTuningJobsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		for _, v := range page.AlgorithmSummaryList {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newAlgorithmResource, client,
-				framework.NewAttribute("algorithm_name", aws.ToString(v.AlgorithmName))),
-			)
-		}
-	}
-
-	return sweepResources, nil
-}
-
-func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := sagemaker.ListTrainingJobsInput{}
-	conn := client.SageMakerClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := sagemaker.NewListTrainingJobsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.TrainingJobSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceTrainingJob, client,
-				framework.NewAttribute("training_job_name", aws.ToString(v.TrainingJobName))),
-			)
+		for _, v := range page.HyperParameterTuningJobSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newHyperParameterTuningJobResource, client,
+				framework.NewAttribute("hyper_parameter_tuning_job_name", aws.ToString(v.HyperParameterTuningJobName))))
 		}
 	}
 
