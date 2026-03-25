@@ -72,7 +72,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_network_acl_rule.my_rule
+  to = aws_network_acl_rule.example
   identity = {
     egress         = false
     network_acl_id = "acl-7aaabd18"
@@ -81,7 +81,7 @@ import {
   }
 }
 
-resource "aws_network_acl_rule" "my_rule" {
+resource "aws_network_acl_rule" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
