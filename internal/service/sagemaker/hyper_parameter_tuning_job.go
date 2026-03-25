@@ -49,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -256,7 +257,11 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					Blocks: map[string]schema.Block{
 						"hyper_parameter_tuning_job_objective": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobObjectiveModel](ctx),
-							Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"metric_name": schema.StringAttribute{
@@ -272,15 +277,34 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 								},
 							},
 						},
-						"parameter_ranges": parameterRangesBlock(ctx, true),
+						"parameter_ranges": parameterRangesBlock(ctx),
 						"resource_limits": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[resourceLimitsModel](ctx),
-							Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(1)},
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"max_number_of_training_jobs": schema.Int64Attribute{Required: true},
-									"max_parallel_training_jobs":  schema.Int64Attribute{Required: true},
-									"max_runtime_in_seconds":      schema.Int64Attribute{Optional: true},
+									"max_number_of_training_jobs": schema.Int64Attribute{
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.AtLeast(1),
+										},
+									},
+									"max_parallel_training_jobs": schema.Int64Attribute{
+										Required: true,
+										Validators: []validator.Int64{
+											int64validator.AtLeast(1),
+										},
+									},
+									"max_runtime_in_seconds": schema.Int64Attribute{
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(120, 15768000),
+										},
+									},
 								},
 							},
 						},
@@ -291,11 +315,23 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 								Blocks: map[string]schema.Block{
 									"hyperband_strategy_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[hyperbandStrategyConfigModel](ctx),
-										Validators: []validator.List{listvalidator.SizeAtMost(1)},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"max_resource": schema.Int64Attribute{Optional: true},
-												"min_resource": schema.Int64Attribute{Optional: true},
+												"max_resource": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(1),
+													},
+												},
+												"min_resource": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(1),
+													},
+												},
 											},
 										},
 									},
@@ -304,10 +340,14 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						},
 						"tuning_job_completion_criteria": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[tuningJobCompletionCriteriaModel](ctx),
-							Validators: []validator.List{listvalidator.SizeAtMost(1)},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"target_objective_metric_value": schema.Float64Attribute{Optional: true},
+									"target_objective_metric_value": schema.Float64Attribute{
+										Optional: true,
+									},
 								},
 								Blocks: map[string]schema.Block{
 									"best_objective_not_improving": schema.ListNestedBlock{
@@ -315,7 +355,12 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 										Validators: []validator.List{listvalidator.SizeAtMost(1)},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"max_number_of_training_jobs_not_improving": schema.Int64Attribute{Optional: true},
+												"max_number_of_training_jobs_not_improving": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(3),
+													},
+												},
 											},
 										},
 									},
@@ -324,7 +369,10 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 										Validators: []validator.List{listvalidator.SizeAtMost(1)},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"complete_on_convergence": schema.StringAttribute{Optional: true},
+												"complete_on_convergence": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.CompleteOnConvergence](),
+													Optional:   true,
+												},
 											},
 										},
 									},
@@ -362,47 +410,117 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 	}
 }
 
-func parameterRangesBlock(ctx context.Context, required bool) schema.ListNestedBlock {
-	validators := []validator.List{listvalidator.SizeAtMost(1)}
-	if required {
-		validators = append(validators, listvalidator.IsRequired(), listvalidator.SizeAtLeast(1))
-	}
-
+func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[parameterRangesModel](ctx),
-		Validators: validators,
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"auto_parameters": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[autoParameterModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(100),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"name":       schema.StringAttribute{Required: true},
-						"value_hint": schema.StringAttribute{Required: true},
+						"name": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"value_hint": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
 					}},
 				},
 				"categorical_parameter_ranges": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[categoricalParameterRangeModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(30),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"name":   schema.StringAttribute{Required: true},
-						"values": schema.SetAttribute{CustomType: fwtypes.SetOfStringType, ElementType: types.StringType, Required: true},
+						"name": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"values": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 30),
+								setvalidator.ValueStringsAre(
+									stringvalidator.LengthAtMost(256),
+								),
+							},
+						},
 					}},
 				},
 				"continuous_parameter_ranges": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[continuousParameterRangeModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(30),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"max_value":    schema.StringAttribute{Required: true},
-						"min_value":    schema.StringAttribute{Required: true},
-						"name":         schema.StringAttribute{Required: true},
-						"scaling_type": schema.StringAttribute{Optional: true},
+						"max_value": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"min_value": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"name": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"scaling_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterScalingType](),
+							Optional:   true,
+						},
 					}},
 				},
 				"integer_parameter_ranges": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[integerParameterRangeModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(30),
+					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-						"max_value":    schema.StringAttribute{Required: true},
-						"min_value":    schema.StringAttribute{Required: true},
-						"name":         schema.StringAttribute{Required: true},
-						"scaling_type": schema.StringAttribute{Optional: true},
+						"max_value": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"min_value": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"name": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(256),
+							},
+						},
+						"scaling_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterScalingType](),
+							Optional:   true,
+						},
 					}},
 				},
 			},
@@ -461,7 +579,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						"s3_uri":     schema.StringAttribute{Optional: true},
 					}},
 				},
-				"hyper_parameter_ranges": parameterRangesBlock(ctx, false),
+				"hyper_parameter_ranges": parameterRangesBlock(ctx),
 				"input_data_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[inputDataConfigModel](ctx),
 					Validators: []validator.List{listvalidator.IsRequired(), listvalidator.SizeAtLeast(1)},
@@ -1004,7 +1122,7 @@ type hyperParameterTuningJobConfigModel struct {
 }
 
 type hyperParameterTuningJobObjectiveModel struct {
-	MetricName types.String `tfsdk:"metric_name"`
+	MetricName types.String                                                      `tfsdk:"metric_name"`
 	Type       fwtypes.StringEnum[awstypes.HyperParameterTuningJobObjectiveType] `tfsdk:"type"`
 }
 
@@ -1026,17 +1144,17 @@ type categoricalParameterRangeModel struct {
 }
 
 type continuousParameterRangeModel struct {
-	MaxValue    types.String `tfsdk:"max_value"`
-	MinValue    types.String `tfsdk:"min_value"`
-	Name        types.String `tfsdk:"name"`
-	ScalingType types.String `tfsdk:"scaling_type"`
+	MaxValue    types.String                                           `tfsdk:"max_value"`
+	MinValue    types.String                                           `tfsdk:"min_value"`
+	Name        types.String                                           `tfsdk:"name"`
+	ScalingType fwtypes.StringEnum[awstypes.HyperParameterScalingType] `tfsdk:"scaling_type"`
 }
 
 type integerParameterRangeModel struct {
-	MaxValue    types.String `tfsdk:"max_value"`
-	MinValue    types.String `tfsdk:"min_value"`
-	Name        types.String `tfsdk:"name"`
-	ScalingType types.String `tfsdk:"scaling_type"`
+	MaxValue    types.String                                           `tfsdk:"max_value"`
+	MinValue    types.String                                           `tfsdk:"min_value"`
+	Name        types.String                                           `tfsdk:"name"`
+	ScalingType fwtypes.StringEnum[awstypes.HyperParameterScalingType] `tfsdk:"scaling_type"`
 }
 
 type resourceLimitsModel struct {
@@ -1065,7 +1183,7 @@ type bestObjectiveNotImprovingModel struct {
 }
 
 type convergenceDetectedModel struct {
-	CompleteOnConvergence types.String `tfsdk:"complete_on_convergence"`
+	CompleteOnConvergence fwtypes.StringEnum[awstypes.CompleteOnConvergence] `tfsdk:"complete_on_convergence"`
 }
 
 type hyperParameterTrainingJobDefinitionModel struct {
