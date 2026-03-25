@@ -19,6 +19,7 @@ var (
 	ResourceTokenVaultCMK            = newTokenVaultCMKResource
 	ResourceHarness                  = newHarnessResource
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
+	ResourcePolicyEngine             = newPolicyEngineResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
 
 	FindAgentRuntimeByID                 = findAgentRuntimeByID
@@ -35,5 +36,6 @@ var (
 	FindOnlineEvaluationConfigByID       = findOnlineEvaluationConfigByID
 	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindTokenVaultByID                   = findTokenVaultByID
+	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 )
