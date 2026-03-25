@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -165,7 +167,7 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("edge_location", attachment.EdgeLocation)
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
 	} else {
 		d.Set("routing_policy_label", routingPolicyLabel)
@@ -247,7 +249,7 @@ func findSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Clien
 	}
 
 	if output == nil || output.SiteToSiteVpnAttachment == nil || output.SiteToSiteVpnAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SiteToSiteVpnAttachment, nil
@@ -281,7 +283,7 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -303,7 +305,7 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -322,7 +324,7 @@ func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmana
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}

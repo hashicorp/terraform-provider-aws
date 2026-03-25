@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -11,10 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -80,7 +81,7 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	input := vpclattice.CreateAccessLogSubscriptionInput{
-		ClientToken:        aws.String(sdkid.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		DestinationArn:     aws.String(d.Get(names.AttrDestinationARN).(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
@@ -163,7 +164,7 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 	}
 
 	if output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -173,9 +174,8 @@ func findAccessLogSubscription(ctx context.Context, conn *vpclattice.Client, inp
 	output, err := conn.GetAccessLogSubscription(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -184,7 +184,7 @@ func findAccessLogSubscription(ctx context.Context, conn *vpclattice.Client, inp
 	}
 
 	if output == nil || output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

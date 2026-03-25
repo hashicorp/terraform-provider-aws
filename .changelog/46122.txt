@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket: Fix bucket creation with tags in non-commercial AWS regions by handling `UnsupportedArgument` errors during tag-on-create operations
+```
+
+```release-note:bug
+resource/aws_s3_bucket: Fix tag read and update operations in non-commercial AWS regions by handling `MethodNotAllowed` errors when S3 Control APIs are unavailable
+```

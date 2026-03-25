@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -483,9 +484,8 @@ func findFleets(ctx context.Context, conn *gamelift.Client, input *gamelift.Desc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -515,9 +515,8 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -535,8 +534,8 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *gamelift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *gamelift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -552,7 +551,7 @@ func statusFleet(ctx context.Context, conn *gamelift.Client, id string) sdkretry
 }
 
 func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FleetAttributes, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.FleetStatusActivating,
 			awstypes.FleetStatusBuilding,
@@ -561,7 +560,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 			awstypes.FleetStatusValidating,
 		),
 		Target:  enum.Slice(awstypes.FleetStatusActive),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -569,7 +568,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err
@@ -579,7 +578,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 }
 
 func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FleetAttributes, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.FleetStatusActive,
 			awstypes.FleetStatusDeleting,
@@ -587,7 +586,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 			awstypes.FleetStatusTerminated,
 		),
 		Target:  []string{},
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -595,7 +594,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err

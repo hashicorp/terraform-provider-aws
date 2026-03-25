@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -17,7 +17,7 @@ func testAccDelegatedAdministratorsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "securitylake.amazonaws.com"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)

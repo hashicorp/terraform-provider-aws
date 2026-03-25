@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 # tflint-ignore: terraform_unused_declarations
@@ -24,16 +24,20 @@ resource "aws_lb_listener_rule" "test" {
   tags = var.resource_tags
 }
 
+# testAccListenerRuleConfig_baseWithHTTPListener
+
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
+
+# testAccListenerRuleConfig_base
 
 resource "aws_security_group" "test" {
   name   = var.rName

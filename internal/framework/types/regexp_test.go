@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types_test
@@ -34,7 +34,7 @@ func TestRegexpTypeValueFromTerraform(t *testing.T) {
 		},
 		"invalid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `(`),
-			expected: fwtypes.RegexpUnknown(),
+			expected: fwtypes.RegexpValue(`(`),
 		},
 	}
 

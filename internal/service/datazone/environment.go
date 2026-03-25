@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -23,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -392,10 +393,10 @@ func (r *environmentResource) ImportState(ctx context.Context, req resource.Impo
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnvironmentStatusCreating),
 		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
-		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
+		Refresh:                   statusEnvironment(conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -404,7 +405,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
 		if status, deployment := out.Status, out.LastDeployment; (status == awstypes.EnvironmentStatusCreateFailed || status == awstypes.EnvironmentStatusValidationFailed) && deployment != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
 	}
@@ -413,10 +414,10 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnvironmentStatusUpdating),
 		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
-		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
+		Refresh:                   statusEnvironment(conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -425,7 +426,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusUpdateFailed && deployment != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
 	}
@@ -434,10 +435,10 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
 		Target:       []string{},
-		Refresh:      statusEnvironment(ctx, conn, domainId, id),
+		Refresh:      statusEnvironment(conn, domainId, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: 5 * time.Second,
@@ -446,7 +447,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusDeleteFailed && deployment != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
 	}
@@ -454,8 +455,8 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 	return nil, err
 }
 
-func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -478,9 +479,8 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	out, err := conn.GetEnvironment(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -489,7 +489,7 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

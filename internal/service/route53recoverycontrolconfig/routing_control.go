@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53recoverycontrolconfig
 
@@ -11,10 +13,9 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -64,7 +65,7 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
 	input := &r53rcc.CreateRoutingControlInput{
-		ClientToken:        aws.String(id.UniqueId()),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		ClusterArn:         aws.String(d.Get("cluster_arn").(string)),
 		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
 	}
@@ -74,12 +75,12 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateRoutingControl(ctx, input)
-	result := output.RoutingControl
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Routing Control: %s", err)
 	}
 
+	result := output.RoutingControl
 	if result == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Routing Control: empty response")
 	}
@@ -172,9 +173,8 @@ func findRoutingControlByARN(ctx context.Context, conn *r53rcc.Client, arn strin
 
 	output, err := conn.DescribeRoutingControl(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -182,7 +182,7 @@ func findRoutingControlByARN(ctx context.Context, conn *r53rcc.Client, arn strin
 	}
 
 	if output == nil || output.RoutingControl == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RoutingControl, nil

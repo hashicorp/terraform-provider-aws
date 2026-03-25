@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -13,11 +15,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -112,7 +113,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := &imagebuilder.CreateWorkflowInput{
-		ClientToken:     aws.String(id.UniqueId()),
+		ClientToken:     aws.String(create.UniqueId(ctx)),
 		Name:            aws.String(name),
 		SemanticVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		Type:            awstypes.WorkflowType(d.Get(names.AttrType).(string)),
@@ -218,9 +219,8 @@ func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn strin
 	output, err := conn.GetWorkflow(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -229,7 +229,7 @@ func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn strin
 	}
 
 	if output == nil || output.Workflow == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workflow, nil

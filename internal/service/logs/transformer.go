@@ -1,7 +1,9 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Copyright 2025 Twilio Inc.
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package logs
 
 import (
@@ -33,8 +35,6 @@ import (
 // @FrameworkResource("aws_cloudwatch_log_transformer", name="Transformer")
 // @ArnIdentity("log_group_arn")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(destroyTakesT=true)
-// @Testing(existsTakesT=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetTransformerOutput")
 func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transformerResource{}
@@ -931,7 +931,7 @@ func findTransformer(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

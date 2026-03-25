@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package docdb
 
@@ -115,7 +117,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			if engineVersion == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {

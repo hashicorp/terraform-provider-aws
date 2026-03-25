@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagent
 
@@ -21,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -122,7 +122,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgentAlias(ctx, &input)
@@ -312,9 +312,8 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	output, err := conn.GetAgentAlias(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -323,14 +322,14 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	}
 
 	if output == nil || output.AgentAlias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentAlias, nil
 }
 
-func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgentAlias(conn *bedrockagent.Client, agentAliasID, agentID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAgentAliasByTwoPartKey(ctx, conn, agentAliasID, agentID)
 
 		if retry.NotFound(err) {
@@ -346,10 +345,10 @@ func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAlias
 }
 
 func waitAgentAliasCreated(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string, timeout time.Duration) (*awstypes.AgentAlias, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
-		Refresh: statusAgentAlias(ctx, conn, agentAliasID, agentID),
+		Refresh: statusAgentAlias(conn, agentAliasID, agentID),
 		Timeout: timeout,
 	}
 
@@ -363,10 +362,10 @@ func waitAgentAliasCreated(ctx context.Context, conn *bedrockagent.Client, agent
 }
 
 func waitAgentAliasUpdated(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string, timeout time.Duration) (*awstypes.AgentAlias, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
-		Refresh: statusAgentAlias(ctx, conn, agentAliasID, agentID),
+		Refresh: statusAgentAlias(conn, agentAliasID, agentID),
 		Timeout: timeout,
 	}
 

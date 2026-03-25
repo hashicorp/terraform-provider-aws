@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -220,9 +221,8 @@ func findTrafficPolicyByID(ctx context.Context, conn *route53.Client, id string)
 	output, err := conn.GetTrafficPolicy(ctx, inputGTP)
 
 	if errs.IsA[*awstypes.NoSuchTrafficPolicy](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: inputLTP,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -231,7 +231,7 @@ func findTrafficPolicyByID(ctx context.Context, conn *route53.Client, id string)
 	}
 
 	if output == nil || output.TrafficPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(inputLTP)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicy, nil
@@ -285,9 +285,8 @@ func findTrafficPolicyVersions(ctx context.Context, conn *route53.Client, input 
 	})
 
 	if errs.IsA[*awstypes.NoSuchTrafficPolicy](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

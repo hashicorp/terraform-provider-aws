@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -32,6 +33,9 @@ type setTypeOf[T attr.Value] struct {
 var (
 	// SetOfStringType is a custom type used for defining a Set of strings.
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}, nil}
+
+	// SetOfInt64Type is a custom type used for defining a Set of int64s.
+	SetOfInt64Type = setTypeOf[basetypes.Int64Value]{basetypes.SetType{ElemType: basetypes.Int64Type{}}, nil}
 
 	// SetOfARNType is a custom type used for defining a Set of ARNs.
 	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}, nil}
@@ -112,6 +116,7 @@ type SetValueOf[T attr.Value] struct {
 
 type (
 	SetOfString                         = SetValueOf[basetypes.StringValue]
+	SetOfInt64                          = SetValueOf[basetypes.Int64Value]
 	SetOfARN                            = SetValueOf[ARN]
 	SetOfStringEnum[T enum.Valueser[T]] = SetValueOf[StringEnum[T]]
 )
@@ -136,6 +141,20 @@ func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.Validate
 	}
 
 	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
+}
+
+// IsFullyKnown returns true if `v` all its elements are known.
+func (v SetValueOf[T]) IsFullyKnown() bool {
+	switch {
+	case v.IsUnknown():
+		return false
+	case v.IsNull():
+		return true
+	default:
+		return tfslices.All(v.Elements(), func(v attr.Value) bool {
+			return !v.IsUnknown()
+		})
+	}
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {

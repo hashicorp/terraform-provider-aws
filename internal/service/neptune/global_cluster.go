@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
@@ -18,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -508,7 +509,7 @@ func clusterIDAndRegionFromARN(clusterARN string) (string, string, error) {
 }
 
 func waitGlobalClusterMemberUpdated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration, optFns ...func(*neptune.Options)) (*awstypes.DBCluster, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
 			clusterStatusConfiguringIAMDatabaseAuth,
@@ -518,7 +519,7 @@ func waitGlobalClusterMemberUpdated(ctx context.Context, conn *neptune.Client, i
 			clusterStatusUpgrading,
 		},
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id, false, optFns...),
+		Refresh:    statusDBCluster(conn, id, false, optFns...),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -543,17 +544,14 @@ func findGlobalClusterByID(ctx context.Context, conn *neptune.Client, id string)
 	}
 
 	if status := aws.ToString(output.Status); status == globalClusterStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -587,9 +585,8 @@ func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptun
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -607,8 +604,8 @@ func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptun
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *neptune.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalCluster(conn *neptune.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -624,10 +621,10 @@ func statusGlobalCluster(ctx context.Context, conn *neptune.Client, id string) s
 }
 
 func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -641,10 +638,10 @@ func waitGlobalClusterCreated(ctx context.Context, conn *neptune.Client, id stri
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -659,10 +656,10 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *neptune.Client, id stri
 }
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
-		Refresh:        statusGlobalCluster(ctx, conn, id),
+		Refresh:        statusGlobalCluster(conn, id),
 		Timeout:        timeout,
 		NotFoundChecks: 1,
 	}

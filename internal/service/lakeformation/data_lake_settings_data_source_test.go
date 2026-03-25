@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -15,14 +15,14 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_basic,
@@ -44,14 +44,14 @@ func testAccDataLakeSettingsDataSource_readOnlyAdmins(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_readOnlyAdmins,

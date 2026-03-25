@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -196,9 +197,8 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	output, err := conn.GetSnapshot(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "snapshot") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -207,14 +207,14 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Snapshot, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshot(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -230,10 +230,10 @@ func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name s
 }
 
 func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusAvailable),
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -247,10 +247,10 @@ func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client,
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusAvailable),
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 

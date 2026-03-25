@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfrontkeyvaluestore
 
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -123,6 +124,25 @@ func (r *keysExclusiveResource) syncKeyValuePairs(ctx context.Context, plan *key
 	diags.Append(flex.Expand(ctx, plan.ResourceKeyValuePair, &want)...)
 	if diags.HasError() {
 		return diags
+	}
+
+	// Manually set Value fields to avoid JSON encoding by AutoFlEx.
+	// Build a map from Key to Value from the plan
+	planValueMap := make(map[string]string)
+	var planModels []resourceKeyValuePairModel
+	diags.Append(plan.ResourceKeyValuePair.ElementsAs(ctx, &planModels, false)...)
+	if !diags.HasError() {
+		for _, model := range planModels {
+			planValueMap[model.Key.ValueString()] = model.Value.ValueString()
+		}
+		// Update the Value fields in want using the map
+		for i := range want {
+			if key := aws.ToString(want[i].Key); key != "" {
+				if value, ok := planValueMap[key]; ok {
+					want[i].Value = aws.String(value)
+				}
+			}
+		}
 	}
 
 	put, del, modify, _ := intflex.DiffSlicesWithModify(have, want, resourceKeyValuePairEqual, resourceKeyValuePairKeyEqual)
@@ -230,6 +250,37 @@ func (r *keysExclusiveResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
+	// Manually set Value fields to avoid JSON decoding by AutoFlEx.
+	// Build a map from Key to Value from the AWS response
+	awsValueMap := make(map[string]string)
+	for _, pair := range keyPairs {
+		if key := aws.ToString(pair.Key); key != "" {
+			awsValueMap[key] = aws.ToString(pair.Value)
+		}
+	}
+	// Update the Value fields in data using the map
+	var dataModels []resourceKeyValuePairModel
+	response.Diagnostics.Append(data.ResourceKeyValuePair.ElementsAs(ctx, &dataModels, false)...)
+	if !response.Diagnostics.HasError() {
+		for i := range dataModels {
+			if key := dataModels[i].Key.ValueString(); key != "" {
+				if value, ok := awsValueMap[key]; ok {
+					dataModels[i].Value = types.StringValue(value)
+				}
+			}
+		}
+		// Set the updated models back - convert to slice of pointers
+		dataModelPtrs := make([]*resourceKeyValuePairModel, len(dataModels))
+		for i := range dataModels {
+			dataModelPtrs[i] = &dataModels[i]
+		}
+		updatedSet, diag := fwtypes.NewSetNestedObjectValueOfSlice(ctx, dataModelPtrs, nil)
+		response.Diagnostics.Append(diag...)
+		if !response.Diagnostics.HasError() {
+			data.ResourceKeyValuePair = updatedSet
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -265,9 +316,8 @@ func FindKeyValueStoreByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.C
 		//
 		// ConflictException: Key-Value-Store was not in expected state
 		errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "was not in expected state") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -276,7 +326,7 @@ func FindKeyValueStoreByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.C
 	}
 
 	if output == nil || output.KvsARN == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

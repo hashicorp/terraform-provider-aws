@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 rules:
@@ -18,4 +18,41 @@ rules:
       tfresource.TimedOut($ERR)
     fix: |
       retry.TimedOut($ERR)
+    severity: ERROR
+
+  - id: internal-retry-setlasterror
+    languages: [go]
+    message: "Prefer retry.SetLastError to tfresource.SetLastError"
+    severity: WARNING
+    pattern: |
+      tfresource.SetLastError($ERR, $LASTERR)
+    fix: |
+      retry.SetLastError($ERR, $LASTERR)
+
+  - id: internal-retry-state-refresh-func-zero-value-result
+    languages: [go]
+    message: |
+      StateRefreshFunc returns a zero value with a non-empty status.
+      The internal/retry package uses reflect.Value.IsZero() to detect "not found" states.
+      Returning zero values with a non-empty status will be incorrectly interpreted as "resource not found".
+    paths:
+      include:
+        - "/internal/service"
+    patterns:
+      - pattern-inside: |
+          func $FUNC(...) retry.StateRefreshFunc {
+            return func($CTX context.Context) (any, string, error) {
+              ...
+            }
+          }
+      - pattern-either:
+          - pattern: return struct{}{}, $STATUS, $ERR
+          - pattern: return false, $STATUS, $ERR
+          - pattern: return 0, $STATUS, $ERR
+          - pattern: return 0.0, $STATUS, $ERR
+          - pattern: return "", $STATUS, $ERR
+      - metavariable-pattern:
+          metavariable: $STATUS
+          patterns:
+            - pattern-not: '""'
     severity: ERROR

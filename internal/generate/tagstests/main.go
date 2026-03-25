@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -166,7 +166,7 @@ func main() {
 		}
 
 		if !resource.IsDataSource {
-			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
 				b, err := os.ReadFile(configTmplFile)
@@ -206,6 +206,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
@@ -216,7 +217,7 @@ func main() {
 			}
 		} else {
 			sourceName = strings.TrimSuffix(sourceName, "_data_source")
-			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
 				b, err := os.ReadFile(configTmplFile)
@@ -276,6 +277,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
@@ -429,6 +431,7 @@ type commonConfig struct {
 	AdditionalTfVars        []string
 	WithRName               bool
 	AlternateRegionProvider bool
+	AlternateRegionTfVars   bool
 }
 
 type ConfigDatum struct {

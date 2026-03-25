@@ -93,6 +93,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["my-app", "mobile-app"]
       allowed_clients  = ["client-123", "client-456"]
+      allowed_scopes   = ["openid", "email"]
     }
   }
 
@@ -200,6 +201,30 @@ The `custom_jwt_authorizer` block supports the following:
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
+* `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+
+### `custom_claim`
+
+The `custom_claim` block supports the following:
+
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
+* `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
+
+### `authorizing_claim_match_value`
+
+The `authorizing_claim_match_value` block supports the following:
+
+* `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+
+### `claim_match_value`
+
+The `claim_match_value` block supports the following:
+
+* `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+* `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 
 ### `lifecycle_configuration`
 

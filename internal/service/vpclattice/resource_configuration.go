@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -28,8 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -266,7 +267,7 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.DomainVerificationIdentifier = fwflex.StringFromFramework(ctx, data.DomainVerificationID)
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)
@@ -433,9 +434,8 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	output, err := conn.GetResourceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -444,14 +444,14 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceConfiguration(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourceConfigurationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -467,10 +467,10 @@ func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, i
 }
 
 func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceConfigurationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceConfigurationStatusActive),
-		Refresh:                   statusResourceConfiguration(ctx, conn, id),
+		Refresh:                   statusResourceConfiguration(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -478,7 +478,7 @@ func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetResourceConfigurationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -487,10 +487,10 @@ func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitResourceConfigurationUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceConfigurationStatusUpdateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceConfigurationStatusActive),
-		Refresh:                   statusResourceConfiguration(ctx, conn, id),
+		Refresh:                   statusResourceConfiguration(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -505,10 +505,10 @@ func waitResourceConfigurationUpdated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitResourceConfigurationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceConfigurationStatusActive, awstypes.ResourceConfigurationStatusDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusResourceConfiguration(ctx, conn, id),
+		Refresh: statusResourceConfiguration(conn, id),
 		Timeout: timeout,
 	}
 

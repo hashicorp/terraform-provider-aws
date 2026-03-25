@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,23 +25,23 @@ func TestAccRedshiftLogging_basic(t *testing.T) {
 	}
 
 	var log redshift.DescribeLoggingStatusOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_logging.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingDestroy(ctx),
+		CheckDestroy:             testAccCheckLoggingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingExists(ctx, resourceName, &log),
+					testAccCheckLoggingExists(ctx, t, resourceName, &log),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(awstypes.LogDestinationTypeCloudwatch)),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "3"),
@@ -71,23 +69,23 @@ func TestAccRedshiftLogging_disappears(t *testing.T) {
 	}
 
 	var log redshift.DescribeLoggingStatusOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_logging.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingDestroy(ctx),
+		CheckDestroy:             testAccCheckLoggingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingExists(ctx, resourceName, &log),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceLogging, resourceName),
+					testAccCheckLoggingExists(ctx, t, resourceName, &log),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceLogging, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,24 +100,24 @@ func TestAccRedshiftLogging_disappears_Cluster(t *testing.T) {
 	}
 
 	var log redshift.DescribeLoggingStatusOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_logging.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingDestroy(ctx),
+		CheckDestroy:             testAccCheckLoggingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingExists(ctx, resourceName, &log),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+					testAccCheckLoggingExists(ctx, t, resourceName, &log),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,24 +132,24 @@ func TestAccRedshiftLogging_s3(t *testing.T) {
 	}
 
 	var log redshift.DescribeLoggingStatusOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_logging.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoggingDestroy(ctx),
+		CheckDestroy:             testAccCheckLoggingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoggingConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoggingExists(ctx, resourceName, &log),
+					testAccCheckLoggingExists(ctx, t, resourceName, &log),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucketName, bucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(awstypes.LogDestinationTypeS3)),
@@ -170,9 +168,9 @@ func TestAccRedshiftLogging_s3(t *testing.T) {
 	})
 }
 
-func testAccCheckLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLoggingDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_logging" {
@@ -196,14 +194,14 @@ func testAccCheckLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLoggingExists(ctx context.Context, n string, v *redshift.DescribeLoggingStatusOutput) resource.TestCheckFunc {
+func testAccCheckLoggingExists(ctx context.Context, t *testing.T, n string, v *redshift.DescribeLoggingStatusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindLoggingStatusByID(ctx, conn, rs.Primary.ID)
 

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appflow
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1401,41 +1402,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
-	d.Set(names.AttrARN, output.FlowArn)
-	d.Set(names.AttrDescription, output.Description)
-	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(output.DestinationFlowConfigList)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting destination_flow_config: %s", err)
-	}
-	d.Set("flow_status", output.FlowStatus)
-	d.Set("kms_arn", output.KmsArn)
-	d.Set(names.AttrName, output.FlowName)
-	if output.SourceFlowConfig != nil {
-		if err := d.Set("source_flow_config", []any{flattenSourceFlowConfig(output.SourceFlowConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting source_flow_config: %s", err)
-		}
-	} else {
-		d.Set("source_flow_config", nil)
-	}
-	if err := d.Set("task", flattenTasks(output.Tasks)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting task: %s", err)
-	}
-	if output.TriggerConfig != nil {
-		if err := d.Set("trigger_config", []any{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting trigger_config: %s", err)
-		}
-	} else {
-		d.Set("trigger_config", nil)
-	}
-
-	if output.MetadataCatalogConfig != nil {
-		if err := d.Set("metadata_catalog_config", flattenMetadataCatalogConfig(output.MetadataCatalogConfig)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting metadata_catalog_config: %s", err)
-		}
-	} else {
-		d.Set("metadata_catalog_config", nil)
-	}
-
-	setTagsOut(ctx, output.Tags)
+	resourceFlowFlatten(ctx, output, d)
 
 	return diags
 }
@@ -1507,9 +1474,8 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	output, err := conn.DescribeFlow(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1518,21 +1484,20 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.FlowStatus; status == types.FlowStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusFlow(ctx context.Context, conn *appflow.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFlow(conn *appflow.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFlowByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1551,9 +1516,9 @@ func waitFlowDeleted(ctx context.Context, conn *appflow.Client, name string) (*t
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{},
-		Refresh: statusFlow(ctx, conn, name),
+		Refresh: statusFlow(conn, name),
 		Timeout: timeout,
 	}
 
@@ -3839,4 +3804,32 @@ func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperti
 	}
 
 	return m
+}
+
+func resourceFlowFlatten(ctx context.Context, output *appflow.DescribeFlowOutput, rd *schema.ResourceData) {
+	rd.Set(names.AttrARN, output.FlowArn)
+	rd.Set(names.AttrDescription, output.Description)
+	rd.Set("destination_flow_config", flattenDestinationFlowConfigs(output.DestinationFlowConfigList))
+	rd.Set("flow_status", output.FlowStatus)
+	rd.Set("kms_arn", output.KmsArn)
+	rd.Set(names.AttrName, output.FlowName)
+	if output.SourceFlowConfig != nil {
+		rd.Set("source_flow_config", []any{flattenSourceFlowConfig(output.SourceFlowConfig)})
+	} else {
+		rd.Set("source_flow_config", nil)
+	}
+	rd.Set("task", flattenTasks(output.Tasks))
+	if output.TriggerConfig != nil {
+		rd.Set("trigger_config", []any{flattenTriggerConfig(output.TriggerConfig)})
+	} else {
+		rd.Set("trigger_config", nil)
+	}
+
+	if output.MetadataCatalogConfig != nil {
+		rd.Set("metadata_catalog_config", flattenMetadataCatalogConfig(output.MetadataCatalogConfig))
+	} else {
+		rd.Set("metadata_catalog_config", nil)
+	}
+
+	setTagsOut(ctx, output.Tags)
 }

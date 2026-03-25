@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -148,9 +149,8 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	output, err := conn.GetResolverRuleAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -159,14 +159,14 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	}
 
 	if output == nil || output.ResolverRuleAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverRuleAssociation, nil
 }
 
-func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRuleAssociation(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverRuleAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -182,10 +182,10 @@ func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id
 }
 
 func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusCreating),
 		Target:     enum.Slice(awstypes.ResolverRuleAssociationStatusComplete),
-		Refresh:    statusRuleAssociation(ctx, conn, id),
+		Refresh:    statusRuleAssociation(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -194,7 +194,7 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverRuleAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -203,10 +203,10 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Clien
 }
 
 func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusRuleAssociation(ctx, conn, id),
+		Refresh:    statusRuleAssociation(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -215,7 +215,7 @@ func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverRuleAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

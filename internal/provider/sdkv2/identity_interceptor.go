@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -122,14 +122,14 @@ func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) 
 	return true
 }
 
-func getAttributeOk(d schemaResourceData, name string) (string, bool) {
+func getAttributeOk(d schemaResourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
 		return "", false
 	} else {
-		return v.(string), true
+		return v, true
 	}
 }
 
@@ -155,7 +155,7 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	}
 }
 
-func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
+func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
@@ -232,7 +232,7 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 		// Historically, we haven't validated *any* Import ID value for Global Singletons
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
+				if err := importer.GlobalSingleton(ctx, rd, identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -242,7 +242,7 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
+				if err := importer.RegionalSingleton(ctx, rd, identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 

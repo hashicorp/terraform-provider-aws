@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -110,7 +111,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
@@ -271,9 +272,7 @@ func findDBParameterGroupByName(ctx context.Context, conn *neptune.Client, name 
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBParameterGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -297,9 +296,8 @@ func findDBParameterGroups(ctx context.Context, conn *neptune.Client, input *nep
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -322,9 +320,8 @@ func findDBParameters(ctx context.Context, conn *neptune.Client, input *neptune.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package secretsmanager
 
@@ -13,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -103,7 +105,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.RotateSecretInput{
-		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
 		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]any)),
 		SecretId:           aws.String(secretID),
@@ -166,7 +168,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
 		secretID := d.Get("secret_id").(string)
 		input := &secretsmanager.RotateSecretInput{
-			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 			RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
 			RotationRules:      expandRotationRules(d.Get("rotation_rules").([]any)),
 			SecretId:           aws.String(secretID),

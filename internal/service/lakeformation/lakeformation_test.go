@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -34,7 +34,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		"IdentityCenterConfiguration": {
 			acctest.CtBasic:      testAccLakeFormationIdentityCenterConfiguration_basic,
 			acctest.CtDisappears: testAccLakeFormationIdentityCenterConfiguration_disappears,
-			"Identity":           testAccLakeFormationIdentityCenterConfiguration_IdentitySerial,
+			"Identity":           testAccLakeFormationIdentityCenterConfiguration_identitySerial,
 		},
 		"OptIn": {
 			acctest.CtBasic:      testAccOptIn_basic,

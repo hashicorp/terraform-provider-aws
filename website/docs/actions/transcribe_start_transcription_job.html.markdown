@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_transcribe_start_transcription_job
 
-~> **Note:** `aws_transcribe_start_transcription_job` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Starts an Amazon Transcribe transcription job to transcribe audio from a media file. The media file must be uploaded to an Amazon S3 bucket before starting the transcription job.
 
 For information about Amazon Transcribe, see the [Amazon Transcribe Developer Guide](https://docs.aws.amazon.com/transcribe/latest/dg/). For specific information about starting transcription jobs, see the [StartTranscriptionJob](https://docs.aws.amazon.com/transcribe/latest/APIReference/API_StartTranscriptionJob.html) page in the Amazon Transcribe API Reference.

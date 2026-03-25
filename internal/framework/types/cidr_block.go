@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -52,12 +52,9 @@ func (t cidrBlockType) ValueFromString(_ context.Context, in types.String) (base
 		return CIDRBlockUnknown(), diags
 	}
 
-	valueString := in.ValueString()
-	if err := inttypes.ValidateCIDRBlock(valueString); err != nil {
-		return CIDRBlockUnknown(), diags // Must not return validation errors
-	}
-
-	return CIDRBlockValue(valueString), diags
+	// The ValidateAttribute method will surface errors if the value is an invalid
+	// CIDR block. This method simply passes the value through.
+	return CIDRBlockValue(in.ValueString()), diags
 }
 
 func (t cidrBlockType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {

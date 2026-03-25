@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -290,7 +290,7 @@ func TestFlattenStringSpecial(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenTopLevelStringPtr(t *testing.T) {

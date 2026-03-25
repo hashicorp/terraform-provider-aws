@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer
@@ -17,7 +17,7 @@ type AWSClient interface {
 	Region(ctx context.Context) string
 }
 
-func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec *inttypes.Identity, client AWSClient) error {
+func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
 	var region string
 	if region = rd.Id(); region != "" {
 		if regionAttr, ok := rd.GetOk(names.AttrRegion); ok {
@@ -56,7 +56,7 @@ func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpe
 	return nil
 }
 
-func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec *inttypes.Identity, client AWSClient) error {
+func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
 	accountID := client.AccountID(ctx)
 
 	// Historically, we have not validated the Import ID for Global Singletons

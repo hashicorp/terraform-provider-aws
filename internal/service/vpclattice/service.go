@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -12,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -112,7 +112,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 		Tags:        getTagsIn(ctx),
 	}
@@ -230,10 +230,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func waitServiceCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ServiceStatusCreateInProgress),
 		Target:                    enum.Slice(types.ServiceStatusActive),
-		Refresh:                   statusService(ctx, conn, id),
+		Refresh:                   statusService(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -248,10 +248,10 @@ func waitServiceCreated(ctx context.Context, conn *vpclattice.Client, id string,
 }
 
 func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusDeleteInProgress, types.ServiceStatusActive),
 		Target:  []string{},
-		Refresh: statusService(ctx, conn, id),
+		Refresh: statusService(conn, id),
 		Timeout: timeout,
 	}
 
@@ -263,8 +263,8 @@ func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string,
 	return nil, err
 }
 
-func statusService(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusService(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findServiceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -286,9 +286,8 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 	out, err := conn.GetService(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -297,7 +296,7 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

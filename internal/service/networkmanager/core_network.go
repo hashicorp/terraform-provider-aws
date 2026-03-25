@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -15,11 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -171,7 +173,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := networkmanager.CreateCoreNetworkInput{
-		ClientToken:     aws.String(id.UniqueId()),
+		ClientToken:     aws.String(create.UniqueId(ctx)),
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
 	}
@@ -354,7 +356,7 @@ func findCoreNetwork(ctx context.Context, conn *networkmanager.Client, input *ne
 	}
 
 	if output == nil || output.CoreNetwork == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CoreNetwork, nil
@@ -385,7 +387,7 @@ func findCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, inp
 	}
 
 	if output == nil || output.CoreNetworkPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CoreNetworkPolicy, nil
@@ -532,7 +534,7 @@ func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Cl
 	}
 
 	inputPCNP := networkmanager.PutCoreNetworkPolicyInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		CoreNetworkId:  aws.String(coreNetworkID),
 		PolicyDocument: aws.String(document),
 	}
@@ -594,7 +596,7 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Clie
 				errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(err.ErrorCode), aws.ToString(err.Message)))
 			}
 
-			tfresource.SetLastError(err, errors.Join(errs...))
+			retry.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err

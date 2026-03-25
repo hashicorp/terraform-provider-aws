@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -41,7 +43,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="egress_only_internet_gateway_exclusion;elastic_file_system_exclusion;internet_gateway_exclusion;lambda_exclusion;nat_gateway_exclusion;virtual_private_gateway_exclusion;vpc_lattice_exclusion;vpc_peering_exclusion")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(generator=false)
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}

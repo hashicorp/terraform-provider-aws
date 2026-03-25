@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetMethodResponseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_response.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodResponseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
+					testAccCheckMethodResponseExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "response_models.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Error"),
@@ -52,7 +50,7 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 			{
 				Config: testAccMethodResponseConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
+					testAccCheckMethodResponseExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "response_models.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Empty"),
@@ -68,20 +66,20 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetMethodResponseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_response.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodResponse(), resourceName),
+					testAccCheckMethodResponseExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceMethodResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,14 +87,14 @@ func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigateway.GetMethodResponseOutput) resource.TestCheckFunc {
+func testAccCheckMethodResponseExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetMethodResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
@@ -110,9 +108,9 @@ func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigatew
 	}
 }
 
-func testAccCheckMethodResponseDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMethodResponseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method_response" {

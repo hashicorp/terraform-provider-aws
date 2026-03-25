@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 name: Pull Request Review
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Community Check
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           sparse-checkout: .github/actions/community_check
 
@@ -31,7 +31,7 @@ jobs:
         if: |
           github.event.review.state == 'approved'
           && (steps.community_check.outputs.maintainer == 'true' || steps.community_check.outputs.partner == 'true')
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
         env:
           REVIEW_AUTHOR_URL: ${{ github.event.review.user.html_url }}
           REVIEW_AUTHOR_LOGIN: ${{ github.event.review.user.login }}

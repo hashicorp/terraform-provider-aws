@@ -1,4 +1,4 @@
-<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <!-- markdownlint-configure-file { "code-block-style": false } -->
@@ -43,7 +43,7 @@ Add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `interna
     	"internet-gateway-id": d.Get("internet_gateway_id").(string),
     })
     // Add filters based on key-value tags (N.B. Not applicable to all AWS services that support filtering)
-    filters.Add(namevaluesfilters.EC2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
+    filters.Add(namevaluesfilters.EC2Tags(keyvaluetags.New(d.Get("tags").(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
     // Add filters based on the custom filtering "filter" attribute.
     filters.Add(d.Get("filter").(*schema.Set))
 

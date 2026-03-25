@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -40,7 +40,7 @@ func TestTraceRule2Expansion(t *testing.T) {
 	}
 
 	source := &birdModel{
-		Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust[parrotModel](ctx, []parrotModel{
+		Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []parrotModel{
 			{
 				Flying: types.BoolValue(true),
 				Items: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -255,7 +256,7 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	output, err := conn.DescribeKeyValueStore(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -265,14 +266,14 @@ func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name 
 	}
 
 	if output == nil || output.KeyValueStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKeyValueStore(conn *cloudfront.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKeyValueStoreByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -288,10 +289,10 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 }
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyValueStoreStatusProvisioning},
 		Target:  []string{keyValueStoreStatusReady},
-		Refresh: statusKeyValueStore(ctx, conn, name),
+		Refresh: statusKeyValueStore(conn, name),
 		Timeout: timeout,
 	}
 

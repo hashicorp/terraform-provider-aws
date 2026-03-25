@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lightsail
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -198,9 +199,8 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Client, id stri
 	out, err := conn.GetDisk(ctx, in)
 
 	if IsANotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -211,7 +211,7 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Client, id stri
 	disk := out.Disk
 
 	if disk == nil || !aws.ToBool(disk.IsAttached) || aws.ToString(disk.Name) != dName || aws.ToString(disk.AttachedTo) != iName {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Disk, nil

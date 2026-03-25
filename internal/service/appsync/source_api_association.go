@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appsync
 
@@ -23,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -339,7 +340,9 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 	output, err := conn.GetSourceApiAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -347,14 +350,14 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 	}
 
 	if output == nil || output.SourceApiAssociation == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.SourceApiAssociation, nil
 }
 
-func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSourceAPIAssociation(conn *appsync.Client, associationID, mergedAPIID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationID, mergedAPIID)
 
 		if retry.NotFound(err) {
@@ -370,17 +373,17 @@ func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, assoc
 }
 
 func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
 		Target:  enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
-		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
+		Refresh: statusSourceAPIAssociation(conn, associationID, mergedAPIID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
@@ -389,17 +392,17 @@ func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, 
 }
 
 func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeInProgress, awstypes.SourceApiAssociationStatusMergeScheduled),
 		Target:  enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess),
-		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
+		Refresh: statusSourceAPIAssociation(conn, associationID, mergedAPIID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
@@ -408,17 +411,17 @@ func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, 
 }
 
 func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, associationID, mergedAPIID string, timeout time.Duration) (*awstypes.SourceApiAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SourceApiAssociationStatusMergeSuccess, awstypes.SourceApiAssociationStatusDeletionInProgress, awstypes.SourceApiAssociationStatusDeletionScheduled),
 		Target:  []string{},
-		Refresh: statusSourceAPIAssociation(ctx, conn, associationID, mergedAPIID),
+		Refresh: statusSourceAPIAssociation(conn, associationID, mergedAPIID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}

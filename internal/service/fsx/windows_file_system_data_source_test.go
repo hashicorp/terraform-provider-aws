@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -6,7 +6,6 @@ package fsx_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +19,20 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_fsx_windows_file_system.test"
 	datasourceName := "data.aws_fsx_windows_file_system.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWindowsFileSystemDataSourceConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "active_directory_id", resourceName, "active_directory_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "aliases.#", resourceName, "aliases.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "audit_log_configuration.#", resourceName, "audit_log_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "automatic_backup_retention_days", resourceName, "automatic_backup_retention_days"),
@@ -61,7 +61,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 }
 
 func testAccWindowsFileSystemDataSourceConfig_basic(rName, domain string) string {
-	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_basic(rName, domain), `
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_aliases1(rName, domain, "filesystem1.example.com"), `
 data "aws_fsx_windows_file_system" "test" {
   id = aws_fsx_windows_file_system.test.id
 }

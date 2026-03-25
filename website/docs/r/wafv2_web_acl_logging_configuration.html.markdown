@@ -160,7 +160,7 @@ The `action_condition` block supports the following argument:
 
 The `label_name_condition` block supports the following argument:
 
-* `label_name` - (Required) Name of the label that a log record must contain in order to meet the condition. It must be a fully qualified label name, which includes a prefix, optional namespaces, and the label name itself. The prefix identifies the rule group or web ACL context of the rule that added the label.
+* `label_name` - (Required) Name of the label that a log record must contain in order to meet the condition. It must be a [fully qualified label name](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-label-requirements.html#waf-rule-label-syntax), which includes a prefix, optional namespaces, and the label name itself. The prefix identifies the rule group or web ACL context of the rule that added the label.
 
 ### Redacted Fields
 

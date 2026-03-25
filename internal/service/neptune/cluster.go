@@ -1,10 +1,13 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -17,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -328,7 +330,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 
 	// Check if any of the parameters that require a cluster modification after creation are set.
 	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
@@ -546,7 +548,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if err != nil {
-		if !errs.IsA[*tfresource.EmptyResultError](err) {
+		if !errors.Is(err, tfresource.ErrEmptyResult) {
 			return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
 		}
 	}
@@ -555,7 +557,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	for l := backoff.NewLoop(d.Timeout(schema.TimeoutRead)); err != nil && l.Continue(ctx); {
 		dbc, err = findDBClusterByID(ctx, conn, d.Id())
 
-		if errs.IsA[*tfresource.EmptyResultError](err) {
+		if errors.Is(err, tfresource.ErrEmptyResult) {
 			continue
 		}
 
@@ -888,8 +890,8 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Client, c
 	return nil
 }
 
-func statusDBCluster(ctx context.Context, conn *neptune.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*neptune.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBCluster(conn *neptune.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*neptune.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id, optFns...)
 
 		if retry.NotFound(err) {
@@ -922,14 +924,10 @@ func findDBClusterByID(ctx context.Context, conn *neptune.Client, id string, opt
 	// Eventual consistency check.
 	if arn.IsARN(id) {
 		if aws.ToString(output.DBClusterArn) != id {
-			return nil, &sdkretry.NotFoundError{
-				LastRequest: input,
-			}
+			return nil, &retry.NotFoundError{}
 		}
 	} else if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -953,9 +951,8 @@ func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.De
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -993,10 +990,10 @@ func waitDBClusterAvailable(ctx context.Context, conn *neptune.Client, id string
 		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
+		Refresh:    statusDBCluster(conn, id, waitNoPendingModifiedValues),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1012,7 +1009,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *neptune.Client, id string
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusDeleting,
@@ -1020,7 +1017,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *neptune.Client, id string, 
 			clusterStatusModifying,
 		},
 		Target:     []string{},
-		Refresh:    statusDBCluster(ctx, conn, id, false),
+		Refresh:    statusDBCluster(conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

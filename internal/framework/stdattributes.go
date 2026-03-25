@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -37,7 +37,7 @@ func IDAttributeDeprecatedNoReplacement() schema.StringAttribute {
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.UseStateForUnknown(),
 		},
-		DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
+		DeprecationMessage: "This attribute will be removed in a future version of the provider.",
 	}
 }
 
@@ -61,5 +61,5 @@ func ARNAttributeComputedOnlyDeprecatedWithAlternate(altPath path.Path) schema.S
 }
 
 func deprecatedWithAlternateMessage(altPath path.Path) string {
-	return fmt.Sprintf("Use '%s' instead. This attribute will be removed in a future verion of the provider.", altPath.String())
+	return fmt.Sprintf("Use '%s' instead. This attribute will be removed in a future version of the provider.", altPath.String())
 }

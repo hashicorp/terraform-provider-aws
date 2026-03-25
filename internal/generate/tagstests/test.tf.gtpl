@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 {{ define "region" -}}
@@ -126,6 +126,13 @@ variable "ignore_tag_keys" {
 {{ if .AlternateRegionProvider }}
 variable "alt_region" {
   description = "Region for provider awsalternate"
+  type        = string
+  nullable    = false
+}
+{{ end -}}
+{{- if .AlternateRegionTfVars }}
+variable "secondary_region" {
+  description = "Secondary region"
   type        = string
   nullable    = false
 }

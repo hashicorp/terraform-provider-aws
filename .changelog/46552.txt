@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_ec2_secondary_network
+```
+```release-note:new-list-resource
+aws_ec2_secondary_subnet
+```

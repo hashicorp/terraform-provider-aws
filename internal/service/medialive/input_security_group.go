@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package medialive
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -189,10 +190,10 @@ func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
-		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
+		Refresh:                   statusInputSecurityGroup(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -207,10 +208,10 @@ func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputSecurityGroupStateUpdating),
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
-		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
+		Refresh:                   statusInputSecurityGroup(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -225,10 +226,10 @@ func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.InputSecurityGroupStateDeleted),
-		Refresh: statusInputSecurityGroup(ctx, conn, id),
+		Refresh: statusInputSecurityGroup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -240,8 +241,8 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 	return nil, err
 }
 
-func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInputSecurityGroup(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findInputSecurityGroupByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -263,9 +264,8 @@ func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -273,7 +273,7 @@ func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

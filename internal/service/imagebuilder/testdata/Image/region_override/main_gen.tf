@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_imagebuilder_image" "test" {
@@ -6,6 +6,41 @@ resource "aws_imagebuilder_image" "test" {
 
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+}
+
+resource "aws_imagebuilder_image_recipe" "test" {
+  region = var.region
+
+  component {
+    component_arn = data.aws_imagebuilder_component.update-linux.arn
+  }
+
+  name         = var.rName
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+
+data "aws_imagebuilder_component" "update-linux" {
+  region = var.region
+
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
+}
+
+data "aws_partition" "current" {}
+data "aws_region" "current" {
+  region = var.region
+
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  region = var.region
+
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = var.rName
+  security_group_ids    = [aws_default_security_group.test.id]
+  subnet_id             = aws_subnet.test.id
+
+  depends_on = [aws_default_route_table.test]
 }
 
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
@@ -111,41 +146,6 @@ resource "aws_iam_instance_profile" "test" {
     aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilder,
   ]
 }
-
-resource "aws_imagebuilder_image_recipe" "test" {
-  region = var.region
-
-  component {
-    component_arn = data.aws_imagebuilder_component.update-linux.arn
-  }
-
-  name         = var.rName
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
-  version      = "1.0.0"
-}
-
-resource "aws_imagebuilder_infrastructure_configuration" "test" {
-  region = var.region
-
-  instance_profile_name = aws_iam_instance_profile.test.name
-  name                  = var.rName
-  security_group_ids    = [aws_default_security_group.test.id]
-  subnet_id             = aws_subnet.test.id
-
-  depends_on = [aws_default_route_table.test]
-}
-
-data "aws_imagebuilder_component" "update-linux" {
-  region = var.region
-
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
-}
-data "aws_partition" "current" {}
-data "aws_region" "current" {
-  region = var.region
-
-}
-
 
 variable "rName" {
   description = "Name for resource"

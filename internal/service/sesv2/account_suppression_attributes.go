@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sesv2
 
@@ -143,7 +145,7 @@ func findAccountSuppressionAttributes(ctx context.Context, conn *sesv2.Client) (
 	}
 
 	if output.SuppressionAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SuppressionAttributes, nil

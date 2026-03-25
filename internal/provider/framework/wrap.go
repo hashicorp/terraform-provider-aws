@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -29,7 +29,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -55,7 +57,7 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+		interceptors = append(interceptors, dataSourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, dataSourceValidateRegion())
 		}
@@ -100,6 +102,9 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
+		if s := c.RandomnessSource(); s != nil {
+			ctx = vcr.NewContext(ctx, s)
+		}
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
@@ -544,7 +549,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, resourceInjectRegionAttribute())
+		interceptors = append(interceptors, resourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, resourceValidateRegion())
 		}
@@ -864,7 +869,7 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(framework.Lister); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParams]); ok {
 		if isRegionOverrideEnabled {
 			v.AppendResultInterceptor(listresource.SetRegionInterceptor())
 		}
@@ -916,6 +921,10 @@ func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
 	}
 
 	return ctx, diags
@@ -979,13 +988,19 @@ var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
 	var interceptors interceptorInvocations
 
-	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
 		interceptors = append(interceptors, listResourceInjectRegionAttribute())
 		// TODO: validate region in partition, needs tweaked error message
 	}
 
 	inner := spec.Factory()
 
+	// Updates SDKv2 schema
 	if v, ok := inner.(framework.WithRegionSpec); ok {
 		v.SetRegionSpec(spec.Region)
 	}
@@ -994,15 +1009,17 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
-		if !tfunique.IsHandleNil(spec.Tags) {
-			v.SetTagsSpec(spec.Tags)
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
+		v.AppendResultInterceptor(listresource.SetResourceStateSDK())
+
+		if isRegionOverrideEnabled {
+			v.AppendResultInterceptor(listresource.SetRegionInterceptorSDK())
 		}
-	} else { // Interceptor is on by default. Will use as a fallback for now until legacy behavior is removed
-		if v, ok := inner.(framework.ListerSDK); ok {
-			if !tfunique.IsHandleNil(spec.Tags) {
-				v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
-			}
+
+		v.AppendResultInterceptor(listresource.IdentityInterceptorSDK(spec.Identity.Attributes))
+
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
 	}
 
@@ -1049,6 +1066,10 @@ func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAt
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
 	}
 
 	return ctx, diags

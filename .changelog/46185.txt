@@ -1,0 +1,11 @@
+```release-note:note
+resource/aws_invoicing_invoice_unit: Deprecates `region` attribute, as the resource is global.
+```
+
+```release-note:enhancement
+resource/aws_invoicing_invoice_unit: Adds resource identity support.
+```
+
+```release-note:enhancement
+resource/aws_invoicing_invoice_unit: Adds validation to restrict `rules` to a single element.
+```

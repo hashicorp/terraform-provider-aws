@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune_test
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,7 +23,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 	licenseModel := "amazon-license"
 	class := "db.t4g.medium"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -50,7 +49,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	licenseModel := "amazon-license"
 	preferredOption := "db.r5.2xlarge"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,7 +68,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).NeptuneClient(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),

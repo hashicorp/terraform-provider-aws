@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -24,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -277,7 +279,7 @@ func (r *resourceMemoryStrategy) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		MemoryId:    plan.MemoryID.ValueStringPointer(),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			AddMemoryStrategies: []awstypes.MemoryStrategyInput{strategyInput},
@@ -381,7 +383,7 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 		}
 
 		input := bedrockagentcorecontrol.UpdateMemoryInput{
-			ClientToken: aws.String(sdkid.UniqueId()),
+			ClientToken: aws.String(create.UniqueId(ctx)),
 			MemoryId:    plan.MemoryID.ValueStringPointer(),
 			MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 				ModifyMemoryStrategies: []awstypes.ModifyMemoryStrategyInput{strategyInput},
@@ -432,7 +434,7 @@ func (r *resourceMemoryStrategy) Delete(ctx context.Context, request resource.De
 	}
 
 	input := bedrockagentcorecontrol.UpdateMemoryInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		MemoryId:    state.MemoryID.ValueStringPointer(),
 		MemoryStrategies: &awstypes.ModifyMemoryStrategies{
 			DeleteMemoryStrategies: []awstypes.DeleteMemoryStrategyInput{

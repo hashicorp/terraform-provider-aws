@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 rules:
@@ -8,6 +8,20 @@ rules:
     patterns:
       - pattern: |
           resource.TestCheckResourceAttrSet($NAME, $ATTR)
+      - metavariable-pattern:
+          metavariable: $ATTR
+          patterns:
+            - pattern-either:
+                - pattern: names.AttrARN
+                # - pattern-regex: _arn
+    severity: ERROR
+
+  - id: arn-matchresourceattr
+    languages: [go]
+    message: Use one of the `acctest` ARN value checks or TestCheckResourceAttrPair
+    patterns:
+      - pattern: |
+          resource.TestMatchResourceAttr($NAME, $ATTR, regexache.MustCompile(...))
       - metavariable-pattern:
           metavariable: $ATTR
           patterns:

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ds
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -148,14 +149,14 @@ func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice
 	}
 
 	if output.OwnerDirectoryDescription == nil {
-		return nil, tfresource.NewEmptyResultError(id)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDirectoryShareStatus(conn *directoryservice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -171,10 +172,10 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Clie
 }
 
 func waitSharedDirectoryAccepted(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ShareStatusPendingAcceptance, awstypes.ShareStatusSharing),
 		Target:                    enum.Slice(awstypes.ShareStatusShared),
-		Refresh:                   statusDirectoryShareStatus(ctx, conn, id),
+		Refresh:                   statusDirectoryShareStatus(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

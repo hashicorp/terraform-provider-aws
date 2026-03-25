@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package errs_test
@@ -48,6 +48,25 @@ func TestIsAErrorMessageContains(t *testing.T) {
 	}
 
 	if !errs.IsAErrorMessageContains[*SecondError](&e2, "Second") {
+		t.Error("unexpected false")
+	}
+}
+
+func TestContains(t *testing.T) {
+	t.Parallel()
+
+	var e1 FirstError
+	var e2 SecondError
+
+	if !errs.Contains(e1, "First") {
+		t.Error("unexpected false")
+	}
+
+	if errs.Contains(e1, "Second") {
+		t.Error("unexpected true")
+	}
+
+	if !errs.Contains(&e2, "Second") {
 		t.Error("unexpected false")
 	}
 }

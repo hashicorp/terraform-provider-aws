@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -9,29 +9,28 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/batch"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
@@ -47,22 +46,27 @@ func TestAccECSTag_basic(t *testing.T) {
 
 func TestAccECSTag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTag(), resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -71,19 +75,19 @@ func TestAccECSTag_disappears(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11951
 func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckBatch(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_resourceARNBatchComputeEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -97,19 +101,19 @@ func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 
 func TestAccECSTag_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
@@ -122,7 +126,7 @@ func TestAccECSTag_value(t *testing.T) {
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
@@ -190,7 +194,7 @@ resource "aws_ecs_tag" "test" {
 }
 
 func testAccPreCheckBatch(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BatchClient(ctx)
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 

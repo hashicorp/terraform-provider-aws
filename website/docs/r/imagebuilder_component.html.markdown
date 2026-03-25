@@ -73,6 +73,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the component.
 * `arn` - (Required) Amazon Resource Name (ARN) of the component.
 * `date_created` - Date the component was created.
 * `encrypted` - Encryption status of the component.

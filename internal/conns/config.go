@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagpolicy"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -47,6 +48,7 @@ type Config struct {
 	Profile                        string
 	Region                         string
 	RetryMode                      aws.RetryMode
+	S3OriginalRegion               string
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
@@ -166,6 +168,20 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	c.Region = cfg.Region
 
+	// Handle custom S3 regions for S3-compatible storage (Ceph, MinIO, etc.)
+	// AWS SDK v2 validates regions strictly, but S3-compatible storage may use non-standard region strings
+	if customS3Endpoint := c.Endpoints[names.S3]; customS3Endpoint != "" {
+		if !inttypes.IsAWSRegion(cfg.Region) {
+			c.S3OriginalRegion = cfg.Region
+			cfg.Region = "us-east-1" // Use compliant dummy region for SDK initialization
+			tflog.Info(ctx, "Substituting non-standard region for S3-compatible endpoint", map[string]any{
+				"original_region":    c.S3OriginalRegion,
+				"substitute_region":  cfg.Region,
+				"custom_s3_endpoint": customS3Endpoint,
+			})
+		}
+	}
+
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
@@ -221,6 +237,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.clients = make(map[string]map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
+	client.s3OriginalRegion = c.S3OriginalRegion
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3USEast1RegionalEndpoint = c.S3USEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion

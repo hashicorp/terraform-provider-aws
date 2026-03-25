@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -14,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -130,7 +131,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		output, err := conn.SearchAvailablePhoneNumbers(ctx, input)
 
 		if err == nil && (output == nil || len(output.AvailableNumbersList) == 0) {
-			err = tfresource.NewEmptyResultError(input)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		if err != nil {
@@ -277,9 +278,8 @@ func findPhoneNumber(ctx context.Context, conn *connect.Client, input *connect.D
 	output, err := conn.DescribePhoneNumber(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -288,7 +288,7 @@ func findPhoneNumber(ctx context.Context, conn *connect.Client, input *connect.D
 	}
 
 	if output == nil || output.ClaimedPhoneNumberSummary == nil || output.ClaimedPhoneNumberSummary.PhoneNumberStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClaimedPhoneNumberSummary, nil
@@ -307,8 +307,8 @@ func flattenPhoneNumberStatus(apiObject *awstypes.PhoneNumberStatus) []any {
 	return []any{tfMap}
 }
 
-func statusPhoneNumber(ctx context.Context, conn *connect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPhoneNumber(conn *connect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -324,10 +324,10 @@ func statusPhoneNumber(ctx context.Context, conn *connect.Client, id string) sdk
 }
 
 func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
 		Target:  enum.Slice(awstypes.PhoneNumberWorkflowStatusClaimed),
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -335,7 +335,7 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, id string
 
 	if output, ok := outputRaw.(*awstypes.ClaimedPhoneNumberSummary); ok {
 		if status := output.PhoneNumberStatus; status.Status == awstypes.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -345,10 +345,10 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, id string
 }
 
 func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
 		Target:  enum.Slice(awstypes.PhoneNumberWorkflowStatusClaimed),
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -356,7 +356,7 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, id string
 
 	if output, ok := outputRaw.(*awstypes.ClaimedPhoneNumberSummary); ok {
 		if status := output.PhoneNumberStatus; status.Status == awstypes.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -366,10 +366,10 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, id string
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
 		Target:  []string{},
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -377,7 +377,7 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Client, id string
 
 	if output, ok := outputRaw.(*awstypes.ClaimedPhoneNumberSummary); ok {
 		if status := output.PhoneNumberStatus; status.Status == awstypes.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(status.Message)))
 		}
 
 		return output, err

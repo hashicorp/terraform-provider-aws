@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -92,6 +92,8 @@ const (
 	errCodeInvalidRouteServerPeerIdNotFound                        = "InvalidRouteServerPeerId.NotFound"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"
+	errCodeInvalidSecondaryNetworkIdNotFound                       = "InvalidSecondaryNetworkId.NotFound"
+	errCodeInvalidSecondarySubnetIdNotFound                        = "InvalidSecondarySubnetId.NotFound"
 	errCodeInvalidSecurityGroupIDNotFound                          = "InvalidSecurityGroupID.NotFound"
 	errCodeInvalidSecurityGroupRuleIdNotFound                      = "InvalidSecurityGroupRuleId.NotFound"
 	errCodeInvalidServiceName                                      = "InvalidServiceName"
@@ -101,6 +103,7 @@ const (
 	errCodeInvalidSpotFleetRequestConfig                           = "InvalidSpotFleetRequestConfig"
 	errCodeInvalidSpotFleetRequestIdNotFound                       = "InvalidSpotFleetRequestId.NotFound"
 	errCodeInvalidSpotInstanceRequestIDNotFound                    = "InvalidSpotInstanceRequestID.NotFound"
+	errCodeInvalidState                                            = "InvalidState"
 	errCodeInvalidSubnetCIDRReservationIDNotFound                  = "InvalidSubnetCidrReservationID.NotFound"
 	errCodeInvalidSubnetIDNotFound                                 = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                                 = "InvalidSubnetId.NotFound"
@@ -113,6 +116,8 @@ const (
 	errCodeInvalidTransitGatewayIDNotFound                         = "InvalidTransitGatewayID.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainAssociationNotFound = "InvalidTransitGatewayMulticastDomainAssociation.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound          = "InvalidTransitGatewayMulticastDomainId.NotFound"
+	errCodeInvalidTransitGatewayMeteringPolicyEntryNotFound        = "InvalidTransitGatewayMeteringPolicyEntry.NotFound"
+	errCodeInvalidTransitGatewayMeteringPolicyIdNotFound           = "InvalidTransitGatewayMeteringPolicyId.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableAssociationNotFound     = "InvalidTransitGatewayPolicyTableAssociation.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound              = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidVPCBlockPublicAccessExclusionIdNotFound          = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
@@ -144,7 +149,9 @@ const (
 	errCodeTransitGatewayMulticastGroupMemberNotFound              = "TransitGatewayMulticastGroupMember.NotFound"
 	errCodeTransitGatewayMulticastGroupSourceNotFound              = "TransitGatewayMulticastGroupSource.NotFound"
 	errCodeTransitGatewayRouteTablePropagationNotFound             = "TransitGatewayRouteTablePropagation.NotFound"
+	errCodeUnauthorizedOperation                                   = "UnauthorizedOperation"
 	errCodeUnsupportedOperation                                    = "UnsupportedOperation"
+	errCodeVPNConcentratorLimitExceeded                            = "VpnConcentratorLimitExceeded"
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"
 	errCodeVolumeInUse                                             = "VolumeInUse"

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lightsail
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -444,9 +445,8 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	output, err := conn.GetContainerServiceDeployments(ctx, input)
 
 	if IsANotFoundError(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -455,7 +455,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if output == nil || len(output.Deployments) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	var result types.ContainerServiceDeployment
@@ -472,9 +472,8 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if reflect.DeepEqual(result, types.ContainerServiceDeployment{}) {
-		return nil, &sdkretry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: "Empty result",
 		}
 	}
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -310,6 +310,12 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 			if v.when&opts.when != 0 {
 				// Short circuit if any Before interceptor errors.
 				if err := v.interceptor.run(ctx, opts); err != nil {
+					return nil, err
+				}
+				// Re-bootstrap context after each interceptor to pick up any changes.
+				// This allows later interceptors to see context modifications from earlier ones.
+				ctx, err = bootstrapContext(ctx, d.GetOk, nil, meta)
+				if err != nil {
 					return nil, err
 				}
 			}

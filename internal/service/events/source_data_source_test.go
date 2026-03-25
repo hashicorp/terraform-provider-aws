@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -30,7 +30,7 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

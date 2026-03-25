@@ -1,7 +1,8 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// // SPDX-License-Identifier: MPL-2.0
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package finspace
 
 import (
@@ -14,8 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -181,7 +180,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(rID)
 
 	in := &finspace.CreateKxVolumeInput{
-		ClientToken:         aws.String(id.UniqueId()),
+		ClientToken:         aws.String(create.UniqueId(ctx)),
 		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		EnvironmentId:       aws.String(environmentId),
 		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),
@@ -330,10 +329,10 @@ func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxVolumeStatusCreating),
 		Target:                    enum.Slice(types.KxVolumeStatusActive),
-		Refresh:                   statusKxVolume(ctx, conn, id),
+		Refresh:                   statusKxVolume(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -348,10 +347,10 @@ func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, 
 }
 
 func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxVolumeStatusCreating, types.KxVolumeStatusUpdating),
 		Target:                    enum.Slice(types.KxVolumeStatusActive),
-		Refresh:                   statusKxVolume(ctx, conn, id),
+		Refresh:                   statusKxVolume(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -366,10 +365,10 @@ func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, 
 }
 
 func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxVolumeStatusDeleting),
 		Target:  enum.Slice(types.KxVolumeStatusDeleted),
-		Refresh: statusKxVolume(ctx, conn, id),
+		Refresh: statusKxVolume(conn, id),
 		Timeout: timeout,
 	}
 
@@ -381,8 +380,8 @@ func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, 
 	return nil, err
 }
 
-func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKxVolume(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindKxVolumeByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -411,9 +410,8 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -421,7 +419,7 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	}
 
 	if out == nil || out.VolumeArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

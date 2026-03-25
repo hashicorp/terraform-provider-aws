@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -237,7 +239,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Attachment (%s) routing policy label: %s", d.Id(), err)
 	} else {
 		d.Set("routing_policy_label", routingPolicyLabel)
@@ -319,7 +321,7 @@ func findConnectAttachment(ctx context.Context, conn *networkmanager.Client, inp
 	}
 
 	if output == nil || output.ConnectAttachment == nil || output.ConnectAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConnectAttachment, nil
@@ -353,7 +355,7 @@ func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -375,7 +377,7 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -394,7 +396,7 @@ func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.Cl
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}

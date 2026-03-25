@@ -1,12 +1,29 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
+
+type (
+	AlgorithmResourceModel                = algorithmResourceModel
+	AlgorithmValidationSpecificationModel = algorithmValidationSpecificationModel
+	AlgorithmValidationProfileModel       = algorithmValidationProfileModel
+	TrainingJobDefinitionModel            = trainingJobDefinitionModel
+	ChannelModel                          = channelModel
+	DataSourceModel                       = dataSourceModel
+	ShuffleConfigModel                    = shuffleConfigModel
+	OutputDataConfigModel                 = outputDataConfigModel
+	ResourceConfigModel                   = resourceConfigModel
+	InstanceGroupModel                    = instanceGroupModel
+	InstancePlacementConfigModel          = instancePlacementConfigModel
+	StoppingConditionModel                = stoppingConditionModel
+	TransformJobDefinitionModel           = transformJobDefinitionModel
+)
 
 // Exports for use in tests only.
 var (
 	ResourceApp                                    = resourceApp
 	ResourceAppImageConfig                         = resourceAppImageConfig
+	ResourceAlgorithm                              = newAlgorithmResource
 	ResourceCodeRepository                         = resourceCodeRepository
 	ResourceDataQualityJobDefinition               = resourceDataQualityJobDefinition
 	ResourceDevice                                 = resourceDevice
@@ -19,9 +36,12 @@ var (
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
+	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
+	ResourceModelCard                              = newModelCardResource
 	ResourceModelPackageGroup                      = resourceModelPackageGroup
 	ResourceModelPackageGroupPolicy                = resourceModelPackageGroupPolicy
 	ResourceMonitoringSchedule                     = resourceMonitoringSchedule
@@ -36,6 +56,7 @@ var (
 	ResourceWorkteam                               = resourceWorkteam
 
 	FindAppByName                             = findAppByName
+	FindAlgorithmByName                       = findAlgorithmByName
 	FindAppImageConfigByName                  = findAppImageConfigByName
 	FindCodeRepositoryByName                  = findCodeRepositoryByName
 	FindDataQualityJobDefinitionByName        = findDataQualityJobDefinitionByName
@@ -50,8 +71,12 @@ var (
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindLabelingJobByName                     = findLabelingJobByName
+	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
+	FindModelCardByName                       = findModelCardByName
+	FindModelCardExportJobByARN               = findModelCardExportJobByARN
 	FindModelPackageGroupByName               = findModelPackageGroupByName
 	FindModelPackageGroupPolicyByName         = findModelPackageGroupPolicyByName
 	FindMonitoringScheduleByName              = findMonitoringScheduleByName
@@ -68,6 +93,7 @@ var (
 
 	DecodeAppID                                    = decodeAppID
 	DecodeDeviceId                                 = decodeDeviceId
+	ImageVersionFromARN                            = imageVersionFromARN
 	PrebuiltECRImageCreatePath                     = prebuiltECRImageCreatePath
 	PrebuiltECRImageIDByRegion_factorMachines      = prebuiltECRImageIDByRegion_factorMachines
 	PrebuiltECRImageIDByRegion_XGBoost             = prebuiltECRImageIDByRegion_XGBoost
@@ -80,6 +106,7 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
 
 	ValidName   = validName
 	ValidPrefix = validPrefix

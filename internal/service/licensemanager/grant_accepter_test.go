@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ import (
 
 func testAccGrantAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
@@ -32,7 +31,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -67,7 +66,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 func testAccGrantAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
@@ -75,7 +74,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -87,7 +86,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 				Config: testAccGrantAccepterConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
-					acctest.CheckResourceDisappears(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappearsWithProvider(ctx, acctest.NamedProvider(acctest.ProviderName, providers), tflicensemanager.ResourceGrantAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

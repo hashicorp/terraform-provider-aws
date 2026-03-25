@@ -547,6 +547,8 @@ resource "aws_lambda_capacity_provider" "example" {
 }
 ```
 
+See [the `aws_lambda_capacity_provider` resource](lambda_capacity_provider.html) for more details, such as configuring instance requirements and the scaling policy.
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -581,7 +583,7 @@ The following arguments are optional:
 * `kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
 * `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-configuration-block).
-* `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 1 MB increments. Defaults to 128.
+* `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 32,768 MB (32 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `publish_to` - (Optional) Whether to publish to a alias or version number. Omit for regular version publishing. Option is `LATEST_PUBLISHED`.
@@ -604,6 +606,8 @@ The following arguments are optional:
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
 ### capacity_provider_config Configuration
+
+~> **NOTE:** If `capacity_provider_config` is set, `vpc_config` cannot be set.
 
 * `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
 

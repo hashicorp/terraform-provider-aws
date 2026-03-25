@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -16,10 +18,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -402,7 +404,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	inputC := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileSystemType:     awstypes.FileSystemTypeOpenzfs,
 		OpenZFSConfiguration: &awstypes.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
@@ -413,7 +415,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		OpenZFSConfiguration: &awstypes.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
@@ -595,7 +597,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		names.AttrTagsAll,
 	) {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(id.UniqueId()),
+			ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &awstypes.UpdateFileSystemOpenZFSConfiguration{},
 		}
@@ -669,7 +671,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("root_volume_configuration") {
 			rootVolumeID := d.Get("root_volume_id").(string)
 			input := &fsx.UpdateVolumeInput{
-				ClientRequestToken:   aws.String(id.UniqueId()),
+				ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 				OpenZFSConfiguration: expandUpdateOpenZFSVolumeConfiguration(d.Get("root_volume_configuration").([]any)),
 				VolumeId:             aws.String(rootVolumeID),
 			}
@@ -903,7 +905,7 @@ func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.Client, id string)
 	}
 
 	if output.OpenZFSConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

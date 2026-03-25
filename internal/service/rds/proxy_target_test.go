@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,18 +25,18 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 
 	var dbProxyTarget types.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
+					testAccCheckProxyTargetExists(ctx, t, resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_db_instance.test", names.AttrAddress),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_db_instance.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
@@ -64,18 +62,18 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 
 	var dbProxyTarget types.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyTargetConfig_cluster(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
+					testAccCheckProxyTargetExists(ctx, t, resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpoint, ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_rds_cluster.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
@@ -101,19 +99,19 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 
 	var dbProxyTarget types.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
+					testAccCheckProxyTargetExists(ctx, t, resourceName, &dbProxyTarget),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,9 +119,9 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProxyTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_proxy_target" {
@@ -152,14 +150,14 @@ func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckProxyTargetExists(ctx context.Context, n string, v *types.DBProxyTarget) resource.TestCheckFunc {
+func testAccCheckProxyTargetExists(ctx context.Context, t *testing.T, n string, v *types.DBProxyTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		dbProxyName, targetGroupName, targetType, rdsResourceID, err := tfrds.ProxyTargetParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -284,14 +282,13 @@ resource "aws_security_group" "test" {
 func testAccProxyTargetConfig_instance(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "mysql"
-  preferred_versions = ["8.0.33", "8.0.32", "8.0.31"]
+  engine = "mysql"
 }
 
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version
-  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
+  preferred_instance_classes = ["db.t4g.micro", "db.t3.micro", "db.t4g.small", "db.t3.small"]
 }
 
 resource "aws_db_instance" "test" {

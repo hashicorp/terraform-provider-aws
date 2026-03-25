@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -211,7 +211,7 @@ func bucketNameFilter(ctx context.Context, bucket types.Bucket) bool {
 		}
 	}
 
-	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
+	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, sdkid.UniqueIdPrefix))
 	if defaultNameRegexp.MatchString(name) {
 		return true
 	}

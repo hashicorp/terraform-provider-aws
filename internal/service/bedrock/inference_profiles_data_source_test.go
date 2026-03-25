@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -17,7 +17,7 @@ func TestAccBedrockInferenceProfilesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_bedrock_inference_profiles.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,7 +39,7 @@ func TestAccBedrockInferenceProfilesDataSource_type(t *testing.T) {
 	typeApplication := string(types.InferenceProfileTypeApplication)
 	typeSystemDefined := string(types.InferenceProfileTypeSystemDefined)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

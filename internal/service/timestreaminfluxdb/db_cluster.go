@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package timestreaminfluxdb
 
@@ -48,8 +50,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbClusterResource{}
 
@@ -809,7 +809,7 @@ func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *tim
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -837,7 +837,7 @@ func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -213,9 +214,8 @@ func findHostedConnectionByID(ctx context.Context, conn *directconnect.Client, h
 	}
 
 	if state := output.ConnectionState; state == awstypes.ConnectionStateDeleted || state == awstypes.ConnectionStateRejected {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -236,9 +236,8 @@ func findHostedConnections(ctx context.Context, conn *directconnect.Client, inpu
 	output, err := conn.DescribeHostedConnections(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -247,14 +246,14 @@ func findHostedConnections(ctx context.Context, conn *directconnect.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
 }
 
-func statusHostedConnection(ctx context.Context, conn *directconnect.Client, hostedConnectionID string, parentConnectionID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHostedConnection(conn *directconnect.Client, hostedConnectionID string, parentConnectionID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostedConnectionByID(ctx, conn, hostedConnectionID, parentConnectionID)
 
 		if retry.NotFound(err) {
@@ -273,10 +272,10 @@ func waitHostedConnectionDeleted(ctx context.Context, conn *directconnect.Client
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusHostedConnection(ctx, conn, hostedConnectionID, parentConnectionID),
+		Refresh: statusHostedConnection(conn, hostedConnectionID, parentConnectionID),
 		Timeout: timeout,
 	}
 

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -179,7 +180,8 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, d.Id(), apiID)
@@ -194,7 +196,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizer (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, authorizerARN(ctx, meta.(*conns.AWSClient), apiID, d.Id()))
+	d.Set(names.AttrARN, authorizerARN(ctx, c, apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
@@ -364,9 +366,8 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 	output, err := conn.GetAuthorizer(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -375,7 +376,7 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

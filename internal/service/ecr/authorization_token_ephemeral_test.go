@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -20,7 +20,7 @@ func TestAccECRAuthorizationTokenEphemeral_basic(t *testing.T) {
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ECRServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

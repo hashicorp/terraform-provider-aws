@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cmd
@@ -10,7 +10,7 @@ import (
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Create scaffolding for an list resource",
+	Short: "Create scaffolding for a list resource",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return list.Create(name, snakeName, !clearComments, framework, force)
 	},

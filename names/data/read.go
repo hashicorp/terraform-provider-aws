@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package data
@@ -157,6 +157,13 @@ func (sr ServiceRecord) HumanFriendly() string {
 	return sr.service.ServiceNames.HumanFriendly
 }
 
+func (sr ServiceRecord) HumanFriendlyShort() string {
+	if sr.service.ServiceNames.HumanFriendlyShort != "" {
+		return sr.service.ServiceNames.HumanFriendlyShort
+	}
+	return sr.service.ServiceNames.HumanFriendly
+}
+
 func (sr ServiceRecord) FullHumanFriendly() string {
 	if sr.Brand() == "" {
 		return sr.HumanFriendly()
@@ -307,9 +314,10 @@ type SDK struct {
 }
 
 type Names struct {
-	Aliases           []string `hcl:"aliases,optional"`
-	ProviderNameUpper string   `hcl:"provider_name_upper,attr"`
-	HumanFriendly     string   `hcl:"human_friendly,attr"`
+	Aliases            []string `hcl:"aliases,optional"`
+	ProviderNameUpper  string   `hcl:"provider_name_upper,attr"`
+	HumanFriendly      string   `hcl:"human_friendly,attr"`
+	HumanFriendlyShort string   `hcl:"human_friendly_short,optional"`
 }
 
 type ProviderPackage struct {

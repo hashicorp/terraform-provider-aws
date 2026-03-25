@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package acmpca
 
@@ -21,9 +23,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -53,9 +55,7 @@ func resourceCertificate() *schema.Resource {
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 
@@ -144,7 +144,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
-		IdempotencyToken:        aws.String(id.UniqueId()),
+		IdempotencyToken:        aws.String(create.UniqueId(ctx)),
 		SigningAlgorithm:        types.SigningAlgorithm(d.Get("signing_algorithm").(string)),
 	}
 
@@ -275,7 +275,7 @@ func findCertificate(ctx context.Context, conn *acmpca.Client, input *acmpca.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

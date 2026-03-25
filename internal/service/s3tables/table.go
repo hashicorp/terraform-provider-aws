@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3tables
 
@@ -30,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -663,7 +664,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	output, err := conn.GetTable(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -673,7 +674,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -693,7 +694,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	output, err := conn.GetTableEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -703,7 +704,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	}
 
 	if output == nil || output.EncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfiguration, nil
@@ -723,7 +724,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	output, err := conn.GetTableMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -733,7 +734,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

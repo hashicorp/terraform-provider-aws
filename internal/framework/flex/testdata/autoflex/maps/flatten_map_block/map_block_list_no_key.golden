@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockListNoKey",
-    "source_type": "flex.awsMapBlockValues"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockListNoKey"
   },
   {
     "@level": "info",

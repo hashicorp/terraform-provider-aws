@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceattribute
@@ -10,10 +10,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var Region = sync.OnceValue(func() schema.Attribute {
+var Region = sync.OnceValue(func() schema.StringAttribute {
 	return schema.StringAttribute{
 		Optional:    true,
 		Computed:    true,
 		Description: names.ResourceTopLevelRegionAttributeDescription,
+	}
+})
+
+var RegionDeprecated = sync.OnceValue(func() schema.StringAttribute {
+	return schema.StringAttribute{
+		Optional:           true,
+		Computed:           true,
+		Description:        names.ResourceTopLevelRegionAttributeDescription,
+		DeprecationMessage: "This attribute will be removed in a future version of the provider.",
 	}
 })

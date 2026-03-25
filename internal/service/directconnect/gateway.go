@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -32,8 +33,9 @@ import (
 // @Region(global=true)
 // @IdentityAttribute("id")
 // @V60SDKv2Fix
-// @Testing(identityTest=false)
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directconnect/types;awstypes;awstypes.DirectConnectGateway")
+// @Testing(randomBgpAsn="64512;65534")
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
@@ -182,9 +184,8 @@ func findGatewayByID(ctx context.Context, conn *directconnect.Client, id string)
 	}
 
 	if state := output.DirectConnectGatewayState; state == awstypes.DirectConnectGatewayStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -225,8 +226,8 @@ func findGateways(ctx context.Context, conn *directconnect.Client, input *direct
 	return output, nil
 }
 
-func statusGateway(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGateway(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGatewayByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -242,17 +243,17 @@ func statusGateway(ctx context.Context, conn *directconnect.Client, id string) s
 }
 
 func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayStatePending),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayStateAvailable),
-		Refresh: statusGateway(ctx, conn, id),
+		Refresh: statusGateway(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGateway); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -261,17 +262,17 @@ func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id stri
 }
 
 func waitGatewayDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayStatePending, awstypes.DirectConnectGatewayStateAvailable, awstypes.DirectConnectGatewayStateDeleting),
 		Target:  []string{},
-		Refresh: statusGateway(ctx, conn, id),
+		Refresh: statusGateway(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGateway); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -35,39 +35,43 @@ func (d Duration) Value() (time.Duration, bool, error) {
 }
 
 func ValidateDuration(i any, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	v, ok := i.(string)
 	if !ok {
-		return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
+		return append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
 	}
 
 	duration, _, err := Duration(v).Value()
 	if err != nil {
-		return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
+		return append(diags, errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err))
 	}
 
 	if duration < 0 {
-		return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, "Must be greater than zero")}
+		return append(diags, errs.NewInvalidValueAttributeError(path, "Must be greater than zero"))
 	}
 
-	return nil
+	return diags
 }
 
 func ValidateDurationBetween(min, max time.Duration) schema.SchemaValidateDiagFunc {
 	return func(i any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+
 		v, ok := i.(string)
 		if !ok {
-			return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
+			return append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
 		}
 
 		duration, _, err := Duration(v).Value()
 		if err != nil {
-			return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
+			return append(diags, errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err))
 		}
 
 		if duration < min || duration > max {
-			return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Expected to be in the range (%d - %d)", min, max)}
+			return append(diags, errs.NewInvalidValueAttributeErrorf(path, "Expected to be in the range (%d - %d)", min, max))
 		}
 
-		return nil
+		return diags
 	}
 }

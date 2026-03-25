@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -198,7 +199,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &neptune.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
@@ -404,9 +405,7 @@ func findDBInstanceByID(ctx context.Context, conn *neptune.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -430,9 +429,8 @@ func findDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -458,8 +456,8 @@ func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.
 	}))
 }
 
-func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstance(conn *neptune.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -475,7 +473,7 @@ func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) sdkr
 }
 
 func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			dbInstanceStatusBackingUp,
 			dbInstanceStatusConfiguringEnhancedMonitoring,
@@ -492,7 +490,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id strin
 			dbInstanceStatusUpgrading,
 		},
 		Target:     []string{dbInstanceStatusAvailable},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -508,13 +506,13 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id strin
 }
 
 func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			dbInstanceStatusModifying,
 			dbInstanceStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -1364,7 +1364,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 							"enable_machine_learning": {
 								Type:     schema.TypeBool,
 								Optional: true,
-								Default:  false,
+								Computed: true,
 							},
 							"inspection_level": {
 								Type:             schema.TypeString,

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,22 +30,22 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 	}
 
 	var service awstypes.ECSExpressGatewayService
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -89,20 +87,20 @@ func TestAccECSExpressGatewayService_disappears(t *testing.T) {
 	}
 
 	var service awstypes.ECSExpressGatewayService
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfecs.ResourceExpressGatewayService, resourceName),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceExpressGatewayService, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -125,22 +123,22 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 	}
 
 	var service awstypes.ECSExpressGatewayService
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -167,7 +165,7 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 			{
 				Config: testAccExpressGatewayServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -184,7 +182,7 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 			{
 				Config: testAccExpressGatewayServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -208,29 +206,29 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 	}
 
 	var service1, service2 awstypes.ECSExpressGatewayService
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service1),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
 				),
 			},
 			{
 				Config: testAccExpressGatewayServiceConfig_updated(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service2),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
 				),
 			},
@@ -246,22 +244,22 @@ func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
 	}
 
 	var service awstypes.ECSExpressGatewayService
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
 				),
@@ -269,7 +267,7 @@ func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
 			{
 				Config: testAccExpressGatewayServiceConfig_updated(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
 				),
 			},
@@ -284,22 +282,22 @@ func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 	}
 
 	var service1 awstypes.ECSExpressGatewayService
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_networkConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service1),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "1"),
@@ -330,22 +328,22 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ecs_express_gateway_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &awstypes.ECSExpressGatewayService{}),
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &awstypes.ECSExpressGatewayService{}),
 				),
 			},
 			{
@@ -356,9 +354,111 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 	})
 }
 
-func testAccCheckExpressGatewayServiceDestroy(ctx context.Context) resource.TestCheckFunc {
+// TestAccECSExpressGatewayService_environmentVariableOrdering verifies that
+// non-alphabetical environment variables don't cause inconsistent apply errors.
+// See: https://github.com/hashicorp/terraform-provider-aws/issues/45792
+func TestAccECSExpressGatewayService_environmentVariableOrdering(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create with env vars in non-alphabetical order.
+				Config: testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.name", "ZULU"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.value", "third"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.name", "BETA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.value", "second"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.2.name", "ALPHA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.2.value", "first"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Re-apply same config to verify no diff.
+			{
+				Config: testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Import (env var ordering may differ due to alphabetical default).
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+					// Import uses alphabetical ordering (no prior state to preserve).
+					"primary_container.0.environment.0.name",
+					"primary_container.0.environment.0.value",
+					"primary_container.0.environment.1.name",
+					"primary_container.0.environment.1.value",
+					"primary_container.0.environment.2.name",
+					"primary_container.0.environment.2.value",
+					"ingress_paths.0.endpoint",
+					"network_configuration.0.security_groups.#",
+					"network_configuration.0.security_groups.0",
+				},
+			},
+			{
+				// Update env vars.
+				Config: testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.name", "ZULU"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.value", "third"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.name", "GAMMA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.value", "fourth"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Re-apply updated config to verify no diff.
+			{
+				Config: testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_express_gateway_service" {
@@ -387,14 +487,14 @@ func testAccCheckExpressGatewayServiceDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckExpressGatewayServiceExists(ctx context.Context, n string, v *awstypes.ECSExpressGatewayService) resource.TestCheckFunc {
+func testAccCheckExpressGatewayServiceExists(ctx context.Context, t *testing.T, n string, v *awstypes.ECSExpressGatewayService) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
 
 		output, err := tfecs.FindExpressGatewayServiceByARN(ctx, conn, rs.Primary.Attributes["service_arn"])
 
@@ -706,6 +806,61 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
   depends_on = [
     aws_ecs_express_gateway_service.test
   ]
+}
+`)
+}
+
+// testAccExpressGatewayServiceConfig_environmentVariableOrdering creates a service
+// with env vars in non-alphabetical order.
+func testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+
+    environment {
+      name  = "ZULU"
+      value = "third"
+    }
+
+    environment {
+      name  = "BETA"
+      value = "second"
+    }
+
+    environment {
+      name  = "ALPHA"
+      value = "first"
+    }
+  }
+}
+`)
+}
+
+// testAccExpressGatewayServiceConfig_environmentVariableUpdated creates a service
+// with updated env vars to test ordering after add/remove.
+func testAccExpressGatewayServiceConfig_environmentVariableUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+
+    environment {
+      name  = "ZULU"
+      value = "third"
+    }
+
+    environment {
+      name  = "GAMMA"
+      value = "fourth"
+    }
+  }
 }
 `)
 }

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fms
 
@@ -13,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -131,9 +132,8 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	output, err := conn.GetAdminAccount(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -142,23 +142,20 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.RoleStatus; status == awstypes.AccountRoleStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) sdkretry.StateRefreshFunc {
-	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
-	// success even though it failed if called too quickly after creating an Organization.
-	return func() (any, string, error) {
+func statusAssociateAdminAccount(conn *fms.Client, accountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &fms.AssociateAdminAccountInput{
 			AdminAccount: aws.String(accountID),
 		}
@@ -193,8 +190,8 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 	}
 }
 
-func statusAdminAccount(ctx context.Context, conn *fms.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAdminAccount(conn *fms.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -210,13 +207,13 @@ func statusAdminAccount(ctx context.Context, conn *fms.Client) sdkretry.StateRef
 }
 
 func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.AccountRoleStatusDeleted, // Recreating association can return this status.
 			awstypes.AccountRoleStatusCreating,
 		),
 		Target:  enum.Slice(awstypes.AccountRoleStatusReady),
-		Refresh: statusAssociateAdminAccount(ctx, conn, accountID),
+		Refresh: statusAssociateAdminAccount(conn, accountID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -231,14 +228,14 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID st
 }
 
 func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.AccountRoleStatusDeleting,
 			awstypes.AccountRoleStatusPendingDeletion,
 			awstypes.AccountRoleStatusReady,
 		),
 		Target:  []string{},
-		Refresh: statusAdminAccount(ctx, conn),
+		Refresh: statusAdminAccount(conn),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

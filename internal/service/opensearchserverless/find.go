@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,9 +22,8 @@ func findAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	out, err := conn.GetAccessPolicy(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -33,7 +32,7 @@ func findAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	}
 
 	if out == nil || out.AccessPolicyDetail == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.AccessPolicyDetail, nil
@@ -46,9 +45,8 @@ func findCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 	out, err := conn.BatchGetCollection(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -66,9 +64,8 @@ func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client
 	out, err := conn.BatchGetCollection(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -86,9 +83,8 @@ func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Clie
 	out, err := conn.GetSecurityConfig(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -97,7 +93,7 @@ func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Clie
 	}
 
 	if out == nil || out.SecurityConfigDetail == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.SecurityConfigDetail, nil
@@ -111,9 +107,8 @@ func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	out, err := conn.GetSecurityPolicy(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -122,7 +117,7 @@ func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	}
 
 	if out == nil || out.SecurityPolicyDetail == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.SecurityPolicyDetail, nil
@@ -140,9 +135,8 @@ func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserve
 
 	out, err := conn.BatchGetLifecyclePolicy(ctx, in)
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

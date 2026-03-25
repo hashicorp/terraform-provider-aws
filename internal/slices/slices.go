@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package slices
@@ -159,11 +159,11 @@ func Range[T signed](start, stop, step T) []T {
 	return v
 }
 
-type stringable interface {
+type Stringable interface {
 	~string | ~[]byte | ~[]rune
 }
 
-func Strings[S ~[]E, E stringable](s S) []string {
+func Strings[S ~[]E, E Stringable](s S) []string {
 	return ApplyToAll(s, func(e E) string {
 		return string(e)
 	})

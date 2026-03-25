@@ -28,13 +28,13 @@ This resource supports the following arguments:
 * `app_monitor_configuration` - (Optional) configuration data for the app monitor. See [app_monitor_configuration](#app_monitor_configuration) below.
 * `cw_log_enabled` - (Optional) Data collected by RUM is kept by RUM for 30 days and then deleted. This parameter specifies whether RUM sends a copy of this telemetry data to Amazon CloudWatch Logs in your account. This enables you to keep the telemetry data for more than 30 days, but it does incur Amazon CloudWatch Logs charges. Default value is `false`.
 * `custom_events` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. If you omit this parameter, custom events are `DISABLED`. See [custom_events](#custom_events) below.
+* `domain` - (Optional) The top-level internet domain name for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
+* `domain_list` - (Optional) A list of internet domain names for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### app_monitor_configuration
 
 * `allow_cookies` - (Optional) If you set this to `true`, RUM web client sets two cookies, a session cookie and a user cookie. The cookies allow the RUM web client to collect data relating to the number of users an application has and the behavior of the application across a sequence of events. Cookies are stored in the top-level domain of the current page.
-* `domain` - (Optional) The top-level internet domain name for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
-* `domain_list` - (Optional) A list of internet domain names for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
 * `enable_xray` - (Optional) If you set this to `true`, RUM enables X-Ray tracing for the user sessions that RUM samples. RUM adds an X-Ray trace header to allowed HTTP requests. It also records an X-Ray segment for allowed HTTP requests.
 * `excluded_pages` - (Optional) A list of URLs in your website or application to exclude from RUM data collection.
 * `favorite_pages` - (Optional) A list of pages in the CloudWatch RUM console that are to be displayed with a "favorite" icon.

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Package names provides constants for AWS service names that are used as keys
@@ -127,6 +127,7 @@ const (
 	RedshiftServerlessEndpointID           = "redshift-serverless"
 	RekognitionEndpointID                  = "rekognition"
 	ResourceExplorer2EndpointID            = "resource-explorer-2"
+	ResourceGroupsTaggingAPIEndpointID     = "tagging"
 	RolesAnywhereEndpointID                = "rolesanywhere"
 	Route53DomainsEndpointID               = "route53domains"
 	Route53RecoveryControlConfigEndpointID = "route53-recovery-control-config"

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -9,11 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
 	_, err := conn.ListTableBuckets(ctx, &s3tables.ListTableBucketsInput{})
 	if acctest.PreCheckSkipError(err) {

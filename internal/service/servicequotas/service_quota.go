@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicequotas
 
@@ -15,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -321,9 +322,8 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	output, err := conn.GetAWSDefaultServiceQuota(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -332,7 +332,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	}
 
 	if output == nil || output.Quota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Quota, nil
@@ -351,9 +351,8 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	output, err := conn.GetServiceQuota(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -362,7 +361,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	}
 
 	if output == nil || output.Quota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if apiObject := output.Quota.ErrorReason; apiObject != nil {
@@ -370,7 +369,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	}
 
 	if output.Quota.Value == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Quota, nil
@@ -388,9 +387,8 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -399,7 +397,7 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	}
 
 	if output == nil || output.RequestedQuota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RequestedQuota, nil

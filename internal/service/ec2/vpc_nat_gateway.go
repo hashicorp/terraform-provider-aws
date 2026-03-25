@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -16,10 +18,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -278,7 +280,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNatGatewayInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNatgateway),
 	}
 
@@ -603,6 +605,11 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	// Eventual consistency wait for any attached appliances to be detached before deleting the NAT Gateway
+	if _, err := waitNATGatewayAttachedAppliancesDetached(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) attached appliances to detach: %s", d.Id(), err)
+	}
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
 	input := ec2.DeleteNatGatewayInput{

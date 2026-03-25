@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -298,8 +299,8 @@ func findExportTasks(ctx context.Context, conn *rds.Client, input *rds.DescribeE
 	return output, nil
 }
 
-func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExportTask(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findExportTaskByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -315,10 +316,10 @@ func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkretry
 }
 
 func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{exportTaskStatusStarting, exportTaskStatusInProgress},
 		Target:     []string{exportTaskStatusComplete, exportTaskStatusFailed},
-		Refresh:    statusExportTask(ctx, conn, id),
+		Refresh:    statusExportTask(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -327,7 +328,7 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ExportTask); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
 
 		return output, err
 	}
@@ -336,17 +337,17 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{exportTaskStatusStarting, exportTaskStatusInProgress, exportTaskStatusCanceling},
 		Target:  []string{},
-		Refresh: statusExportTask(ctx, conn, id),
+		Refresh: statusExportTask(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ExportTask); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
 
 		return output, err
 	}

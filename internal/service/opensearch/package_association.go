@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -168,9 +169,8 @@ func findPackageAssociations(ctx context.Context, conn *opensearch.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -188,8 +188,8 @@ func findPackageAssociations(ctx context.Context, conn *opensearch.Client, input
 	return output, nil
 }
 
-func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, domainName, packageID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPackageAssociation(conn *opensearch.Client, domainName, packageID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
 		if retry.NotFound(err) {
@@ -205,10 +205,10 @@ func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, doma
 }
 
 func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client, domainName, packageID string, timeout time.Duration) (*awstypes.DomainPackageDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainPackageStatusAssociating),
 		Target:  enum.Slice(awstypes.DomainPackageStatusActive),
-		Refresh: statusPackageAssociation(ctx, conn, domainName, packageID),
+		Refresh: statusPackageAssociation(conn, domainName, packageID),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -217,7 +217,7 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client,
 
 	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
 		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusAssociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err
@@ -227,10 +227,10 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitPackageAssociationDeleted(ctx context.Context, conn *opensearch.Client, domainName, packageID string, timeout time.Duration) (*awstypes.DomainPackageDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainPackageStatusDissociating),
 		Target:  []string{},
-		Refresh: statusPackageAssociation(ctx, conn, domainName, packageID),
+		Refresh: statusPackageAssociation(conn, domainName, packageID),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -239,7 +239,7 @@ func waitPackageAssociationDeleted(ctx context.Context, conn *opensearch.Client,
 
 	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
 		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusDissociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err

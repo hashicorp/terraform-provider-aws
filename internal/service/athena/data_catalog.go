@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package athena
 
@@ -10,11 +12,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,8 +109,8 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.AthenaClient(ctx)
 
 	dataCatalog, err := findDataCatalogByName(ctx, conn, d.Id())
 
@@ -124,14 +124,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading Athena Data Catalog (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "athena",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, dataCatalogARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, dataCatalog.Description)
 	d.Set(names.AttrName, dataCatalog.Name)
 	d.Set(names.AttrType, dataCatalog.Type)
@@ -218,9 +211,8 @@ func findDataCatalogByName(ctx context.Context, conn *athena.Client, name string
 	output, err := conn.GetDataCatalog(ctx, input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "was not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -229,8 +221,12 @@ func findDataCatalogByName(ctx context.Context, conn *athena.Client, name string
 	}
 
 	if output == nil || output.DataCatalog == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataCatalog, nil
+}
+
+func dataCatalogARN(ctx context.Context, c *conns.AWSClient, catalogName string) string {
+	return c.RegionalARN(ctx, "athena", fmt.Sprintf("datacatalog/%s", catalogName))
 }

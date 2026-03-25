@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudfront_anycast_ip_list
+```
+
+```release-note:note
+resource/aws_cloudfront_anycast_ip_list: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing
+```
