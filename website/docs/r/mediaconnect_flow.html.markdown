@@ -430,7 +430,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MediaConnect Flow can be imported using the flow ARN, e.g.,
+Using `terraform import`, import MediaConnect Flow using the `arn` value. For example:
 
 ```
 $ terraform import aws_mediaconnect_flow.example arn:aws:mediaconnect:us-east-1:123456789012:flow:1-23aBC45dEF67hiJ8-12AbC34dEf56:example-flow
