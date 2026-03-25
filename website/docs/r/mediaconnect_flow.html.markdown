@@ -442,5 +442,5 @@ import {
 Using `terraform import`, import MediaConnect Flow using the `arn` value. For example:
 
 ```console
-$ terraform import aws_mediaconnect_flow.example arn:aws:mediaconnect:us-east-1:123456789012:flow:1-23aBC45dEF67hiJ8-12AbC34dEf56:example-flow
+% terraform import aws_mediaconnect_flow.example arn:aws:mediaconnect:us-east-1:123456789012:flow:1-23aBC45dEF67hiJ8-12AbC34dEf56:example-flow
 ```
