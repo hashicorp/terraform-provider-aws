@@ -40,7 +40,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_observabilityadmin_telemetry_enrichment",
 			Name:     "Telemetry Enrichment",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalSingletonIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

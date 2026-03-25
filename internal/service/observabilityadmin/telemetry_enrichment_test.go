@@ -6,14 +6,18 @@ package observabilityadmin_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
@@ -37,8 +41,15 @@ func TestAccObservabilityAdminTelemetryEnrichment_basic(t *testing.T) {
 				Config: testAccTelemetryEnrichmentConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTelemetryEnrichmentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_resource_explorer_managed_view_arn"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aws_resource_explorer_managed_view_arn"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -69,6 +80,14 @@ func TestAccObservabilityAdminTelemetryEnrichment_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceTelemetryEnrichment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -83,19 +102,17 @@ func testAccCheckTelemetryEnrichmentDestroy(ctx context.Context, t *testing.T) r
 				continue
 			}
 
-			out, err := tfobservabilityadmin.FindTelemetryEnrichmentStatus(ctx, conn)
+			_, err := tfobservabilityadmin.FindTelemetryEnrichment(ctx, conn)
+
 			if retry.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
-				return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingDestroyed, tfobservabilityadmin.ResNameTelemetryEnrichment, rs.Primary.ID, err)
-			}
-			// Stopped means the feature is disabled — treat as destroyed.
-			if out.Status != awstypes.TelemetryEnrichmentStatusRunning {
-				return nil
+				return err
 			}
 
-			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingDestroyed, tfobservabilityadmin.ResNameTelemetryEnrichment, rs.Primary.ID, errors.New("not destroyed"))
+			return errors.New("Observability Admin Telemetry Enrichment still exists")
 		}
 
 		return nil
@@ -104,19 +121,16 @@ func testAccCheckTelemetryEnrichmentDestroy(ctx context.Context, t *testing.T) r
 
 func testAccCheckTelemetryEnrichmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingExistence, tfobservabilityadmin.ResNameTelemetryEnrichment, n, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
-		_, err := tfobservabilityadmin.FindTelemetryEnrichmentStatus(ctx, conn)
-		if err != nil {
-			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingExistence, tfobservabilityadmin.ResNameTelemetryEnrichment, rs.Primary.ID, err)
-		}
+		_, err := tfobservabilityadmin.FindTelemetryEnrichment(ctx, conn)
 
-		return nil
+		return err
 	}
 }
 

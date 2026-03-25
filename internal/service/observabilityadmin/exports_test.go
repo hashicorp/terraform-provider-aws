@@ -10,6 +10,6 @@ var (
 	ResourceTelemetryPipeline                 = newTelemetryPipelineResource
 
 	FindCentralizationRuleForOrganizationByID = findCentralizationRuleForOrganizationByID
-	FindTelemetryEnrichmentStatus             = findTelemetryEnrichmentStatus
+	FindTelemetryEnrichment                   = findTelemetryEnrichment
 	FindTelemetryPipelineByARN                = findTelemetryPipelineByARN
 )

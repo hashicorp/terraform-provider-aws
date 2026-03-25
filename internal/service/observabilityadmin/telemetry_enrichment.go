@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,12 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNameTelemetryEnrichment = "Telemetry Enrichment"
-)
-
 // @FrameworkResource("aws_observabilityadmin_telemetry_enrichment", name="Telemetry Enrichment")
-// @SingletonIdentity(identityDuplicateAttributes="id")
+// @SingletonIdentity
 // @Testing(preCheck="testAccTelemetryEnrichmentPreCheck")
 // @Testing(tagsTest=false)
 // @Testing(identityTest=false)
@@ -56,7 +51,6 @@ func (r *telemetryEnrichmentResource) Schema(ctx context.Context, req resource.S
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"aws_resource_explorer_managed_view_arn": framework.ARNAttributeComputedOnly(),
-			names.AttrID:                             framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -76,7 +70,7 @@ func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.C
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	input := observabilityadmin.StartTelemetryEnrichmentInput{}
+	var input observabilityadmin.StartTelemetryEnrichmentInput
 	_, err := conn.StartTelemetryEnrichment(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
@@ -89,8 +83,7 @@ func (r *telemetryEnrichmentResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	data.ID = types.StringValue(r.Meta().Region(ctx))
-	data.AwsResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
+	data.AWSResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, data))
 }
@@ -104,7 +97,7 @@ func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.Rea
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	out, err := findTelemetryEnrichmentStatus(ctx, conn)
+	out, err := findTelemetryEnrichment(ctx, conn)
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -114,13 +107,8 @@ func (r *telemetryEnrichmentResource) Read(ctx context.Context, req resource.Rea
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
-	if out.Status != awstypes.TelemetryEnrichmentStatusRunning {
-		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(tfresource.NewEmptyResultError()))
-		resp.State.RemoveResource(ctx)
-		return
-	}
 
-	data.AwsResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
+	data.AWSResourceExplorerManagedViewARN = fwflex.StringToFramework(ctx, out.AwsResourceExplorerManagedViewArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -134,7 +122,7 @@ func (r *telemetryEnrichmentResource) Delete(ctx context.Context, req resource.D
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	input := observabilityadmin.StopTelemetryEnrichmentInput{}
+	var input observabilityadmin.StopTelemetryEnrichmentInput
 	_, err := conn.StopTelemetryEnrichment(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -144,19 +132,31 @@ func (r *telemetryEnrichmentResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	if err := waitTelemetryEnrichmentStopped(ctx, conn, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitTelemetryEnrichmentStopped(ctx, conn, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 }
 
-func (r *telemetryEnrichmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	r.WithImportByIdentity.ImportState(ctx, req, resp)
+func findTelemetryEnrichment(ctx context.Context, conn *observabilityadmin.Client) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) {
+	var input observabilityadmin.GetTelemetryEnrichmentStatusInput
+	out, err := findTelemetryEnrichmentStatus(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := out.Status; status == awstypes.TelemetryEnrichmentStatusStopped {
+		return nil, &retry.NotFoundError{
+			Message: string(status),
+		}
+	}
+
+	return out, nil
 }
 
-func findTelemetryEnrichmentStatus(ctx context.Context, conn *observabilityadmin.Client) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) {
-	input := observabilityadmin.GetTelemetryEnrichmentStatusInput{}
-	out, err := conn.GetTelemetryEnrichmentStatus(ctx, &input)
+func findTelemetryEnrichmentStatus(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.GetTelemetryEnrichmentStatusInput) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) {
+	out, err := conn.GetTelemetryEnrichmentStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -177,7 +177,8 @@ func findTelemetryEnrichmentStatus(ctx context.Context, conn *observabilityadmin
 
 func statusTelemetryEnrichment(conn *observabilityadmin.Client) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findTelemetryEnrichmentStatus(ctx, conn)
+		var input observabilityadmin.GetTelemetryEnrichmentStatusInput
+		out, err := findTelemetryEnrichmentStatus(ctx, conn, &input)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -188,7 +189,7 @@ func statusTelemetryEnrichment(conn *observabilityadmin.Client) retry.StateRefre
 	}
 }
 
-func waitTelemetryEnrichmentRunning(ctx context.Context, conn *observabilityadmin.Client, timeout time.Duration) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) { //nolint:unparam
+func waitTelemetryEnrichmentRunning(ctx context.Context, conn *observabilityadmin.Client, timeout time.Duration) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.TelemetryEnrichmentStatusRunning),
@@ -205,7 +206,7 @@ func waitTelemetryEnrichmentRunning(ctx context.Context, conn *observabilityadmi
 	return nil, err
 }
 
-func waitTelemetryEnrichmentStopped(ctx context.Context, conn *observabilityadmin.Client, timeout time.Duration) error {
+func waitTelemetryEnrichmentStopped(ctx context.Context, conn *observabilityadmin.Client, timeout time.Duration) (*observabilityadmin.GetTelemetryEnrichmentStatusOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TelemetryEnrichmentStatusRunning, awstypes.TelemetryEnrichmentStatusImpaired),
 		Target:  enum.Slice(awstypes.TelemetryEnrichmentStatusStopped),
@@ -213,13 +214,16 @@ func waitTelemetryEnrichmentStopped(ctx context.Context, conn *observabilityadmi
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*observabilityadmin.GetTelemetryEnrichmentStatusOutput); ok {
+		return out, err
+	}
+
+	return nil, err
 }
 
 type telemetryEnrichmentResourceModel struct {
 	framework.WithRegionModel
-	AwsResourceExplorerManagedViewARN types.String   `tfsdk:"aws_resource_explorer_managed_view_arn"`
-	ID                                types.String   `tfsdk:"id"`
+	AWSResourceExplorerManagedViewARN types.String   `tfsdk:"aws_resource_explorer_managed_view_arn"`
 	Timeouts                          timeouts.Value `tfsdk:"timeouts"`
 }
