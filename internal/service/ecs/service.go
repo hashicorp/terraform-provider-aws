@@ -1637,6 +1637,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 			}
 
+			input.DeploymentConfiguration.LifecycleHooks = []awstypes.DeploymentLifecycleHook{}
+
 			if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				config := v.([]any)[0].(map[string]any)
 
