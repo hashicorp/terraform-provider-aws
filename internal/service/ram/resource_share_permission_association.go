@@ -78,24 +78,21 @@ func (r *resourceSharePermissionAssociationResource) Schema(ctx context.Context,
 
 func (r *resourceSharePermissionAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().RAMClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceSharePermissionAssociationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	input := ram.AssociateResourceSharePermissionInput{
 		ClientToken:      aws.String(create.UniqueId(ctx)),
 		PermissionArn:    aws.String(plan.PermissionARN.ValueString()),
 		ResourceShareArn: aws.String(plan.ResourceShareARN.ValueString()),
 		Replace:          aws.Bool(true),
 	}
-	// TIP: -- 4. Call the AWS Create function
+
 	_, err := conn.AssociateResourceSharePermission(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -104,38 +101,25 @@ func (r *resourceSharePermissionAssociationResource) Create(ctx context.Context,
 		)
 		return
 	}
-	// TIP: -- 5. Set minimum attributes for Read to work
-	// No waiter needed — API returns boolean instantly.
-	// Set the composite ID so Read can find the resource.
+
 	plan.ResourceShareARN = types.StringValue(plan.ResourceShareARN.ValueString())
 	plan.PermissionARN = types.StringValue(plan.PermissionARN.ValueString())
 
-	// TIP: -- 6. No waiter needed for this resource.
-	// AssociateResourceSharePermission returns returnValue: boolean immediately.
-	// Unlike AssociateResourceShare which returns an association with async status,
-	// this API completes synchronously.
-	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceSharePermissionAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().RAMClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceSharePermissionAssociationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get the resource from AWS
-	// We use ListResourceSharePermissions and filter by permissionArn
-	// since there is no direct Get API for permission associations.
 	out, err := findResourceSharePermissionByTwoPartKey(ctx, conn, state.ResourceShareARN.ValueString(), state.PermissionARN.ValueString())
 
-	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -149,42 +133,33 @@ func (r *resourceSharePermissionAssociationResource) Read(ctx context.Context, r
 		return
 	}
 
-	// TIP: -- 5. Set the arguments and attributes
-	// Set all schema attributes from the AWS response.
-	// permission_version is Computed so we read it back from AWS here.
 	state.PermissionARN = types.StringValue(aws.ToString(out.Arn))
 	state.ResourceShareARN = types.StringValue(state.ResourceShareARN.ValueString())
 	if v, err := strconv.ParseInt(aws.ToString(out.Version), 10, 64); err == nil {
 		state.PermissionVersion = types.Int64Value(v)
 	}
 
-	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceSharePermissionAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().RAMClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceSharePermissionAssociationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	input := ram.DisassociateResourceSharePermissionInput{
 		ClientToken:      aws.String(create.UniqueId(ctx)),
 		PermissionArn:    aws.String(state.PermissionARN.ValueString()),
 		ResourceShareArn: aws.String(state.ResourceShareARN.ValueString()),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DisassociateResourceSharePermission(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
+
 	if err != nil {
 		if errs.IsA[*awstypes.UnknownResourceException](err) {
 			return
@@ -196,7 +171,6 @@ func (r *resourceSharePermissionAssociationResource) Delete(ctx context.Context,
 		return
 	}
 
-	// TIP: -- 5. No waiter needed.
 	// DisassociateResourceSharePermission returns returnValue: boolean instantly.
 	// No async status to poll unlike DisassociateResourceShare.
 }
