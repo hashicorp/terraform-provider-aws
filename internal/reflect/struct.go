@@ -13,25 +13,28 @@ import (
 // index components from each struct as used by `reflect.Value.FieldByIndex`
 func StructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 	return func(yield func(reflect.StructField) bool) {
-		for i := range typ.NumField() {
-			field := typ.Field(i)
+		structFieldsHelper(typ, []int{}, yield)
+	}
+}
 
-			if field.Anonymous {
-				fieldIndexSequence := []int{i}
-				for v := range StructFields(field.Type) {
-					v.Index = append(fieldIndexSequence, v.Index...)
-					if !yield(v) {
-						return
-					}
-				}
-				continue
-			}
+func structFieldsHelper(typ reflect.Type, parentIndex []int, yield func(reflect.StructField) bool) bool {
+	for i := range typ.NumField() {
+		field := typ.Field(i)
 
-			if !yield(field) {
-				return
+		if field.Anonymous {
+			fieldIndexSequence := append(parentIndex, i)
+			if !structFieldsHelper(field.Type, fieldIndexSequence, yield) {
+				return false
 			}
+			continue
+		}
+
+		field.Index = append(parentIndex, i)
+		if !yield(field) {
+			return false
 		}
 	}
+	return true
 }
 
 func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.StructField] {
