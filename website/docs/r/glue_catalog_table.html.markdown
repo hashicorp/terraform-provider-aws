@@ -151,6 +151,35 @@ EOF
 }
 ```
 
+### Protected Multi-Dialect View
+
+```terraform
+resource "aws_glue_catalog_table" "example" {
+  name          = "multidialect_view"
+  database_name = "catalog_database"
+
+  table_type = "VIRTUAL_VIEW"
+
+  view_definition {
+    is_protected = true
+
+    representations {
+      dialect            = "ATHENA"
+      dialect_version    = "10000"
+      view_original_text = "SELECT * FROM catalog_database.base_table"
+      view_expanded_text = "SELECT * FROM catalog_database.base_table"
+    }
+
+    representations {
+      dialect            = "REDSHIFT"
+      dialect_version    = "10000"
+      view_original_text = "SELECT * FROM catalog_database.base_table"
+      view_expanded_text = "SELECT * FROM catalog_database.base_table"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:

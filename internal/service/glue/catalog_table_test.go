@@ -1770,3 +1770,64 @@ EOF
 }
 `, rName)
 }
+
+func TestAccGlueCatalogTable_viewDefinitionMultiDialect(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinitionMultiDialect(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", "true"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCatalogTableConfig_viewDefinitionMultiDialect(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    is_protected = true
+
+    representations {
+      dialect            = "ATHENA"
+      dialect_version    = "10000"
+      view_original_text = "SELECT 1"
+      view_expanded_text = "SELECT 1"
+    }
+
+    representations {
+      dialect            = "REDSHIFT"
+      dialect_version    = "10000"
+      view_original_text = "SELECT 1"
+      view_expanded_text = "SELECT 1"
+    }
+  }
+}
+`, rName)
+}
