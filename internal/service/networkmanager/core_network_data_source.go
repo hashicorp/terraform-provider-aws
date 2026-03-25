@@ -7,10 +7,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -45,85 +43,17 @@ func (d *coreNetworkDataSource) Schema(ctx context.Context, req datasource.Schem
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
+			"edges": framework.DataSourceComputedListOfObjectAttribute[edgeModel](ctx),
 			"global_network_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID:              framework.IDAttribute(),
+			"network_function_groups": framework.DataSourceComputedListOfObjectAttribute[networkFunctionGroupModel](ctx),
+			"segments":                framework.DataSourceComputedListOfObjectAttribute[segmentModel](ctx),
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-		},
-		Blocks: map[string]schema.Block{
-			"edges": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[edgeModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"asn": schema.Int64Attribute{
-							Computed: true,
-						},
-						"edge_location": schema.StringAttribute{
-							Computed: true,
-						},
-						"inside_cidr_blocks": schema.ListAttribute{
-							ElementType: types.StringType,
-							Computed:    true,
-						},
-					},
-				},
-			},
-			"network_function_groups": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[networkFunctionGroupModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"edge_locations": schema.ListAttribute{
-							ElementType: types.StringType,
-							Computed:    true,
-						},
-						names.AttrName: schema.StringAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"segments": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[networkFunctionGroupSegmentsModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"send_to": schema.ListAttribute{
-										ElementType: types.StringType,
-										Computed:    true,
-									},
-									"send_via": schema.ListAttribute{
-										ElementType: types.StringType,
-										Computed:    true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"segments": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[segmentModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"edge_locations": schema.ListAttribute{
-							ElementType: types.StringType,
-							Computed:    true,
-						},
-						names.AttrName: schema.StringAttribute{
-							Computed: true,
-						},
-						"shared_segments": schema.ListAttribute{
-							ElementType: types.StringType,
-							Computed:    true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
