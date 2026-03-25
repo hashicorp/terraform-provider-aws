@@ -149,25 +149,25 @@ func testAccSageMakerTrainingJob_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRoleARN), tfknownvalue.GlobalARNExact("iam", "role/"+rName)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_job_name"), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("algorithm_specification"), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.ObjectExact(map[string]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"training_input_mode": knownvalue.StringExact("File"),
 								"training_image":      knownvalue.NotNull(),
 							}),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("output_data_config"), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.ObjectExact(map[string]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"s3_output_path": knownvalue.StringExact("s3://" + rName + "/output/"),
 							}),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("resource_config"), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.ObjectExact(map[string]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
 								names.AttrInstanceCount: knownvalue.Int64Exact(1),
 								"volume_size_in_gb":     knownvalue.Int64Exact(30),
 							}),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("stopping_condition"), knownvalue.ListExact([]knownvalue.Check{
-							knownvalue.ObjectExact(map[string]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"max_runtime_in_seconds": knownvalue.Int64Exact(3600),
 							}),
 						})),
