@@ -9,6 +9,8 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
@@ -25,16 +27,55 @@ func Get(ctx context.Context, source cty.Value, target any) error {
 	}
 	vTarget = vTarget.Elem()
 	if kind := vTarget.Kind(); kind != reflect.Struct {
-		return fmt.Errorf("target must be a pointer to struct, got %T", target)
+		return fmt.Errorf("target must be a pointer to struct, got %T (Kind: %s)", target, kind)
 	}
 
-	for key, _ := range ValueElements(source) {
+	for key, vSource := range ValueElements(source) {
 		key := key.AsString()
-		_, ok := tfreflect.FieldByTag(target, "tfsdk", key)
+		field, ok := tfreflect.FieldByTag(target, "tfsdk", key)
 		if !ok {
 			continue
 		}
+		vField, err := vTarget.FieldByIndexErr(field.Index)
+		if err != nil {
+			return err
+		}
+
+		attrValue, err := attrValueOf(ctx, vSource, vField.Interface())
+		if err != nil {
+			return err
+		}
+
+		vField.Set(reflect.ValueOf(attrValue))
 	}
 
 	return nil
+}
+
+func attrValueOf(ctx context.Context, source cty.Value, target any) (attr.Value, error) {
+	tfType, err := ToTfValue(source)
+	if err != nil {
+		return nil, err
+	}
+
+	var attrType attr.Type
+
+	switch v := target.(type) {
+	case basetypes.BoolValuable:
+		attrType = v.Type(ctx)
+	case basetypes.Float32Valuable:
+		attrType = v.Type(ctx)
+	case basetypes.Float64Valuable:
+		attrType = v.Type(ctx)
+	case basetypes.Int32Valuable:
+		attrType = v.Type(ctx)
+	case basetypes.Int64Valuable:
+		attrType = v.Type(ctx)
+	case basetypes.StringValuable:
+		attrType = v.Type(ctx)
+	default:
+		return nil, fmt.Errorf("attrValueOf unsupported type: %T", target)
+	}
+
+	return attrType.ValueFromTerraform(ctx, *tfType)
 }

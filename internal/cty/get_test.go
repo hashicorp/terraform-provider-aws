@@ -65,15 +65,32 @@ func TestGetPrimitives(t *testing.T) {
 			source: cty.ObjectVal(map[string]cty.Value{
 				"string": cty.StringVal("Alice"),
 			}),
-			target:     new(A),
-			wantTarget: new(A),
+			target:  (*A)(nil),
+			wantErr: true,
 		},
-		"source object, struct pointer target": {
+		"source object, struct pointer target, one field": {
 			source: cty.ObjectVal(map[string]cty.Value{
 				"string": cty.StringVal("Alice"),
 			}),
-			target:     &A{},
-			wantTarget: &A{String: types.StringValue("Alice")},
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+			},
+		},
+		"source object, struct pointer target, all fields": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string": cty.StringVal("Alice"),
+				"bool":   cty.BoolVal(true),
+				"int32":  cty.NumberIntVal(32),
+				"int64":  cty.NumberIntVal(-64),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+				Bool:   types.BoolValue(true),
+				Int32:  types.Int32Value(32),
+				Int64:  types.Int64Value(-64),
+			},
 		},
 	}
 
