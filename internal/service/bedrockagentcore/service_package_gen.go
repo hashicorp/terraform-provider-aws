@@ -111,6 +111,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newPolicyEngineResource,
+			TypeName: "aws_bedrockagentcore_policy_engine",
+			Name:     "Policy Engine",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "policy_engine_arn",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTokenVaultCMKResource,
 			TypeName: "aws_bedrockagentcore_token_vault_cmk",
 			Name:     "Token Vault CMK",

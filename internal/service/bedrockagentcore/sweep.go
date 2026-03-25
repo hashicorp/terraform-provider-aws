@@ -27,6 +27,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
+	awsv2.Register("aws_bedrockagentcore_policy_engine", sweepPolicyEngines)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -255,6 +256,32 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
 			)
 		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepPolicyEngines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	input := bedrockagentcorecontrol.ListPolicyEnginesInput{}
+	for {
+		out, err := conn.ListPolicyEngines(ctx, &input)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range out.PolicyEngines {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyEngineResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.PolicyEngineId))),
+			)
+		}
+
+		if out.NextToken == nil {
+			break
+		}
+		input.NextToken = out.NextToken
 	}
 
 	return sweepResources, nil
