@@ -8900,6 +8900,34 @@ service "translate" {
   not_implemented          = true
 }
 
+service "uxc" {
+  sdk {
+    id            = "UXC"
+    arn_namespace = "uxc"
+  }
+
+  names {
+    provider_name_upper = "UXC"
+    human_friendly      = "UXC"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListServices"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_uxc_"
+  }
+
+  provider_package_correct = "uxc"
+  doc_prefix               = ["uxc_"]
+  brand                    = "AWS"
+  is_global                = true
+}
+
 service "vpclattice" {
   cli_v2_command {
     aws_cli_v2_command           = "vpc-lattice"

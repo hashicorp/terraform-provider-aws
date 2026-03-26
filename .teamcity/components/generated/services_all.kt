@@ -249,6 +249,7 @@ val services = mapOf(
     "transcribe" to ServiceSpec("Transcribe"),
     "transfer" to ServiceSpec("Transfer Family", vpcLock = true),
     "transitgateway" to ServiceSpec("Transit Gateway", vpcLock = true, patternOverride = "TestAccTransitGateway", splitPackageRealPackage = "ec2"),
+    "uxc" to ServiceSpec("UXC"),
     "verifiedaccess" to ServiceSpec("Verified Access", vpcLock = true, patternOverride = "TestAccVerifiedAccess", splitPackageRealPackage = "ec2"),
     "verifiedpermissions" to ServiceSpec("Verified Permissions"),
     "vpc" to ServiceSpec("VPC (Virtual Private Cloud)", vpcLock = true, patternOverride = "TestAccVPC", splitPackageRealPackage = "ec2"),

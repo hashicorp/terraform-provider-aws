@@ -336,6 +336,7 @@ provider "aws" {
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|
 |Transfer Family|`transfer`|`AWS_ENDPOINT_URL_TRANSFER`|`transfer`|
+|UXC|`uxc`|`AWS_ENDPOINT_URL_UXC`|`uxc`|
 |Verified Permissions|`verifiedpermissions`|`AWS_ENDPOINT_URL_VERIFIEDPERMISSIONS`|`verifiedpermissions`|
 |VPC Lattice|`vpclattice`|`AWS_ENDPOINT_URL_VPC_LATTICE`|`vpc_lattice`|
 |WAF Classic|`waf`|`AWS_ENDPOINT_URL_WAF`|`waf`|
