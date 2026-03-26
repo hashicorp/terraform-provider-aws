@@ -5,6 +5,8 @@ FEATURES:
 * **New Data Source:** `aws_iam_role_policies` ([#46936](https://github.com/hashicorp/terraform-provider-aws/issues/46936))
 * **New Data Source:** `aws_iam_role_policy_attachments` ([#47119](https://github.com/hashicorp/terraform-provider-aws/issues/47119))
 * **New Data Source:** `aws_networkmanager_core_network` ([#45798](https://github.com/hashicorp/terraform-provider-aws/issues/45798))
+* **New List Resource:** `aws_sagemaker_training_job` ([#46892](https://github.com/hashicorp/terraform-provider-aws/issues/46892))
+* **New Resource:** `aws_sagemaker_training_job` ([#46892](https://github.com/hashicorp/terraform-provider-aws/issues/46892))
 
 ENHANCEMENTS:
 
