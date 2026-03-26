@@ -30,6 +30,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Outbound Web Identity Federation",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
+		{
+			Factory:  newRolePoliciesDataSource,
+			TypeName: "aws_iam_role_policies",
+			Name:     "Role Policies",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 	}
 }
 
