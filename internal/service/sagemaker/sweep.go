@@ -52,6 +52,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_pipeline", sweepPipelines)
 	awsv2.Register("aws_sagemaker_hub", sweepHubs)
 	awsv2.Register("aws_sagemaker_model_card", sweepModelCards)
+	awsv2.Register("aws_sagemaker_algorithm", sweepAlgorithms)
 }
 
 func sweepAppImagesConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -726,6 +727,28 @@ func sweepModelCards(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		for _, v := range page.ModelCardSummaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newModelCardResource, client,
 				framework.NewAttribute("model_card_name", aws.ToString(v.ModelCardName))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAlgorithms(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := sagemaker.ListAlgorithmsInput{}
+	conn := client.SageMakerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := sagemaker.NewListAlgorithmsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AlgorithmSummaryList {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAlgorithmResource, client,
+				framework.NewAttribute("algorithm_name", aws.ToString(v.AlgorithmName))),
+			)
 		}
 	}
 

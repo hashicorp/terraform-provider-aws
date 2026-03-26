@@ -1,18 +1,25 @@
-## 6.38.0 (Unreleased)
+## 6.39.0 (Unreleased)
+
+## 6.38.0 (March 25, 2026)
 
 FEATURES:
 
+* **New Action:** `aws_dms_start_replication_task_assessment_run` ([#47058](https://github.com/hashicorp/terraform-provider-aws/issues/47058))
 * **New Data Source:** `aws_dynamodb_backups` ([#47036](https://github.com/hashicorp/terraform-provider-aws/issues/47036))
 * **New Data Source:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New Data Source:** `aws_savingsplans_offerings` ([#47081](https://github.com/hashicorp/terraform-provider-aws/issues/47081))
 * **New List Resource:** `aws_msk_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_serverless_cluster` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
 * **New List Resource:** `aws_route53_resolver_rule` ([#47063](https://github.com/hashicorp/terraform-provider-aws/issues/47063))
+* **New List Resource:** `aws_sagemaker_algorithm` ([#47051](https://github.com/hashicorp/terraform-provider-aws/issues/47051))
 * **New List Resource:** `aws_ssm_document` ([#46974](https://github.com/hashicorp/terraform-provider-aws/issues/46974))
 * **New List Resource:** `aws_ssoadmin_account_assignment` ([#47067](https://github.com/hashicorp/terraform-provider-aws/issues/47067))
 * **New List Resource:** `aws_vpc_endpoint` ([#46977](https://github.com/hashicorp/terraform-provider-aws/issues/46977))
 * **New List Resource:** `aws_workmail_domain` ([#46931](https://github.com/hashicorp/terraform-provider-aws/issues/46931))
 * **New Resource:** `aws_msk_topic` ([#46490](https://github.com/hashicorp/terraform-provider-aws/issues/46490))
+* **New Resource:** `aws_observabilityadmin_telemetry_enrichment` ([#47089](https://github.com/hashicorp/terraform-provider-aws/issues/47089))
+* **New Resource:** `aws_sagemaker_algorithm` ([#47051](https://github.com/hashicorp/terraform-provider-aws/issues/47051))
 * **New Resource:** `aws_workmail_default_domain` ([#46931](https://github.com/hashicorp/terraform-provider-aws/issues/46931))
 * **New Resource:** `aws_workmail_domain` ([#46931](https://github.com/hashicorp/terraform-provider-aws/issues/46931))
 
@@ -61,6 +68,7 @@ BUG FIXES:
 * resource/aws_dx_private_virtual_interface: Fix import to honor `@region` suffix when using resource-level `region` attribute ([#47043](https://github.com/hashicorp/terraform-provider-aws/issues/47043))
 * resource/aws_dx_public_virtual_interface: Fix import to honor `@region` suffix when using resource-level `region` attribute ([#47043](https://github.com/hashicorp/terraform-provider-aws/issues/47043))
 * resource/aws_dx_transit_virtual_interface: Fix import to honor `@region` suffix when using resource-level `region` attribute ([#47043](https://github.com/hashicorp/terraform-provider-aws/issues/47043))
+* resource/aws_ecs_express_gateway_service: Fix `Provider produced inconsistent result after apply` error when `environment` variables are defined in non-alphabetical order ([#46771](https://github.com/hashicorp/terraform-provider-aws/issues/46771))
 * resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` errors where computed attributes remained unknown after create ([#47012](https://github.com/hashicorp/terraform-provider-aws/issues/47012))
 * resource/aws_kinesis_stream: Fix import to honor `@region` suffix when using resource-level `region` attribute ([#47043](https://github.com/hashicorp/terraform-provider-aws/issues/47043))
 * resource/aws_mq_broker: Fix non-idempotent behavior for RabbitMQ brokers with `user` block ([#46883](https://github.com/hashicorp/terraform-provider-aws/issues/46883))
