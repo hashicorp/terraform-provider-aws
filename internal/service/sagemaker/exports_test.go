@@ -17,6 +17,14 @@ type (
 	InstancePlacementConfigModel          = instancePlacementConfigModel
 	StoppingConditionModel                = stoppingConditionModel
 	TransformJobDefinitionModel           = transformJobDefinitionModel
+
+	TrainingJobAlgorithmSpecificationModel = trainingJobAlgorithmSpecificationModel
+	TrainingJobMetricDefinitionModel       = trainingJobMetricDefinitionModel
+	TrainingJobModelPackageConfigModel     = trainingJobModelPackageConfigModel
+	TrainingJobTrainingImageConfigModel    = trainingJobTrainingImageConfigModel
+	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
+	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
+	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
 )
 
 // Exports for use in tests only.
@@ -51,6 +59,7 @@ var (
 	ResourceProject                                = resourceProject
 	ResourceSpace                                  = resourceSpace
 	ResourceStudioLifecycleConfig                  = resourceStudioLifecycleConfig
+	ResourceTrainingJob                            = newResourceTrainingJob
 	ResourceUserProfile                            = resourceUserProfile
 	ResourceWorkforce                              = resourceWorkforce
 	ResourceWorkteam                               = resourceWorkteam
@@ -87,6 +96,7 @@ var (
 	FindServicecatalogPortfolioStatus         = findServicecatalogPortfolioStatus
 	FindSpaceByName                           = findSpaceByName
 	FindStudioLifecycleConfigByName           = findStudioLifecycleConfigByName
+	FindTrainingJobByName                     = findTrainingJobByName
 	FindUserProfileByName                     = findUserProfileByName
 	FindWorkforceByName                       = findWorkforceByName
 	FindWorkteamByName                        = findWorkteamByName
@@ -107,6 +117,10 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
+
+	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition         = normalizeStoppingCondition
+	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
