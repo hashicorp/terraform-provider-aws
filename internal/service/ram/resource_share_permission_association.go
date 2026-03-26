@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -50,6 +51,7 @@ func (r *resourceSharePermissionAssociationResource) Schema(ctx context.Context,
 	resp.Schema = schema.Schema{
 		Description: "Associates an AWS RAM permission with a resource share.",
 		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
 			"permission_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -104,6 +106,19 @@ func (r *resourceSharePermissionAssociationResource) Create(ctx context.Context,
 
 	plan.ResourceShareARN = types.StringValue(plan.ResourceShareARN.ValueString())
 	plan.PermissionARN = types.StringValue(plan.PermissionARN.ValueString())
+	plan.ID = types.StringValue(fmt.Sprintf("%s,%s", plan.ResourceShareARN.ValueString(), plan.PermissionARN.ValueString()))
+
+	out, err := findResourceSharePermissionByTwoPartKey(ctx, conn, plan.ResourceShareARN.ValueString(), plan.PermissionARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RAM, create.ErrActionCreating, ResNameResourceSharePermissionAssociation, plan.PermissionARN.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	if v, err := strconv.ParseInt(aws.ToString(out.Version), 10, 64); err == nil {
+		plan.PermissionVersion = types.Int64Value(v)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -118,7 +133,25 @@ func (r *resourceSharePermissionAssociationResource) Read(ctx context.Context, r
 		return
 	}
 
-	out, err := findResourceSharePermissionByTwoPartKey(ctx, conn, state.ResourceShareARN.ValueString(), state.PermissionARN.ValueString())
+	var resourceShareARN, permissionARN string
+
+	// Handle identity-based import where ID may not be set yet
+	if state.ID.IsNull() || state.ID.ValueString() == "" {
+		resourceShareARN = state.ResourceShareARN.ValueString()
+		permissionARN = state.PermissionARN.ValueString()
+	} else {
+		parts := strings.SplitN(state.ID.ValueString(), ",", 2)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			resp.Diagnostics.AddError(
+				"Invalid ID",
+				fmt.Sprintf("unexpected format of ID (%s), expected resource_share_arn,permission_arn", state.ID.ValueString()),
+			)
+			return
+		}
+		resourceShareARN, permissionARN = parts[0], parts[1]
+	}
+
+	out, err := findResourceSharePermissionByTwoPartKey(ctx, conn, resourceShareARN, permissionARN)
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -127,14 +160,16 @@ func (r *resourceSharePermissionAssociationResource) Read(ctx context.Context, r
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RAM, create.ErrActionReading, ResNameResourceSharePermissionAssociation, state.PermissionARN.ValueString(), err),
+			create.ProblemStandardMessage(names.RAM, create.ErrActionReading, ResNameResourceSharePermissionAssociation, permissionARN, err),
 			err.Error(),
 		)
 		return
 	}
 
 	state.PermissionARN = types.StringValue(aws.ToString(out.Arn))
-	state.ResourceShareARN = types.StringValue(state.ResourceShareARN.ValueString())
+	state.ResourceShareARN = types.StringValue(resourceShareARN)
+	state.ID = types.StringValue(fmt.Sprintf("%s,%s", resourceShareARN, permissionARN))
+
 	if v, err := strconv.ParseInt(aws.ToString(out.Version), 10, 64); err == nil {
 		state.PermissionVersion = types.Int64Value(v)
 	}
@@ -162,6 +197,9 @@ func (r *resourceSharePermissionAssociationResource) Delete(ctx context.Context,
 
 	if err != nil {
 		if errs.IsA[*awstypes.UnknownResourceException](err) {
+			return
+		}
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "already been disassociated") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -205,6 +243,8 @@ func findResourceSharePermissionByTwoPartKey(ctx context.Context, conn *ram.Clie
 }
 
 type resourceSharePermissionAssociationResourceModel struct {
+	framework.WithRegionModel
+	ID                types.String `tfsdk:"id"`
 	PermissionARN     types.String `tfsdk:"permission_arn"`
 	PermissionVersion types.Int64  `tfsdk:"permission_version"`
 	ResourceShareARN  types.String `tfsdk:"resource_share_arn"`
@@ -224,4 +264,25 @@ func (resourceSharePermissionAssociationImportID) Parse(id string) (string, map[
 	}
 
 	return id, result, nil
+}
+
+func (r *resourceSharePermissionAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+
+	if req.ID == "" {
+		r.WithImportByIdentity.ImportState(ctx, req, resp)
+		return
+	}
+
+	parts := strings.SplitN(req.ID, ",", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			fmt.Sprintf("unexpected format of ID (%s), expected resource_share_arn,permission_arn", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("resource_share_arn"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("permission_arn"), parts[1])...)
 }
