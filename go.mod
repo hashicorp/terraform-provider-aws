@@ -23,14 +23,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/amp v1.42.8
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.38.13
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.33.8
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.43.12
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.16.20
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.51.11
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.37.6
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.13
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.34.19
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.18.7
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.11
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.13
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.54.3
@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.3
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.13
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.10
-	github.com/aws/aws-sdk-go-v2/service/batch v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/batch v1.63.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.6
@@ -201,7 +201,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.39.20
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.19
-	github.com/aws/aws-sdk-go-v2/service/polly v1.56.1
+	github.com/aws/aws-sdk-go-v2/service/polly v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.14
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
