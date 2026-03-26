@@ -486,16 +486,16 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	domainName := fwflex.StringValueFromFramework(ctx, new.DomainName)
 
-	var consent *awstypes.Consent
-	if !new.Consent.IsUnknown() {
-		fwflex.Expand(ctx, new.Consent, consent)
-	}
-
 	if !new.AdminContact.Equal(old.AdminContact) ||
 		!new.BillingContact.Equal(old.BillingContact) ||
 		!new.RegistrantContact.Equal(old.RegistrantContact) ||
 		!new.TechContact.Equal(old.TechContact) {
 		var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
+
+		var consent *awstypes.Consent
+		if !new.Consent.IsNull() {
+			fwflex.Expand(ctx, new.Consent, consent)
+		}
 
 		if !new.AdminContact.Equal(old.AdminContact) {
 			var apiObject awstypes.ContactDetail

@@ -184,7 +184,6 @@ func resourceRegisteredDomain() *schema.Resource {
 				"consent": {
 					Type:     schema.TypeList,
 					Optional: true,
-					Computed: false,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -319,10 +318,6 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		if v := expandContactDetail(v.([]any)[0].(map[string]any)); !reflect.DeepEqual(v, domainDetail.TechContact) {
 			techContact = v
 		}
-	}
-
-	if v, ok := d.GetOk("consent"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		consent = expandConsent(v.([]any)[0].(map[string]any))
 	}
 
 	if adminContact != nil || billingContact != nil || registrantContact != nil || techContact != nil {
@@ -593,10 +588,7 @@ func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domai
 		DomainName:        aws.String(domainName),
 		RegistrantContact: registrantContact,
 		TechContact:       techContact,
-	}
-
-	if consent != nil {
-		input.Consent = consent
+		Consent:           consent,
 	}
 
 	output, err := conn.UpdateDomainContact(ctx, input)
@@ -939,7 +931,7 @@ func expandConsent(tfMap map[string]any) *awstypes.Consent {
 	}
 
 	if v, ok := tfMap["max_price"].(float64); ok {
-		apiObject.MaxPrice = *aws.Float64(v)
+		apiObject.MaxPrice = v
 	}
 
 	return apiObject
