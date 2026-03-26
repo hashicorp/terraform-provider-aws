@@ -159,11 +159,17 @@ This resource exports the following attributes in addition to the arguments abov
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
 * `security_group_id` - The ID of the security group created by the directory.
+* `launch_time` - Specifies when the directory was created.
+* `stage_last_updated_date_time` - The date and time that the stage was last updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 `connect_settings` (for `ADConnector`) is also exported with the following attributes:
 
 * `connect_ips` - The IP addresses of the AD Connector servers.
+
+For `MicrosoftAD` export the following attributes in addition to the arguments above:
+
+* `os_version` - The operating system version of the directory.
 
 ## Timeouts
 
