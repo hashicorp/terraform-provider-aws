@@ -37,8 +37,6 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -92,30 +90,9 @@ import (
 // @FrameworkResource("aws_sagemaker_hyper_parameter_tuning_job", name="Hyper Parameter Tuning Job")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("hyper_parameter_tuning_job_name")
-// @Testing(hasNoPreExistingResource=true)
-// @Testing(tagsTest=false)
-
-// TIP: ==== RESOURCE IDENTITY ====
-// Identify which attributes can be used to uniquely identify the resource.
-//
-// * If the AWS APIs for the resource take the ARN as an identifier, use
-// ARN Identity.
-// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
-// * Otherwise, use Parameterized Identity with one or more identity attributes.
-//
-// For more information about resource identity, see
-// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
-//
-// Keep one identity approach annotation set appropriate for this resource.
-//
-// TIP: ==== GENERATED ACCEPTANCE TESTS ====
-// Resource Identity and tagging make use of automatically generated acceptance tests.
-// For more information about automatically generated acceptance tests, see
-// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
-//
-// Some common annotations are included below:
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeHyperParameterTuningJobOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(tagsTest=false)
 func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hyperParameterTuningJobResource{}
 
@@ -264,8 +241,6 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						"hyper_parameter_tuning_job_objective": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobObjectiveModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -478,7 +453,10 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{Create: true, Update: true, Delete: true}),
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
 		},
 	}
 }
@@ -653,7 +631,7 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 }
 
 func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) schema.ListNestedBlock {
-	validators := []validator.List{listvalidator.ConflictsWith(path.MatchRoot("training_job_definition"), path.MatchRoot("training_job_definitions"))}
+	validators := []validator.List{}
 	if plural {
 		validators = append(validators, listvalidator.SizeAtLeast(1), listvalidator.SizeAtMost(10))
 	} else {
@@ -1902,34 +1880,4 @@ type warmStartConfigModel struct {
 
 type parentHyperParameterTuningJobModel struct {
 	HyperParameterTuningJobName types.String `tfsdk:"hyper_parameter_tuning_job_name"`
-}
-
-// TIP: ==== IMPORT ID HANDLER ====
-// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
-// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
-//
-// The parser takes the string value of the Import ID and returns:
-// * A string value that is typically ignored. See documentation for more details.
-// * A map of the resource attributes derived from the Import ID.
-// * An error value if there are parsing errors.
-//
-// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
-var (
-	_ inttypes.ImportIDParser = hyperParameterTuningJobImportID{}
-)
-
-type hyperParameterTuningJobImportID struct{}
-
-func (hyperParameterTuningJobImportID) Parse(id string) (string, map[string]string, error) {
-	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
-	}
-
-	result := map[string]string{
-		"some-value":    someValue,
-		"another-value": anotherValue,
-	}
-
-	return id, result, nil
 }
