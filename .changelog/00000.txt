@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `parameter_group_name_actual` attribute to track the currently active parameter group, mirroring `engine_version_actual`
+```
+
+```release-note:bug
+resource/aws_db_instance: Fix perpetual drift on `parameter_group_name` when a major engine version upgrade is pending in the maintenance window
+```
