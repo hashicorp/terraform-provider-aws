@@ -165,7 +165,7 @@ resource "aws_glue_catalog_table" "example" {
 
     representations {
       dialect            = "ATHENA"
-      dialect_version    = "10000"
+      dialect_version    = "3"
       view_original_text = "SELECT * FROM catalog_database.base_table"
       view_expanded_text = "SELECT * FROM catalog_database.base_table"
     }
