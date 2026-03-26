@@ -10,7 +10,6 @@ description: |-
 
 This resource creates a WAFv2 Web ACL Logging Configuration.
 
-!> **Warning:**
 
 ## Example Usage
 
