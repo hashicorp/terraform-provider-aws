@@ -16,9 +16,8 @@ import (
 // GetFramework populates the struct passed as `target` with the entire cty object passed as `source`.
 // The target's fields must be Plugin Framework types.
 func GetFramework(ctx context.Context, source cty.Value, target any) error {
-	tSrc := source.Type()
-	if !tSrc.IsObjectType() {
-		return fmt.Errorf("source must be an object, got %s", tSrc.FriendlyName())
+	if typ := source.Type(); !typ.IsObjectType() {
+		return fmt.Errorf("source must be an object, got %s", typ.FriendlyName())
 	}
 
 	vTarget := reflect.ValueOf(target)
@@ -30,37 +29,33 @@ func GetFramework(ctx context.Context, source cty.Value, target any) error {
 		return fmt.Errorf("target must be a pointer to struct, got %T (Kind: %s)", target, kind)
 	}
 
-	for key, vSource := range ValueElements(source) {
+	for key, sourceFieldCtyValue := range ValueElements(source) {
+		// Map source field to target field via `tfsdk:"<key>"` struct tag.
 		key := key.AsString()
-		field, ok := tfreflect.FieldByTag(target, "tfsdk", key)
+		targetField, ok := tfreflect.FieldByTag(target, "tfsdk", key)
 		if !ok {
 			continue
 		}
-		vField, err := vTarget.FieldByIndexErr(field.Index)
+		vTargetField := vTarget.FieldByIndex(targetField.Index)
+
+		sourceFieldTfValue, err := ToTfValue(sourceFieldCtyValue)
 		if err != nil {
-			return err
+			return fmt.Errorf("source field %s: %w", key, err)
 		}
 
-		attrValue, err := attrValueOf(ctx, vSource, vField.Interface())
-		if err != nil {
-			return err
-		}
+		targetFieldRaw := vTargetField.Interface()
+		if attrValue, ok := targetFieldRaw.(attr.Value); ok {
+			newAttrValue, err := attrValue.Type(ctx).ValueFromTerraform(ctx, *sourceFieldTfValue)
+			if err != nil {
+				return fmt.Errorf("source field %s: %w", key, err)
+			}
 
-		vField.Set(reflect.ValueOf(attrValue))
+			// Set the target field's value to that of the source field.
+			vTargetField.Set(reflect.ValueOf(newAttrValue))
+		} else {
+			return fmt.Errorf("target field %s: unsupported type: %T", key, targetFieldRaw)
+		}
 	}
 
 	return nil
-}
-
-func attrValueOf(ctx context.Context, source cty.Value, target any) (attr.Value, error) {
-	tfType, err := ToTfValue(source)
-	if err != nil {
-		return nil, err
-	}
-
-	if attrValue, ok := target.(attr.Value); ok {
-		return attrValue.Type(ctx).ValueFromTerraform(ctx, *tfType)
-	}
-
-	return nil, fmt.Errorf("attrValueOf unsupported type: %T", target)
 }
