@@ -258,6 +258,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	"github.com/aws/aws-sdk-go-v2/service/uxc"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -1274,6 +1275,10 @@ func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe.Client {
 
 func (c *AWSClient) TransferClient(ctx context.Context) *transfer.Client {
 	return errs.Must(client[*transfer.Client](ctx, c, names.Transfer, make(map[string]any)))
+}
+
+func (c *AWSClient) UXCClient(ctx context.Context) *uxc.Client {
+	return errs.Must(client[*uxc.Client](ctx, c, names.UXC, make(map[string]any)))
 }
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice.Client {

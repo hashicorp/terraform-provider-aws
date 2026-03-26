@@ -449,6 +449,96 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 	})
 }
 
+func testAccInsight_StringFilters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_securityhub_insight.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInsightConfig_stringFilterEach(rName, "aws_account_name", string(types.StringFilterComparisonEquals), "test-account"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, t, resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_name.*", map[string]string{
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "test-account",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
+				),
+			},
+			{
+				Config: testAccInsightConfig_stringFilterEach(rName, "compliance_associated_standards_id", string(types.StringFilterComparisonEquals), "123"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, t, resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.compliance_associated_standards_id.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.compliance_associated_standards_id.*", map[string]string{
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "123",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
+				),
+			},
+			{
+				Config: testAccInsightConfig_stringFilterEach(rName, "compliance_security_control_id", string(types.StringFilterComparisonEquals), "123"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, t, resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.compliance_security_control_id.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.compliance_security_control_id.*", map[string]string{
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "123",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
+				),
+			},
+			{
+				Config: testAccInsightConfig_stringFilterEach(rName, "compliance_security_control_parameters_name", string(types.StringFilterComparisonEquals), "test-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, t, resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.compliance_security_control_parameters_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.compliance_security_control_parameters_name.*", map[string]string{
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "test-name",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
+				),
+			},
+			{
+				Config: testAccInsightConfig_stringFilterEach(rName, "compliance_security_control_parameters_value", string(types.StringFilterComparisonEquals), "test-value"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, t, resourceName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.compliance_security_control_parameters_value.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.compliance_security_control_parameters_value.*", map[string]string{
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "test-value",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInsightDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
@@ -726,4 +816,25 @@ resource "aws_securityhub_insight" "test" {
   depends_on = [aws_securityhub_account.test]
 }
 `, rName)
+}
+
+func testAccInsightConfig_stringFilterEach(rName, filterName, comparison, value string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
+resource "aws_securityhub_insight" "test" {
+  filters {
+    %[2]s {
+      comparison = %[3]q
+      value      = %[4]q
+    }
+  }
+
+  group_by_attribute = "AwsAccountId"
+
+  name = %[1]q
+
+  depends_on = [aws_securityhub_account.test]
+}
+`, rName, filterName, comparison, value)
 }

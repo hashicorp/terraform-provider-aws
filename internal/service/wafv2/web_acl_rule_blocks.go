@@ -841,19 +841,49 @@ func ruleActionOverrideBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
 							"allow": schema.ListNestedBlock{
-								CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
-								Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-								NestedObject: schema.NestedBlockObject{},
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": customRequestHandlingBlock(ctx),
+									},
+								},
 							},
 							"block": schema.ListNestedBlock{
-								CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleBlockActionModel](ctx),
-								Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-								NestedObject: schema.NestedBlockObject{},
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBlockActionModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_response": customResponseBlock(ctx),
+									},
+								},
+							},
+							"captcha": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": customRequestHandlingBlock(ctx),
+									},
+								},
+							},
+							"challenge": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": customRequestHandlingBlock(ctx),
+									},
+								},
 							},
 							"count": schema.ListNestedBlock{
-								CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
-								Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-								NestedObject: schema.NestedBlockObject{},
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": customRequestHandlingBlock(ctx),
+									},
+								},
 							},
 						},
 					},

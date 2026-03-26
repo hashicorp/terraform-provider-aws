@@ -19,10 +19,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -158,7 +158,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateFaqInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
