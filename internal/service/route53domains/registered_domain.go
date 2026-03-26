@@ -189,11 +189,13 @@ func resourceRegisteredDomain() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"currency": {
-								Optional:     false,
-								ValidateFunc: validation.StringLenBetween(0, 3),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(3, 3),
 							},
 							"max_price": {
-								Optional:     false,
+								Type:         schema.TypeFloat,
+								Required:     true,
 								ValidateFunc: validation.FloatAtLeast(0.001),
 							},
 						},
@@ -941,16 +943,4 @@ func expandConsent(tfMap map[string]any) *awstypes.Consent {
 	}
 
 	return apiObject
-}
-
-func flattenConsent(apiObject *awstypes.Consent) map[string]any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{}
-	tfMap["currency"] = apiObject.Currency
-	tfMap["max_price"] = apiObject.MaxPrice
-
-	return tfMap
 }

@@ -299,13 +299,13 @@ func consentBlock(ctx context.Context) schema.Block {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"currency": schema.StringAttribute{
-					Optional: false,
+					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(3),
 					},
 				},
 				"max_price": schema.Float64Attribute{
-					Optional: false,
+					Required: true,
 					Validators: []validator.Float64{
 						float64validator.AtLeast(0.01),
 					},
