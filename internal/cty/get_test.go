@@ -9,8 +9,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -118,6 +120,115 @@ func TestGetFrameworkPrimitives(t *testing.T) {
 			},
 		},
 	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			gotErr := err != nil
+
+			if gotErr != testCase.wantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.wantErr)
+			}
+
+			if gotErr {
+				if !testCase.wantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.target, testCase.wantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGetFrameworkAggregatePrimitives(t *testing.T) {
+	t.Parallel()
+
+	type A struct {
+		Int64List      fwtypes.ListOfInt64      `tfsdk:"int64_list"`
+		StringList     fwtypes.ListOfString     `tfsdk:"string_list"`
+		StringSet      fwtypes.SetOfString      `tfsdk:"string_set"`
+		StringMap      fwtypes.MapOfString      `tfsdk:"string_map"`
+		StringMapOfMap fwtypes.MapOfMapOfString `tfsdk:"string_map_of_map"`
+	}
+
+	ctx := t.Context()
+	testCases := map[string]struct {
+		source     cty.Value
+		target     any
+		wantErr    bool
+		wantTarget any
+	}{
+		"one field populated": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string_list": cty.ListVal([]cty.Value{
+					cty.StringVal("apple"),
+					cty.StringVal("cherry"),
+					cty.StringVal("kangaroo"),
+				}),
+				"int64_list":        cty.NullVal(cty.List(cty.Number)),
+				"string_set":        cty.UnknownVal(cty.Set(cty.String)),
+				"string_map":        cty.NullVal(cty.Map(cty.String)),
+				"string_map_of_map": cty.NullVal(cty.Map(cty.Map(cty.String))),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				StringList:     fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"apple", "cherry", "kangaroo"}),
+				Int64List:      fwtypes.NewListValueOfNull[types.Int64](ctx),
+				StringSet:      fwtypes.NewSetValueOfUnknown[types.String](ctx),
+				StringMap:      fwtypes.NewMapValueOfNull[types.String](ctx),
+				StringMapOfMap: fwtypes.NewMapValueOfNull[fwtypes.MapOfString](ctx),
+			},
+		},
+		"all fields populated": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string_list": cty.ListVal([]cty.Value{
+					cty.StringVal("apple"),
+					cty.StringVal("cherry"),
+					cty.StringVal("kangaroo"),
+				}),
+				"int64_list": cty.ListVal([]cty.Value{
+					cty.NumberIntVal(-1),
+					cty.NumberIntVal(1),
+				}),
+				"string_set": cty.SetVal([]cty.Value{
+					cty.StringVal("ball"),
+					cty.StringVal("rope"),
+				}),
+				"string_map": cty.MapVal(map[string]cty.Value{
+					"foo": cty.StringVal("bar"),
+					"baz": cty.StringVal("qux"),
+				}),
+				"string_map_of_map": cty.MapVal(map[string]cty.Value{
+					"key1": cty.MapVal(map[string]cty.Value{
+						"key2": cty.StringVal("val"),
+					}),
+				}),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				StringList: fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"apple", "cherry", "kangaroo"}),
+				Int64List: fwtypes.NewListValueOfMust[types.Int64](ctx, []attr.Value{
+					types.Int64Value(-1),
+					types.Int64Value(1),
+				}),
+				StringSet: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"ball", "rope"}),
+				StringMap: fwflex.FlattenFrameworkStringValueMapOfString(ctx, map[string]string{
+					"foo": "bar",
+					"baz": "qux",
+				}),
+				StringMapOfMap: fwflex.FlattenFrameworkStringValueMapOfMapOfString(ctx, map[string]map[string]string{
+					"key1": {
+						"key2": "val",
+					},
+				}),
+			},
+		},
+	}
+
+	fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"apple", "cherry", "kangaroo"})
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
