@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,7 +47,7 @@ func (d *dataSourceServices) Read(ctx context.Context, req datasource.ReadReques
 	conn := d.Meta().UXCClient(ctx)
 
 	var data dataSourceServicesModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -57,10 +57,7 @@ func (d *dataSourceServices) Read(ctx context.Context, req datasource.ReadReques
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.UXC, create.ErrActionReading, DSNameServices, "", err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err)
 			return
 		}
 		if page == nil {
@@ -72,10 +69,10 @@ func (d *dataSourceServices) Read(ctx context.Context, req datasource.ReadReques
 	data.ID = flex.StringValueToFramework(ctx, d.Meta().AccountID(ctx))
 
 	servicesList, listDiags := types.ListValueFrom(ctx, types.StringType, allServices)
-	resp.Diagnostics.Append(listDiags...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, listDiags)
 	data.Services = fwtypes.ListOfString{ListValue: servicesList}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type dataSourceServicesModel struct {

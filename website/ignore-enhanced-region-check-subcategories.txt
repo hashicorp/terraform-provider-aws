@@ -22,6 +22,7 @@ Route 53 Recovery Readiness
 STS (Security Token)
 Savings Plans
 Shield
+UXC
 User Notifications
 User Notifications Contacts
 WAF Classic
