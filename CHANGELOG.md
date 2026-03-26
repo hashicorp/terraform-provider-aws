@@ -6,6 +6,10 @@ FEATURES:
 * **New Data Source:** `aws_iam_role_policy_attachments` ([#47119](https://github.com/hashicorp/terraform-provider-aws/issues/47119))
 * **New Data Source:** `aws_networkmanager_core_network` ([#45798](https://github.com/hashicorp/terraform-provider-aws/issues/45798))
 
+ENHANCEMENTS:
+
+* resource/aws_network_acl_rule: Add Resource Identity support ([#47090](https://github.com/hashicorp/terraform-provider-aws/issues/47090))
+
 ## 6.38.0 (March 25, 2026)
 
 FEATURES:
