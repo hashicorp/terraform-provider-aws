@@ -13,8 +13,9 @@ import (
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
-// Get populates the struct passed as `target` with the entire cty object passed as `source`.
-func Get(ctx context.Context, source cty.Value, target any) error {
+// GetFramework populates the struct passed as `target` with the entire cty object passed as `source`.
+// The target's fields must be Plugin Framework types.
+func GetFramework(ctx context.Context, source cty.Value, target any) error {
 	tSrc := source.Type()
 	if !tSrc.IsObjectType() {
 		return fmt.Errorf("source must be an object, got %s", tSrc.FriendlyName())

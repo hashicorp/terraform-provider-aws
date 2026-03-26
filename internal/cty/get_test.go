@@ -14,7 +14,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestGetPrimitives(t *testing.T) {
+func TestGetFrameworkPrimitives(t *testing.T) {
 	t.Parallel()
 
 	type A struct {
@@ -123,7 +123,7 @@ func TestGetPrimitives(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := tfcty.Get(ctx, testCase.source, testCase.target)
+			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
 			gotErr := err != nil
 
 			if gotErr != testCase.wantErr {
