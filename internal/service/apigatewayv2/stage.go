@@ -560,7 +560,7 @@ func flattenDefaultRouteSettings(routeSettings *awstypes.RouteSettings) []any {
 		"data_trace_enabled":       aws.ToBool(routeSettings.DataTraceEnabled),
 		"detailed_metrics_enabled": aws.ToBool(routeSettings.DetailedMetricsEnabled),
 		"logging_level":            string(routeSettings.LoggingLevel),
-		"throttling_burst_limit":   int(aws.ToInt32(routeSettings.ThrottlingBurstLimit)),
+		"throttling_burst_limit":   aws.ToInt32(routeSettings.ThrottlingBurstLimit),
 		"throttling_rate_limit":    aws.ToFloat64(routeSettings.ThrottlingRateLimit),
 	}}
 }
@@ -599,14 +599,22 @@ func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []any {
 	vSettings := []any{}
 
 	for k, routeSetting := range settings {
-		vSettings = append(vSettings, map[string]any{
+		vSetting := map[string]any{
 			"data_trace_enabled":       aws.ToBool(routeSetting.DataTraceEnabled),
 			"detailed_metrics_enabled": aws.ToBool(routeSetting.DetailedMetricsEnabled),
 			"logging_level":            routeSetting.LoggingLevel,
 			"route_key":                k,
-			"throttling_burst_limit":   int(aws.ToInt32(routeSetting.ThrottlingBurstLimit)),
-			"throttling_rate_limit":    aws.ToFloat64(routeSetting.ThrottlingRateLimit),
-		})
+		}
+
+		if routeSetting.ThrottlingBurstLimit != nil {
+			vSetting["throttling_burst_limit"] = aws.ToInt32(routeSetting.ThrottlingBurstLimit)
+		}
+
+		if routeSetting.ThrottlingRateLimit != nil {
+			vSetting["throttling_rate_limit"] = aws.ToFloat64(routeSetting.ThrottlingRateLimit)
+		}
+
+		vSettings = append(vSettings, vSetting)
 	}
 
 	return vSettings
