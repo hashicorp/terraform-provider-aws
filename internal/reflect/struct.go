@@ -25,14 +25,14 @@ func structFields_(typ reflect.Type, parentIndex []int, yield func(reflect.Struc
 		field := typ.Field(i)
 
 		if field.Anonymous {
-			fieldIndexSequence := append(parentIndex, i)
+			fieldIndexSequence := append(parentIndex, i) //nolint:gocritic // append re-assign is intentional
 			if !structFields_(field.Type, fieldIndexSequence, yield) {
 				return false
 			}
 			continue
 		}
 
-		field.Index = append(parentIndex, i)
+		field.Index = append(parentIndex, i) //nolint:gocritic // append re-assign is intentional
 		if !yield(field) {
 			return false
 		}
