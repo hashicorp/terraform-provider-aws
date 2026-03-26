@@ -19,6 +19,7 @@ To create a RAM resource share, see the [`aws_ram_resource_share` resource](/doc
 ## Example Usage
 
 ### Basic Usage
+
 ```terraform
 resource "aws_ram_permission" "example" {
   name          = "example"
@@ -65,6 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM Resource Share Permission Association using the `resource_share_arn` and `permission_arn` separated by a comma. For example:
+
 ```terraform
 import {
   to = aws_ram_resource_share_permission_association.example
@@ -73,6 +75,7 @@ import {
 ```
 
 Using `terraform import`, import RAM Resource Share Permission Association using the `resource_share_arn` and `permission_arn` separated by a comma. For example:
+
 ```console
 % terraform import aws_ram_resource_share_permission_association.example arn:aws:ram:us-west-2:123456789012:resource-share/example,arn:aws:ram::aws:permission/example
 ```
