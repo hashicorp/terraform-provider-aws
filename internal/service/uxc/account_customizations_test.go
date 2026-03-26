@@ -23,11 +23,11 @@ func TestAccUXC_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"accountCustomizationsBasic":          testAccAccountCustomizations_basic,
-		"accountCustomizationsVisibleRegions": testAccAccountCustomizations_visibleRegions,
+		"accountCustomizationsBasic":           testAccAccountCustomizations_basic,
+		"accountCustomizationsVisibleRegions":  testAccAccountCustomizations_visibleRegions,
 		"accountCustomizationsVisibleServices": testAccAccountCustomizations_visibleServices,
-		"accountCustomizationsDisappears":     testAccAccountCustomizations_disappears,
-		"servicesDataSourceBasic":             testAccServicesDataSource_basic,
+		"accountCustomizationsDisappears":      testAccAccountCustomizations_disappears,
+		"servicesDataSourceBasic":              testAccServicesDataSource_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

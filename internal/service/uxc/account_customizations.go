@@ -5,7 +5,6 @@ package uxc
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/uxc"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/uxc/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -70,7 +70,7 @@ func (r *resourceAccountCustomizations) Schema(_ context.Context, _ resource.Sch
 
 func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan resourceAccountCustomizationsModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -78,7 +78,7 @@ func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource
 	conn := r.Meta().UXCClient(ctx)
 
 	input := &uxc.UpdateAccountCustomizationsInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,23 +92,20 @@ func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource
 
 	output, err := conn.UpdateAccountCustomizations(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("creating UXC %s", ResNameAccountCustomizations),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
 	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan))
 	normalizeAccountCustomizationsModel(ctx, &plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceAccountCustomizations) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state resourceAccountCustomizationsModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -122,21 +119,18 @@ func (r *resourceAccountCustomizations) Read(ctx context.Context, req resource.R
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("reading UXC %s (%s)", ResNameAccountCustomizations, state.ID.ValueString()),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &state))
 	normalizeAccountCustomizationsModel(ctx, &state)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan resourceAccountCustomizationsModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -144,7 +138,7 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 	conn := r.Meta().UXCClient(ctx)
 
 	input := &uxc.UpdateAccountCustomizationsInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -157,22 +151,19 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 
 	output, err := conn.UpdateAccountCustomizations(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("updating UXC %s (%s)", ResNameAccountCustomizations, plan.ID.ValueString()),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan))
 	normalizeAccountCustomizationsModel(ctx, &plan)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceAccountCustomizations) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourceAccountCustomizationsModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -186,10 +177,7 @@ func (r *resourceAccountCustomizations) Delete(ctx context.Context, req resource
 		VisibleServices: []string{},
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("deleting UXC %s (%s)", ResNameAccountCustomizations, state.ID.ValueString()),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 	}
 }
 
