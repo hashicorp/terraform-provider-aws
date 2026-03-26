@@ -6,23 +6,26 @@ package cty_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func TestGetPrimitives(t *testing.T) {
 	t.Parallel()
 
 	type A struct {
-		Bool    types.Bool    `tfsdk:"bool"`
-		Float32 types.Float32 `tfsdk:"float32"`
-		Float64 types.Float64 `tfsdk:"float64"`
-		Int32   types.Int32   `tfsdk:"int32"`
-		Int64   types.Int64   `tfsdk:"int64"`
-		String1 types.String  `tfsdk:"string1"`
-		String2 types.String  `tfsdk:"string2"`
+		Bool       types.Bool                                 `tfsdk:"bool"`
+		Float32    types.Float32                              `tfsdk:"float32"`
+		Float64    types.Float64                              `tfsdk:"float64"`
+		Int32      types.Int32                                `tfsdk:"int32"`
+		Int64      types.Int64                                `tfsdk:"int64"`
+		String1    types.String                               `tfsdk:"string1"`
+		String2    types.String                               `tfsdk:"string2"`
+		StringEnum fwtypes.StringEnum[awstypes.AclPermission] `tfsdk:"string_enum"`
 	}
 
 	ctx := t.Context()
@@ -93,23 +96,25 @@ func TestGetPrimitives(t *testing.T) {
 		},
 		"source object, struct pointer target, all fields": {
 			source: cty.ObjectVal(map[string]cty.Value{
-				"string1": cty.StringVal("Alice"),
-				"string2": cty.NullVal(cty.String),
-				"bool":    cty.BoolVal(true),
-				"float32": cty.UnknownVal(cty.Number),
-				"float64": cty.NumberFloatVal(-64.64),
-				"int32":   cty.NumberIntVal(32),
-				"int64":   cty.NumberIntVal(-64),
+				"string1":     cty.StringVal("Alice"),
+				"string2":     cty.NullVal(cty.String),
+				"bool":        cty.BoolVal(true),
+				"float32":     cty.UnknownVal(cty.Number),
+				"float64":     cty.NumberFloatVal(-64.64),
+				"int32":       cty.NumberIntVal(32),
+				"int64":       cty.NumberIntVal(-64),
+				"string_enum": cty.StringVal(string(awstypes.AclPermissionRead)),
 			}),
 			target: &A{},
 			wantTarget: &A{
-				String1: types.StringValue("Alice"),
-				String2: types.StringNull(),
-				Bool:    types.BoolValue(true),
-				Float32: types.Float32Unknown(),
-				Float64: types.Float64Value(-64.64),
-				Int32:   types.Int32Value(32),
-				Int64:   types.Int64Value(-64),
+				String1:    types.StringValue("Alice"),
+				String2:    types.StringNull(),
+				Bool:       types.BoolValue(true),
+				Float32:    types.Float32Unknown(),
+				Float64:    types.Float64Value(-64.64),
+				Int32:      types.Int32Value(32),
+				Int64:      types.Int64Value(-64),
+				StringEnum: fwtypes.StringEnumValue(awstypes.AclPermissionRead),
 			},
 		},
 	}
