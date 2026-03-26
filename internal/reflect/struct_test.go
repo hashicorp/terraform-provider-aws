@@ -296,6 +296,8 @@ func TestExportedStructFields(t *testing.T) {
 }
 
 func TestFieldByTag(t *testing.T) {
+	t.Parallel()
+
 	type sample struct {
 		ID    int    `json:"id"`
 		Name  string `json:"name,omitempty"`
@@ -375,6 +377,8 @@ func TestFieldByTag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			f, ok := FieldByTag(tt.v, tt.tagKey, tt.tagValue)
 			if ok != tt.wantOK {
 				t.Fatalf("got ok=%v, want %v", ok, tt.wantOK)
