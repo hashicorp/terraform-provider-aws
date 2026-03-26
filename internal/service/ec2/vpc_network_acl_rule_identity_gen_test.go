@@ -218,7 +218,7 @@ func TestAccVPCNetworkACLRule_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.37.0
+// Resource Identity was added after v6.38.0
 func TestAccVPCNetworkACLRule_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -235,7 +235,7 @@ func TestAccVPCNetworkACLRule_Identity_ExistingResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/NetworkACLRule/basic_v6.37.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACLRule/basic_v6.38.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -281,7 +281,7 @@ func TestAccVPCNetworkACLRule_Identity_ExistingResource_basic(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.37.0
+// Resource Identity was added after v6.38.0
 func TestAccVPCNetworkACLRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -303,7 +303,7 @@ func TestAccVPCNetworkACLRule_Identity_ExistingResource_noRefreshNoChange(t *tes
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/NetworkACLRule/basic_v6.37.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/NetworkACLRule/basic_v6.38.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

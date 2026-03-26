@@ -37,7 +37,7 @@ import (
 // @ImportIDHandler("networkACLRuleImportID")
 // @CustomImport
 // @Testing(importStateIdFunc=testAccNetworkACLRuleImportStateIdentityFunc)
-// @Testing(preIdentityVersion="v6.37.0")
+// @Testing(preIdentityVersion="v6.38.0")
 func resourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLRuleCreate,
