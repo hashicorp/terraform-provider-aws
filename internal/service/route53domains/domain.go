@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -173,6 +174,7 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 			"admin_contact":      contactDetailBlock(ctx),
 			"registrant_contact": contactDetailBlock(ctx),
 			"tech_contact":       contactDetailBlock(ctx),
+			"consent":            consentBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -288,6 +290,33 @@ func contactDetailBlock(ctx context.Context) schema.Block {
 		},
 	}
 
+	return block
+}
+
+func consentBlock(ctx context.Context) schema.Block {
+	block := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[consentModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"currency": schema.StringAttribute{
+					Optional: false,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(3),
+					},
+				},
+				"max_price": schema.Float64Attribute{
+					Optional: false,
+					Validators: []validator.Float64{
+						float64validator.AtLeast(0.01),
+					},
+				},
+			},
+		},
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
+		},
+	}
 	return block
 }
 
@@ -457,6 +486,11 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 
 	domainName := fwflex.StringValueFromFramework(ctx, new.DomainName)
 
+	var consent *awstypes.Consent
+	if !new.Consent.IsUnknown() {
+		fwflex.Expand(ctx, new.Consent, consent)
+	}
+
 	if !new.AdminContact.Equal(old.AdminContact) ||
 		!new.BillingContact.Equal(old.BillingContact) ||
 		!new.RegistrantContact.Equal(old.RegistrantContact) ||
@@ -499,7 +533,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 			techContact = &apiObject
 		}
 
-		if err := modifyDomainContact(ctx, conn, domainName, adminContact, billingContact, registrantContact, techContact, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if err := modifyDomainContact(ctx, conn, domainName, adminContact, billingContact, registrantContact, techContact, consent, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError("update", err.Error())
 
 			return
@@ -696,6 +730,7 @@ type domainResourceModel struct {
 	AutoRenew         types.Bool                                          `tfsdk:"auto_renew"`
 	BillingContact    fwtypes.ListNestedObjectValueOf[contactDetailModel] `tfsdk:"billing_contact"`
 	BillingPrivacy    types.Bool                                          `tfsdk:"billing_privacy"`
+	Consent           fwtypes.ListNestedObjectValueOf[consentModel]       `tfsdk:"consent"`
 	CreationDate      timetypes.RFC3339                                   `tfsdk:"creation_date"`
 	DomainName        fwtypes.CaseInsensitiveString                       `tfsdk:"domain_name"`
 	DurationInYears   types.Int64                                         `tfsdk:"duration_in_years"`
@@ -715,6 +750,11 @@ type domainResourceModel struct {
 	TransferLock      types.Bool                                          `tfsdk:"transfer_lock"`
 	UpdatedDate       timetypes.RFC3339                                   `tfsdk:"updated_date"`
 	WhoIsServer       types.String                                        `tfsdk:"whois_server"`
+}
+
+type consentModel struct {
+	Currency types.String  `tfsdk:"currency"`
+	MaxPrice types.Float64 `tfsdk:"max_price"`
 }
 
 type contactDetailModel struct {
