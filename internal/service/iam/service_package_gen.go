@@ -36,6 +36,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Role Policies",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
+		{
+			Factory:  newRolePolicyAttachmentsDataSource,
+			TypeName: "aws_iam_role_policy_attachments",
+			Name:     "Role Policy Attachments",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 	}
 }
 
