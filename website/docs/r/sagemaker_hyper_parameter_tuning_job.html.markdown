@@ -62,9 +62,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sagemaker_hyper_parameter_tuning_job.example
   identity = {
-<!---
-Add only required attributes in this example.
---->
+    hyper_parameter_tuning_job_name = "example-hyper-parameter-tuning-job"
   }
 }
 
@@ -76,35 +74,8 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "example" {
 ### Identity Schema
 
 #### Required
-<!---
-Required attributes here:
-> ARN Identity:
-* `arn` - ARN of the Hyper Parameter Tuning Job.
-> Parameterized Identity:
-* `example_id_arg` - ID argument of the Hyper Parameter Tuning Job.
-> Singleton Identity: no required attributes.
---->
+* `hyper_parameter_tuning_job_name` (String) Name of the Hyper Parameter Tuning Job.
 
 #### Optional
-<!---
-Optional attributes here:
-> ARN Identity: no optional attributes.
-> Parameterized Identity and Singleton Identity: remove `region` if the resource is global.
---->
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Hyper Parameter Tuning Job using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_sagemaker_hyper_parameter_tuning_job.example
-  id = "hyper_parameter_tuning_job-id-12345678"
-}
-```
-
-Using `terraform import`, import SageMaker AI Hyper Parameter Tuning Job using the `example_id_arg`. For example:
-
-```console
-% terraform import aws_sagemaker_hyper_parameter_tuning_job.example hyper_parameter_tuning_job-id-12345678
-```
