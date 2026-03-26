@@ -512,6 +512,48 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_parameters_volumeWithExcludeDataVolumeTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_parametersVolumeExcludeDataVolumeTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_data_volume_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_data_volume_tags.exclude", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Remove exclude_data_volume_tags
+				Config: testAccLifecyclePolicyConfig_parametersVolume(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_data_volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
@@ -1380,6 +1422,43 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
     parameters {
       exclude_boot_volume = true
+    }
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_parametersVolumeExcludeDataVolumeTags(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+    policy_type    = "EBS_SNAPSHOT_MANAGEMENT"
+
+    parameters {
+      exclude_boot_volume = true
+      exclude_data_volume_tags = {
+        exclude = "true"
+      }
     }
 
     schedule {
