@@ -228,7 +228,163 @@ func TestGetFrameworkAggregatePrimitives(t *testing.T) {
 		},
 	}
 
-	fwflex.FlattenFrameworkStringValueListOfString(ctx, []string{"apple", "cherry", "kangaroo"})
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			gotErr := err != nil
+
+			if gotErr != testCase.wantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.wantErr)
+			}
+
+			if gotErr {
+				if !testCase.wantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.target, testCase.wantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGetFrameworkSimpleNestedObject(t *testing.T) {
+	t.Parallel()
+
+	type B struct {
+		Bool types.Bool `tfsdk:"bool"`
+	}
+	type A struct {
+		String types.String                       `tfsdk:"string"`
+		B      fwtypes.ListNestedObjectValueOf[B] `tfsdk:"b"`
+	}
+
+	ctx := t.Context()
+	testCases := map[string]struct {
+		source     cty.Value
+		target     any
+		wantErr    bool
+		wantTarget any
+	}{
+		"null nested object": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string": cty.StringVal("Alice"),
+				"b":      cty.NullVal(cty.List(cty.Object(map[string]cty.Type{"bool": cty.Bool}))),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+				B:      fwtypes.NewListNestedObjectValueOfNull[B](ctx),
+			},
+		},
+		"unknown nested object": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string": cty.StringVal("Alice"),
+				"b":      cty.UnknownVal(cty.List(cty.Object(map[string]cty.Type{"bool": cty.Bool}))),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+				B:      fwtypes.NewListNestedObjectValueOfUnknown[B](ctx),
+			},
+		},
+		"known nested object": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string": cty.StringVal("Alice"),
+				"b": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+					"bool": cty.BoolVal(true),
+				})}),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+				B:      fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &B{Bool: types.BoolValue(true)}),
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tfcty.GetFramework(ctx, testCase.source, testCase.target)
+			gotErr := err != nil
+
+			if gotErr != testCase.wantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.wantErr)
+			}
+
+			if gotErr {
+				if !testCase.wantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.target, testCase.wantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGetFrameworkComplexNestedObject(t *testing.T) {
+	t.Parallel()
+
+	type C struct {
+		Bool      types.Bool          `tfsdk:"bool"`
+		StringMap fwtypes.MapOfString `tfsdk:"string_map"`
+	}
+	type B struct {
+		C fwtypes.SetNestedObjectValueOf[C] `tfsdk:"c"`
+	}
+	type A struct {
+		String types.String                       `tfsdk:"string"`
+		B      fwtypes.ListNestedObjectValueOf[B] `tfsdk:"b"`
+	}
+
+	ctx := t.Context()
+	testCases := map[string]struct {
+		source     cty.Value
+		target     any
+		wantErr    bool
+		wantTarget any
+	}{
+		"null in nested object": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string": cty.StringVal("Alice"),
+				"b": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+					"c": cty.NullVal(cty.Set(cty.Object(map[string]cty.Type{
+						"bool":       cty.Bool,
+						"string_map": cty.Map(cty.String),
+					}))),
+				})}),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+				B:      fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &B{C: fwtypes.NewSetNestedObjectValueOfNull[C](ctx)}),
+			},
+		},
+		"fully known nested object": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string": cty.StringVal("Alice"),
+				"b": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+					"c": cty.SetVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+						"bool":       cty.BoolVal(true),
+						"string_map": cty.MapVal(map[string]cty.Value{"key": cty.StringVal("val")}),
+					})}),
+				})}),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String: types.StringValue("Alice"),
+				B: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &B{C: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &C{
+					Bool:      types.BoolValue(true),
+					StringMap: fwflex.FlattenFrameworkStringValueMapOfString(ctx, map[string]string{"key": "val"}),
+				})}),
+			},
+		},
+	}
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
