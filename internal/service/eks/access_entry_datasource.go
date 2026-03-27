@@ -64,8 +64,14 @@ func dataSourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchemaComputed(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTagsAll: {
+				Type:       schema.TypeMap,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `this attribute has been deprecated`,
+			},
 		},
 	}
 }
