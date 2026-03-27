@@ -34,6 +34,7 @@ import (
 
 // @SDKResource("aws_eks_addon", name="Add-On")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceAddon() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAddonCreate,
