@@ -5,36 +5,7 @@
 
 package sagemaker
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/sagemaker/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"time"
@@ -241,6 +212,8 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						"hyper_parameter_tuning_job_objective": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobObjectiveModel](ctx),
 							Validators: []validator.List{
+								//listvalidator.IsRequired(), // TODO : API seems to enforce it , come abck later
+								//listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -738,7 +711,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								Optional: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 170),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*/)?([a-zA-Z0-9]([a-zA-Z0-9-]){0,62})(?<!-)$`), "must be a valid SageMaker algorithm name or ARN"),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*/)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`), "must be a valid SageMaker algorithm name or ARN"),
 									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("training_image")),
 								},
 								PlanModifiers: []planmodifier.String{
@@ -1676,8 +1649,8 @@ type autoParameterModel struct {
 }
 
 type categoricalParameterRangeModel struct {
-	Name   types.String `tfsdk:"name"`
-	Values types.Set    `tfsdk:"values"`
+	Name   types.String        `tfsdk:"name"`
+	Values fwtypes.SetOfString `tfsdk:"values"`
 }
 
 type continuousParameterRangeModel struct {
@@ -1730,7 +1703,7 @@ type hyperParameterTrainingJobDefinitionModel struct {
 	EnableInterContainerTrafficEncryption types.Bool                                                               `tfsdk:"enable_inter_container_traffic_encryption"`
 	EnableManagedSpotTraining             types.Bool                                                               `tfsdk:"enable_managed_spot_training"`
 	EnableNetworkIsolation                types.Bool                                                               `tfsdk:"enable_network_isolation"`
-	Environment                           types.Map                                                                `tfsdk:"environment"`
+	Environment                           fwtypes.MapOfString                                                      `tfsdk:"environment"`
 	HyperParameterTuningResourceConfig    fwtypes.ListNestedObjectValueOf[hyperParameterTuningResourceConfigModel] `tfsdk:"hyper_parameter_tuning_resource_config"`
 	HyperParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                    `tfsdk:"hyper_parameter_ranges"`
 	InputDataConfig                       fwtypes.ListNestedObjectValueOf[inputDataConfigModel]                    `tfsdk:"input_data_config"`
@@ -1738,7 +1711,7 @@ type hyperParameterTrainingJobDefinitionModel struct {
 	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingResourceConfigModel]             `tfsdk:"resource_config"`
 	RetryStrategy                         fwtypes.ListNestedObjectValueOf[retryStrategyModel]                      `tfsdk:"retry_strategy"`
 	RoleARN                               types.String                                                             `tfsdk:"role_arn"`
-	StaticHyperParameters                 types.Map                                                                `tfsdk:"static_hyper_parameters"`
+	StaticHyperParameters                 fwtypes.MapOfString                                                      `tfsdk:"static_hyper_parameters"`
 	StoppingCondition                     fwtypes.ListNestedObjectValueOf[stoppingConditionModel]                  `tfsdk:"stopping_condition"`
 	TuningObjective                       fwtypes.ListNestedObjectValueOf[tuningObjectiveModel]                    `tfsdk:"tuning_objective"`
 	VPCConfig                             fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobVPCConfigModel]   `tfsdk:"vpc_config"`
@@ -1792,9 +1765,9 @@ type fileSystemDataSourceModel struct {
 }
 
 type s3DataSourceModel struct {
-	AttributeNames         types.Set                                               `tfsdk:"attribute_names"`
+	AttributeNames         fwtypes.SetOfString                                     `tfsdk:"attribute_names"`
 	HubAccessConfig        fwtypes.ListNestedObjectValueOf[hubAccessConfigModel]   `tfsdk:"hub_access_config"`
-	InstanceGroupNames     types.Set                                               `tfsdk:"instance_group_names"`
+	InstanceGroupNames     fwtypes.SetOfString                                     `tfsdk:"instance_group_names"`
 	ModelAccessConfig      fwtypes.ListNestedObjectValueOf[modelAccessConfigModel] `tfsdk:"model_access_config"`
 	S3DataDistributionType fwtypes.StringEnum[awstypes.S3DataDistribution]         `tfsdk:"s3_data_distribution_type"`
 	S3DataType             fwtypes.StringEnum[awstypes.S3DataType]                 `tfsdk:"s3_data_type"`
@@ -1869,8 +1842,8 @@ type tuningObjectiveModel struct {
 }
 
 type hyperParameterTuningJobVPCConfigModel struct {
-	SecurityGroupIDs types.Set `tfsdk:"security_group_ids"`
-	Subnets          types.Set `tfsdk:"subnets"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	Subnets          fwtypes.SetOfString `tfsdk:"subnets"`
 }
 
 type warmStartConfigModel struct {
