@@ -47,6 +47,22 @@ func TestAccElastiCacheClusterDataSource_basic(t *testing.T) {
 	})
 }
 
+func testAccClusterDataSourceConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "memcached"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+  port            = 11211
+}
+
+data "aws_elasticache_cluster" "test" {
+  cluster_id = aws_elasticache_cluster.test.cluster_id
+}
+`, rName)
+}
+
 func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -80,18 +96,154 @@ func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(
 	})
 }
 
-func testAccClusterDataSourceConfig_basic(rName string) string {
+func testAccClusterConfig_dataSourceEngineValkeyLogDeliveryConfigurations(rName string, slowLogDeliveryEnabled bool, slowDeliveryDestination awstypes.DestinationType, slowDeliveryFormat awstypes.LogFormat, engineLogDeliveryEnabled bool, engineDeliveryDestination awstypes.DestinationType, engineLogDeliveryFormat awstypes.LogFormat) string {
 	return fmt.Sprintf(`
+data "aws_iam_policy_document" "p" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["${aws_cloudwatch_log_group.lg.arn}:log-stream:*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "rp" {
+  policy_document = data.aws_iam_policy_document.p.json
+  policy_name     = %[1]q
+  depends_on = [
+    aws_cloudwatch_log_group.lg
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "lg" {
+  retention_in_days = 1
+  name              = %[1]q
+}
+
+resource "aws_s3_bucket" "b" {
+  force_destroy = true
+}
+
+resource "aws_iam_role" "r" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      },
+    ]
+  })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = [aws_s3_bucket.b.arn, "${aws_s3_bucket.b.arn}/*"]
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "ds" {
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    bucket_arn = aws_s3_bucket.b.arn
+    role_arn   = aws_iam_role.r.arn
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      = %[1]q
-  engine          = "memcached"
-  node_type       = "cache.t3.small"
-  num_cache_nodes = 1
-  port            = 11211
+  cluster_id        = %[1]q
+  engine            = "valkey"
+  node_type         = "cache.t3.micro"
+  num_cache_nodes   = 1
+  port              = 6379
+  apply_immediately = true
+  dynamic "log_delivery_configuration" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination      = (%[3]q == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : ((%[3]q == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
+      destination_type = %[3]q
+      log_format       = %[4]q
+      log_type         = "slow-log"
+    }
+  }
+  dynamic "log_delivery_configuration" {
+    for_each = tobool("%[5]t") ? [""] : []
+    content {
+      destination      = (%[6]q == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : ((%[6]q == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
+      destination_type = %[6]q
+      log_format       = %[7]q
+      log_type         = "engine-log"
+    }
+  }
 }
 
 data "aws_elasticache_cluster" "test" {
   cluster_id = aws_elasticache_cluster.test.cluster_id
 }
-`, rName)
+`, rName, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
+}
+
+func TestAccElastiCacheClusterDataSource_Engine_Valkey_LogDeliveryConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_dataSourceEngineValkeyLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson, true, awstypes.DestinationTypeCloudWatchLogs, awstypes.LogFormatText),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", names.AttrJSON),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_type", "slow-log"),
+				),
+			},
+		},
+	})
 }
