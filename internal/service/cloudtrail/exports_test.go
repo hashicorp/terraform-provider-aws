@@ -6,11 +6,14 @@ package cloudtrail
 // Exports for use in tests only.
 var (
 	ResourceEventDataStore                    = resourceEventDataStore
+	ResourceInsightSelectors                  = resourceInsightSelectors
 	ResourceOrganizationDelegatedAdminAccount = newOrganizationDelegatedAdminAccountResource
 	ResourceTrail                             = resourceTrail
 
-	FindEventDataStoreByARN    = findEventDataStoreByARN
-	FindTrailByARN             = findTrailByARN
-	ServiceAccountPerRegionMap = serviceAccountPerRegionMap
-	ServicePrincipal           = servicePrincipal
+	FindEventDataStoreByARN              = findEventDataStoreByARN
+	FindInsightSelectorsByEventDataStore = findInsightSelectorsByEventDataStore
+	FindInsightSelectorsByTrailName      = findInsightSelectorsByTrailName
+	FindTrailByARN                       = findTrailByARN
+	ServiceAccountPerRegionMap           = serviceAccountPerRegionMap
+	ServicePrincipal                     = servicePrincipal
 )
