@@ -275,8 +275,8 @@ github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.15 h1:artlAftmSj14Z
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.15/go.mod h1:WVbh3cBUXfbgn9E1MVQE3KckUnkEP2FDFN/pRKbq4M0=
 github.com/aws/aws-sdk-go-v2/service/glue v1.139.1 h1:2FiGBr6B+Y9nJPEvaRgo5Mxau8uAboLcgFwrwFy1hhM=
 github.com/aws/aws-sdk-go-v2/service/glue v1.139.1/go.mod h1:1l+jalOvmNPKJkvEIgkJN4brHKcbmZSCdP+nDRKw+5g=
-github.com/aws/aws-sdk-go-v2/service/grafana v1.33.3 h1:+e3VhDgHXL6r/YJM1zj2jqHTF+YtnY04eL2Kl65B3j4=
-github.com/aws/aws-sdk-go-v2/service/grafana v1.33.3/go.mod h1:9yv2C4ijaU4xvLgnG7zJ2rxs/i716o/o/+3LggjXPmY=
+github.com/aws/aws-sdk-go-v2/service/grafana v1.33.4 h1:iFC2Eld6XDtSIP1bpnz78K+zBe5WOhq9GZMW/G5q6M8=
+github.com/aws/aws-sdk-go-v2/service/grafana v1.33.4/go.mod h1:6naHHSh+kZvZ7iIfY4At+caLwX27zZus147TfKMaKfo=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.20 h1:EJ+VYPKnxlFohBb8rDpyWfOkbsIL0iHa4X9ddtFESMs=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.20/go.mod h1:BrX7KnlmYATbX/uI71REP/68Y+1hThVQdsTrDYYmIrE=
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.3 h1:/H/1D4Hr1y4kziQ4kFMJxPL1u7oVMMGpkED0fE56/Jw=
