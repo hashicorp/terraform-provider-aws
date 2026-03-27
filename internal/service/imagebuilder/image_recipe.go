@@ -247,6 +247,22 @@ func resourceImageRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -312,6 +328,13 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.ImageRecipeArn))
 
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
+
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }
 
@@ -319,7 +342,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	imageRecipe, err := findImageRecipeByARN(ctx, conn, d.Id())
+	output, err := findImageRecipeByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image Recipe (%s) not found, removing from state", d.Id())
@@ -330,6 +353,8 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", d.Id(), err)
 	}
+
+	imageRecipe := output.ImageRecipe
 
 	d.Set(names.AttrARN, imageRecipe.Arn)
 	if err := d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings)); err != nil {
@@ -357,6 +382,13 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set(names.AttrVersion, imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
+
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 
 	setTagsOut(ctx, imageRecipe.Tags)
 
@@ -391,7 +423,7 @@ func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.ImageRecipe, error) {
+func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*imagebuilder.GetImageRecipeOutput, error) {
 	input := &imagebuilder.GetImageRecipeInput{
 		ImageRecipeArn: aws.String(arn),
 	}
@@ -412,7 +444,7 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.ImageRecipe, nil
+	return output, nil
 }
 
 func expandComponentConfiguration(tfMap map[string]any) *awstypes.ComponentConfiguration {
