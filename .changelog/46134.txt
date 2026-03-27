@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_serverless_cache: Fixed, removal of `cache_usage_limits` from `aws_elasticache_serverless_cache` after it had previously been added to the resource. Previously it used to throw `InvalidParameterCombination` error.
+```
