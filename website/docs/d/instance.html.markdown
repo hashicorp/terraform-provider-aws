@@ -99,6 +99,7 @@ interpolation.
 * `launch_time` - Time the instance was launched.
 * `maintenance_options` - Maintenance and recovery options for the instance.
     * `auto_recovery` - Automatic recovery behavior of the instance.
+    * `reboot_migration` - Automatic reboot migration behavior of the instance.
 * `metadata_options` - Metadata options of the Instance.
     * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
     * `http_protocol_ipv6` - Whether the IPv6 endpoint for the instance metadata service is `enabled` or `disabled`
