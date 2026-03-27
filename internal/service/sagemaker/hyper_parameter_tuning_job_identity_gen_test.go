@@ -63,10 +63,15 @@ func TestAccSageMakerHyperParameterTuningJob_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "hyper_parameter_tuning_job_name",
+				ImportStateVerifyIgnore: []string{
+					"failure_reason", "hyper_parameter_tuning_job_status", "training_job_definition.0.algorithm_specification.0.metric_definitions",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -75,15 +80,18 @@ func TestAccSageMakerHyperParameterTuningJob_Identity_basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -97,10 +105,12 @@ func TestAccSageMakerHyperParameterTuningJob_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -146,11 +156,15 @@ func TestAccSageMakerHyperParameterTuningJob_Identity_regionOverride(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "hyper_parameter_tuning_job_name",
+				ImportStateVerifyIgnore: []string{
+					"failure_reason", "hyper_parameter_tuning_job_status", "training_job_definition.0.algorithm_specification.0.metric_definitions",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -163,13 +177,15 @@ func TestAccSageMakerHyperParameterTuningJob_Identity_regionOverride(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -184,10 +200,12 @@ func TestAccSageMakerHyperParameterTuningJob_Identity_regionOverride(t *testing.
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
