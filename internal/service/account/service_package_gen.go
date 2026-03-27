@@ -23,6 +23,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newAccountDataSource,
+			TypeName: "aws_account_account",
+			Name:     "Account",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newPrimaryContactDataSource,
 			TypeName: "aws_account_primary_contact",
 			Name:     "Primary Contact",
