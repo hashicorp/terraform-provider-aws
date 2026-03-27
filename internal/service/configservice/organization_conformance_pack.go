@@ -435,7 +435,28 @@ func statusOrganizationConformancePack(conn *configservice.Client, name string) 
 			return nil, "", err
 		}
 
-		return output, string(output.Status), err
+		status := output.Status
+
+		// The DescribeOrganizationConformancePackStatuses API may not
+		// transition the aggregate status from CREATE_IN_PROGRESS to
+		// CREATE_SUCCESSFUL when called from a delegated administrator
+		// account, even after all member accounts have completed
+		// deployment. Work around this by checking per-account detailed
+		// statuses: if no accounts are still in progress, the
+		// deployment has finished.
+		if status == types.OrganizationResourceStatusCreateInProgress {
+			if v, detailedErr := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusCreateInProgress); detailedErr == nil && len(v) == 0 {
+				status = types.OrganizationResourceStatusCreateSuccessful
+			}
+		}
+
+		if status == types.OrganizationResourceStatusUpdateInProgress {
+			if v, detailedErr := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusUpdateInProgress); detailedErr == nil && len(v) == 0 {
+				status = types.OrganizationResourceStatusUpdateSuccessful
+			}
+		}
+
+		return output, string(status), nil
 	}
 }
 
