@@ -116,6 +116,11 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"ResourceTags": {
 			acctest.CtBasic: testAccResourceTagsDataSource_basic,
 		},
+		"ServiceAccess": {
+			acctest.CtBasic:      testAccOrganizationsServiceAccess_basic,
+			acctest.CtDisappears: testAccOrganizationsServiceAccess_disappears,
+			"Identity":           testAccOrganizationsServiceAccess_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
