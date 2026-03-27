@@ -638,6 +638,14 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+// testAccPreCheckProxyGA skips tests that require the Network Firewall Proxy service
+// to be Generally Available (GA). During the preview period, only one proxy can be
+// created at a time. Set TF_AWS_NETWORKFIREWALL_PROXY_GA=1 to run these tests once
+// the service is GA.
+func testAccPreCheckProxyGA(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_NETWORKFIREWALL_PROXY_GA")
+}
+
 func testAccFirewallConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
