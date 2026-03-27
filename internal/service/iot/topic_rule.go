@@ -148,7 +148,6 @@ func resourceTopicRule() *schema.Resource {
 							"metric_timestamp": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: verify.ValidUTCTimestamp,
 							},
 							"metric_unit": {
 								Type:     schema.TypeString,
@@ -359,7 +358,6 @@ func resourceTopicRule() *schema.Resource {
 										"metric_timestamp": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: verify.ValidUTCTimestamp,
 										},
 										"metric_unit": {
 											Type:     schema.TypeString,
