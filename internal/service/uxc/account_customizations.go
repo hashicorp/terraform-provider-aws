@@ -11,12 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -25,29 +24,28 @@ import (
 
 // @FrameworkResource("aws_uxc_account_customizations", name="Account Customizations")
 // @SingletonIdentity
+// @Testing(serialize=true)
+// @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
-// @Testing(preIdentityVersion="v5.100.0")
-func newResourceAccountCustomizations(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAccountCustomizations{}, nil
+func newAccountCustomizationsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &accountCustomizationsResource{}, nil
 }
 
-const (
-	ResNameAccountCustomizations = "Account Customizations"
-)
-
-type resourceAccountCustomizations struct {
-	framework.ResourceWithModel[resourceAccountCustomizationsModel]
+type accountCustomizationsResource struct {
+	framework.ResourceWithModel[accountCustomizationsResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *resourceAccountCustomizations) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *accountCustomizationsResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	accountColorType := fwtypes.StringEnumType[awstypes.AccountColor]()
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account_color": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.AccountColor](),
+				CustomType: accountColorType,
 				Optional:   true,
 				Computed:   true,
-				Default:    stringdefault.StaticString(string(awstypes.AccountColorNone)),
+				Default:    accountColorType.AttributeDefault(awstypes.AccountColorNone),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -66,8 +64,8 @@ func (r *resourceAccountCustomizations) Schema(_ context.Context, _ resource.Sch
 	}
 }
 
-func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceAccountCustomizationsModel
+func (r *accountCustomizationsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan accountCustomizationsResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -76,7 +74,7 @@ func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource
 	conn := r.Meta().UXCClient(ctx)
 
 	input := uxc.UpdateAccountCustomizationsInput{}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -94,14 +92,14 @@ func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
 	normalizeAccountCustomizationsModel(ctx, &plan)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceAccountCustomizations) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceAccountCustomizationsModel
+func (r *accountCustomizationsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state accountCustomizationsResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,13 +118,13 @@ func (r *resourceAccountCustomizations) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
 	normalizeAccountCustomizationsModel(ctx, &state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceAccountCustomizationsModel
+func (r *accountCustomizationsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan accountCustomizationsResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,7 +133,7 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 	conn := r.Meta().UXCClient(ctx)
 
 	input := uxc.UpdateAccountCustomizationsInput{}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -152,32 +150,14 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
 	normalizeAccountCustomizationsModel(ctx, &plan)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceAccountCustomizations) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	conn := r.Meta().UXCClient(ctx)
-
-	output, err := findAccountCustomizations(ctx, conn)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-
-	var state resourceAccountCustomizationsModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	normalizeAccountCustomizationsModel(ctx, &state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *resourceAccountCustomizations) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceAccountCustomizationsModel
+func (r *accountCustomizationsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state accountCustomizationsResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -197,9 +177,27 @@ func (r *resourceAccountCustomizations) Delete(ctx context.Context, req resource
 	}
 }
 
+func (r *accountCustomizationsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	conn := r.Meta().UXCClient(ctx)
+
+	output, err := findAccountCustomizations(ctx, conn)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err)
+		return
+	}
+
+	var state accountCustomizationsResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	normalizeAccountCustomizationsModel(ctx, &state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
 // normalizeAccountCustomizationsModel maps empty API sets to null so that unconfigured
 // optional attributes don't drift against a config that omits them.
-func normalizeAccountCustomizationsModel(ctx context.Context, m *resourceAccountCustomizationsModel) {
+func normalizeAccountCustomizationsModel(ctx context.Context, m *accountCustomizationsResourceModel) {
 	if !m.VisibleRegions.IsNull() && len(m.VisibleRegions.Elements()) == 0 {
 		m.VisibleRegions = fwtypes.NewSetValueOfNull[types.String](ctx)
 	}
@@ -221,7 +219,7 @@ func findAccountCustomizations(ctx context.Context, conn *uxc.Client) (*uxc.GetA
 	return output, nil
 }
 
-type resourceAccountCustomizationsModel struct {
+type accountCustomizationsResourceModel struct {
 	AccountColor    fwtypes.StringEnum[awstypes.AccountColor] `tfsdk:"account_color"`
 	VisibleRegions  fwtypes.SetOfString                       `tfsdk:"visible_regions"`
 	VisibleServices fwtypes.SetOfString                       `tfsdk:"visible_services"`

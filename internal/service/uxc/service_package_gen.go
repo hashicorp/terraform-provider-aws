@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceAccountCustomizations,
+			Factory:  newAccountCustomizationsResource,
 			TypeName: "aws_uxc_account_customizations",
 			Name:     "Account Customizations",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),

@@ -5,6 +5,6 @@ package uxc
 
 // Exports for use in tests only.
 var (
-	ResourceAccountCustomizations = newResourceAccountCustomizations
+	ResourceAccountCustomizations = newAccountCustomizationsResource
 	FindAccountCustomizations     = findAccountCustomizations
 )
