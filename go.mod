@@ -277,7 +277,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.19
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.67.2
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.38.4
-	github.com/aws/aws-sdk-go-v2/service/xray v1.36.20
+	github.com/aws/aws-sdk-go-v2/service/xray v1.36.21
 	github.com/aws/smithy-go v1.24.2
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.6.0
