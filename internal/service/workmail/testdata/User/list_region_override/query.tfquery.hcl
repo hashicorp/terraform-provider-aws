@@ -6,6 +6,6 @@ list "aws_workmail_user" "test" {
 
   config {
     organization_id = aws_workmail_organization.test.organization_id
-    region = var.region
+    region          = var.region
   }
 }

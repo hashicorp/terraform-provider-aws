@@ -273,11 +273,11 @@ resource "aws_workmail_organization" "test" {
 }
 
 resource "aws_workmail_user" "test" {
-  organization_id                 = aws_workmail_organization.test.organization_id
-  email                           = "%[2]s@${aws_workmail_organization.test.default_mail_domain}"
-  name                            = %[2]q
-  display_name                    = %[3]q
-  password                        = "UpdatedPassword1234!"
+  organization_id = aws_workmail_organization.test.organization_id
+  email           = "%[2]s@${aws_workmail_organization.test.default_mail_domain}"
+  name            = %[2]q
+  display_name    = %[3]q
+  password        = "UpdatedPassword1234!"
 }
 `, rName, userName, displayName)
 }

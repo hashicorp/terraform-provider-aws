@@ -109,10 +109,12 @@ resource "aws_workmail_user" "example" {
 ### Identity Schema
 
 #### Required
+
 * `organization_id` - Identifier of the WorkMail organization.
 * `user_id` - Identifier of the user.
 
 #### Optional
+
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
