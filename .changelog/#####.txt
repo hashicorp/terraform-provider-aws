@@ -9,3 +9,7 @@ data-source/aws_eks_access_entry: The `tags_all` attribute is deprecated and wil
 ```release-note:enhancement
 resource/aws_eks_cluster: Add resource identity support
 ```
+
+```release-note:bug
+resource/aws_eks_cluster: Set `bootstrap_self_managed_addons` to `true` when importing
+```

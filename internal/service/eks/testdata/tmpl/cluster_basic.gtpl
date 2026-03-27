@@ -14,6 +14,7 @@ resource "aws_eks_cluster" "test" {
 
 data "aws_partition" "current" {}
 data "aws_service_principal" "eks" {
+{{- template "region" }}
   service_name = "eks"
 }
 

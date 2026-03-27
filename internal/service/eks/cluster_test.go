@@ -241,8 +241,15 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(false)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -252,15 +259,17 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(true)),
+				},
 			},
 		},
 	})
@@ -268,7 +277,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 
 func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -286,18 +295,28 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 				},
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(true)),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

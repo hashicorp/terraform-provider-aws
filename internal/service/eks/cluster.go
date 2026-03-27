@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -34,9 +35,11 @@ import (
 
 // @SDKResource("aws_eks_cluster", name="Cluster")
 // @IdentityAttribute("name")
+// @CustomImport
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Cluster")
 // @Testing(importIgnore="bootstrap_self_managed_addons")
+// @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="v6.38.0")
 // @Testing(tagsTest=false)
 func resourceCluster() *schema.Resource {
@@ -68,6 +71,16 @@ func resourceCluster() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+				d.Set("bootstrap_self_managed_addons", true)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
