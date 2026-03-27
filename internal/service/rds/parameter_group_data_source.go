@@ -9,10 +9,13 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,6 +42,26 @@ func dataSourceParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			names.AttrParameters: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apply_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrValue: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -58,6 +81,21 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrFamily, output.DBParameterGroupFamily)
 	d.Set(names.AttrName, output.DBParameterGroupName)
+
+	// Read parameters
+	input := &rds.DescribeDBParametersInput{
+		DBParameterGroupName: aws.String(d.Id()),
+	}
+
+	parameters, err := findDBParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
+	}
+
+	if err := d.Set(names.AttrParameters, flattenParameters(parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
+	}
 
 	return diags
 }

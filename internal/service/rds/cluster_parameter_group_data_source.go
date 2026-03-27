@@ -8,12 +8,17 @@ package rds
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	ifwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +37,7 @@ type clusterParameterGroupDataSource struct {
 	framework.DataSourceWithModel[clusterParameterGroupDataSourceModel]
 }
 
-func (d *clusterParameterGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *clusterParameterGroupDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -44,6 +49,24 @@ func (d *clusterParameterGroupDataSource) Schema(_ context.Context, _ datasource
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrParameters: schema.SetNestedBlock{
+				CustomType: ifwtypes.NewSetNestedObjectTypeOf[parameterModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"apply_method": schema.StringAttribute{
+							Computed: true,
+						},
+						names.AttrName: schema.StringAttribute{
+							Computed: true,
+						},
+						names.AttrValue: schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -77,13 +100,64 @@ func (d *clusterParameterGroupDataSource) Read(ctx context.Context, request data
 
 	data.Family = fwflex.StringToFramework(ctx, output.DBParameterGroupFamily)
 
+	// Read parameters
+	input := &rds.DescribeDBClusterParametersInput{
+		DBClusterParameterGroupName: data.Name.ValueStringPointer(),
+	}
+
+	parameters, err := findDBClusterParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, DSNameClusterParameterGroup+" parameters", data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Convert parameters to parameterModel structs for Plugin Framework
+	parameterModels := make([]parameterModel, 0, len(parameters))
+	for _, param := range parameters {
+		if param.ParameterName == nil {
+			continue
+		}
+
+		model := parameterModel{
+			ApplyMethod: fwtypes.StringValue(string(param.ApplyMethod)),
+			Name:        fwtypes.StringValue(aws.ToString(param.ParameterName)),
+			Value:       fwtypes.StringValue(""),
+		}
+
+		if param.ParameterValue != nil {
+			model.Value = fwtypes.StringValue(aws.ToString(param.ParameterValue))
+		}
+
+		parameterModels = append(parameterModels, model)
+	}
+
+	// Convert to SetNestedObjectValueOf for Plugin Framework
+	parametersValue, diags := ifwtypes.NewSetNestedObjectValueOfValueSlice(ctx, parameterModels)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.Parameters = parametersValue
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type clusterParameterGroupDataSourceModel struct {
 	framework.WithRegionModel
-	ARN         types.String `tfsdk:"arn"`
-	Description types.String `tfsdk:"description"`
-	Family      types.String `tfsdk:"family"`
-	Name        types.String `tfsdk:"name"`
+	ARN         fwtypes.String                                  `tfsdk:"arn"`
+	Description fwtypes.String                                  `tfsdk:"description"`
+	Family      fwtypes.String                                  `tfsdk:"family"`
+	Name        fwtypes.String                                  `tfsdk:"name"`
+	Parameters  ifwtypes.SetNestedObjectValueOf[parameterModel] `tfsdk:"parameters"`
+}
+
+type parameterModel struct {
+	ApplyMethod fwtypes.String `tfsdk:"apply_method"`
+	Name        fwtypes.String `tfsdk:"name"`
+	Value       fwtypes.String `tfsdk:"value"`
 }
