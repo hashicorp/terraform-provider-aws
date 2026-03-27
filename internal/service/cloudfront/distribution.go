@@ -145,6 +145,7 @@ func resourceDistribution() *schema.Resource {
 						"cache_policy_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"cached_methods": {
 							Type:     schema.TypeSet,
@@ -281,6 +282,7 @@ func resourceDistribution() *schema.Resource {
 						"origin_request_policy_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"realtime_log_config_arn": {
 							Type:         schema.TypeString,
@@ -403,6 +405,7 @@ func resourceDistribution() *schema.Resource {
 						"cache_policy_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"compress": {
 							Type:     schema.TypeBool,
@@ -533,6 +536,7 @@ func resourceDistribution() *schema.Resource {
 						"origin_request_policy_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"path_pattern": {
 							Type:     schema.TypeString,
