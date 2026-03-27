@@ -702,6 +702,35 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
+			"report_configuration": fwschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[reportConfigurationModel](ctx),
+				NestedObject: fwschema.NestedBlockObject{
+					Blocks: map[string]fwschema.Block{
+						"report_output": fwschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[reportOutputConfigurationModel](ctx),
+							NestedObject: fwschema.NestedBlockObject{
+								Blocks: map[string]fwschema.Block{
+									"s3_configuration": fwschema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[s3ReportOutputConfigurationModel](ctx),
+										NestedObject: fwschema.NestedBlockObject{
+											Attributes: map[string]fwschema.Attribute{
+												"bucket_path": fwschema.StringAttribute{
+													Required: true,
+												},
+												"bucket_owner": fwschema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+										Validators: []validator.List{listvalidator.SizeAtMost(1)},
+									},
+								},
+							},
+						},
+					},
+				},
+				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -827,6 +856,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 	input.Workflows = createInput.Workflows
 	input.AssociatedAlarms = createInput.AssociatedAlarms
 	input.Triggers = createInput.Triggers
+	input.ReportConfiguration = createInput.ReportConfiguration
 
 	_, err := conn.UpdatePlan(ctx, &input)
 	if err != nil {
@@ -967,20 +997,21 @@ func sortWorkflows(ctx context.Context, m *resourcePlanModel) fwdiag.Diagnostics
 
 type resourcePlanModel struct {
 	framework.WithRegionModel
-	ARN                          types.String                                         `tfsdk:"arn"`
-	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
-	Description                  types.String                                         `tfsdk:"description"`
-	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
-	Name                         types.String                                         `tfsdk:"name"`
-	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
-	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
-	RecoveryTimeObjectiveMinutes types.Int64                                          `tfsdk:"recovery_time_objective_minutes"`
-	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
-	Tags                         tftags.Map                                           `tfsdk:"tags"`
-	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
-	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
-	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
-	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
+	ARN                          types.String                                              `tfsdk:"arn"`
+	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel]      `tfsdk:"associated_alarms"`
+	Description                  types.String                                              `tfsdk:"description"`
+	ExecutionRole                types.String                                              `tfsdk:"execution_role"`
+	Name                         types.String                                              `tfsdk:"name"`
+	PrimaryRegion                types.String                                              `tfsdk:"primary_region"`
+	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]             `tfsdk:"recovery_approach"`
+	RecoveryTimeObjectiveMinutes types.Int64                                               `tfsdk:"recovery_time_objective_minutes"`
+	Regions                      fwtypes.ListOfString                                      `tfsdk:"regions"`
+	ReportConfiguration          fwtypes.ListNestedObjectValueOf[reportConfigurationModel] `tfsdk:"report_configuration"`
+	Tags                         tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                            `tfsdk:"timeouts"`
+	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]             `tfsdk:"triggers"`
+	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]            `tfsdk:"workflow"`
 }
 
 type associatedAlarmModel struct {
@@ -1941,4 +1972,87 @@ func statusPlanDeletable(conn *arcregionswitch.Client, arn string) retry.StateRe
 		// Other error
 		return nil, "", smarterr.NewError(err)
 	}
+}
+
+// reportConfigurationModel implements custom Expand/Flatten because ReportOutputConfiguration
+// is a union interface type that autoflex cannot handle automatically.
+type reportConfigurationModel struct {
+	ReportOutput fwtypes.ListNestedObjectValueOf[reportOutputConfigurationModel] `tfsdk:"report_output" autoflex:"-"`
+}
+
+var (
+	_ flex.Expander  = reportConfigurationModel{}
+	_ flex.Flattener = &reportConfigurationModel{}
+)
+
+func (m reportConfigurationModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.ReportConfiguration
+	var diags fwdiag.Diagnostics
+
+	if m.ReportOutput.IsNull() || m.ReportOutput.IsUnknown() {
+		return &result, diags
+	}
+
+	outputs, d := m.ReportOutput.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	for _, output := range outputs {
+		if output.S3Configuration.IsNull() || output.S3Configuration.IsUnknown() {
+			continue
+		}
+		s3Config, d := output.S3Configuration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var member awstypes.ReportOutputConfigurationMemberS3Configuration
+		diags.Append(flex.Expand(ctx, s3Config, &member.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ReportOutput = append(result.ReportOutput, &member)
+	}
+
+	return &result, diags
+}
+
+func (m *reportConfigurationModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	config, ok := v.(awstypes.ReportConfiguration)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.ReportConfiguration")
+		return diags
+	}
+
+	outputs := make([]reportOutputConfigurationModel, 0, len(config.ReportOutput))
+	for _, output := range config.ReportOutput {
+		var outputModel reportOutputConfigurationModel
+		switch ov := output.(type) {
+		case *awstypes.ReportOutputConfigurationMemberS3Configuration:
+			diags.Append(flex.Flatten(ctx, &ov.Value, &outputModel.S3Configuration)...)
+		}
+		if diags.HasError() {
+			return diags
+		}
+		outputs = append(outputs, outputModel)
+	}
+
+	var d fwdiag.Diagnostics
+	m.ReportOutput, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, outputs)
+	diags.Append(d...)
+
+	return diags
+}
+
+type reportOutputConfigurationModel struct {
+	S3Configuration fwtypes.ListNestedObjectValueOf[s3ReportOutputConfigurationModel] `tfsdk:"s3_configuration"`
+}
+
+type s3ReportOutputConfigurationModel struct {
+	BucketOwner types.String `tfsdk:"bucket_owner"`
+	BucketPath  types.String `tfsdk:"bucket_path"`
 }
