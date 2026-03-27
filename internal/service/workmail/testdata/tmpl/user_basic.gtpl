@@ -7,7 +7,9 @@ resource "aws_workmail_organization" "test" {
 resource "aws_workmail_user" "test" {
 {{- template "region" }}
   organization_id = aws_workmail_organization.test.organization_id
+  email           = "${var.rName}@${aws_workmail_organization.test.default_mail_domain}"
   name            = var.rName
   display_name    = var.rName
-  password        = "TestTest1234!"
+  city            = "bangalore"
+  office          = "hashicorp"
 }

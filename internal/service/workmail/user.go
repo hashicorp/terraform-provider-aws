@@ -14,21 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,6 +39,7 @@ import (
 // @ImportIDHandler("userImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="organization_id;user_id", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importIgnore="password")
 func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userResource{}, nil
 }
@@ -50,6 +48,8 @@ const (
 	ResNameUser                = "User"
 	userPropagationTimeout     = 2 * time.Minute
 	userDeleteTransitionTimout = 2 * time.Minute
+	userStateEnabled           = string(awstypes.EntityStateEnabled)
+	userStateDisabled          = string(awstypes.EntityStateDisabled)
 )
 
 type userResource struct {
@@ -61,104 +61,132 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"city": schema.StringAttribute{
-				Optional: true,
+				Description: "City where the user is located.",
+				Optional:    true,
 			},
 			"company": schema.StringAttribute{
-				Optional: true,
+				Description: "Company associated with the user.",
+				Optional:    true,
 			},
 			"country": schema.StringAttribute{
-				Optional: true,
+				Description: "Country where the user is located.",
+				Optional:    true,
 			},
 			"department": schema.StringAttribute{
-				Optional: true,
+				Description: "Department associated with the user.",
+				Optional:    true,
 			},
 			"disabled_date": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Description: "Timestamp when the user was disabled from WorkMail use.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
 			},
 			names.AttrDisplayName: schema.StringAttribute{
-				Required: true,
+				Description: "Display name of the user.",
+				Required:    true,
 			},
 			names.AttrEmail: schema.StringAttribute{
-				Computed: true,
+				Description: "Primary email address used to register the user with WorkMail.",
+				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"enabled_date": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Description: "Timestamp when the user was enabled for WorkMail use.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
 			},
 			"first_name": schema.StringAttribute{
-				Optional: true,
+				Description: "First name of the user.",
+				Optional:    true,
 			},
 			"hidden_from_global_address_list": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
+				Description: "Whether to hide the user from the global address list.",
+				Optional:    true,
+				Computed:    true,
 			},
 			"identity_provider_identity_store_id": schema.StringAttribute{
-				Computed: true,
+				Description: "Identity store ID from IAM Identity Center associated with the user.",
+				Computed:    true,
 			},
 			"identity_provider_user_id": schema.StringAttribute{
-				Optional: true,
+				Description: "User ID from IAM Identity Center associated with the user.",
+				Optional:    true,
 			},
 			"initials": schema.StringAttribute{
-				Optional: true,
+				Description: "Initials of the user.",
+				Optional:    true,
 			},
 			"job_title": schema.StringAttribute{
-				Optional: true,
+				Description: "Job title of the user.",
+				Optional:    true,
 			},
 			"last_name": schema.StringAttribute{
-				Optional: true,
+				Description: "Last name of the user.",
+				Optional:    true,
 			},
 			"mailbox_deprovisioned_date": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Description: "Timestamp when the mailbox was removed for the user.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
 			},
 			"mailbox_provisioned_date": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Description: "Timestamp when the mailbox was created for the user.",
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Username of the user.",
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"office": schema.StringAttribute{
-				Optional: true,
+				Description: "Office where the user is located.",
+				Optional:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Required: true,
+				Description: "Identifier of the WorkMail organization where the user is managed.",
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"password": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+			names.AttrPassword: schema.StringAttribute{
+				Description: "Password to set for the user.",
+				Optional:    true,
+				Sensitive:   true,
 			},
-			"role": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(string(awstypes.UserRoleUser)),
-				Validators: []validator.String{
-					stringvalidator.OneOf(enumUserRoleValues()...),
-				},
+			"user_role": schema.StringAttribute{
+				Description: "Role assigned to the user.",
+				Optional:    true,
+				CustomType:  fwtypes.StringEnumType[awstypes.UserRole](),
+				Computed:    true,
 			},
 			names.AttrState: schema.StringAttribute{
-				Computed: true,
+				Description: "Current WorkMail state of the user.",
+				Computed:    true,
 			},
 			"street": schema.StringAttribute{
-				Optional: true,
+				Description: "Street address of the user.",
+				Optional:    true,
 			},
 			"telephone": schema.StringAttribute{
-				Optional: true,
+				Description: "Telephone number of the user.",
+				Optional:    true,
 			},
-			"user_id": framework.IDAttribute(),
+			"user_id": schema.StringAttribute{
+				Description: "Identifier of the user.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"zip_code": schema.StringAttribute{
-				Optional: true,
+				Description: "ZIP or postal code of the user.",
+				Optional:    true,
 			},
 		},
 	}
@@ -189,24 +217,33 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.UserId = types.StringPointerValue(out.UserId)
+	plan.UserId = flex.StringToFramework(ctx, out.UserId)
+
+	if err := registerUser(ctx, conn, plan); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
+		return
+	}
+
+	created, err := waitUserEnabled(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString(), userPropagationTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
+		return
+	}
 
 	if hasPostCreateUpdate(plan) {
 		if err := updateUser(ctx, conn, plan); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
 			return
 		}
+
+		created, err = findUserByTwoPartKey(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
+			return
+		}
 	}
 
-	created, err := tfresource.RetryWhenNotFound(ctx, userPropagationTimeout, func(ctx context.Context) (*workmail.DescribeUserOutput, error) {
-		return findUserByTwoPartKey(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString())
-	})
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, plan.OrganizationId.ValueString(), created, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, created, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -234,7 +271,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, state.OrganizationId.ValueString(), out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -245,29 +282,65 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().WorkMailClient(ctx)
 
-	var plan userResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	var old, new userResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &new))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &old))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if err := updateUser(ctx, conn, plan); err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
-		return
+	// update other optional fields
+	if !new.City.Equal(old.City) ||
+		!new.Company.Equal(old.Company) ||
+		!new.Country.Equal(old.Country) ||
+		!new.Department.Equal(old.Department) ||
+		!new.DisplayName.Equal(old.DisplayName) ||
+		!new.FirstName.Equal(old.FirstName) ||
+		!new.HiddenFromGlobalAddressList.Equal(old.HiddenFromGlobalAddressList) ||
+		!new.IdentityProviderUserId.Equal(old.IdentityProviderUserId) ||
+		!new.Initials.Equal(old.Initials) ||
+		!new.JobTitle.Equal(old.JobTitle) ||
+		!new.LastName.Equal(old.LastName) ||
+		!new.Office.Equal(old.Office) ||
+		!new.UserRole.Equal(old.UserRole) ||
+		!new.Street.Equal(old.Street) ||
+		!new.Telephone.Equal(old.Telephone) ||
+		!new.ZipCode.Equal(old.ZipCode) {
+		if err := updateUser(ctx, conn, new); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.UserId.String())
+			return
+		}
 	}
 
-	out, err := findUserByTwoPartKey(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString())
+	// update password needs to call ResetPassword API
+	if !new.Password.Equal(old.Password) {
+		resetPasswordInput := workmail.ResetPasswordInput{
+			OrganizationId: new.OrganizationId.ValueStringPointer(),
+			Password:       new.Password.ValueStringPointer(),
+			UserId:         new.UserId.ValueStringPointer(),
+		}
+		_, err := conn.ResetPassword(ctx, &resetPasswordInput)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, old.UserId.String())
+			return
+		}
+	}
+
+	out, err := findUserByTwoPartKey(ctx, conn, old.OrganizationId.ValueString(), old.UserId.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, old.UserId.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, plan.OrganizationId.ValueString(), out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &new))
 }
 
 func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -289,11 +362,12 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	if user.State == awstypes.EntityStateEnabled {
-		_, err := conn.DeregisterFromWorkMail(ctx, &workmail.DeregisterFromWorkMailInput{
-			EntityId:       state.UserId.ValueStringPointer(),
-			OrganizationId: state.OrganizationId.ValueStringPointer(),
-		})
-		if err != nil && !errs.IsA[*awstypes.EntityNotFoundException](err) && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if err := deregisterUser(ctx, conn, state); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.UserId.String())
+			return
+		}
+
+		if _, err := waitUserDisabled(ctx, conn, state.OrganizationId.ValueString(), state.UserId.ValueString(), userDeleteTransitionTimout); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.UserId.String())
 			return
 		}
@@ -309,14 +383,16 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	})
 	if err != nil && !errs.IsA[*awstypes.EntityNotFoundException](err) && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.UserId.String())
+		return
+	}
+
+	if _, err := waitUserDeleted(ctx, conn, state.OrganizationId.ValueString(), state.UserId.ValueString(), userDeleteTransitionTimout); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.UserId.String())
 	}
 }
 
-func (r *userResource) flatten(ctx context.Context, organizationID string, out *workmail.DescribeUserOutput, data *userResourceModel) (diags diag.Diagnostics) {
+func (r *userResource) flatten(ctx context.Context, out *workmail.DescribeUserOutput, data *userResourceModel) (diags diag.Diagnostics) {
 	diags.Append(flex.Flatten(ctx, out, data)...)
-	data.OrganizationId = types.StringValue(organizationID)
-	data.Role = stringEnumFrameworkValue(string(out.UserRole))
-
 	return diags
 }
 
@@ -325,8 +401,51 @@ func updateUser(ctx context.Context, conn *workmail.Client, data userResourceMod
 	if diags := flex.Expand(ctx, data, &input); diags.HasError() {
 		return fmt.Errorf("expanding workmail user update input: %s", diags.Errors()[0].Detail())
 	}
-
 	_, err := conn.UpdateUser(ctx, &input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func registerUser(ctx context.Context, conn *workmail.Client, data userResourceModel) error {
+	err := tfresource.Retry(ctx, userPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		input := workmail.RegisterToWorkMailInput{
+			Email:          data.Email.ValueStringPointer(),
+			EntityId:       data.UserId.ValueStringPointer(),
+			OrganizationId: data.OrganizationId.ValueStringPointer(),
+		}
+		_, err := conn.RegisterToWorkMail(ctx, &input)
+
+		if errs.IsA[*awstypes.MailDomainStateException](err) || errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func deregisterUser(ctx context.Context, conn *workmail.Client, data userResourceModel) error {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.EntityStateException](ctx, userDeleteTransitionTimout, func(ctx context.Context) (any, error) {
+		input := workmail.DeregisterFromWorkMailInput{
+			EntityId:       data.UserId.ValueStringPointer(),
+			OrganizationId: data.OrganizationId.ValueStringPointer(),
+		}
+		_, err := conn.DeregisterFromWorkMail(ctx, &input)
+
+		return nil, err
+	})
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil
+	}
 
 	return err
 }
@@ -342,6 +461,72 @@ func hasPostCreateUpdate(data userResourceModel) bool {
 		isStringSet(data.Street) ||
 		isStringSet(data.Telephone) ||
 		isStringSet(data.ZipCode)
+}
+
+func waitUserEnabled(ctx context.Context, conn *workmail.Client, organizationID, userID string, timeout time.Duration) (*workmail.DescribeUserOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{userStateDisabled},
+		Target:                    []string{userStateEnabled},
+		Refresh:                   statusUser(conn, organizationID, userID),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*workmail.DescribeUserOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitUserDisabled(ctx context.Context, conn *workmail.Client, organizationID, userID string, timeout time.Duration) (*workmail.DescribeUserOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{userStateEnabled},
+		Target:                    []string{userStateDisabled},
+		Refresh:                   statusUser(conn, organizationID, userID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*workmail.DescribeUserOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitUserDeleted(ctx context.Context, conn *workmail.Client, organizationID, userID string, timeout time.Duration) (*workmail.DescribeUserOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{userStateDisabled, userStateEnabled},
+		Target:  []string{},
+		Refresh: statusUser(conn, organizationID, userID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*workmail.DescribeUserOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func statusUser(conn *workmail.Client, organizationID, userID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findUserByTwoPartKey(ctx, conn, organizationID, userID)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.State), nil
+	}
 }
 
 func findUserByTwoPartKey(ctx context.Context, conn *workmail.Client, organizationID, userID string) (*workmail.DescribeUserOutput, error) {
@@ -363,30 +548,15 @@ func findUserByTwoPartKey(ctx context.Context, conn *workmail.Client, organizati
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
+	if out.State == awstypes.EntityStateDeleted {
+		return nil, smarterr.NewError(&retry.NotFoundError{Message: fmt.Sprintf("WorkMail User %s is in Deleted state", userID)})
+	}
+
 	return out, nil
 }
 
 func isStringSet(value types.String) bool {
 	return !value.IsNull() && !value.IsUnknown()
-}
-
-func stringEnumFrameworkValue(value string) types.String {
-	if value == "" {
-		return types.StringNull()
-	}
-
-	return types.StringValue(value)
-}
-
-func enumUserRoleValues() []string {
-	values := awstypes.UserRole("").Values()
-	result := make([]string, 0, len(values))
-
-	for _, value := range values {
-		result = append(result, string(value))
-	}
-
-	return result
 }
 
 var (
@@ -411,31 +581,31 @@ func (userImportID) Parse(id string) (string, map[string]any, error) {
 
 type userResourceModel struct {
 	framework.WithRegionModel
-	City                            types.String      `tfsdk:"city"`
-	Company                         types.String      `tfsdk:"company"`
-	Country                         types.String      `tfsdk:"country"`
-	Department                      types.String      `tfsdk:"department"`
-	DisabledDate                    timetypes.RFC3339 `tfsdk:"disabled_date"`
-	DisplayName                     types.String      `tfsdk:"display_name"`
-	Email                           types.String      `tfsdk:"email"`
-	EnabledDate                     timetypes.RFC3339 `tfsdk:"enabled_date"`
-	FirstName                       types.String      `tfsdk:"first_name"`
-	HiddenFromGlobalAddressList     types.Bool        `tfsdk:"hidden_from_global_address_list"`
-	IdentityProviderIdentityStoreId types.String      `tfsdk:"identity_provider_identity_store_id"`
-	IdentityProviderUserId          types.String      `tfsdk:"identity_provider_user_id"`
-	Initials                        types.String      `tfsdk:"initials"`
-	JobTitle                        types.String      `tfsdk:"job_title"`
-	LastName                        types.String      `tfsdk:"last_name"`
-	MailboxDeprovisionedDate        timetypes.RFC3339 `tfsdk:"mailbox_deprovisioned_date"`
-	MailboxProvisionedDate          timetypes.RFC3339 `tfsdk:"mailbox_provisioned_date"`
-	Name                            types.String      `tfsdk:"name"`
-	Office                          types.String      `tfsdk:"office"`
-	OrganizationId                  types.String      `tfsdk:"organization_id"`
-	Password                        types.String      `tfsdk:"password"`
-	Role                            types.String      `tfsdk:"role"`
-	State                           types.String      `tfsdk:"state"`
-	Street                          types.String      `tfsdk:"street"`
-	Telephone                       types.String      `tfsdk:"telephone"`
-	UserId                          types.String      `tfsdk:"user_id"`
-	ZipCode                         types.String      `tfsdk:"zip_code"`
+	City                            types.String                          `tfsdk:"city"`
+	Company                         types.String                          `tfsdk:"company"`
+	Country                         types.String                          `tfsdk:"country"`
+	Department                      types.String                          `tfsdk:"department"`
+	DisabledDate                    timetypes.RFC3339                     `tfsdk:"disabled_date"`
+	DisplayName                     types.String                          `tfsdk:"display_name"`
+	Email                           types.String                          `tfsdk:"email"`
+	EnabledDate                     timetypes.RFC3339                     `tfsdk:"enabled_date"`
+	FirstName                       types.String                          `tfsdk:"first_name"`
+	HiddenFromGlobalAddressList     types.Bool                            `tfsdk:"hidden_from_global_address_list"`
+	IdentityProviderIdentityStoreId types.String                          `tfsdk:"identity_provider_identity_store_id"`
+	IdentityProviderUserId          types.String                          `tfsdk:"identity_provider_user_id"`
+	Initials                        types.String                          `tfsdk:"initials"`
+	JobTitle                        types.String                          `tfsdk:"job_title"`
+	LastName                        types.String                          `tfsdk:"last_name"`
+	MailboxDeprovisionedDate        timetypes.RFC3339                     `tfsdk:"mailbox_deprovisioned_date"`
+	MailboxProvisionedDate          timetypes.RFC3339                     `tfsdk:"mailbox_provisioned_date"`
+	Name                            types.String                          `tfsdk:"name"`
+	Office                          types.String                          `tfsdk:"office"`
+	OrganizationId                  types.String                          `tfsdk:"organization_id"`
+	Password                        types.String                          `tfsdk:"password"`
+	UserRole                        fwtypes.StringEnum[awstypes.UserRole] `tfsdk:"user_role"`
+	State                           types.String                          `tfsdk:"state"`
+	Street                          types.String                          `tfsdk:"street"`
+	Telephone                       types.String                          `tfsdk:"telephone"`
+	UserId                          types.String                          `tfsdk:"user_id"`
+	ZipCode                         types.String                          `tfsdk:"zip_code"`
 }

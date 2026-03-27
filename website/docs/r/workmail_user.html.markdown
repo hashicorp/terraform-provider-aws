@@ -20,6 +20,9 @@ Documentation guidelines:
 
 Manages an AWS WorkMail User.
 
+This resource registers the user with WorkMail on create so the mailbox is enabled and ready for use. This results in the accumulation of costs, for more details, see [pricing](https://aws.amazon.com/workmail/pricing/).
+On destroy, it deregisters the user before deletion.
+
 ## Example Usage
 
 ### Basic Usage
@@ -34,7 +37,7 @@ resource "aws_workmail_user" "example" {
   organization_id = aws_workmail_organization.example.organization_id
   name            = "example-user"
   display_name    = "Example User"
-  password        = "ExamplePassword123!"
+  email           = "example-user@example.com"
 }
 ```
 
@@ -43,6 +46,7 @@ resource "aws_workmail_user" "example" {
 The following arguments are required:
 
 * `display_name` - (Required) Display name of the user.
+* `email` - (Required) Primary email address used to register the user with WorkMail. Changing this value forces replacement.
 * `name` - (Required) Username of the user.
 * `organization_id` - (Required) Identifier of the WorkMail organization where the user is managed.
 
@@ -59,8 +63,9 @@ The following arguments are optional:
 * `job_title` - (Optional) Job title of the user.
 * `last_name` - (Optional) Last name of the user.
 * `office` - (Optional) Office where the user is located.
-* `password` - (Optional, Sensitive) Password used when creating the user. Changing this value forces replacement.
-* `role` - (Optional) Role of the user. Defaults to `USER`.
+* `password` - (Optional, Sensitive) Password to set for the user.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `user_role` - (Optional) Role assigned to the user. Valid values are `USER`, `REMOTE_USER`, `RESOURCE`, and `SYSTEM_USER`.
 * `street` - (Optional) Street address of the user.
 * `telephone` - (Optional) Telephone number of the user.
 * `zip_code` - (Optional) ZIP or postal code of the user.
@@ -70,7 +75,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `disabled_date` - Timestamp when the user was disabled from WorkMail use.
-* `email` - Primary email address of the user.
 * `enabled_date` - Timestamp when the user was enabled for WorkMail use.
 * `identity_provider_identity_store_id` - Identity store ID from IAM Identity Center associated with the user.
 * `mailbox_deprovisioned_date` - Timestamp when the mailbox was removed for the user.
