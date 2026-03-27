@@ -1,0 +1,15 @@
+resource "aws_resiliencehub_app" "test" {
+  name = var.rName
+
+  app_template {
+    version = "2.0"
+
+    app_component {
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
+      resource_names = []
+    }
+  }
+
+{{- template "tags" . }}
+}
