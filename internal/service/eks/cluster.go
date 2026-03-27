@@ -618,8 +618,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := meta.(*conns.AWSClient)
-	conn := c.EKSClient(ctx)
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
 
@@ -633,7 +632,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceClusterFlatten(ctx, c, cluster, d); err != nil {
+	if err := resourceClusterFlatten(ctx, cluster, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -925,7 +924,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func resourceClusterFlatten(ctx context.Context, awsClient *conns.AWSClient, cluster *types.Cluster, d *schema.ResourceData) error {
+func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *schema.ResourceData) error {
 	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
 	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
 	var bootstrapClusterCreatorAdminPermissions *bool

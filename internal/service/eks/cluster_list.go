@@ -69,7 +69,7 @@ func (l *clusterListResource) List(ctx context.Context, request list.ListRequest
 					continue
 				}
 
-				if err := resourceClusterFlatten(ctx, l.Meta(), cluster, rd); err != nil {
+				if err := resourceClusterFlatten(ctx, cluster, rd); err != nil {
 					tflog.Error(ctx, "Flattening EKS Cluster", map[string]any{
 						"error": err.Error(),
 					})
