@@ -181,6 +181,10 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
 			},
+			"skip_arn_validation": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Skip static validation of ARN format in the provider configuration. Used by users of alternative AWS-like APIs that use non-standard ARN formats.",
+			},
 			"skip_credentials_validation": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
