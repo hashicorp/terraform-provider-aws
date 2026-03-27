@@ -25,6 +25,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newCustomPolicySimulationDataSource,
+			TypeName: "aws_iam_custom_policy_simulation",
+			Name:     "Custom Policy Simulation",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newOutboundWebIdentityFederationDataSource,
 			TypeName: "aws_iam_outbound_web_identity_federation",
 			Name:     "Outbound Web Identity Federation",
