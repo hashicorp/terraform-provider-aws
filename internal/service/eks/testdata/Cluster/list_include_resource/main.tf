@@ -4,7 +4,7 @@
 resource "aws_eks_cluster" "test" {
   count = var.resource_count
 
-  name     = var.rName
+  name     = "${var.rName}-${count.index}"
   role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
