@@ -104,6 +104,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity("organization_id"),
 		},
+		{
+			Factory:  newUserResourceAsListResource,
+			TypeName: "aws_workmail_user",
+			Name:     "User",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute("user_id", true),
+			}),
+		},
 	})
 }
 
