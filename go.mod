@@ -274,7 +274,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.21
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.3
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.21
-	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.18
+	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.19
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.67.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.20
