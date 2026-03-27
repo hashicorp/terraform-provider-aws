@@ -407,8 +407,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.1 h1:bBZBBT3YNuK
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.1/go.mod h1:P5u7mKVe+yIP0OnX8Kk0UxQ1EaOLsEAgLGi1R7d+65Q=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.50.6 h1:xtFQzzqV9GTWtHI/0JEZmV+bOZsjF25mGqU7nOMTg0Q=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.50.6/go.mod h1:urLFj1twuR/h5T0wN/2/kmY1gxBFa1tTKr+c60lZ2fA=
-github.com/aws/aws-sdk-go-v2/service/osis v1.21.13 h1:5yYjoBz+8YJTsaV39CT4l8UURg4pFaxTyK0tanvaiM4=
-github.com/aws/aws-sdk-go-v2/service/osis v1.21.13/go.mod h1:SYSRIbSGYIr35jwms34qI0H3r2h9vbs7eZHLTzicanc=
+github.com/aws/aws-sdk-go-v2/service/osis v1.21.14 h1:lWSv+4zd5gYvvlNyn7yEgOYEm3fK6OwNNDHlqdfX6nw=
+github.com/aws/aws-sdk-go-v2/service/osis v1.21.14/go.mod h1:zS/TMGJS+6i5UiyV2HtSEQ3aZ9n2NgSnkltprSLb10w=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.57.14 h1:KDh3abF5OCx/s7rQ/+uevxVtbWbmjTGNG1HDQX+0P+A=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.57.14/go.mod h1:K5FFS4ODQIoeQW5qlUsu4uuROScM46xLBHskBigzf5E=
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.27.4 h1:6AbM2yRKGLELYdFZokJT0BTEz2mVrnIIBqTLePoKYQA=
