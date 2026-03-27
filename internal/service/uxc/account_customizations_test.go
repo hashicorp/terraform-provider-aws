@@ -51,12 +51,12 @@ func testAccAccountCustomizations_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_color", "pink"),
-					),
+				),
 			},
 			{
-				ResourceName:                      resourceName,
-				ImportState:                       true,
-				ImportStateVerify:                 true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "account_color",
 			},
 			{
@@ -93,9 +93,9 @@ func testAccAccountCustomizations_visibleRegions(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:                      resourceName,
-				ImportState:                       true,
-				ImportStateVerify:                 true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "account_color",
 			},
 			{
@@ -133,9 +133,9 @@ func testAccAccountCustomizations_visibleServices(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:                      resourceName,
-				ImportState:                       true,
-				ImportStateVerify:                 true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "account_color",
 			},
 			{
