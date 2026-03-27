@@ -50,6 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status_reason` - The reason for the current status of the ODB peering connection.
 * `peer_network_arn` - ARN of the peer network peering connection.
 * `odb_peering_connection_type` - Type of the ODB peering connection.
+* `peer_network_cidrs` - Set of peer network cidrs. Add remove is only supported during update operation. During create this attribute is compute only.
 * `created_at` - Created time of the ODB network peering connection.
 * `percent_progress` - Progress of the ODB network peering connection.
 * `tags_all` - A map of tags assigned to the resource, including inherited tags.
