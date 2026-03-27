@@ -33,7 +33,12 @@ import (
 )
 
 // @SDKResource("aws_eks_cluster", name="Cluster")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Cluster")
+// @Testing(idAttrDuplicates="name")
+// @Testing(importIgnore="bootstrap_self_managed_addons")
+// @Testing(preIdentityVersion="v6.38.0")
 // @Testing(tagsTest=false)
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
@@ -41,10 +46,6 @@ func resourceCluster() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterRead,
 		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
