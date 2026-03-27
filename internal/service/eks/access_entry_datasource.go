@@ -70,7 +70,7 @@ func dataSourceAccessEntry() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `tags_all is deprecated`,
+				Deprecated: `tags_all is deprecated.`,
 			},
 		},
 	}
