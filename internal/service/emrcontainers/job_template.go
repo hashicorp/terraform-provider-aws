@@ -231,6 +231,31 @@ func resourceJobTemplate() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"parameter_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.TemplateParameterDataType](),
+									},
+									names.AttrDefaultValue: {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
 						"release_label": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -406,6 +431,10 @@ func expandJobTemplateData(tfMap map[string]any) *awstypes.JobTemplateData {
 
 	if v, ok := tfMap["job_tags"].(map[string]any); ok && len(v) > 0 {
 		apiObject.JobTags = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["parameter_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ParameterConfiguration = expandParameterConfiguration(v)
 	}
 
 	if v, ok := tfMap["release_label"].(string); ok && v != "" {
@@ -607,11 +636,72 @@ func flattenJobTemplateData(apiObject *awstypes.JobTemplateData) map[string]any 
 		tfMap["job_tags"] = v
 	}
 
+	if v := apiObject.ParameterConfiguration; v != nil {
+		tfMap["parameter_configuration"] = flattenParameterConfiguration(v)
+	}
+
 	if v := apiObject.ReleaseLabel; v != nil {
 		tfMap["release_label"] = aws.ToString(v)
 	}
 
 	return tfMap
+}
+
+func expandParameterConfiguration(tfSet *schema.Set) map[string]awstypes.TemplateParameterConfiguration {
+	if tfSet.Len() == 0 {
+		return nil
+	}
+
+	apiObjects := make(map[string]awstypes.TemplateParameterConfiguration)
+
+	for _, tfMapRaw := range tfSet.List() {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		name, ok := tfMap[names.AttrName].(string)
+		if !ok || name == "" {
+			continue
+		}
+
+		apiObject := awstypes.TemplateParameterConfiguration{}
+
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+			apiObject.Type = awstypes.TemplateParameterDataType(v)
+		}
+
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
+			apiObject.DefaultValue = aws.String(v)
+		}
+
+		apiObjects[name] = apiObject
+	}
+
+	return apiObjects
+}
+
+func flattenParameterConfiguration(apiObjects map[string]awstypes.TemplateParameterConfiguration) []map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]any
+
+	for name, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrName: name,
+			names.AttrType: string(apiObject.Type),
+		}
+
+		if v := apiObject.DefaultValue; v != nil {
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenConfigurationOverrides(apiObject *awstypes.ParametricConfigurationOverrides) map[string]any {
