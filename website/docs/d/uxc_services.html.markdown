@@ -36,7 +36,7 @@ resource "aws_uxc_account_customizations" "example" {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

@@ -84,7 +84,10 @@ func testAccAccountCustomizations_visibleRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountCustomizationsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountCustomizationsConfig_visibleRegions([]string{"us-east-1", "us-west-2"}), //lintignore:AWSAT003
+				Config: testAccAccountCustomizationsConfig_visibleRegions([]string{
+					"us-east-1", //lintignore:AWSAT003
+					"us-west-2", //lintignore:AWSAT003
+				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "visible_regions.#", "2"),
@@ -99,7 +102,9 @@ func testAccAccountCustomizations_visibleRegions(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "account_color",
 			},
 			{
-				Config: testAccAccountCustomizationsConfig_visibleRegions([]string{"eu-west-1"}), //lintignore:AWSAT003
+				Config: testAccAccountCustomizationsConfig_visibleRegions([]string{
+					"eu-west-1", //lintignore:AWSAT003
+				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountCustomizationsExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "visible_regions.#", "1"),
