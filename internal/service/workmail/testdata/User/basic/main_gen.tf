@@ -11,6 +11,8 @@ resource "aws_workmail_user" "test" {
   email           = "${var.rName}@${aws_workmail_organization.test.default_mail_domain}"
   name            = var.rName
   display_name    = var.rName
+  city            = "bangalore"
+  office          = "hashicorp"
 }
 variable "rName" {
   description = "Name for resource"

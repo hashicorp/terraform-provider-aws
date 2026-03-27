@@ -39,7 +39,7 @@ import (
 // @ImportIDHandler("userImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="organization_id;user_id", importStateIdAttributesSep="flex.ResourceIdSeparator")
-// @Testing(importIgnore="password")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workmail;workmail.DescribeUserOutput")
 func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userResource{}, nil
 }
