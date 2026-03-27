@@ -374,10 +374,11 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	_, err = tfresource.RetryWhenIsA[any, *awstypes.EntityStateException](ctx, userDeleteTransitionTimout, func(ctx context.Context) (any, error) {
-		_, err := conn.DeleteUser(ctx, &workmail.DeleteUserInput{
+		deleteUserInput := workmail.DeleteUserInput{
 			OrganizationId: state.OrganizationId.ValueStringPointer(),
 			UserId:         state.UserId.ValueStringPointer(),
-		})
+		}
+		_, err := conn.DeleteUser(ctx, &deleteUserInput)
 
 		return nil, err
 	})
@@ -402,11 +403,8 @@ func updateUser(ctx context.Context, conn *workmail.Client, data userResourceMod
 		return fmt.Errorf("expanding workmail user update input: %s", diags.Errors()[0].Detail())
 	}
 	_, err := conn.UpdateUser(ctx, &input)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func registerUser(ctx context.Context, conn *workmail.Client, data userResourceModel) error {

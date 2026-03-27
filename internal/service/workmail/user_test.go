@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +23,7 @@ func TestAccWorkMailUser_basic(t *testing.T) {
 
 	var user workmail.DescribeUserOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := fmt.Sprintf("user%s", sdkacctest.RandStringFromCharSet(8, "abcdefghijklmnopqrstuvwxyz0123456789"))
+	userName := fmt.Sprintf("user%s", acctest.RandStringFromCharSet(t, 8, "abcdefghijklmnopqrstuvwxyz0123456789"))
 	resourceName := "aws_workmail_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -43,7 +42,7 @@ func TestAccWorkMailUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "Test User"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, userName),
-					resource.TestCheckResourceAttr(resourceName, "hidden_from_global_address_list", "false"),
+					resource.TestCheckResourceAttr(resourceName, "hidden_from_global_address_list", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "user_role", "USER"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
@@ -56,7 +55,7 @@ func TestAccWorkMailUser_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccUserImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "organization_id",
-				ImportStateVerifyIgnore:              []string{"password"},
+				ImportStateVerifyIgnore:              []string{names.AttrPassword},
 			},
 		},
 	})
@@ -66,7 +65,7 @@ func TestAccWorkMailUser_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := fmt.Sprintf("user%s", sdkacctest.RandStringFromCharSet(8, "abcdefghijklmnopqrstuvwxyz0123456789"))
+	userName := fmt.Sprintf("user%s", acctest.RandStringFromCharSet(t, 8, "abcdefghijklmnopqrstuvwxyz0123456789"))
 	resourceName := "aws_workmail_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -102,7 +101,7 @@ func TestAccWorkMailUser_updatePassword(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := fmt.Sprintf("user%s", sdkacctest.RandStringFromCharSet(8, "abcdefghijklmnopqrstuvwxyz0123456789"))
+	userName := fmt.Sprintf("user%s", acctest.RandStringFromCharSet(t, 8, "abcdefghijklmnopqrstuvwxyz0123456789"))
 	resourceName := "aws_workmail_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -141,7 +140,7 @@ func TestAccWorkMailUser_disappears(t *testing.T) {
 
 	var user workmail.DescribeUserOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := fmt.Sprintf("user%s", sdkacctest.RandStringFromCharSet(8, "abcdefghijklmnopqrstuvwxyz0123456789"))
+	userName := fmt.Sprintf("user%s", acctest.RandStringFromCharSet(t, 8, "abcdefghijklmnopqrstuvwxyz0123456789"))
 	resourceName := "aws_workmail_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

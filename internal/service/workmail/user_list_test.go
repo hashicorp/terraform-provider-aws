@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -128,7 +129,7 @@ func TestAccWorkMailUser_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_workmail_user.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("city"), knownvalue.StringExact("bangalore")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEmail), knownvalue.StringRegexp(regexp.MustCompile("^"+regexp.QuoteMeta(rName+"-0")+"@.+$"))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEmail), knownvalue.StringRegexp(regexache.MustCompile("^"+regexp.QuoteMeta(rName+"-0")+"@.+$"))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("hidden_from_global_address_list"), knownvalue.Bool(false)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("office"), knownvalue.StringExact("hashicorp")),
