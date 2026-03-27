@@ -29,7 +29,8 @@ resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = ["db-server-1", "db-server-2"]
+  # Provide DB Server IDs (not names) - see data source example below for how to retrieve these
+  db_servers                      = ["dbs-abc123def456", "dbs-ghi789jkl012"]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   data_collection_options {
@@ -52,7 +53,8 @@ resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers                      = ["my-dbserver-1", "my-db-server-2"]
+  # Provide DB Server IDs (not names) - see data source example below for how to retrieve these
+  db_servers                      = ["dbs-abc123def456", "dbs-ghi789jkl012"]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   cluster_name                    = "julia-13"
@@ -69,12 +71,42 @@ resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
 }
 ```
 
+### Using Data Source to Retrieve DB Server IDs
+
+```terraform
+data "aws_odb_db_servers" "example" {
+  cloud_exadata_infrastructure_id = "<aws_odb_cloud_exadata_infrastructure_id>"
+}
+
+resource "aws_odb_cloud_vm_cluster" "example" {
+  display_name                    = "my_vm_cluster"
+  cloud_exadata_infrastructure_id = data.aws_odb_db_servers.example.cloud_exadata_infrastructure_id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["public-ssh-key"]
+  odb_network_id                  = "<aws_odb_network_id>"
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = [for db_server in data.aws_odb_db_servers.example.db_servers : db_server.id]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `cpu_core_count` - (Required) The number of CPU cores to enable on the VM cluster. Changing this will create a new resource.
-* `db_servers` - (Required) The list of database servers for the VM cluster. Changing this will create a new resource.
+* `db_servers` - (Required) The list of database server IDs for the VM cluster. Changing this will create a new resource.
 * `display_name` - (Required) A user-friendly name for the VM cluster. Changing this will create a new resource.
 * `gi_version` - (Required) A valid software version of Oracle Grid Infrastructure (GI). To get the list of valid values, use the ListGiVersions operation and specify the shape of the Exadata infrastructure. Example: 19.0.0.0 Changing this will create a new resource.
 * `hostname_prefix` - (Required) The host name prefix for the VM cluster. Constraints: - Can't be "localhost" or "hostname". - Can't contain "-version". - The maximum length of the combined hostname and domain is 63 characters. - The hostname must be unique within the subnet. Changing this will create a new resource.
