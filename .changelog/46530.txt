@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix premature "couldn't find resource (21 retries)" error during creation [GH-46530]
+```

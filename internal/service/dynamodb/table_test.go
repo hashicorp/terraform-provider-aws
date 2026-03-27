@@ -8747,6 +8747,29 @@ func TestAccDynamoDBTable_GSI_keySchema_unknown(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_creationTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_creationTimeout(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -13182,6 +13205,26 @@ variable "key_schemas" {
     attribute_name = %[1]q
     key_type       = "HASH"
   }]
+}
+`, rName)
+}
+
+func testAccTableConfig_creationTimeout(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = "TestTableHashKey"
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  timeouts {
+    create = "30m"
+  }
 }
 `, rName)
 }

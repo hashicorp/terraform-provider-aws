@@ -33,6 +33,7 @@ func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName strin
 		Refresh:                   statusTable(conn, tableName),
 		Timeout:                   max(createTableTimeout, timeout),
 		MinTimeout:                1 * time.Second,
+		NotFoundChecks:            1000,
 		ContinuousTargetOccurence: 2,
 	}
 
