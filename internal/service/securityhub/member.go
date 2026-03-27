@@ -128,17 +128,17 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrAccountID, member.AccountId)
-	d.Set(names.AttrEmail, member.Email)
+	// Only set email if returned by AWS API.
+	// For organization members, email is optional and not returned.
+	if member.Email != nil {
+		d.Set(names.AttrEmail, member.Email)
+	}
 	status := aws.ToString(member.MemberStatus)
-	const (
-		// Associated is the member status naming for Regions that do not support Organizations.
-		memberStatusAssociated = "Associated"
-		memberStatusInvited    = "Invited"
-		memberStatusEnabled    = "Enabled"
-		memberStatusResigned   = "Resigned"
-	)
-	invited := status == memberStatusInvited || status == memberStatusEnabled || status == memberStatusAssociated || status == memberStatusResigned
-	d.Set("invite", invited)
+	// Don't recompute invite from member_status. The invite attribute is a create-time
+	// input parameter (ForceNew: true) that controls whether to send an invitation.
+	// It should not be derived from the API response, as this causes drift for
+	// organization members (status="Enabled" but invite=false).
+	// The invite value from the configuration is already in state and should be preserved.
 	d.Set("master_id", member.MasterId)
 	d.Set("member_status", status)
 
