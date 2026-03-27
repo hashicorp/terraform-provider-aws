@@ -318,6 +318,7 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	HasGuardDutyManagedTag                                      = hasGuardDutyManagedTag
 )
 
 type (

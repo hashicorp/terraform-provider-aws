@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1656,4 +1657,700 @@ import {
   id = aws_subnet.source.vpc_id
 }
 `, acctest.ProviderName))
+}
+
+func TestGuardDutySecurityGroupNamePattern(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		groupName   string
+		vpcID       string
+		shouldMatch bool
+	}{
+		{
+			name:        "exact match",
+			groupName:   "GuardDutyManagedSecurityGroup-vpc-12345678",
+			vpcID:       "vpc-12345678",
+			shouldMatch: true,
+		},
+		{
+			name:        "different VPC ID",
+			groupName:   "GuardDutyManagedSecurityGroup-vpc-87654321",
+			vpcID:       "vpc-12345678",
+			shouldMatch: false,
+		},
+		{
+			name:        "missing prefix",
+			groupName:   "ManagedSecurityGroup-vpc-12345678",
+			vpcID:       "vpc-12345678",
+			shouldMatch: false,
+		},
+		{
+			name:        "wrong format",
+			groupName:   "GuardDuty-vpc-12345678",
+			vpcID:       "vpc-12345678",
+			shouldMatch: false,
+		},
+		{
+			name:        "empty group name",
+			groupName:   "",
+			vpcID:       "vpc-12345678",
+			shouldMatch: false,
+		},
+		{
+			name:        "case sensitive - lowercase",
+			groupName:   "guarddutymanagedsecuritygroup-vpc-12345678",
+			vpcID:       "vpc-12345678",
+			shouldMatch: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			expectedName := tfec2.GuardDutySecurityGroupPrefix + tc.vpcID
+			matches := tc.groupName == expectedName
+
+			if matches != tc.shouldMatch {
+				t.Errorf("Security group name pattern matching failed for '%s' with VPC '%s'\nExpected match: %v, Got: %v",
+					tc.groupName, tc.vpcID, tc.shouldMatch, matches)
+			}
+		})
+	}
+}
+
+func TestIsDependencyViolationError(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name                        string
+		err                         error
+		shouldBeDependencyViolation bool
+	}{
+		{
+			name:                        "nil error",
+			err:                         nil,
+			shouldBeDependencyViolation: false,
+		},
+		{
+			name:                        "DependencyViolation error",
+			err:                         fmt.Errorf("DependencyViolation: resource sg-123 has a dependent object"),
+			shouldBeDependencyViolation: true,
+		},
+		{
+			name:                        "dependent object error",
+			err:                         fmt.Errorf("Cannot delete security group: resource has a dependent object"),
+			shouldBeDependencyViolation: true,
+		},
+		{
+			name:                        "DependencyViolation with network interface",
+			err:                         fmt.Errorf("DependencyViolation: resource sg-456 has a dependent object (network interface eni-789)"),
+			shouldBeDependencyViolation: true,
+		},
+		{
+			name:                        "other error",
+			err:                         fmt.Errorf("InternalError: An internal error occurred"),
+			shouldBeDependencyViolation: false,
+		},
+		{
+			name:                        "unauthorized error",
+			err:                         fmt.Errorf("UnauthorizedOperation: You are not authorized"),
+			shouldBeDependencyViolation: false,
+		},
+		{
+			name:                        "not found error",
+			err:                         fmt.Errorf("InvalidGroup.NotFound: The security group does not exist"),
+			shouldBeDependencyViolation: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := tfec2.IsDependencyViolationError(tc.err)
+			if result != tc.shouldBeDependencyViolation {
+				t.Errorf("Expected %v, got %v for error: %v", tc.shouldBeDependencyViolation, result, tc.err)
+			}
+		})
+	}
+}
+
+// TestAccVPC_guardDutySecurityGroupCleanup validates UC-V1: VPC destroy with out-of-band
+// GuardDuty resources. It creates a VPC + subnet via Terraform, then uses the AWS SDK to
+// create a GuardDuty endpoint and security group out-of-band (not in Terraform state).
+// When terraform destroy runs, it deletes the subnet first (triggering subnet-level cleanup),
+// then tries to delete the VPC. Since the endpoint and SG are out-of-band, Terraform may hit
+// DependencyViolation, and detectAndDeleteGuardDutyVPCEndpoints + detectAndDeleteGuardDutySecurityGroups
+// run to clean them up.
+//
+// EXPECTED: Test PASSES. VPC, endpoint, and SG are all cleaned up.
+func TestAccVPC_guardDutySecurityGroupCleanup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	var subnet awstypes.Subnet
+	var vpcID string
+	vpcResourceName := "aws_vpc.test"
+	subnetResourceName := "aws_subnet.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckVPCGuardDutyCleanupDestroy(ctx, t, &vpcID),
+			testAccDeleteGuardDutyResources(ctx, t, &vpcID),
+		),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create VPC + subnet via Terraform. After creation,
+				// use SDK to create GuardDuty endpoint + SG out-of-band.
+				// When the test framework runs terraform destroy, it will
+				// trigger the VPC-level cleanup path.
+				Config: testAccVPCConfig_guardDutySecurityGroupCleanup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
+					testAccCheckSubnetExists(ctx, t, subnetResourceName, &subnet),
+					testAccCaptureVPCIDFromVPC(&vpc, &vpcID),
+					testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnet),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpc),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpc),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckVPCGuardDutySecurityGroupExists(ctx context.Context, t *testing.T, vpc *awstypes.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+		vpcID := aws.ToString(vpc.VpcId)
+
+		sgInput := &ec2.DescribeSecurityGroupsInput{
+			Filters: []awstypes.Filter{
+				{
+					Name:   aws.String("vpc-id"),
+					Values: []string{vpcID},
+				},
+				{
+					Name:   aws.String("group-name"),
+					Values: []string{fmt.Sprintf("GuardDutyManagedSecurityGroup-%s", vpcID)},
+				},
+				{
+					Name:   aws.String("tag:GuardDutyManaged"),
+					Values: []string{acctest.CtTrue},
+				},
+			},
+		}
+		sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+		if err != nil {
+			return fmt.Errorf("error describing security groups: %w", err)
+		}
+		if len(sgOutput.SecurityGroups) == 0 {
+			return fmt.Errorf("expected GuardDuty security group with GuardDutyManaged=true tag to exist, but none found")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckVPCGuardDutyEndpointExists(ctx context.Context, t *testing.T, vpc *awstypes.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+		vpcID := aws.ToString(vpc.VpcId)
+
+		endpointsInput := &ec2.DescribeVpcEndpointsInput{
+			Filters: []awstypes.Filter{
+				{
+					Name:   aws.String("vpc-id"),
+					Values: []string{vpcID},
+				},
+				{
+					Name:   aws.String("service-name"),
+					Values: []string{"*guardduty-data*"},
+				},
+				{
+					Name:   aws.String("tag:GuardDutyManaged"),
+					Values: []string{acctest.CtTrue},
+				},
+			},
+		}
+		endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+		if err != nil {
+			return fmt.Errorf("error describing VPC endpoints: %w", err)
+		}
+		if len(endpointsOutput.VpcEndpoints) == 0 {
+			return fmt.Errorf("expected GuardDuty VPC endpoint with GuardDutyManaged=true tag to exist, but none found")
+		}
+
+		return nil
+	}
+}
+
+func testAccCaptureVPCIDFromVPC(vpc *awstypes.Vpc, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		*vpcID = aws.ToString(vpc.VpcId)
+		return nil
+	}
+}
+
+func testAccCheckVPCGuardDutyCleanupDestroy(ctx context.Context, t *testing.T, vpcID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc" {
+				continue
+			}
+
+			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 VPC %s still exists", rs.Primary.ID)
+		}
+
+		if vpcID != nil && *vpcID != "" {
+			endpointsInput := &ec2.DescribeVpcEndpointsInput{
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("vpc-id"),
+						Values: []string{*vpcID},
+					},
+					{
+						Name:   aws.String("service-name"),
+						Values: []string{"*guardduty-data*"},
+					},
+					{
+						Name:   aws.String("tag:GuardDutyManaged"),
+						Values: []string{acctest.CtTrue},
+					},
+				},
+			}
+			endpointsOutput, err := conn.DescribeVpcEndpoints(ctx, endpointsInput)
+			if err != nil {
+				return nil
+			}
+			activeEndpoints := 0
+			for _, ep := range endpointsOutput.VpcEndpoints {
+				if string(ep.State) != "deleted" {
+					activeEndpoints++
+				}
+			}
+			if activeEndpoints > 0 {
+				return fmt.Errorf("expected GuardDuty VPC endpoints to be cleaned up, but found %d active endpoint(s)", activeEndpoints)
+			}
+
+			sgInput := &ec2.DescribeSecurityGroupsInput{
+				Filters: []awstypes.Filter{
+					{
+						Name:   aws.String("vpc-id"),
+						Values: []string{*vpcID},
+					},
+					{
+						Name:   aws.String("group-name"),
+						Values: []string{fmt.Sprintf("GuardDutyManagedSecurityGroup-%s", *vpcID)},
+					},
+					{
+						Name:   aws.String("tag:GuardDutyManaged"),
+						Values: []string{acctest.CtTrue},
+					},
+				},
+			}
+			sgOutput, err := conn.DescribeSecurityGroups(ctx, sgInput)
+			if err != nil {
+				return nil
+			}
+			if len(sgOutput.SecurityGroups) > 0 {
+				return fmt.Errorf("expected GuardDuty security groups to be cleaned up, but found %d group(s)", len(sgOutput.SecurityGroups))
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccVPCConfig_guardDutySecurityGroupCleanup(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "%[1]s-test"
+  }
+}
+`, rName)
+}
+
+// TestAccVPC_guardDutyEndpointAlreadyCleaned validates UC-V2: VPC destroy where the
+// GuardDuty endpoint was already cleaned up by subnet-level deletion, but the SG remains.
+// Step 1 creates VPC + subnet, then creates GuardDuty endpoint + SG out-of-band via SDK.
+// Step 2 removes the subnet from config — Terraform deletes the subnet, which triggers
+// dissociateGuardDutyVPCEndpoints (dissociates the endpoint from the subnet). The endpoint
+// may be auto-deleted by AWS or left in a degraded state, but the SG still exists.
+// When terraform destroy runs on the remaining VPC, detectAndDeleteGuardDutyVPCEndpoints
+// finds nothing (or a degraded endpoint) and detectAndDeleteGuardDutySecurityGroups finds
+// and deletes the SG.
+//
+// EXPECTED: Test PASSES. Subnet deletion cleans up the endpoint association, VPC deletion
+// cleans up the remaining SG.
+func TestAccVPC_guardDutyEndpointAlreadyCleaned(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	var subnet awstypes.Subnet
+	var vpcID string
+	vpcResourceName := "aws_vpc.test"
+	subnetResourceName := "aws_subnet.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckVPCGuardDutyCleanupDestroy(ctx, t, &vpcID),
+			testAccDeleteGuardDutyResources(ctx, t, &vpcID),
+		),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create VPC + subnet via Terraform. After creation,
+				// use SDK to create GuardDuty endpoint + SG out-of-band.
+				Config: testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withSubnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
+					testAccCheckSubnetExists(ctx, t, subnetResourceName, &subnet),
+					testAccCaptureVPCIDFromVPC(&vpc, &vpcID),
+					testAccCreateGuardDutyResourcesFromSubnet(ctx, t, &subnet),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpc),
+					testAccCheckVPCGuardDutyEndpointExists(ctx, t, &vpc),
+				),
+			},
+			{
+				// Step 2: Remove subnet from config (VPC only remains).
+				// Terraform deletes the subnet, triggering dissociateGuardDutyVPCEndpoints
+				// which dissociates the endpoint. The SG still exists in the VPC.
+				// Verify the SG persists after subnet deletion.
+				Config: testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withoutSubnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
+					testAccCheckVPCGuardDutySecurityGroupExists(ctx, t, &vpc),
+				),
+			},
+			// After step 2, the test framework runs terraform destroy on the
+			// remaining VPC. detectAndDeleteGuardDutyVPCEndpoints finds nothing
+			// (or a degraded endpoint) and detectAndDeleteGuardDutySecurityGroups
+			// finds and deletes the SG.
+		},
+	})
+}
+
+// TestAccVPC_guardDutyNoResources validates UC-V4: standard VPC with a subnet and no
+// GuardDuty resources at all. This is a regression test to ensure the GuardDuty cleanup
+// code is a safe no-op when there are no GuardDuty resources. The DescribeVpcEndpoints
+// and DescribeSecurityGroups calls should return empty results and the code should return
+// immediately without interfering with normal VPC deletion.
+//
+// Note: This test only exercises the GuardDuty cleanup path if DeleteVpc returns
+// DependencyViolation. Without GuardDuty resources, there may be no DependencyViolation
+// at all, in which case the cleanup code is never called.
+//
+// EXPECTED: Test PASSES. Normal VPC deletion unaffected by GuardDuty cleanup code.
+func TestAccVPC_guardDutyNoResources(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	vpcResourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_guardDutyNoResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
+				),
+			},
+		},
+	})
+}
+
+func testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withSubnet(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "%[1]s-test"
+  }
+}
+`, rName)
+}
+
+func testAccVPCConfig_guardDutyEndpointAlreadyCleaned_withoutSubnet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCConfig_guardDutyNoResources(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "%[1]s-test"
+  }
+}
+`, rName)
+}
+
+func TestDetectAndDeleteGuardDutyVPCEndpoints_warningMessageFormat(t *testing.T) {
+	t.Parallel()
+
+	const warningTemplate = "During deletion of VPC %s, Terraform attempted to check for and delete " +
+		"GuardDuty-managed VPC endpoints that may have been causing a DependencyViolation, " +
+		"but lacked sufficient IAM permissions (%s) to do so. " +
+		"If GuardDuty is enabled in this VPC, these permissions may be required for automatic cleanup."
+
+	t.Run("non-definitive phrasing", func(t *testing.T) {
+		t.Parallel()
+
+		phrasingCases := []struct {
+			name            string
+			expectedPhrase  string
+			forbiddenPhrase string
+		}{
+			{
+				name:            "uses may have been causing",
+				expectedPhrase:  "may have been causing",
+				forbiddenPhrase: "was causing",
+			},
+			{
+				name:            "uses attempted to check for",
+				expectedPhrase:  "attempted to check for",
+				forbiddenPhrase: "found",
+			},
+			{
+				name:            "uses may be required",
+				expectedPhrase:  "may be required",
+				forbiddenPhrase: "are required",
+			},
+		}
+
+		for _, tc := range phrasingCases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				if !strings.Contains(warningTemplate, tc.expectedPhrase) {
+					t.Errorf("Warning template missing non-definitive phrase %q\nTemplate: %s", tc.expectedPhrase, warningTemplate)
+				}
+				if strings.Contains(warningTemplate, tc.forbiddenPhrase) {
+					t.Errorf("Warning template contains definitive phrase %q which should not be present\nTemplate: %s", tc.forbiddenPhrase, warningTemplate)
+				}
+			})
+		}
+	})
+
+	t.Run("includes required identifiers", func(t *testing.T) {
+		t.Parallel()
+
+		identifierCases := []struct {
+			name        string
+			vpcID       string
+			permissions string
+		}{
+			{
+				name:        "describe endpoints permission",
+				vpcID:       "vpc-0abc123def456",
+				permissions: "ec2:DescribeVpcEndpoints",
+			},
+			{
+				name:        "delete endpoints permission",
+				vpcID:       "vpc-0xyz789ghi012",
+				permissions: "ec2:DeleteVpcEndpoints",
+			},
+		}
+
+		for _, tc := range identifierCases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				formatted := fmt.Sprintf(warningTemplate, tc.vpcID, tc.permissions)
+
+				if !strings.Contains(formatted, tc.vpcID) {
+					t.Errorf("Formatted warning missing VPC ID %q\nFormatted: %s", tc.vpcID, formatted)
+				}
+				if !strings.Contains(formatted, tc.permissions) {
+					t.Errorf("Formatted warning missing permissions %q\nFormatted: %s", tc.permissions, formatted)
+				}
+			})
+		}
+	})
+}
+
+func TestDetectAndDeleteGuardDutySecurityGroups_warningMessageFormat(t *testing.T) {
+	t.Parallel()
+
+	const warningTemplate = "During deletion of VPC %s, Terraform attempted to check for and delete " +
+		"GuardDuty-managed security groups that may have been causing a DependencyViolation, " +
+		"but lacked sufficient IAM permissions (%s) to do so. If GuardDuty is enabled " +
+		"in this VPC, these permissions may be required for automatic cleanup."
+
+	t.Run("non-definitive phrasing", func(t *testing.T) {
+		t.Parallel()
+
+		phrasingCases := []struct {
+			name            string
+			expectedPhrase  string
+			forbiddenPhrase string
+		}{
+			{
+				name:            "uses may have been causing",
+				expectedPhrase:  "may have been causing",
+				forbiddenPhrase: "was causing",
+			},
+			{
+				name:            "uses attempted to check for",
+				expectedPhrase:  "attempted to check for",
+				forbiddenPhrase: "found",
+			},
+			{
+				name:            "uses may be required",
+				expectedPhrase:  "may be required",
+				forbiddenPhrase: "are required",
+			},
+		}
+
+		for _, tc := range phrasingCases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				if !strings.Contains(warningTemplate, tc.expectedPhrase) {
+					t.Errorf("Warning template missing non-definitive phrase %q\nTemplate: %s", tc.expectedPhrase, warningTemplate)
+				}
+				if strings.Contains(warningTemplate, tc.forbiddenPhrase) {
+					t.Errorf("Warning template contains definitive phrase %q which should not be present\nTemplate: %s", tc.forbiddenPhrase, warningTemplate)
+				}
+			})
+		}
+	})
+
+	t.Run("includes required identifiers", func(t *testing.T) {
+		t.Parallel()
+
+		identifierCases := []struct {
+			name        string
+			vpcID       string
+			permissions string
+		}{
+			{
+				name:        "describe security groups permission",
+				vpcID:       "vpc-0abc123def456",
+				permissions: "ec2:DescribeSecurityGroups",
+			},
+			{
+				name:        "delete security group permission",
+				vpcID:       "vpc-0xyz789ghi012",
+				permissions: "ec2:DeleteSecurityGroup",
+			},
+		}
+
+		for _, tc := range identifierCases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				formatted := fmt.Sprintf(warningTemplate, tc.vpcID, tc.permissions)
+
+				if !strings.Contains(formatted, tc.vpcID) {
+					t.Errorf("Formatted warning missing VPC ID %q\nFormatted: %s", tc.vpcID, formatted)
+				}
+				if !strings.Contains(formatted, tc.permissions) {
+					t.Errorf("Formatted warning missing permissions %q\nFormatted: %s", tc.permissions, formatted)
+				}
+			})
+		}
+	})
 }

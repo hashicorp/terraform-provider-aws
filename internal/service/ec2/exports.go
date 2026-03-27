@@ -34,6 +34,8 @@ var (
 	WaitTransitGatewayAttachmentAccepted                                    = waitTransitGatewayAttachmentAccepted
 	WaitTransitGatewayAttachmentDeleted                                     = waitTransitGatewayAttachmentDeleted
 	WaitVPCEndpointAvailable                                                = waitVPCEndpointAvailable
+	WaitVPCEndpointDeleted                                                  = waitVPCEndpointDeleted
+	VPCEndpointDeletionTimeout                                              = vpcEndpointDeletionTimeout
 )
 
 type (
