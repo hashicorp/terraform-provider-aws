@@ -111,6 +111,19 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"advanced_performance_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
 									"bucket_level": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -144,6 +157,19 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													},
 												},
 												"advanced_data_protection_metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrEnabled: {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"advanced_performance_metrics": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -707,6 +733,10 @@ func expandAccountLevel(tfMap map[string]any) *types.AccountLevel {
 		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["advanced_performance_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedPerformanceMetrics = expandAdvancedPerformanceMetrics(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap["bucket_level"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BucketLevel = expandBucketLevel(v[0].(map[string]any))
 	} else {
@@ -753,6 +783,10 @@ func expandBucketLevel(tfMap map[string]any) *types.BucketLevel {
 		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["advanced_performance_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedPerformanceMetrics = expandAdvancedPerformanceMetrics(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap["detailed_status_code_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]any))
 	}
@@ -784,6 +818,20 @@ func expandAdvancedDataProtectionMetrics(tfMap map[string]any) *types.AdvancedDa
 	}
 
 	apiObject := &types.AdvancedDataProtectionMetrics{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.IsEnabled = v
+	}
+
+	return apiObject
+}
+
+func expandAdvancedPerformanceMetrics(tfMap map[string]any) *types.AdvancedPerformanceMetrics {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AdvancedPerformanceMetrics{}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
@@ -1059,6 +1107,10 @@ func flattenAccountLevel(apiObject *types.AccountLevel) map[string]any {
 		tfMap["advanced_data_protection_metrics"] = []any{flattenAdvancedDataProtectionMetrics(v)}
 	}
 
+	if v := apiObject.AdvancedPerformanceMetrics; v != nil {
+		tfMap["advanced_performance_metrics"] = []any{flattenAdvancedPerformanceMetrics(v)}
+	}
+
 	if v := apiObject.BucketLevel; v != nil {
 		tfMap["bucket_level"] = []any{flattenBucketLevel(v)}
 	}
@@ -1101,6 +1153,10 @@ func flattenBucketLevel(apiObject *types.BucketLevel) map[string]any {
 		tfMap["advanced_data_protection_metrics"] = []any{flattenAdvancedDataProtectionMetrics(v)}
 	}
 
+	if v := apiObject.AdvancedPerformanceMetrics; v != nil {
+		tfMap["advanced_performance_metrics"] = []any{flattenAdvancedPerformanceMetrics(v)}
+	}
+
 	if v := apiObject.DetailedStatusCodesMetrics; v != nil {
 		tfMap["detailed_status_code_metrics"] = []any{flattenDetailedStatusCodesMetrics(v)}
 	}
@@ -1125,6 +1181,18 @@ func flattenAdvancedCostOptimizationMetrics(apiObject *types.AdvancedCostOptimiz
 }
 
 func flattenAdvancedDataProtectionMetrics(apiObject *types.AdvancedDataProtectionMetrics) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
+
+	return tfMap
+}
+
+func flattenAdvancedPerformanceMetrics(apiObject *types.AdvancedPerformanceMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}

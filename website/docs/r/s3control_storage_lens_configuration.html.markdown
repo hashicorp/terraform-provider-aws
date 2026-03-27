@@ -86,6 +86,7 @@ The `account_level` block supports the following:
 * `activity_metrics` (Optional) S3 Storage Lens activity metrics. See [Activity Metrics](#activity-metrics) below for more details.
 * `advanced_cost_optimization_metrics` (Optional) Advanced cost-optimization metrics for S3 Storage Lens. See [Advanced Cost-Optimization Metrics](#advanced-cost-optimization-metrics) below for more details.
 * `advanced_data_protection_metrics` (Optional) Advanced data-protection metrics for S3 Storage Lens. See [Advanced Data-Protection Metrics](#advanced-data-protection-metrics) below for more details.
+* `advanced_performance_metrics` (Optional) Advanced performance metrics for S3 Storage Lens. See [Advanced Performance Metrics](#advanced-performance-metrics) below for more details.
 * `bucket_level` (Required) S3 Storage Lens bucket-level configuration. See [Bucket Level](#bucket-level) below for more details.
 * `detailed_status_code_metrics` (Optional) Detailed status code metrics for S3 Storage Lens. See [Detailed Status Code Metrics](#detailed-status-code-metrics) below for more details.
 
@@ -107,6 +108,12 @@ The `advanced_data_protection_metrics` block supports the following:
 
 * `enabled` (Optional) Whether advanced data-protection metrics are enabled.
 
+### Advanced Performance Metrics
+
+The `advanced_performance_metrics` block supports the following:
+
+* `enabled` (Optional) Whether advanced performance metrics are enabled.
+
 ### Detailed Status Code Metrics
 
 The `detailed_status_code_metrics` block supports the following:
@@ -120,6 +127,7 @@ The `bucket_level` block supports the following:
 * `activity_metrics` (Optional) S3 Storage Lens activity metrics. See [Activity Metrics](#activity-metrics) above for more details.
 * `advanced_cost_optimization_metrics` (Optional) Advanced cost-optimization metrics for S3 Storage Lens. See [Advanced Cost-Optimization Metrics](#advanced-cost-optimization-metrics) above for more details.
 * `advanced_data_protection_metrics` (Optional) Advanced data-protection metrics for S3 Storage Lens. See [Advanced Data-Protection Metrics](#advanced-data-protection-metrics) above for more details.
+* `advanced_performance_metrics` (Optional) Advanced performance metrics for S3 Storage Lens. See [Advanced Performance Metrics](#advanced-performance-metrics) above for more details.
 * `detailed_status_code_metrics` (Optional) Detailed status code metrics for S3 Storage Lens. See [Detailed Status Code Metrics](#detailed-status-code-metrics) above for more details.
 * `prefix_level` (Optional) Prefix-level metrics for S3 Storage Lens. See [Prefix Level](#prefix-level) below for more details.
 

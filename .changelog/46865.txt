@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3control_storage_lens_configuration: Add `advanced_performance_metrics` attribute to `account_level` and `bucket_level` configuration blocks
+```
