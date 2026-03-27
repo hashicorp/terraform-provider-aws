@@ -618,7 +618,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EKSClient(ctx)
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
 
@@ -632,72 +633,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
 	}
 
-	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
-	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
-	var bootstrapClusterCreatorAdminPermissions *bool
-	if v, ok := d.GetOk("access_config"); ok {
-		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
-			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
-		}
+	if err := resourceClusterFlatten(ctx, c, cluster, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
-	}
-	d.Set(names.AttrARN, cluster.Arn)
-	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
-	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
-	}
-	// cluster_id is only relevant for clusters on Outposts.
-	if cluster.OutpostConfig != nil {
-		d.Set("cluster_id", cluster.Id)
-	}
-	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
-	}
-	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting control_plane_scaling_config: %s", err)
-	}
-	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
-	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
-	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
-	}
-	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
-	}
-	d.Set(names.AttrEndpoint, cluster.Endpoint)
-	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
-	}
-	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
-	}
-	d.Set(names.AttrName, cluster.Name)
-	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
-	}
-	d.Set("platform_version", cluster.PlatformVersion)
-	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting remote_network_config: %s", err)
-	}
-	d.Set(names.AttrRoleARN, cluster.RoleArn)
-	d.Set(names.AttrStatus, cluster.Status)
-	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
-	}
-	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
-	}
-	d.Set(names.AttrVersion, cluster.Version)
-	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
-	}
-	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting zonal_shift_config: %s", err)
-	}
-
-	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
@@ -985,6 +923,77 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return diags
+}
+
+func resourceClusterFlatten(ctx context.Context, awsClient *conns.AWSClient, cluster *types.Cluster, d *schema.ResourceData) error {
+	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
+	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
+	var bootstrapClusterCreatorAdminPermissions *bool
+	if v, ok := d.GetOk("access_config"); ok {
+		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
+			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+		}
+	}
+	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
+		return fmt.Errorf("setting access_config: %w", err)
+	}
+	d.Set(names.AttrARN, cluster.Arn)
+	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
+	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
+		return fmt.Errorf("setting certificate_authority: %w", err)
+	}
+	// cluster_id is only relevant for clusters on Outposts.
+	if cluster.OutpostConfig != nil {
+		d.Set("cluster_id", cluster.Id)
+	}
+	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
+		return fmt.Errorf("setting compute_config: %w", err)
+	}
+	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
+		return fmt.Errorf("setting control_plane_scaling_config: %w", err)
+	}
+	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
+	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
+		return fmt.Errorf("setting enabled_cluster_log_types: %w", err)
+	}
+	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
+		return fmt.Errorf("setting encryption_config: %w", err)
+	}
+	d.Set(names.AttrEndpoint, cluster.Endpoint)
+	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("setting identity: %w", err)
+	}
+	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
+		return fmt.Errorf("setting kubernetes_network_config: %w", err)
+	}
+	d.Set(names.AttrName, cluster.Name)
+	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
+		return fmt.Errorf("setting outpost_config: %w", err)
+	}
+	d.Set("platform_version", cluster.PlatformVersion)
+	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+		return fmt.Errorf("setting remote_network_config: %w", err)
+	}
+	d.Set(names.AttrRoleARN, cluster.RoleArn)
+	d.Set(names.AttrStatus, cluster.Status)
+	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
+		return fmt.Errorf("setting storage_config: %w", err)
+	}
+	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
+		return fmt.Errorf("setting upgrade_policy: %w", err)
+	}
+	d.Set(names.AttrVersion, cluster.Version)
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+		return fmt.Errorf("setting vpc_config: %w", err)
+	}
+	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
+		return fmt.Errorf("setting zonal_shift_config: %w", err)
+	}
+
+	setTagsOut(ctx, cluster.Tags)
+
+	return nil
 }
 
 func findClusterByName(ctx context.Context, conn *eks.Client, name string) (*types.Cluster, error) {

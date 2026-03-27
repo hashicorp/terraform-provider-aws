@@ -13,3 +13,7 @@ resource/aws_eks_cluster: Add resource identity support
 ```release-note:bug
 resource/aws_eks_cluster: Set `bootstrap_self_managed_addons` to `true` when importing
 ```
+
+```release-note:new-list-resource
+aws_eks_cluster
+```
