@@ -180,6 +180,14 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	return diags
 }
 
+// Nullified returns a value for T with all applicable fields nulled.
+// `T` must be a struct.
+func Nullified[T any](ctx context.Context) T {
+	t := inttypes.Zero[T]()
+	diags := NullOutObjectPtrFields(ctx, &t)
+	return fwdiag.Must(t, diags)
+}
+
 // ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.
 type ObjectValueOf[T any] struct {
 	basetypes.ObjectValue
