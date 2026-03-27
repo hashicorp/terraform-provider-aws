@@ -11,29 +11,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_uxc_services", name="Services")
-func newDataSourceServices(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceServices{}, nil
+func newServicesDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &servicesDataSource{}, nil
 }
 
-const (
-	DSNameServices = "Services"
-)
-
-type dataSourceServices struct {
-	framework.DataSourceWithModel[dataSourceServicesModel]
+type servicesDataSource struct {
+	framework.DataSourceWithModel[servicesDataSourceModel]
 }
 
-func (d *dataSourceServices) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *servicesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"services": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
@@ -43,17 +37,18 @@ func (d *dataSourceServices) Schema(_ context.Context, _ datasource.SchemaReques
 	}
 }
 
-func (d *dataSourceServices) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *servicesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().UXCClient(ctx)
 
-	var data dataSourceServicesModel
+	var data servicesDataSourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	var input uxc.ListServicesInput
 	var allServices []string
-	paginator := uxc.NewListServicesPaginator(conn, &uxc.ListServicesInput{})
+	paginator := uxc.NewListServicesPaginator(conn, &input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
@@ -66,16 +61,11 @@ func (d *dataSourceServices) Read(ctx context.Context, req datasource.ReadReques
 		allServices = append(allServices, page.Services...)
 	}
 
-	data.ID = flex.StringValueToFramework(ctx, d.Meta().AccountID(ctx))
-
-	servicesList, listDiags := types.ListValueFrom(ctx, types.StringType, allServices)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, listDiags)
-	data.Services = fwtypes.ListOfString{ListValue: servicesList}
+	data.Services = fwflex.FlattenFrameworkStringValueListOfString(ctx, allServices)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-type dataSourceServicesModel struct {
-	ID       types.String         `tfsdk:"id"`
+type servicesDataSourceModel struct {
 	Services fwtypes.ListOfString `tfsdk:"services"`
 }

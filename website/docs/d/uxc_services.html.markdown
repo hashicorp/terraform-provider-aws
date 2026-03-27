@@ -42,5 +42,4 @@ This data source does not support any arguments.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - AWS Account ID.
 * `services` - List of AWS service identifiers available in UXC.
