@@ -670,6 +670,12 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", id, err)
 	}
 
+	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
+		if err := waitCatalogTableViewCreated(ctx, conn, catalogID, dbName, name); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view creation: %s", id, err)
+		}
+	}
+
 	d.SetId(id)
 
 	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
@@ -695,6 +701,10 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
+	}
+
+	if table.Status != nil && table.Status.State == "FAILED" {
+		return sdkdiag.AppendErrorf(diags, "Glue Catalog Table (%s) view creation failed with state: %s", d.Id(), table.Status.State)
 	}
 
 	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))
@@ -796,6 +806,12 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
+	}
+
+	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
+		if err := waitCatalogTableViewCreated(ctx, conn, catalogID, dbName, name); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
@@ -1868,4 +1884,27 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
 	return c.RegionalARN(ctx, "glue", "table/"+dbName+"/"+name)
+}
+
+func waitCatalogTableViewCreated(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) error {
+	return tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		table, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		if table.Status == nil {
+			return nil
+		}
+
+		switch string(table.Status.State) {
+		case "QUEUED", "IN_PROGRESS":
+			return tfresource.RetryableError(fmt.Errorf("view creation is in state: %s", table.Status.State))
+		case "FAILED":
+			return tfresource.NonRetryableError(fmt.Errorf("view creation failed"))
+		default:
+			return nil
+		}
+	})
 }
