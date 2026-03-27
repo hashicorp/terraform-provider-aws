@@ -50,6 +50,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newResourceSharePermissionAssociationResource,
+			TypeName: "aws_ram_resource_share_permission_association",
+			Name:     "Resource Share Permission Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("resource_share_arn", true),
+				inttypes.StringIdentityAttribute("permission_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      resourceSharePermissionAssociationImportID{},
+			},
+		},
 	}
 }
 
