@@ -8,12 +8,14 @@ package sagemaker
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -40,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -62,6 +66,9 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("hyper_parameter_tuning_job_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeHyperParameterTuningJobOutput")
+// @Testing(importStateIdAttribute="hyper_parameter_tuning_job_name")
+// @Testing(importIgnore="failure_reason;hyper_parameter_tuning_job_status;training_job_definition.0.algorithm_specification.0.metric_definitions")
+// @Testing(plannableImportAction="NoOp")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(tagsTest=false)
 func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -74,7 +81,8 @@ func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWit
 }
 
 const (
-	ResNameHyperParameterTuningJob = "Hyper Parameter Tuning Job"
+	ResNameHyperParameterTuningJob                  = "Hyper Parameter Tuning Job"
+	hyperParameterTuningJobCreatePropagationTimeout = 5 * time.Minute
 )
 
 type hyperParameterTuningJobResource struct {
@@ -134,6 +142,9 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"failure_reason": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"hyper_parameter_tuning_job_name": schema.StringAttribute{
 				Required: true,
@@ -147,6 +158,9 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 			"hyper_parameter_tuning_job_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -210,7 +224,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					},
 					Blocks: map[string]schema.Block{
 						"hyper_parameter_tuning_job_objective": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobObjectiveModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningConfigObjectiveModel](ctx),
 							Validators: []validator.List{
 								//listvalidator.IsRequired(), // TODO : API seems to enforce it , come abck later
 								//listvalidator.SizeAtLeast(1),
@@ -547,8 +561,10 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 						"scaling_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterScalingType](),
 							Optional:   true,
+							Computed:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
+								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
 					}},
@@ -631,20 +647,26 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 				},
 				"enable_inter_container_traffic_encryption": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.RequiresReplace(),
+						boolplanmodifier.UseStateForUnknown(),
 					},
 				},
 				"enable_managed_spot_training": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.RequiresReplace(),
+						boolplanmodifier.UseStateForUnknown(),
 					},
 				},
 				"enable_network_isolation": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
 						boolplanmodifier.RequiresReplace(),
+						boolplanmodifier.UseStateForUnknown(),
 					},
 				},
 				"environment": schema.MapAttribute{
@@ -680,6 +702,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					CustomType:  fwtypes.MapOfStringType,
 					ElementType: types.StringType,
 					Optional:    true,
+					Computed:    true,
 					Validators: []validator.Map{
 						mapvalidator.SizeAtMost(100),
 						mapvalidator.KeysAre(
@@ -691,6 +714,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					},
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.RequiresReplace(),
+						mapplanmodifier.UseStateForUnknown(),
 					},
 				},
 			},
@@ -706,9 +730,16 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						listplanmodifier.RequiresReplace(),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("algorithm_name"),
+								path.MatchRelative().AtName("training_image"),
+							),
+						},
 						Attributes: map[string]schema.Attribute{
 							"algorithm_name": schema.StringAttribute{
 								Optional: true,
+								Computed: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 170),
 									stringvalidator.RegexMatches(regexache.MustCompile(`^(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*/)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`), "must be a valid SageMaker algorithm name or ARN"),
@@ -716,16 +747,19 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
+									stringplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"training_image": schema.StringAttribute{
 								Optional: true,
+								Computed: true,
 								Validators: []validator.String{
 									stringvalidator.LengthAtMost(255),
 									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("algorithm_name")),
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
+									stringplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"training_input_mode": schema.StringAttribute{
@@ -738,7 +772,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						},
 						Blocks: map[string]schema.Block{
 							"metric_definitions": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[metricDefinitionModel](ctx),
+								CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningMetricDefinitionModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(40),
 								},
@@ -955,7 +989,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						},
 						Blocks: map[string]schema.Block{
 							"data_source": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceModel](ctx),
+								CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningDataSourceModel](ctx),
 								Validators: []validator.List{
 									listvalidator.IsRequired(),
 									listvalidator.SizeAtLeast(1),
@@ -967,7 +1001,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								NestedObject: schema.NestedBlockObject{
 									Blocks: map[string]schema.Block{
 										"file_system_data_source": schema.ListNestedBlock{
-											CustomType: fwtypes.NewListNestedObjectTypeOf[fileSystemDataSourceModel](ctx),
+											CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningFileSystemDataSourceModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(1),
 											},
@@ -1074,7 +1108,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 											},
 												Blocks: map[string]schema.Block{
 													"hub_access_config": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[hubAccessConfigModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningHubAccessConfigModel](ctx),
 														Validators: []validator.List{
 															listvalidator.SizeAtMost(1),
 														},
@@ -1092,7 +1126,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 														}},
 													},
 													"model_access_config": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[modelAccessConfigModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningModelAccessConfigModel](ctx),
 														Validators: []validator.List{
 															listvalidator.SizeAtMost(1),
 														},
@@ -1118,7 +1152,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								},
 							},
 							"shuffle_config": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[shuffleConfigModel](ctx),
+								CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningShuffleConfigModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
 								},
@@ -1138,7 +1172,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					},
 				},
 				"output_data_config": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[outputDataConfigModel](ctx),
+					CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningOutputDataConfigModel](ctx),
 					Validators: []validator.List{
 						listvalidator.IsRequired(),
 						listvalidator.SizeAtLeast(1),
@@ -1243,7 +1277,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					},
 						Blocks: map[string]schema.Block{
 							"instance_groups": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[instanceGroupModel](ctx),
+								CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningInstanceGroupModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(5),
 								},
@@ -1279,7 +1313,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								}},
 							},
 							"instance_placement_config": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[instancePlacementConfigModel](ctx),
+								CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningInstancePlacementConfigModel](ctx),
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
 								},
@@ -1297,7 +1331,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 									},
 									Blocks: map[string]schema.Block{
 										"placement_specifications": schema.ListNestedBlock{
-											CustomType: fwtypes.NewListNestedObjectTypeOf[placementSpecificationModel](ctx),
+											CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningPlacementSpecificationModel](ctx),
 											Validators: []validator.List{
 												listvalidator.SizeAtMost(10),
 											},
@@ -1347,7 +1381,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					}},
 				},
 				"stopping_condition": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[stoppingConditionModel](ctx),
+					CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningStoppingConditionModel](ctx),
 					Validators: []validator.List{
 						listvalidator.IsRequired(),
 						listvalidator.SizeAtLeast(1),
@@ -1471,7 +1505,21 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	out, err := conn.CreateHyperParameterTuningJob(ctx, &input)
+	out, err := tfresource.RetryWhen(ctx, hyperParameterTuningJobCreatePropagationTimeout, func(ctx context.Context) (*sagemaker.CreateHyperParameterTuningJobOutput, error) {
+		return conn.CreateHyperParameterTuningJob(ctx, &input)
+	}, func(err error) (bool, error) {
+		if tfawserr.ErrMessageContainsAny(err,
+			ErrCodeValidationException,
+			"Could not assume role",
+			"no identity-based policy allows the s3:ListBucket action",
+			"No S3 objects found under S3 URL",
+			"The AWS Access Key Id you provided does not exist in our records",
+			"Access denied when describing algorithm") {
+			return true, err
+		}
+
+		return false, err
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.HyperParameterTuningJobName.String())
 		return
@@ -1481,19 +1529,19 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitHyperParameterTuningJobCreated(ctx, conn, plan.HyperParameterTuningJobName.ValueString(), createTimeout)
+	describeOut, err := waitHyperParameterTuningJobCreated(ctx, conn, plan.HyperParameterTuningJobName.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.HyperParameterTuningJobName.String())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	r.flatten(ctx, describeOut, &plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan), flex.WithFieldNamePrefix("HyperParameterTuningJob"))
 }
 
 func (r *hyperParameterTuningJobResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -1517,18 +1565,13 @@ func (r *hyperParameterTuningJobResource) Read(ctx context.Context, req resource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	r.flatten(ctx, out, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
-
-// func (r *hyperParameterTuningJobResource) flatten(ctx context.Context, hyperParameterTuningJob *awstypes.HyperParameterTuningJob, data *hyperParameterTuningJobResourceModel) (diags diag.Diagnostics) {
-// 	diags.Append(fwflex.Flatten(ctx, hyperParameterTuningJob, data)...)
-// 	return diags
-// }
 
 func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SageMakerClient(ctx)
@@ -1543,7 +1586,30 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 		HyperParameterTuningJobName: state.HyperParameterTuningJobName.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteHyperParameterTuningJob(ctx, &input)
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+
+	_, err := tfresource.RetryWhen(ctx, deleteTimeout, func(ctx context.Context) (*sagemaker.DeleteHyperParameterTuningJobOutput, error) {
+		out, err := conn.DeleteHyperParameterTuningJob(ctx, &input)
+
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "not in a terminal state") {
+			stopInput := sagemaker.StopHyperParameterTuningJobInput{
+				HyperParameterTuningJobName: state.HyperParameterTuningJobName.ValueStringPointer(),
+			}
+
+			_, stopErr := conn.StopHyperParameterTuningJob(ctx, &stopInput)
+			if stopErr != nil && !errs.IsA[*awstypes.ResourceNotFound](stopErr) && !tfawserr.ErrMessageContains(stopErr, ErrCodeValidationException, "already") {
+				return nil, stopErr
+			}
+		}
+
+		return out, err
+	}, func(err error) (bool, error) {
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "not in a terminal state") {
+			return true, err
+		}
+
+		return false, err
+	})
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFound](err) {
@@ -1554,12 +1620,169 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitHyperParameterTuningJobDeleted(ctx, conn, state.HyperParameterTuningJobName.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.HyperParameterTuningJobName.String())
 		return
 	}
+}
+
+// SageMaker returns algorithm ARNs and may inject metric definitions for
+// algorithm-backed training job definitions. Preserve configured values when
+// available to avoid unexpected new value errors during apply.
+func normalizeTrainingJobDefinitionAlgorithmSpec(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
+	target *fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
+	diags *diag.Diagnostics,
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	flatDefs, d := target.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(flatDefs) == 0 {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		normalizeAlgorithmSpecification(ctx, fwtypes.NewListNestedObjectValueOfNull[algorithmSpecificationModel](ctx), &flatDefs[0].AlgorithmSpecification, diags)
+		if diags.HasError() {
+			return
+		}
+		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+		return
+	}
+
+	savedDefs, d := saved.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(savedDefs) == 0 {
+		return
+	}
+
+	normalizeAlgorithmSpecification(ctx, savedDefs[0].AlgorithmSpecification, &flatDefs[0].AlgorithmSpecification, diags)
+	if diags.HasError() {
+		return
+	}
+
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+}
+
+func normalizeTrainingJobDefinitionsAlgorithmSpec(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
+	target *fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
+	diags *diag.Diagnostics,
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	flatDefs, d := target.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(flatDefs) == 0 {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		for i := range flatDefs {
+			normalizeAlgorithmSpecification(ctx, fwtypes.NewListNestedObjectValueOfNull[algorithmSpecificationModel](ctx), &flatDefs[i].AlgorithmSpecification, diags)
+			if diags.HasError() {
+				return
+			}
+		}
+		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+		return
+	}
+
+	savedDefs, d := saved.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	for i := range min(len(flatDefs), len(savedDefs)) {
+		normalizeAlgorithmSpecification(ctx, savedDefs[i].AlgorithmSpecification, &flatDefs[i].AlgorithmSpecification, diags)
+		if diags.HasError() {
+			return
+		}
+	}
+
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+}
+
+func normalizeAlgorithmSpecification(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel],
+	target *fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel],
+	diags *diag.Diagnostics,
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	flatSpecs, d := target.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(flatSpecs) == 0 {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		flatSpecs[0].AlgorithmName = normalizeHyperParameterTuningAlgorithmName(flatSpecs[0].AlgorithmName)
+		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[hyperParameterTuningMetricDefinitionModel](ctx)
+		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
+		return
+	}
+
+	savedSpecs, d := saved.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(savedSpecs) == 0 {
+		return
+	}
+
+	flatSpecs[0].AlgorithmName = savedSpecs[0].AlgorithmName
+	flatSpecs[0].MetricDefinitions = savedSpecs[0].MetricDefinitions
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
+}
+
+func normalizeHyperParameterTuningAlgorithmName(v types.String) types.String {
+	if v.IsNull() || v.IsUnknown() {
+		return v
+	}
+
+	if !strings.HasPrefix(v.ValueString(), "arn:") {
+		return v
+	}
+
+	idx := strings.LastIndex(v.ValueString(), "/")
+	if idx == -1 || idx == len(v.ValueString())-1 {
+		return v
+	}
+
+	return types.StringValue(v.ValueString()[idx+1:])
+}
+
+func (r *hyperParameterTuningJobResource) flatten(
+	ctx context.Context,
+	out *sagemaker.DescribeHyperParameterTuningJobOutput,
+	target *hyperParameterTuningJobResourceModel,
+	diags *diag.Diagnostics,
+) {
+	savedTrainingJobDefinition := target.TrainingJobDefinition
+	savedTrainingJobDefinitions := target.TrainingJobDefinitions
+
+	diags.Append(fwflex.Flatten(ctx, out, target, fwflex.WithFieldNamePrefix("HyperParameterTuningJob"))...)
+	if diags.HasError() {
+		return
+	}
+
+	normalizeTrainingJobDefinitionAlgorithmSpec(ctx, savedTrainingJobDefinition, &target.TrainingJobDefinition, diags)
+	if diags.HasError() {
+		return
+	}
+
+	normalizeTrainingJobDefinitionsAlgorithmSpec(ctx, savedTrainingJobDefinitions, &target.TrainingJobDefinitions, diags)
 }
 
 func findHyperParameterTuningJobByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
@@ -1621,17 +1844,17 @@ type autotuneModel struct {
 }
 
 type hyperParameterTuningJobConfigModel struct {
-	HyperParameterTuningJobObjective fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobObjectiveModel] `tfsdk:"hyper_parameter_tuning_job_objective"`
-	ParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                  `tfsdk:"parameter_ranges"`
-	RandomSeed                       types.Int64                                                            `tfsdk:"random_seed"`
-	ResourceLimits                   fwtypes.ListNestedObjectValueOf[resourceLimitsModel]                   `tfsdk:"resource_limits"`
-	Strategy                         fwtypes.StringEnum[awstypes.HyperParameterTuningJobStrategyType]       `tfsdk:"strategy"`
-	StrategyConfig                   fwtypes.ListNestedObjectValueOf[strategyConfigModel]                   `tfsdk:"strategy_config"`
-	TrainingJobEarlyStoppingType     fwtypes.StringEnum[awstypes.TrainingJobEarlyStoppingType]              `tfsdk:"training_job_early_stopping_type"`
-	TuningJobCompletionCriteria      fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel]      `tfsdk:"tuning_job_completion_criteria"`
+	HyperParameterTuningJobObjective fwtypes.ListNestedObjectValueOf[hyperParameterTuningConfigObjectiveModel] `tfsdk:"hyper_parameter_tuning_job_objective"`
+	ParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                     `tfsdk:"parameter_ranges"`
+	RandomSeed                       types.Int64                                                               `tfsdk:"random_seed"`
+	ResourceLimits                   fwtypes.ListNestedObjectValueOf[resourceLimitsModel]                      `tfsdk:"resource_limits"`
+	Strategy                         fwtypes.StringEnum[awstypes.HyperParameterTuningJobStrategyType]          `tfsdk:"strategy"`
+	StrategyConfig                   fwtypes.ListNestedObjectValueOf[strategyConfigModel]                      `tfsdk:"strategy_config"`
+	TrainingJobEarlyStoppingType     fwtypes.StringEnum[awstypes.TrainingJobEarlyStoppingType]                 `tfsdk:"training_job_early_stopping_type"`
+	TuningJobCompletionCriteria      fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel]         `tfsdk:"tuning_job_completion_criteria"`
 }
 
-type hyperParameterTuningJobObjectiveModel struct {
+type hyperParameterTuningConfigObjectiveModel struct {
 	MetricName types.String                                                      `tfsdk:"metric_name"`
 	Type       fwtypes.StringEnum[awstypes.HyperParameterTuningJobObjectiveType] `tfsdk:"type"`
 }
@@ -1697,34 +1920,34 @@ type convergenceDetectedModel struct {
 }
 
 type hyperParameterTrainingJobDefinitionModel struct {
-	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel]             `tfsdk:"algorithm_specification"`
-	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[checkpointConfigModel]                   `tfsdk:"checkpoint_config"`
-	DefinitionName                        types.String                                                             `tfsdk:"definition_name"`
-	EnableInterContainerTrafficEncryption types.Bool                                                               `tfsdk:"enable_inter_container_traffic_encryption"`
-	EnableManagedSpotTraining             types.Bool                                                               `tfsdk:"enable_managed_spot_training"`
-	EnableNetworkIsolation                types.Bool                                                               `tfsdk:"enable_network_isolation"`
-	Environment                           fwtypes.MapOfString                                                      `tfsdk:"environment"`
-	HyperParameterTuningResourceConfig    fwtypes.ListNestedObjectValueOf[hyperParameterTuningResourceConfigModel] `tfsdk:"hyper_parameter_tuning_resource_config"`
-	HyperParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                    `tfsdk:"hyper_parameter_ranges"`
-	InputDataConfig                       fwtypes.ListNestedObjectValueOf[inputDataConfigModel]                    `tfsdk:"input_data_config"`
-	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[outputDataConfigModel]                   `tfsdk:"output_data_config"`
-	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingResourceConfigModel]             `tfsdk:"resource_config"`
-	RetryStrategy                         fwtypes.ListNestedObjectValueOf[retryStrategyModel]                      `tfsdk:"retry_strategy"`
-	RoleARN                               types.String                                                             `tfsdk:"role_arn"`
-	StaticHyperParameters                 fwtypes.MapOfString                                                      `tfsdk:"static_hyper_parameters"`
-	StoppingCondition                     fwtypes.ListNestedObjectValueOf[stoppingConditionModel]                  `tfsdk:"stopping_condition"`
-	TuningObjective                       fwtypes.ListNestedObjectValueOf[tuningObjectiveModel]                    `tfsdk:"tuning_objective"`
-	VPCConfig                             fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobVPCConfigModel]   `tfsdk:"vpc_config"`
+	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel]                `tfsdk:"algorithm_specification"`
+	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[checkpointConfigModel]                      `tfsdk:"checkpoint_config"`
+	DefinitionName                        types.String                                                                `tfsdk:"definition_name"`
+	EnableInterContainerTrafficEncryption types.Bool                                                                  `tfsdk:"enable_inter_container_traffic_encryption"`
+	EnableManagedSpotTraining             types.Bool                                                                  `tfsdk:"enable_managed_spot_training"`
+	EnableNetworkIsolation                types.Bool                                                                  `tfsdk:"enable_network_isolation"`
+	Environment                           fwtypes.MapOfString                                                         `tfsdk:"environment"`
+	HyperParameterTuningResourceConfig    fwtypes.ListNestedObjectValueOf[hyperParameterTuningResourceConfigModel]    `tfsdk:"hyper_parameter_tuning_resource_config"`
+	HyperParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                       `tfsdk:"hyper_parameter_ranges"`
+	InputDataConfig                       fwtypes.ListNestedObjectValueOf[inputDataConfigModel]                       `tfsdk:"input_data_config"`
+	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[hyperParameterTuningOutputDataConfigModel]  `tfsdk:"output_data_config"`
+	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingResourceConfigModel]                `tfsdk:"resource_config"`
+	RetryStrategy                         fwtypes.ListNestedObjectValueOf[retryStrategyModel]                         `tfsdk:"retry_strategy"`
+	RoleARN                               types.String                                                                `tfsdk:"role_arn"`
+	StaticHyperParameters                 fwtypes.MapOfString                                                         `tfsdk:"static_hyper_parameters"`
+	StoppingCondition                     fwtypes.ListNestedObjectValueOf[hyperParameterTuningStoppingConditionModel] `tfsdk:"stopping_condition"`
+	TuningObjective                       fwtypes.ListNestedObjectValueOf[tuningObjectiveModel]                       `tfsdk:"tuning_objective"`
+	VPCConfig                             fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobVPCConfigModel]      `tfsdk:"vpc_config"`
 }
 
 type algorithmSpecificationModel struct {
-	AlgorithmName     types.String                                           `tfsdk:"algorithm_name"`
-	MetricDefinitions fwtypes.ListNestedObjectValueOf[metricDefinitionModel] `tfsdk:"metric_definitions"`
-	TrainingImage     types.String                                           `tfsdk:"training_image"`
-	TrainingInputMode types.String                                           `tfsdk:"training_input_mode"`
+	AlgorithmName     types.String                                                               `tfsdk:"algorithm_name"`
+	MetricDefinitions fwtypes.ListNestedObjectValueOf[hyperParameterTuningMetricDefinitionModel] `tfsdk:"metric_definitions"`
+	TrainingImage     types.String                                                               `tfsdk:"training_image"`
+	TrainingInputMode types.String                                                               `tfsdk:"training_input_mode"`
 }
 
-type metricDefinitionModel struct {
+type hyperParameterTuningMetricDefinitionModel struct {
 	Name  types.String `tfsdk:"name"`
 	Regex types.String `tfsdk:"regex"`
 }
@@ -1735,29 +1958,29 @@ type checkpointConfigModel struct {
 }
 
 type inputDataConfigModel struct {
-	ChannelName       types.String                                        `tfsdk:"channel_name"`
-	CompressionType   fwtypes.StringEnum[awstypes.CompressionType]        `tfsdk:"compression_type"`
-	ContentType       types.String                                        `tfsdk:"content_type"`
-	DataSource        fwtypes.ListNestedObjectValueOf[dataSourceModel]    `tfsdk:"data_source"`
-	InputMode         fwtypes.StringEnum[awstypes.TrainingInputMode]      `tfsdk:"input_mode"`
-	RecordWrapperType fwtypes.StringEnum[awstypes.RecordWrapper]          `tfsdk:"record_wrapper_type"`
-	ShuffleConfig     fwtypes.ListNestedObjectValueOf[shuffleConfigModel] `tfsdk:"shuffle_config"`
+	ChannelName       types.String                                                            `tfsdk:"channel_name"`
+	CompressionType   fwtypes.StringEnum[awstypes.CompressionType]                            `tfsdk:"compression_type"`
+	ContentType       types.String                                                            `tfsdk:"content_type"`
+	DataSource        fwtypes.ListNestedObjectValueOf[hyperParameterTuningDataSourceModel]    `tfsdk:"data_source"`
+	InputMode         fwtypes.StringEnum[awstypes.TrainingInputMode]                          `tfsdk:"input_mode"`
+	RecordWrapperType fwtypes.StringEnum[awstypes.RecordWrapper]                              `tfsdk:"record_wrapper_type"`
+	ShuffleConfig     fwtypes.ListNestedObjectValueOf[hyperParameterTuningShuffleConfigModel] `tfsdk:"shuffle_config"`
 }
 
-type dataSourceModel struct {
-	FileSystemDataSource fwtypes.ListNestedObjectValueOf[fileSystemDataSourceModel] `tfsdk:"file_system_data_source"`
-	S3DataSource         fwtypes.ListNestedObjectValueOf[s3DataSourceModel]         `tfsdk:"s3_data_source"`
+type hyperParameterTuningDataSourceModel struct {
+	FileSystemDataSource fwtypes.ListNestedObjectValueOf[hyperParameterTuningFileSystemDataSourceModel] `tfsdk:"file_system_data_source"`
+	S3DataSource         fwtypes.ListNestedObjectValueOf[s3DataSourceModel]                             `tfsdk:"s3_data_source"`
 }
 
-type hubAccessConfigModel struct {
+type hyperParameterTuningHubAccessConfigModel struct {
 	HubContentARN types.String `tfsdk:"hub_content_arn"`
 }
 
-type modelAccessConfigModel struct {
+type hyperParameterTuningModelAccessConfigModel struct {
 	AcceptEULA types.Bool `tfsdk:"accept_eula"`
 }
 
-type fileSystemDataSourceModel struct {
+type hyperParameterTuningFileSystemDataSourceModel struct {
 	DirectoryPath        types.String                                      `tfsdk:"directory_path"`
 	FileSystemAccessMode fwtypes.StringEnum[awstypes.FileSystemAccessMode] `tfsdk:"file_system_access_mode"`
 	FileSystemID         types.String                                      `tfsdk:"file_system_id"`
@@ -1765,20 +1988,20 @@ type fileSystemDataSourceModel struct {
 }
 
 type s3DataSourceModel struct {
-	AttributeNames         fwtypes.SetOfString                                     `tfsdk:"attribute_names"`
-	HubAccessConfig        fwtypes.ListNestedObjectValueOf[hubAccessConfigModel]   `tfsdk:"hub_access_config"`
-	InstanceGroupNames     fwtypes.SetOfString                                     `tfsdk:"instance_group_names"`
-	ModelAccessConfig      fwtypes.ListNestedObjectValueOf[modelAccessConfigModel] `tfsdk:"model_access_config"`
-	S3DataDistributionType fwtypes.StringEnum[awstypes.S3DataDistribution]         `tfsdk:"s3_data_distribution_type"`
-	S3DataType             fwtypes.StringEnum[awstypes.S3DataType]                 `tfsdk:"s3_data_type"`
-	S3URI                  types.String                                            `tfsdk:"s3_uri"`
+	AttributeNames         fwtypes.SetOfString                                                         `tfsdk:"attribute_names"`
+	HubAccessConfig        fwtypes.ListNestedObjectValueOf[hyperParameterTuningHubAccessConfigModel]   `tfsdk:"hub_access_config"`
+	InstanceGroupNames     fwtypes.SetOfString                                                         `tfsdk:"instance_group_names"`
+	ModelAccessConfig      fwtypes.ListNestedObjectValueOf[hyperParameterTuningModelAccessConfigModel] `tfsdk:"model_access_config"`
+	S3DataDistributionType fwtypes.StringEnum[awstypes.S3DataDistribution]                             `tfsdk:"s3_data_distribution_type"`
+	S3DataType             fwtypes.StringEnum[awstypes.S3DataType]                                     `tfsdk:"s3_data_type"`
+	S3URI                  types.String                                                                `tfsdk:"s3_uri"`
 }
 
-type shuffleConfigModel struct {
+type hyperParameterTuningShuffleConfigModel struct {
 	Seed types.Int64 `tfsdk:"seed"`
 }
 
-type outputDataConfigModel struct {
+type hyperParameterTuningOutputDataConfigModel struct {
 	CompressionType fwtypes.StringEnum[awstypes.CompressionType] `tfsdk:"compression_type"`
 	KMSKeyID        types.String                                 `tfsdk:"kms_key_id"`
 	S3OutputPath    types.String                                 `tfsdk:"s3_output_path"`
@@ -1800,28 +2023,28 @@ type hyperParameterTuningInstanceConfigModel struct {
 }
 
 type trainingResourceConfigModel struct {
-	InstanceCount            types.Int64                                                   `tfsdk:"instance_count"`
-	InstanceGroups           fwtypes.ListNestedObjectValueOf[instanceGroupModel]           `tfsdk:"instance_groups"`
-	InstancePlacementConfig  fwtypes.ListNestedObjectValueOf[instancePlacementConfigModel] `tfsdk:"instance_placement_config"`
-	InstanceType             fwtypes.StringEnum[awstypes.TrainingInstanceType]             `tfsdk:"instance_type"`
-	KeepAlivePeriodInSeconds types.Int64                                                   `tfsdk:"keep_alive_period_in_seconds"`
-	TrainingPlanARN          types.String                                                  `tfsdk:"training_plan_arn"`
-	VolumeKMSKeyID           types.String                                                  `tfsdk:"volume_kms_key_id"`
-	VolumeSizeInGB           types.Int64                                                   `tfsdk:"volume_size_in_gb"`
+	InstanceCount            types.Int64                                                                       `tfsdk:"instance_count"`
+	InstanceGroups           fwtypes.ListNestedObjectValueOf[hyperParameterTuningInstanceGroupModel]           `tfsdk:"instance_groups"`
+	InstancePlacementConfig  fwtypes.ListNestedObjectValueOf[hyperParameterTuningInstancePlacementConfigModel] `tfsdk:"instance_placement_config"`
+	InstanceType             fwtypes.StringEnum[awstypes.TrainingInstanceType]                                 `tfsdk:"instance_type"`
+	KeepAlivePeriodInSeconds types.Int64                                                                       `tfsdk:"keep_alive_period_in_seconds"`
+	TrainingPlanARN          types.String                                                                      `tfsdk:"training_plan_arn"`
+	VolumeKMSKeyID           types.String                                                                      `tfsdk:"volume_kms_key_id"`
+	VolumeSizeInGB           types.Int64                                                                       `tfsdk:"volume_size_in_gb"`
 }
 
-type instanceGroupModel struct {
+type hyperParameterTuningInstanceGroupModel struct {
 	InstanceCount     types.Int64                                       `tfsdk:"instance_count"`
 	InstanceGroupName types.String                                      `tfsdk:"instance_group_name"`
 	InstanceType      fwtypes.StringEnum[awstypes.TrainingInstanceType] `tfsdk:"instance_type"`
 }
 
-type instancePlacementConfigModel struct {
-	EnableMultipleJobs      types.Bool                                                   `tfsdk:"enable_multiple_jobs"`
-	PlacementSpecifications fwtypes.ListNestedObjectValueOf[placementSpecificationModel] `tfsdk:"placement_specifications"`
+type hyperParameterTuningInstancePlacementConfigModel struct {
+	EnableMultipleJobs      types.Bool                                                                       `tfsdk:"enable_multiple_jobs"`
+	PlacementSpecifications fwtypes.ListNestedObjectValueOf[hyperParameterTuningPlacementSpecificationModel] `tfsdk:"placement_specifications"`
 }
 
-type placementSpecificationModel struct {
+type hyperParameterTuningPlacementSpecificationModel struct {
 	InstanceCount types.Int64  `tfsdk:"instance_count"`
 	UltraServerID types.String `tfsdk:"ultra_server_id"`
 }
@@ -1830,7 +2053,7 @@ type retryStrategyModel struct {
 	MaximumRetryAttempts types.Int64 `tfsdk:"maximum_retry_attempts"`
 }
 
-type stoppingConditionModel struct {
+type hyperParameterTuningStoppingConditionModel struct {
 	MaxPendingTimeInSeconds types.Int64 `tfsdk:"max_pending_time_in_seconds"`
 	MaxRuntimeInSeconds     types.Int64 `tfsdk:"max_runtime_in_seconds"`
 	MaxWaitTimeInSeconds    types.Int64 `tfsdk:"max_wait_time_in_seconds"`

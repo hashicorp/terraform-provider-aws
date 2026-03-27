@@ -25,6 +25,10 @@ type (
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
 	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
+
+	HyperParameterTrainingJobDefinitionModel        = hyperParameterTrainingJobDefinitionModel
+	HyperParameterTuningAlgorithmSpecificationModel = algorithmSpecificationModel
+	HyperParameterTuningMetricDefinitionModel       = hyperParameterTuningMetricDefinitionModel
 )
 
 // Exports for use in tests only.
@@ -120,9 +124,10 @@ var (
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
 
-	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
-	NormalizeStoppingCondition         = normalizeStoppingCondition
-	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
+	NormalizeAlgoSpecMetricDefinitions                  = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition                          = normalizeStoppingCondition
+	NormalizeHyperParameterTuningAlgorithmSpecification = normalizeAlgorithmSpecification
+	ServerlessJobConfigEqualityFunc                     = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
