@@ -2,162 +2,41 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the service/sagemaker/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestHyperParameterTuningJobExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfsagemaker.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance tests access AWS and cost money to run.
 func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var hyperparametertuningjob sagemaker.DescribeHyperParameterTuningJobResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SageMakerEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -166,68 +45,317 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 			{
 				Config: testAccHyperParameterTuningJobConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &hyperparametertuningjob),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`hyperparametertuningjob:.+$`)),
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"strategy": knownvalue.StringExact("Bayesian"),
+							"resource_limits": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"max_parallel_training_jobs": knownvalue.StringExact("1"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccSageMakerHyperParameterTuningJob_disappears(t *testing.T) {
+func TestAccSageMakerHyperParameterTuningJob_autotune(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var hyperparametertuningjob sagemaker.DescribeHyperParameterTuningJobResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SageMakerEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHyperParameterTuningJobConfig_basic(rName, testAccHyperParameterTuningJobVersionNewer),
+				Config: testAccHyperParameterTuningJobConfig_autotune(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &hyperparametertuningjob),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceHyperParameterTuningJob = newHyperParameterTuningJobResource
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHyperParameterTuningJob, resourceName),
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttr(resourceName, "autotune.0.mode", "Enabled"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_jobConfigOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_jobConfigOptions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.strategy", "Bayesian"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"random_seed":                      knownvalue.StringExact("42"),
+							"training_job_early_stopping_type": knownvalue.StringExact("Auto"),
+							"resource_limits": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"max_number_of_training_jobs": knownvalue.StringExact("2"),
+									"max_parallel_training_jobs":  knownvalue.StringExact("1"),
+									"max_runtime_in_seconds":      knownvalue.StringExact("3600"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_objective(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_objective(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.metric_name", "validation:accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.type", "Maximize"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_parameterRanges(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_parameterRanges(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.auto_parameters.0.name", "learning_rate"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.auto_parameters.0.value_hint", "0.01"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.name", "optimizer"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.values.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.values.*", "adam"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.values.*", "sgd"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.max_value", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.min_value", "0.1"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.name", "dropout"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.scaling_type", "Auto"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.max_value", "128"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.min_value", "16"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.name", "batch_size"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.scaling_type", "Auto"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_strategyConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_strategyConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.strategy_config.0.hyperband_strategy_config.0.max_resource", "9"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.strategy_config.0.hyperband_strategy_config.0.min_resource", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_completionCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_completionCriteria(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.tuning_job_completion_criteria.0.target_objective_metric_value", "0.95"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.tuning_job_completion_criteria.0.best_objective_not_improving.0.max_number_of_training_jobs_not_improving", "3"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.tuning_job_completion_criteria.0.convergence_detected.0.complete_on_convergence", "Enabled"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				Config: testAccHyperParameterTuningJobConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				Config: testAccHyperParameterTuningJobConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -242,16 +370,12 @@ func testAccCheckHyperParameterTuningJobDestroy(ctx context.Context, t *testing.
 				continue
 			}
 
-			
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
-			_, err := tfsagemaker.FindHyperParameterTuningJobByID(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindHyperParameterTuningJobByName(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
-				return nil
+				continue
 			}
 			if err != nil {
-			    return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameHyperParameterTuningJob, rs.Primary.ID, err)
+				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameHyperParameterTuningJob, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameHyperParameterTuningJob, rs.Primary.ID, errors.New("not destroyed"))
@@ -261,7 +385,7 @@ func testAccCheckHyperParameterTuningJobDestroy(ctx context.Context, t *testing.
 	}
 }
 
-func testAccCheckHyperParameterTuningJobExists(ctx context.Context, t *testing.T, name string, hyperparametertuningjob *sagemaker.DescribeHyperParameterTuningJobResponse) resource.TestCheckFunc {
+func testAccCheckHyperParameterTuningJobExists(ctx context.Context, t *testing.T, name string, tuningJob *sagemaker.DescribeHyperParameterTuningJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -274,24 +398,21 @@ func testAccCheckHyperParameterTuningJobExists(ctx context.Context, t *testing.T
 
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
-		resp, err := tfsagemaker.FindHyperParameterTuningJobByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfsagemaker.FindHyperParameterTuningJobByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, rs.Primary.ID, err)
 		}
 
-		*hyperparametertuningjob = *resp
+		*tuningJob = *resp
 
 		return nil
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccHyperParameterTuningJobPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
-	input := &sagemaker.ListHyperParameterTuningJobsInput{}
-
-	_, err := conn.ListHyperParameterTuningJobs(ctx, input)
-
+	_, err := conn.ListHyperParameterTuningJobs(ctx, &sagemaker.ListHyperParameterTuningJobsInput{})
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -300,39 +421,668 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckHyperParameterTuningJobNotRecreated(before, after *sagemaker.DescribeHyperParameterTuningJobResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.HyperParameterTuningJobId), aws.ToString(after.HyperParameterTuningJobId); before != after {
-			return create.Error(names.SageMaker, create.ErrActionCheckingNotRecreated, tfsagemaker.ResNameHyperParameterTuningJob, aws.ToString(before.HyperParameterTuningJobId), errors.New("recreated"))
+func testAccHyperParameterTuningJobConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
 		}
 
-		return nil
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		resource_limits {
+			max_parallel_training_jobs = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	autotune {
+		mode = "Enabled"
+	}
+
+	hyper_parameter_tuning_job_config {
+		random_seed                      = 42
+		strategy                         = "Bayesian"
+		training_job_early_stopping_type = "Auto"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+			max_runtime_in_seconds      = 3600
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	tags = {
+		%[2]q = %[3]q
+	}
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccHyperParameterTuningJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	autotune {
+		mode = "Enabled"
+	}
+
+	hyper_parameter_tuning_job_config {
+		random_seed                      = 42
+		strategy                         = "Bayesian"
+		training_job_early_stopping_type = "Auto"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+			max_runtime_in_seconds      = 3600
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	tags = {
+		%[2]q = %[3]q
+		%[4]q = %[5]q
+	}
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccHyperParameterTuningJobConfig_autotune(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	autotune {
+		mode = "Enabled"
+	}
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		resource_limits {
+			max_parallel_training_jobs = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_objective(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		resource_limits {
+			max_parallel_training_jobs = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_parameterRanges(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			auto_parameters {
+				name       = "learning_rate"
+				value_hint = "0.01"
+			}
+
+			categorical_parameter_ranges {
+				name   = "optimizer"
+				values = ["adam", "sgd"]
+			}
+
+			continuous_parameter_ranges {
+				max_value    = "0.5"
+				min_value    = "0.1"
+				name         = "dropout"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "128"
+				min_value    = "16"
+				name         = "batch_size"
+				scaling_type = "Auto"
+			}
+		}
+
+		resource_limits {
+			max_parallel_training_jobs = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_strategyConfig(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		strategy_config {
+			hyperband_strategy_config {
+				max_resource = 9
+				min_resource = 1
+			}
+		}
+
+		resource_limits {
+			max_parallel_training_jobs = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_completionCriteria(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		tuning_job_completion_criteria {
+			target_objective_metric_value = 0.95
+
+			best_objective_not_improving {
+				max_number_of_training_jobs_not_improving = 3
+			}
+
+			convergence_detected {
+				complete_on_convergence = "Enabled"
+			}
+		}
+
+		resource_limits {
+			max_parallel_training_jobs = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_jobConfigOptions(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		random_seed                      = 42
+		strategy                         = "Bayesian"
+		training_job_early_stopping_type = "Auto"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		parameter_ranges {
+			continuous_parameter_ranges {
+				max_value = "0.5"
+				min_value = "0.1"
+				name      = "learning_rate"
+			}
+		}
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+			max_runtime_in_seconds      = 3600
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "test" {
+	statement {
+		actions = ["sts:AssumeRole"]
+
+		principals {
+			type        = "Service"
+			identifiers = ["sagemaker.amazonaws.com"]
+		}
 	}
 }
 
-func testAccHyperParameterTuningJobConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+resource "aws_iam_role" "test" {
+	name               = %[1]q
+	assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
-resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name             = %[1]q
-  engine_type             = "ActiveSageMaker"
-  engine_version          = %[2]q
-  host_instance_type      = "sagemaker.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+resource "aws_s3_bucket" "test" {
+	bucket        = %[2]q
+	force_destroy = true
 }
-`, rName, version)
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+	repository_name = "kmeans"
+}
+`, rName, fmt.Sprintf("%s-hptj", rName))
 }
