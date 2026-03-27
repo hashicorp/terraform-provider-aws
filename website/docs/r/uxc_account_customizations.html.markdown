@@ -1,5 +1,5 @@
 ---
-subcategory: "UXC"
+subcategory: "User Experience Customization"
 layout: "aws"
 page_title: "AWS: aws_uxc_account_customizations"
 description: |-
@@ -46,11 +46,20 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - (Deprecated) AWS Account ID. This attribute is deprecated and will be removed in a future version. Use the resource identity instead.
+This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to       = aws_uxc_account_customizations.example
+  identity = {}
+}
+
+resource "aws_uxc_account_customizations" "example" {}
+```
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import UXC Account Customizations using the AWS account ID. For example:
 

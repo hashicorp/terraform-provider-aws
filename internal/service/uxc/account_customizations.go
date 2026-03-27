@@ -21,11 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_uxc_account_customizations", name="Account Customizations")
-// @SingletonIdentity(identityDuplicateAttributes="id")
+// @SingletonIdentity
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v5.100.0")
 func newResourceAccountCustomizations(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -53,7 +52,6 @@ func (r *resourceAccountCustomizations) Schema(_ context.Context, _ resource.Sch
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			"visible_regions": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
@@ -77,8 +75,8 @@ func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource
 
 	conn := r.Meta().UXCClient(ctx)
 
-	input := &uxc.UpdateAccountCustomizationsInput{}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, input))
+	input := uxc.UpdateAccountCustomizationsInput{}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -90,13 +88,12 @@ func (r *resourceAccountCustomizations) Create(ctx context.Context, req resource
 		input.VisibleServices = []string{}
 	}
 
-	output, err := conn.UpdateAccountCustomizations(ctx, input)
+	output, err := conn.UpdateAccountCustomizations(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan))
 	normalizeAccountCustomizationsModel(ctx, &plan)
 
@@ -119,7 +116,7 @@ func (r *resourceAccountCustomizations) Read(ctx context.Context, req resource.R
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -137,8 +134,8 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 
 	conn := r.Meta().UXCClient(ctx)
 
-	input := &uxc.UpdateAccountCustomizationsInput{}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, input))
+	input := uxc.UpdateAccountCustomizationsInput{}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -149,9 +146,9 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 		input.VisibleServices = []string{}
 	}
 
-	output, err := conn.UpdateAccountCustomizations(ctx, input)
+	output, err := conn.UpdateAccountCustomizations(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -159,6 +156,24 @@ func (r *resourceAccountCustomizations) Update(ctx context.Context, req resource
 	normalizeAccountCustomizationsModel(ctx, &plan)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *resourceAccountCustomizations) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	conn := r.Meta().UXCClient(ctx)
+
+	output, err := findAccountCustomizations(ctx, conn)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err)
+		return
+	}
+
+	var state resourceAccountCustomizationsModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	normalizeAccountCustomizationsModel(ctx, &state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceAccountCustomizations) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -171,13 +186,14 @@ func (r *resourceAccountCustomizations) Delete(ctx context.Context, req resource
 	conn := r.Meta().UXCClient(ctx)
 
 	// There is no Delete API. Reset all values to their defaults.
-	_, err := conn.UpdateAccountCustomizations(ctx, &uxc.UpdateAccountCustomizationsInput{
+	input := uxc.UpdateAccountCustomizationsInput{
 		AccountColor:    awstypes.AccountColorNone,
 		VisibleRegions:  []string{},
 		VisibleServices: []string{},
-	})
+	}
+	_, err := conn.UpdateAccountCustomizations(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 	}
 }
 
@@ -193,7 +209,8 @@ func normalizeAccountCustomizationsModel(ctx context.Context, m *resourceAccount
 }
 
 func findAccountCustomizations(ctx context.Context, conn *uxc.Client) (*uxc.GetAccountCustomizationsOutput, error) {
-	output, err := conn.GetAccountCustomizations(ctx, &uxc.GetAccountCustomizationsInput{})
+	input := uxc.GetAccountCustomizationsInput{}
+	output, err := conn.GetAccountCustomizations(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +223,6 @@ func findAccountCustomizations(ctx context.Context, conn *uxc.Client) (*uxc.GetA
 
 type resourceAccountCustomizationsModel struct {
 	AccountColor    fwtypes.StringEnum[awstypes.AccountColor] `tfsdk:"account_color"`
-	ID              types.String                              `tfsdk:"id"`
 	VisibleRegions  fwtypes.SetOfString                       `tfsdk:"visible_regions"`
 	VisibleServices fwtypes.SetOfString                       `tfsdk:"visible_services"`
 }

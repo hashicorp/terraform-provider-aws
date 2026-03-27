@@ -39,7 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_uxc_account_customizations",
 			Name:     "Account Customizations",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.GlobalSingletonIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},

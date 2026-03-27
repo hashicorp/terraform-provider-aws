@@ -1,5 +1,5 @@
 ---
-subcategory: "UXC"
+subcategory: "User Experience Customization"
 layout: "aws"
 page_title: "AWS: aws_uxc_services"
 description: |-
