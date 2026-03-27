@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_odb_cloud_vm_cluster: gi_version bug.
+```
