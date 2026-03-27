@@ -46,7 +46,7 @@ func TestAccEKSAccessEntryDataSource_tags(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_access_entry.test"
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
