@@ -1,0 +1,4 @@
+```yaml
+enhancements:
+  - resource/aws_s3_object: Added support for updating `server_side_encryption`, `kms_key_id`, and `bucket_key_enabled` in-place.
+```
