@@ -216,6 +216,61 @@ resource "aws_securityhub_configuration_policy" "test_2" {
 }`, rName)
 }
 
+func testAccConfigurationPolicyAssociation_selfManagedSecurityHub(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_securityhub_configuration_policy_association.test"
+	ouTarget := "aws_organizations_organizational_unit.test.id"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccConfigurationPolicyAssociationConfig_selfManaged(rName, ouTarget),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyAssociationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_id", "SELF_MANAGED_SECURITY_HUB"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccConfigurationPolicyAssociationConfig_selfManaged(rName, targetID string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		testAccMemberAccountDelegatedAdminConfig_base,
+		testAccOrganizationalUnitConfig_base(rName),
+		testAccCentralConfigurationEnabledConfig_base,
+		fmt.Sprintf(`
+resource "aws_securityhub_configuration_policy_association" "test" {
+  target_id = %[1]s
+  policy_id = "SELF_MANAGED_SECURITY_HUB"
+}
+`, targetID))
+}
+
 func testAccConfigurationPolicyAssociationConfig_basic(rName, targetID, policyID string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),

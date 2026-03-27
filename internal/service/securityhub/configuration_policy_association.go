@@ -46,10 +46,13 @@ func resourceConfigurationPolicyAssociation() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The universally unique identifier (UUID) of the configuration policy.",
-				ValidateFunc: validation.IsUUID,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The universally unique identifier (UUID) of the configuration policy, or SELF_MANAGED_SECURITY_HUB for a self-managed configuration.",
+				ValidateFunc: validation.Any(
+					validation.IsUUID,
+					validation.StringInSlice([]string{"SELF_MANAGED_SECURITY_HUB"}, false),
+				),
 			},
 			"target_id": {
 				Type:        schema.TypeString,
