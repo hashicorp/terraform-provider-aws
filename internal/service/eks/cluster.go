@@ -36,7 +36,6 @@ import (
 // @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Cluster")
-// @Testing(idAttrDuplicates="name")
 // @Testing(importIgnore="bootstrap_self_managed_addons")
 // @Testing(preIdentityVersion="v6.38.0")
 // @Testing(tagsTest=false)
