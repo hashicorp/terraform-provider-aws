@@ -1025,3 +1025,49 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 `, rName, deletionProtectionEnabled)
 }
+
+func TestAccLogsLogGroup_bearerTokenAuthenticationEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_bearerTokenAuthenticationEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bearer_token_authentication_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// disable bearer token authentication
+				Config: testAccGroupConfig_bearerTokenAuthenticationEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bearer_token_authentication_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func testAccGroupConfig_bearerTokenAuthenticationEnabled(rName string, bearerTokenAuthenticationEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+
+  bearer_token_authentication_enabled = %[2]t
+}
+`, rName, bearerTokenAuthenticationEnabled)
+}

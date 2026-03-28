@@ -46,6 +46,11 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bearer_token_authentication_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"deletion_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -133,6 +138,23 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(name)
 
+	if v, ok := d.GetOk("bearer_token_authentication_enabled"); ok {
+		loggroup, err := findLogGroupByName(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+		}
+		input := cloudwatchlogs.PutBearerTokenAuthenticationInput{
+			LogGroupIdentifier:               loggroup.LogGroupArn,
+			BearerTokenAuthenticationEnabled: aws.Bool(v.(bool)),
+		}
+
+		_, err = conn.PutBearerTokenAuthentication(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Logs Log Group (%s) bearer token authentication: %s", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("retention_in_days"); ok && input.LogGroupClass != awstypes.LogGroupClassDelivery {
 		input := cloudwatchlogs.PutRetentionPolicyInput{
 			LogGroupName:    aws.String(d.Id()),
@@ -200,6 +222,29 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("bearer_token_authentication_enabled") {
+		var bearerTokenAuthenticationEnabled bool
+		if v, ok := d.GetOk("bearer_token_authentication_enabled"); ok {
+			bearerTokenAuthenticationEnabled = v.(bool)
+		} else {
+			bearerTokenAuthenticationEnabled = false
+		}
+		loggroup, err := findLogGroupByName(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+		}
+		input := cloudwatchlogs.PutBearerTokenAuthenticationInput{
+			LogGroupIdentifier:               loggroup.LogGroupArn,
+			BearerTokenAuthenticationEnabled: aws.Bool(bearerTokenAuthenticationEnabled),
+		}
+
+		_, err = conn.PutBearerTokenAuthentication(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) bearer token authentication: %s", d.Id(), err)
 		}
 	}
 
@@ -311,6 +356,7 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set("bearer_token_authentication_enabled", lg.BearerTokenAuthenticationEnabled)
 	d.Set("deletion_protection_enabled", lg.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
 	d.Set("log_group_class", lg.LogGroupClass)
