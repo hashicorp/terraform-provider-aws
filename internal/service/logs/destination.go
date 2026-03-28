@@ -7,6 +7,8 @@ package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -179,13 +181,13 @@ func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, nam
 		DestinationNamePrefix: aws.String(name),
 	}
 
-	return findDestination(ctx, conn, &input, func(v *awstypes.Destination) bool {
+	return findDestination(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.Destination) bool {
 		return aws.ToString(v.DestinationName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.Destination]())
 }
 
-func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination]) (*awstypes.Destination, error) {
-	output, err := findDestinations(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) (*awstypes.Destination, error) {
+	output, err := findDestinations(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -194,27 +196,23 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.Destination, error) {
-	var output []awstypes.Destination
-	opts := tfslices.NewFinderOptions(optFns)
+func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
+	return tfslices.CollectAndConcatWithError(listDestinationPages(ctx, conn, input), optFns...)
+}
 
-	pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func listDestinationPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {
+	return func(yield func([]awstypes.Destination, error) bool) {
+		pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Destinations: %w", err))
+				return
+			}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Destinations {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
+			if !yield(page.Destinations, nil) {
+				return
 			}
 		}
 	}
-
-	return output, nil
 }

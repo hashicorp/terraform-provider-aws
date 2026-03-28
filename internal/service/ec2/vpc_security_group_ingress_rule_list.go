@@ -5,12 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -88,11 +85,15 @@ func (l *listResourceSecurityGroupIngressRule) List(ctx context.Context, request
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for rule, err := range listSecurityGroupIngressRules(ctx, conn, &input) {
+		for rule, err := range listSecurityGroupRules(ctx, conn, &input) {
 			if err != nil {
 				tflog.Error(ctx, "Listing resources", map[string]any{
 					"error": err.Error(),
 				})
+				continue
+			}
+
+			if aws.ToBool(rule.IsEgress) {
 				continue
 			}
 
@@ -132,29 +133,6 @@ func (l *listResourceSecurityGroupIngressRule) List(ctx context.Context, request
 
 			if !yield(result) {
 				return
-			}
-		}
-	}
-}
-
-func listSecurityGroupIngressRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) iter.Seq2[awstypes.SecurityGroupRule, error] {
-	return func(yield func(awstypes.SecurityGroupRule, error) bool) {
-		pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecurityGroupRule{}, fmt.Errorf("listing VPC Security Group Ingress Rules: %w", err))
-				return
-			}
-
-			for _, rule := range page.SecurityGroupRules {
-				if aws.ToBool(rule.IsEgress) {
-					continue
-				}
-
-				if !yield(rule, nil) {
-					return
-				}
 			}
 		}
 	}

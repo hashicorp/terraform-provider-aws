@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -136,21 +137,6 @@ func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListReq
 	}
 }
 
-func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) iter.Seq2[awstypes.VpcEndpoint, error] {
-	return func(yield func(awstypes.VpcEndpoint, error) bool) {
-		pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.VpcEndpoint{}, fmt.Errorf("listing VPC Endpoint resources: %w", err))
-				return
-			}
-
-			for _, item := range page.VpcEndpoints {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.VpcEndpoint, error] {
+	return tfiter.ConcatValuesWithError(listVPCEndpointPages(ctx, conn, input, optFns...))
 }

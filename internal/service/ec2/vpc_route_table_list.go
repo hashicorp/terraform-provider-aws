@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -156,21 +157,6 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 	}
 }
 
-func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) iter.Seq2[awstypes.RouteTable, error] {
-	return func(yield func(awstypes.RouteTable, error) bool) {
-		pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.RouteTable{}, fmt.Errorf("listing EC2 Route Tables: %w", err))
-				return
-			}
-
-			for _, routeTable := range page.RouteTables {
-				if !yield(routeTable, nil) {
-					return
-				}
-			}
-		}
-	}
+func listRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.RouteTable, error] {
+	return tfiter.ConcatValuesWithError(listRouteTablePages(ctx, conn, input, optFns...))
 }

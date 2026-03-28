@@ -5,14 +5,17 @@ package ec2
 
 import (
 	"context"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -76,4 +79,8 @@ func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, req
 
 type listTransitGatewayMeteringPolicyModel struct {
 	framework.WithRegionModel
+}
+
+func listTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.TransitGatewayMeteringPolicy, error] {
+	return tfiter.ConcatValuesWithError(listTransitGatewayMeteringPolicyPages(ctx, conn, input, optFns...))
 }

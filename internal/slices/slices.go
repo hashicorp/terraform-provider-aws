@@ -172,19 +172,54 @@ func Strings[S ~[]E, E Stringable](s S) []string {
 // CollectWithError collects values from seq into a new slice and returns it.
 // The first non-nil error in seq is returned.
 // If seq is empty, the result is nil.
-func CollectWithError[E any](seq iter.Seq2[E, error]) ([]E, error) {
-	return AppendSeqWithError([]E(nil), seq)
-}
+func CollectWithError[E any](seq iter.Seq2[E, error], optFns ...FinderOptionsFunc[E]) ([]E, error) {
+	var s []E
+	opts := NewFinderOptions(optFns...)
 
-// AppendSeqWithError appends the values from seq to the slice and returns the extended slice.
-// The first non-nil error in seq is returned.
-// If seq is empty, the result preserves the nilness of s.
-func AppendSeqWithError[S ~[]E, E any](s S, seq iter.Seq2[E, error]) (S, error) {
 	for v, err := range seq {
 		if err != nil {
 			return nil, err
 		}
+		if filter := opts.Filter(); filter != nil && !filter(v) {
+			continue
+		}
 		s = append(s, v)
+		if opts.ReturnFirstMatch() {
+			return s, nil
+		}
 	}
+
+	return s, nil
+}
+
+// CollectAndConcatWithError collects values from seq into a new slice and returns it.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result is nil.
+func CollectAndConcatWithError[S ~[]E, E any](seq iter.Seq2[S, error], optFns ...FinderOptionsFunc[E]) (S, error) {
+	var s S
+	opts := NewFinderOptions(optFns...)
+
+	for page, err := range seq {
+		if err != nil {
+			return nil, err
+		}
+
+		// Optimization for the common case.
+		if len(optFns) == 0 {
+			s = append(s, page...)
+			continue
+		}
+
+		for _, v := range page {
+			if filter := opts.Filter(); filter != nil && !filter(v) {
+				continue
+			}
+			s = append(s, v)
+			if opts.ReturnFirstMatch() {
+				return s, nil
+			}
+		}
+	}
+
 	return s, nil
 }
