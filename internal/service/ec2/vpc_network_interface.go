@@ -1542,6 +1542,10 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, reso
 			continue
 		}
 
+		if found := deleteLingeringTransitGatewayENI(ctx, &g, conn, eni, timeout); found {
+			continue
+		}
+
 		deleteLingeringDMSENI(ctx, &g, conn, eni, timeout)
 		deleteLingeringRDSENI(ctx, &g, conn, eni, timeout)
 		deleteLingeringQuickSightENI(ctx, &g, conn, eni, timeout)
@@ -1699,6 +1703,36 @@ func deleteLingeringQuickSightENI(ctx context.Context, g *tfsync.Group, conn *ec
 
 		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
 			return fmt.Errorf("deleting QuickSight ENI (%s): %w", networkInterfaceID, err)
+		}
+
+		return nil
+	})
+
+	return true
+}
+
+func deleteLingeringTransitGatewayENI(ctx context.Context, g *tfsync.Group, conn *ec2.Client, v *awstypes.NetworkInterface, timeout time.Duration) bool {
+	// TGW attachment ENI removal can take several minutes while the
+	// attachment is being modified or deleted concurrently.
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	if !strings.HasPrefix(aws.ToString(v.Description), "Network Interface for Transit Gateway Attachment") {
+		return false
+	}
+
+	g.Go(ctx, func(ctx context.Context) error {
+		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
+
+		if v.Attachment != nil {
+			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching Transit Gateway ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting Transit Gateway ENI (%s): %w", networkInterfaceID, err)
 		}
 
 		return nil
