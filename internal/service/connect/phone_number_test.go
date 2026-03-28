@@ -219,6 +219,39 @@ func testAccPhoneNumber_disappears(t *testing.T) {
 	})
 }
 
+func testAccPhoneNumber_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v0, v1, v2 awstypes.ClaimedPhoneNumberSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Check that all 3 phone numbers were created successfully
+					testAccCheckPhoneNumberExists(ctx, t, "aws_connect_phone_number.test.0", &v0),
+					testAccCheckPhoneNumberExists(ctx, t, "aws_connect_phone_number.test.1", &v1),
+					testAccCheckPhoneNumberExists(ctx, t, "aws_connect_phone_number.test.2", &v2),
+					// Verify each phone number has the expected attributes
+					resource.TestCheckResourceAttr("aws_connect_phone_number.test.0", "country_code", "US"),
+					resource.TestCheckResourceAttr("aws_connect_phone_number.test.1", "country_code", "US"),
+					resource.TestCheckResourceAttr("aws_connect_phone_number.test.2", "country_code", "US"),
+					resource.TestCheckResourceAttr("aws_connect_phone_number.test.0", names.AttrType, "DID"),
+					resource.TestCheckResourceAttr("aws_connect_phone_number.test.1", names.AttrType, "DID"),
+					resource.TestCheckResourceAttr("aws_connect_phone_number.test.2", names.AttrType, "DID"),
+					// Verify all phone numbers are different (no duplicates due to race conditions)
+					testAccCheckPhoneNumbersUnique(&v0, &v1, &v2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPhoneNumberExists(ctx context.Context, t *testing.T, n string, v *awstypes.ClaimedPhoneNumberSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -260,6 +293,35 @@ func testAccCheckPhoneNumberDestroy(ctx context.Context, t *testing.T) resource.
 			}
 
 			return fmt.Errorf("Connect Phone Number %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckPhoneNumbersUnique(phoneNumbers ...*awstypes.ClaimedPhoneNumberSummary) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		phoneNumberSet := make(map[string]bool)
+
+		for i, phoneNumberSummary := range phoneNumbers {
+			if phoneNumberSummary == nil {
+				return fmt.Errorf("Phone number summary %d is nil", i)
+			}
+
+			if phoneNumberSummary.PhoneNumber == nil {
+				return fmt.Errorf("Phone number %d is nil", i)
+			}
+
+			phoneNumber := *phoneNumberSummary.PhoneNumber
+			if phoneNumber == "" {
+				return fmt.Errorf("Phone number %d is empty", i)
+			}
+
+			if phoneNumberSet[phoneNumber] {
+				return fmt.Errorf("Duplicate phone number found: %s", phoneNumber)
+			}
+
+			phoneNumberSet[phoneNumber] = true
 		}
 
 		return nil
@@ -369,4 +431,22 @@ resource "aws_connect_phone_number" "test" {
   }
 }
 `, tag1, value1, tag2, value2))
+}
+
+func testAccPhoneNumberConfig_multiple(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPhoneNumberConfig_base(rName),
+		`
+resource "aws_connect_phone_number" "test" {
+  count = 3
+
+  target_arn   = aws_connect_instance.test.arn
+  country_code = "US"
+  type         = "DID"
+
+  tags = {
+    Name = "test-phone-number-${count.index}"
+  }
+}
+`)
 }
