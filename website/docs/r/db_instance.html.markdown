@@ -47,7 +47,16 @@ They cannot be used with DB Instances with replicas.
 
 Backups must be enabled to use low-downtime updates.
 
-Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
+Enable low-downtime updates with the `blue_green_update` block:
+
+```terraform
+resource "aws_db_instance" "default" {
+  # ...
+  blue_green_update {
+    enabled = true
+  }
+}
+```
 
 ## Example Usage
 
