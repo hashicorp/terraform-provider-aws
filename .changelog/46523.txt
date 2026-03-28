@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_subnet: Fix `aws_subnet` so it's consistent with `aws_vpc` and also waits for IPAM to release it's CIDR on delete.
+```
