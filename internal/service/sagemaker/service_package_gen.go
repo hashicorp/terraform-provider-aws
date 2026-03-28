@@ -42,6 +42,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newHyperParameterTuningJobResource,
+			TypeName: "aws_sagemaker_hyper_parameter_tuning_job",
+			Name:     "Hyper Parameter Tuning Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("hyper_parameter_tuning_job_name"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newLabelingJobResource,
 			TypeName: "aws_sagemaker_labeling_job",
 			Name:     "Labeling Job",
@@ -105,6 +118,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity("algorithm_name"),
+		},
+		{
+			Factory:  newHyperParameterTuningJobResourceAsListResource,
+			TypeName: "aws_sagemaker_hyper_parameter_tuning_job",
+			Name:     "Hyper Parameter Tuning Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("hyper_parameter_tuning_job_name"),
 		},
 		{
 			Factory:  newTrainingJobResourceAsListResource,

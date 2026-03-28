@@ -834,3 +834,59 @@ func waitTrainingJobStopped(ctx context.Context, conn *sagemaker.Client, id stri
 
 	return nil, err
 }
+
+func waitHyperParameterTuningJobCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target: enum.Slice(
+			awstypes.HyperParameterTuningJobStatusInProgress,
+			awstypes.HyperParameterTuningJobStatusCompleted,
+			awstypes.HyperParameterTuningJobStatusFailed,
+			awstypes.HyperParameterTuningJobStatusStopped,
+		),
+		Refresh:                   statusHyperParameterTuningJob(conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHyperParameterTuningJobOutput); ok {
+		if status, reason := output.HyperParameterTuningJobStatus, aws.ToString(output.FailureReason); status == awstypes.HyperParameterTuningJobStatusFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHyperParameterTuningJobDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.HyperParameterTuningJobStatusDeleting,
+			awstypes.HyperParameterTuningJobStatusInProgress,
+			awstypes.HyperParameterTuningJobStatusStopping,
+			awstypes.HyperParameterTuningJobStatusStopped,
+			awstypes.HyperParameterTuningJobStatusCompleted,
+			awstypes.HyperParameterTuningJobStatusFailed,
+			awstypes.HyperParameterTuningJobStatusDeleteFailed,
+		),
+		Target:  []string{},
+		Refresh: statusHyperParameterTuningJob(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHyperParameterTuningJobOutput); ok {
+		if status, reason := output.HyperParameterTuningJobStatus, aws.ToString(output.FailureReason); status == awstypes.HyperParameterTuningJobStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}

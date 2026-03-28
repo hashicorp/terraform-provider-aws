@@ -25,6 +25,10 @@ type (
 	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
 	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
+
+	HyperParameterTrainingJobDefinitionModel        = hyperParameterTrainingJobDefinitionModel
+	HyperParameterTuningAlgorithmSpecificationModel = algorithmSpecificationModel
+	HyperParameterTuningMetricDefinitionModel       = hyperParameterTuningMetricDefinitionModel
 )
 
 // Exports for use in tests only.
@@ -42,6 +46,7 @@ var (
 	ResourceFeatureGroup                           = resourceFeatureGroup
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
+	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
@@ -77,6 +82,7 @@ var (
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
 	FindHubByName                             = findHubByName
+	FindHyperParameterTuningJobByName         = findHyperParameterTuningJobByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
@@ -118,9 +124,10 @@ var (
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
 
-	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
-	NormalizeStoppingCondition         = normalizeStoppingCondition
-	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
+	NormalizeAlgoSpecMetricDefinitions                  = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition                          = normalizeStoppingCondition
+	NormalizeHyperParameterTuningAlgorithmSpecification = normalizeAlgorithmSpecification
+	ServerlessJobConfigEqualityFunc                     = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
