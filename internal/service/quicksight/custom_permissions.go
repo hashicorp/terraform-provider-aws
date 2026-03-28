@@ -306,7 +306,7 @@ type capabilitiesModel struct {
 	Flow                                  fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"flow"`
 	IncludeContentInScheduledReportsEmail fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"include_content_in_scheduled_reports_email"`
 	KnowledgeBase                         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"knowledge_base"`
-	PerformFlowUITask                     fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"perform_flow_ui_task"`
+	PerformFlowUiTask                     fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"perform_flow_ui_task"`
 	PrintReports                          fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"print_reports"`
 	PublishWithoutApproval                fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"publish_without_approval"`
 	RenameSharedFolders                   fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"rename_shared_folders"`
