@@ -99,6 +99,7 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "ipv4"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_address"),
 					resource.TestCheckNoResourceAttr(resourceName, "outpost_mode"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_outpost_arn", ""),
 				),
