@@ -36,28 +36,42 @@ The following arguments are optional:
 
 ### capabilities
 
+* `action` - (Optional) The ability to perform actions in external services through Action connectors. Valid values: `DENY`.
 * `add_or_run_anomaly_detection_for_analyses` - (Optional) The ability to add or run anomaly detection. Valid values: `DENY`.
+* `analysis` - (Optional) The ability to perform analysis-related actions. Valid values: `DENY`.
+* `automate` - (Optional) The ability to perform automate-related actions. Valid values: `DENY`.
+* `chat_agent` - (Optional) The ability to perform chat-related actions. Valid values: `DENY`.
 * `create_and_update_dashboard_email_reports` - (Optional) The ability to create and update email reports. Valid values: `DENY`.
 * `create_and_update_datasets` - (Optional) The ability to create and update datasets. Valid values: `DENY`.
 * `create_and_update_data_sources` - (Optional) The ability to create and update data sources. Valid values: `DENY`.
 * `create_and_update_themes` - (Optional) The ability to export to create and update themes. Valid values: `DENY`.
 * `create_and_update_threshold_alerts` - (Optional) The ability to create and update threshold alerts. Valid values: `DENY`.
+* `create_chat_agents` - (Optional) The ability to create chat agents. Valid values: `DENY`.
 * `create_shared_folders` - (Optional) The ability to create shared folders. Valid values: `DENY`.
 * `create_spice_dataset` - (Optional) The ability to create a SPICE dataset. Valid values: `DENY`.
+* `dashboard` - (Optional) The ability to perform dashboard-related actions. Valid values: `DENY`.
 * `export_to_csv` - (Optional) The ability to export to CSV files from the UI. Valid values: `DENY`.
 * `export_to_csv_in_scheduled_reports` - (Optional) The ability to export to CSV files in scheduled email reports. Valid values: `DENY`.
 * `export_to_excel` - (Optional) The ability to export to Excel files from the UI. Valid values: `DENY`.
 * `export_to_excel_in_scheduled_reports` - (Optional) The ability to export to Excel files in scheduled email reports. Valid values: `DENY`.
 * `export_to_pdf` - (Optional) The ability to export to PDF files from the UI. Valid values: `DENY`.
 * `export_to_pdf_in_scheduled_reports` - (Optional) The ability to export to PDF files in scheduled email reports. Valid values: `DENY`.
+* `flow` - (Optional) The ability to perform flow-related actions. Valid values: `DENY`.
 * `include_content_in_scheduled_reports_email` - (Optional) The ability to include content in scheduled email reports. Valid values: `DENY`.
+* `knowledge_base` - (Optional) The ability to use knowledge bases to specify content from external applications. Valid values: `DENY`.
+* `perform_flow_ui_task` - (Optional) The ability to use UI Agent step to perform tasks on public websites. Valid values: `DENY`.
 * `print_reports` - (Optional) The ability to print reports. Valid values: `DENY`.
+* `publish_without_approval` - (Optional) The ability to enable approvals for flow share. Valid values: `DENY`.
 * `rename_shared_folders` - (Optional) The ability to rename shared folders. Valid values: `DENY`.
+* `research` - (Optional) The ability to perform research-related actions. Valid values: `DENY`.
 * `share_analyses` - (Optional) The ability to share analyses. Valid values: `DENY`.
 * `share_dashboards` - (Optional) The ability to share dashboards. Valid values: `DENY`.
 * `share_datasets` - (Optional) The ability to share datasets. Valid values: `DENY`.
 * `share_data_sources` - (Optional) The ability to share data sources. Valid values: `DENY`.
+* `space` - (Optional) The ability to perform space-related actions. Valid values: `DENY`.
 * `subscribe_dashboard_email_reports` - (Optional) The ability to subscribe to email reports. Valid values: `DENY`.
+* `use_agent_web_search` - (Optional) The ability to use internet to enhance results in Chat Agents, Flows, and Quick Research. Valid values: `DENY`.
+* `use_bedrock_models` - (Optional) The ability to use Bedrock models for general knowledge step in flows. Valid values: `DENY`.
 * `view_account_spice_capacity` - (Optional) The ability to view account SPICE capacity. Valid values: `DENY`.
 
 ## Attribute Reference
