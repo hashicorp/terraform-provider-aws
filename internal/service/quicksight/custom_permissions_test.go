@@ -56,7 +56,7 @@ func TestAccQuickSightCustomPermissions_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capabilities"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"action": knownvalue.Null(),
+							names.AttrAction: knownvalue.Null(),
 							"add_or_run_anomaly_detection_for_analyses": knownvalue.Null(),
 							"analysis":   knownvalue.Null(),
 							"automate":   knownvalue.Null(),
@@ -167,7 +167,7 @@ func TestAccQuickSightCustomPermissions_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capabilities"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"action": knownvalue.Null(),
+							names.AttrAction: knownvalue.Null(),
 							"add_or_run_anomaly_detection_for_analyses": knownvalue.Null(),
 							"analysis":   knownvalue.Null(),
 							"automate":   knownvalue.Null(),
