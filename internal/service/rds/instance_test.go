@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
@@ -3097,6 +3098,1301 @@ func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_rds_cluster.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db_cluster", sourceResourceName, names.AttrClusterIdentifier),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, "master_username"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_promoteNull(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_rds_cluster.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db_cluster", sourceResourceName, "cluster_identifier"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_promoteNull(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "replicate_source_db_cluster", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, "master_username"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_promoteEmptyString(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_rds_cluster.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db_cluster", sourceResourceName, "cluster_identifier"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_promoteEmptyString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, "replicate_source_db_cluster", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, "master_username"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_upgradeStorageConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_upgradeStorageConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const identifierPrefix = "tf-acc-test-prefix-"
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_namePrefix(identifierPrefix, sourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, identifierPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const resourceName = "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_nameGenerated(sourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_addLater(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_addLaterSetup(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_addLater(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_allocatedStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_allocatedStorage(rName, 21),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "21"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_iops(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_iops(rName, 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_allocatedStorageAndIops(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_allocatedStorageAndIOPS(rName, 220, 2200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "220"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2200"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_allowMajorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_allowMajorVersionUpgrade(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_autoMinorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_autoMinorVersionUpgrade(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_availabilityZone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_backupRetentionPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_backupRetentionPeriod(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_backupWindow(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_backupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_dbSubnetGroupName_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_rds_cluster.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_dbSubnetGroupName_sameAsSource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_rds_cluster.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_sameAsSource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_dbSubnetGroupName_sameVPC(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_rds_cluster.source"
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_sameVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db_cluster", sourceResourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("replicate_source_db_cluster", rName+"-source"),
+				),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+					"replicate_source_db_cluster",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_dbSubnetGroupName_VPCMismatch(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_VPCMismatch(rName),
+				ExpectError: regexache.MustCompile(`db_subnet_group_name.*same VPC`),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_deletionProtection(t *testing.T) {
+	// TODO: Verify whether this still happens
+	// acctest.Skip(t, "CreateDBInstanceReadReplica API currently ignores DeletionProtection=true with SourceDBClusterIdentifier set")
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
+				),
+			},
+			// Ensure we disable deletion protection before attempting to delete :)
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_iamDatabaseAuthenticationEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_iamDatabaseAuthenticationEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_maintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_maintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_monitoring(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_monitoring(rName, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_monitoring_sourceAlreadyExists(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_monitoring_sourceOnly(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_monitoring(rName, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_multiAZ(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_multiAZ(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_networkType(rName, "IPV4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_parameterGroupNameSameSetOnBoth(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_ParameterGroupName_sameSetOnBoth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, sourceResourceName, "db_cluster_parameter_group_name"),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckClusterParameterApplyStatusInSync(&sourceDbCluster),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_parameterGroupNameDifferentSetOnBoth(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_ParameterGroupName_differentSetOnBoth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					resource.TestCheckResourceAttr(sourceResourceName, "db_cluster_parameter_group_name", fmt.Sprintf("%s-source", rName)),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckClusterParameterApplyStatusInSync(&sourceDbCluster),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_parameterGroupNameSetOnReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_ParameterGroupName_setOnReplica(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_port(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_port(rName, 9999),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_vpcSecurityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_vpcSecurityGroupIDs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDBCluster_caCertificateIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	var sourceDbCluster types.DBCluster
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.source"
+	resourceName := "aws_db_instance.test"
+	certifiateDataSourceName := "data.aws_rds_certificate.latest"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_caCertificateID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, sourceResourceName, &sourceDbCluster),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					testAccCheckClusterReplicaAttributes(&sourceDbCluster, &dbInstance),
+					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_certificate_identifier", certifiateDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", certifiateDataSourceName, names.AttrID),
+				),
 			},
 		},
 	})
@@ -8019,10 +9315,35 @@ func testAccCheckInstanceParameterApplyStatusInSync(dbInstance *types.DBInstance
 	}
 }
 
+func testAccCheckClusterParameterApplyStatusInSync(dbCluster *types.DBCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, dbMember := range dbCluster.DBClusterMembers {
+			parameterApplyStatus := aws.ToString(dbMember.DBClusterParameterGroupStatus)
+			if parameterApplyStatus != "in-sync" {
+				id := aws.ToString(dbCluster.DBClusterIdentifier)
+				parameterGroupName := aws.ToString(dbCluster.DBClusterParameterGroup)
+				return fmt.Errorf("expected DB Instance (%s) Parameter Group (%s) apply status to be: \"in-sync\", got: %q", id, parameterGroupName, parameterApplyStatus)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckInstanceReplicaAttributes(source, replica *types.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if replica.ReadReplicaSourceDBInstanceIdentifier != nil && *replica.ReadReplicaSourceDBInstanceIdentifier != *source.DBInstanceIdentifier {
 			return fmt.Errorf("bad source identifier for replica, expected: '%s', got: '%s'", *source.DBInstanceIdentifier, *replica.ReadReplicaSourceDBInstanceIdentifier)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckClusterReplicaAttributes(source *types.DBCluster, replica *types.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if replica.ReadReplicaSourceDBClusterIdentifier != nil && *replica.ReadReplicaSourceDBClusterIdentifier != *source.DBClusterIdentifier {
+			return fmt.Errorf("bad source identifier for replica, expected: '%s', got: '%s'", *source.DBClusterIdentifier, *replica.ReadReplicaSourceDBClusterIdentifier)
 		}
 
 		return nil
@@ -8208,6 +9529,26 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, license, storage, mainInstanceClasses)
 }
 
+func testAccInstanceConfig_orderableClusterClass(engine, license, storage string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine            = data.aws_rds_engine_version.default.engine
+  engine_version    = data.aws_rds_engine_version.default.version
+  license_model     = %[2]q
+  storage_type      = %[3]q
+  supports_clusters = true
+  supports_multi_az = true
+
+
+  preferred_instance_classes = [%[4]s]
+}
+`, engine, license, storage, mainInstanceClasses)
+}
+
 func testAccInstanceConfig_orderableClassDB2() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineDB2Standard, "bring-your-own-license", "gp3")
 }
@@ -8245,6 +9586,10 @@ func testAccInstanceConfig_orderableClassSQLServerSe() string {
 }
 func testAccInstanceConfig_orderableClassSQLServerEE() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineSQLServerEnterprise, "license-included", "standard")
+}
+
+func testAccInstanceConfig_orderableClusterClassMySQL() string {
+	return testAccInstanceConfig_orderableClusterClass(tfrds.ClusterEngineMySQL, "general-public-license", "gp3")
 }
 
 func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
@@ -12333,6 +13678,1136 @@ resource "aws_db_instance" "source" {
   backup_retention_period = 1
 
   character_set_name = "WE8ISO8859P15"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_basic(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class      	      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_promoteNull(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_promoteEmptyString(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = ""
+  skip_final_snapshot         = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_upgradeStorageConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+  upgrade_storage_config      = true
+  timeouts {
+    update = "120m"
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_namePrefix(identifierPrefix, sourceName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = %[1]q
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier_prefix   = %[2]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+}
+`, sourceName, identifierPrefix))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_nameGenerated(sourceName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = %[1]q
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+}
+`, sourceName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_addLaterSetup() string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(), `
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+`)
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_addLater(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_ReplicateSourceDBCluster_addLaterSetup(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_allocatedStorage(rName string, allocatedStorage int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = %[2]d
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = %[2]d
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+}
+`, rName, allocatedStorage))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_iops(rName string, iops int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  license_model              = "general-public-license"
+  supports_clusters          = true
+  supports_multi_az          = true
+
+  preferred_instance_classes = [%[2]s]
+
+  storage_type  = "io1"
+  supports_iops = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 100
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[3]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+  iops                       = 1100
+  storage_type               = "io1"
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %[3]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+  iops                = %[4]d
+  storage_type        = "io1"
+}
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, iops))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_allocatedStorageAndIOPS(rName string, allocatedStorage, iops int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  license_model              = "general-public-license"
+  supports_clusters          = true
+  supports_multi_az          = true
+  preferred_instance_classes = [%[2]s]
+
+  storage_type  = "io1"
+  supports_iops = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = %[3]d
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[4]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+  iops                       = 1000
+  storage_type               = "io1"
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = %[3]d
+  identifier          = %[4]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+  iops                = %[5]d
+  storage_type        = "io1"
+}
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, allocatedStorage, rName, iops))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  allow_major_version_upgrade = %[2]t
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName, allowMajorVersionUpgrade))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  auto_minor_version_upgrade = %[2]t
+  identifier                 = %[1]q
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot        = true
+}
+`, rName, autoMinorVersionUpgrade))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_availabilityZone(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  availability_zone   = data.aws_availability_zones.available.names[0]
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_backupRetentionPeriod(rName string, backupRetentionPeriod int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  backup_retention_period = %[2]d
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot     = true
+}
+`, rName, backupRetentionPeriod))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_backupWindow(rName, backupWindow, maintenanceWindow string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  backup_window       = %[2]q
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  maintenance_window  = %[3]q
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+}
+`, rName, backupWindow, maintenanceWindow))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_basic(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  db_subnet_group_name       = aws_db_subnet_group.source.name
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_subnet_group" "source" {
+  name       = "%[1]s-source"
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_sameAsSource(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.id
+  db_subnet_group_name        = aws_db_subnet_group.source.name
+  skip_final_snapshot         = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  db_subnet_group_name       = aws_db_subnet_group.source.name
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_subnet_group" "source" {
+  name       = "%[1]s-source"
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_sameVPC(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.id
+  db_subnet_group_name        = aws_db_subnet_group.test.name
+  skip_final_snapshot         = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  db_subnet_group_name       = aws_db_subnet_group.source.name
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_subnet_group" "source" {
+  name       = "%[1]s-source"
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_dbSubnetGroupName_VPCMismatch(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_vpc" "alternate" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  count    = 3
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.1.${count.index}.0/24"
+  vpc_id            = aws_vpc.alternate.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 3
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "alternate" {
+  name       = "%[1]s-alt"
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+data "aws_rds_engine_version" "default" {
+  engine   = %[2]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine            = data.aws_rds_engine_version.default.engine
+  engine_version    = data.aws_rds_engine_version.default.version
+  license_model     = "general-public-license"
+  supports_clusters = true
+  supports_multi_az = true
+  storage_type      = "gp3"
+
+  preferred_instance_classes = [%[3]s]
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name       = aws_db_subnet_group.alternate.name
+  engine                     = data.aws_rds_engine_version.default.engine
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name        = aws_db_subnet_group.test.name
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.id
+  skip_final_snapshot         = true
+}
+`, rName, tfrds.InstanceEngineMySQL, mainInstanceClasses))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_deletionProtection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  deletion_protection         = %[2]t
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName, deletionProtection))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_iamDatabaseAuthenticationEnabled(rName string, iamDatabaseAuthenticationEnabled bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage                   = 20 
+  storage_type                        = "gp3"
+  backup_retention_period             = 1
+  engine                              = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier                  = "%[1]s-source"
+  db_cluster_instance_class           = data.aws_rds_orderable_db_instance.test.instance_class
+  iam_database_authentication_enabled = true
+  master_password_wo                  = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version          = 1
+  master_username                     = "tfacctest"
+  skip_final_snapshot                 = true
+}
+
+resource "aws_db_instance" "test" {
+  iam_database_authentication_enabled = %[2]t
+  identifier                          = %[1]q
+  instance_class                      = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster         = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot                 = true
+}
+`, rName, iamDatabaseAuthenticationEnabled))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_maintenanceWindow(rName, backupWindow, maintenanceWindow string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  preferred_backup_window              = %[2]q
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  maintenance_window      = %[3]q
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot     = true
+}
+`, rName, backupWindow, maintenanceWindow))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_monitoring(rName string, monitoringInterval int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  monitoring_interval     = %[2]d
+  monitoring_role_arn     = aws_iam_role.test.arn
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot     = true
+}
+`, rName, monitoringInterval))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_monitoring_sourceOnly(rName string) string {
+
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_multiAZ(rName string, multiAz bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  multi_az                    = %[2]t
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName, multiAz))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  db_subnet_group_name       = aws_db_subnet_group.test.name
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  network_type               = %[2]q
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  network_type                = %[2]q
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName, networkType))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_ParameterGroupName_sameSetOnBoth(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 137
+  }
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 137
+  }
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage               = 20 
+  storage_type                    = "gp3"
+  backup_retention_period         = 1
+  cluster_identifier              = "%[1]s-source"
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+  db_cluster_instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  master_password_wo              = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version      = 1
+  master_username                 = "tfacctest"
+  skip_final_snapshot             = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name        = aws_db_parameter_group.test.name
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_ParameterGroupName_differentSetOnBoth(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 137
+  }
+}
+
+resource "aws_rds_cluster_parameter_group" "source" {
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = "%[1]s-source"
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 138
+  }
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage               = 20 
+  storage_type                    = "gp3"
+  backup_retention_period         = 1
+  cluster_identifier              = "%[1]s-source"
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.source.name
+  db_cluster_instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  master_password_wo              = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version      = 1
+  master_username                 = "tfacctest"
+  skip_final_snapshot             = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name        = aws_db_parameter_group.test.name
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_ParameterGroupName_setOnReplica(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 137
+  }
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name        = aws_db_parameter_group.test.name
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_port(rName string, port int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  port                        = %[2]d
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+}
+`, rName, port))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_vpcSecurityGroupIDs(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 3),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name       = aws_db_subnet_group.test.name
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  skip_final_snapshot         = true
+  vpc_security_group_ids      = [aws_security_group.test.id]
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDBCluster_caCertificateID(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClusterClassMySQL(),
+		fmt.Sprintf(`
+data "aws_rds_certificate" "latest" {
+  latest_valid_till = true
+}
+
+resource "aws_rds_cluster" "source" {
+  allocated_storage          = 20 
+  storage_type               = "gp3"
+  backup_retention_period    = 1
+  engine                     = data.aws_rds_orderable_db_instance.test.engine
+  cluster_identifier         = "%[1]s-source"
+  db_cluster_instance_class  = data.aws_rds_orderable_db_instance.test.instance_class
+  master_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_password_wo_version = 1
+  master_username            = "tfacctest"
+  ca_certificate_identifier  = data.aws_rds_certificate.latest.id
+  skip_final_snapshot        = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  replicate_source_db_cluster = aws_rds_cluster.source.cluster_identifier
+  ca_cert_identifier          = data.aws_rds_certificate.latest.id
+  skip_final_snapshot         = true
 }
 `, rName))
 }
