@@ -1702,6 +1702,46 @@ func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_originGroupsSelectionCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.failover_distribution"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_originGroupsSelectionCriteria(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
+						"origin_id":          "groupS3",
+						"selection_criteria": "media-quality-based",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontDistribution_vpcOriginConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -3560,6 +3600,78 @@ resource "aws_cloudfront_distribution" "failover_distribution" {
 
   origin_group {
     origin_id = "groupS3"
+
+    failover_criteria {
+      status_codes = [403, 404, 500, 502]
+    }
+
+    member {
+      origin_id = "primaryS3"
+    }
+
+    member {
+      origin_id = "failoverS3"
+    }
+  }
+
+  enabled = true
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "groupS3"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+  %[1]s
+}
+`, testAccDistributionRetainConfig()))
+}
+
+func testAccDistributionConfig_originGroupsSelectionCriteria(rName string) string {
+	return acctest.ConfigCompose(
+		originBucket(rName),
+		backupBucket(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "failover_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_backup_bucket_origin_acl,
+  ]
+
+  origin {
+    domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
+    origin_id   = "primaryS3"
+  }
+
+  origin {
+    domain_name = aws_s3_bucket.s3_backup_bucket_origin.bucket_regional_domain_name
+    origin_id   = "failoverS3"
+  }
+
+  origin_group {
+    origin_id = "groupS3"
+
+    selection_criteria = "media-quality-based"
 
     failover_criteria {
       status_codes = [403, 404, 500, 502]
