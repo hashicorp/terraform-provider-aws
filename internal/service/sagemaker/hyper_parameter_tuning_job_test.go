@@ -8,8 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -83,6 +86,21 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"),
 				injectedMetrics,
+			),
+		},
+		{
+			name: "training image config does not retain unknown algorithm name",
+			config: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringUnknown(),
+				nullMetrics,
+			),
+			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				injectedMetrics,
+			),
+			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				nullMetrics,
 			),
 		},
 	}
@@ -200,6 +218,57 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_trainingJobDefinitions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_job_definitions"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"definition_name": knownvalue.StringExact("def-1"),
+							"role_arn":        knownvalue.NotNull(),
+							"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"training_input_mode": knownvalue.StringExact("File"),
+								}),
+							}),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"definition_name": knownvalue.StringExact("def-2"),
+							"role_arn":        knownvalue.NotNull(),
+							"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"training_input_mode": knownvalue.StringExact("File"),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccSageMakerHyperParameterTuningJob_autotune(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -298,8 +367,8 @@ func TestAccSageMakerHyperParameterTuningJob_objective(t *testing.T) {
 				Config: testAccHyperParameterTuningJobConfig_objective(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.metric_name", "validation:accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.type", "Maximize"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.metric_name", "test:msd"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.type", "Minimize"),
 				),
 			},
 		},
@@ -329,21 +398,43 @@ func TestAccSageMakerHyperParameterTuningJob_parameterRanges(t *testing.T) {
 				Config: testAccHyperParameterTuningJobConfig_parameterRanges(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.auto_parameters.0.name", "learning_rate"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.auto_parameters.0.value_hint", "0.01"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.name", "optimizer"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.values.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.values.*", "adam"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.categorical_parameter_ranges.0.values.*", "sgd"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.max_value", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.min_value", "0.1"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.name", "dropout"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.continuous_parameter_ranges.0.scaling_type", "Auto"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.max_value", "128"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.min_value", "16"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.name", "batch_size"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.parameter_ranges.0.integer_parameter_ranges.0.scaling_type", "Auto"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"categorical_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"name":   knownvalue.StringExact("init_method"),
+											"values": knownvalue.NotNull(),
+										}),
+									}),
+									"integer_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"max_value":    knownvalue.StringExact("10"),
+											"min_value":    knownvalue.StringExact("1"),
+											"name":         knownvalue.StringExact("epochs"),
+											"scaling_type": knownvalue.StringExact("Auto"),
+										}),
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"max_value":    knownvalue.StringExact("10"),
+											"min_value":    knownvalue.StringExact("4"),
+											"name":         knownvalue.StringExact("extra_center_factor"),
+											"scaling_type": knownvalue.StringExact("Auto"),
+										}),
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"max_value":    knownvalue.StringExact("15000"),
+											"min_value":    knownvalue.StringExact("3000"),
+											"name":         knownvalue.StringExact("mini_batch_size"),
+											"scaling_type": knownvalue.StringExact("Auto"),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -412,6 +503,57 @@ func TestAccSageMakerHyperParameterTuningJob_completionCriteria(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerHyperParameterTuningJob_warmStartConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var parentJob sagemaker.DescribeHyperParameterTuningJobOutput
+	var childJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parentResourceName := "aws_sagemaker_hyper_parameter_tuning_job.parent"
+	childResourceName := "aws_sagemaker_hyper_parameter_tuning_job.child"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_warmStartParent(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, parentResourceName, &parentJob),
+					testAccCheckHyperParameterTuningJobCompleted(ctx, t, parentResourceName),
+				),
+			},
+			{
+				Config: testAccHyperParameterTuningJobConfig_warmStart(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, parentResourceName, &parentJob),
+					testAccCheckHyperParameterTuningJobExists(ctx, t, childResourceName, &childJob),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(childResourceName, tfjsonpath.New("warm_start_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"warm_start_type": knownvalue.StringExact("TransferLearning"),
+							"parent_hyper_parameter_tuning_jobs": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"hyper_parameter_tuning_job_name": knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -440,6 +582,9 @@ func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 				},
 			},
@@ -458,6 +603,10 @@ func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 				},
 			},
@@ -473,6 +622,9 @@ func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -546,6 +698,55 @@ func testAccCheckHyperParameterTuningJobExists(ctx context.Context, t *testing.T
 	}
 }
 
+func testAccCheckHyperParameterTuningJobCompleted(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not found"))
+		}
+
+		hyperParameterTuningJobName := rs.Primary.Attributes["hyper_parameter_tuning_job_name"]
+		if hyperParameterTuningJobName == "" {
+			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not set"))
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
+
+		out, err := tfsagemaker.FindHyperParameterTuningJobByName(ctx, conn, hyperParameterTuningJobName)
+		if err != nil {
+			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, err)
+		}
+
+		if out.HyperParameterTuningJobStatus == awstypes.HyperParameterTuningJobStatusCompleted {
+			return nil
+		}
+
+		if out.HyperParameterTuningJobStatus == awstypes.HyperParameterTuningJobStatusFailed || out.HyperParameterTuningJobStatus == awstypes.HyperParameterTuningJobStatusStopped {
+			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, fmt.Errorf("parent warm-start job must be Completed, got %s (failure_reason=%q)", out.HyperParameterTuningJobStatus, aws.ToString(out.FailureReason)))
+		}
+
+		timeout := time.Now().Add(30 * time.Minute)
+		for time.Now().Before(timeout) {
+			out, err := tfsagemaker.FindHyperParameterTuningJobByName(ctx, conn, hyperParameterTuningJobName)
+			if err != nil {
+				return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, err)
+			}
+
+			if out.HyperParameterTuningJobStatus == awstypes.HyperParameterTuningJobStatusCompleted {
+				return nil
+			}
+
+			if out.HyperParameterTuningJobStatus == awstypes.HyperParameterTuningJobStatusFailed || out.HyperParameterTuningJobStatus == awstypes.HyperParameterTuningJobStatusStopped {
+				return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, fmt.Errorf("parent warm-start job must be Completed, got %s (failure_reason=%q)", out.HyperParameterTuningJobStatus, aws.ToString(out.FailureReason)))
+			}
+
+			time.Sleep(15 * time.Second)
+		}
+
+		return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, fmt.Errorf("timed out waiting for job to reach Completed status"))
+	}
+}
+
 func testAccHyperParameterTuningJobPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
@@ -556,6 +757,218 @@ func testAccHyperParameterTuningJobPreCheck(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
+}
+
+func testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges() string {
+	return `
+		hyper_parameter_tuning_job_objective {
+			metric_name = "test:msd"
+			type        = "Minimize"
+		}
+
+		parameter_ranges {
+			categorical_parameter_ranges {
+				name   = "init_method"
+				values = ["kmeans++", "random"]
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "1"
+				name         = "epochs"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "4"
+				name         = "extra_center_factor"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "15000"
+				min_value    = "3000"
+				name         = "mini_batch_size"
+				scaling_type = "Auto"
+			}
+		}
+	`
+}
+
+func testAccHyperParameterTuningJobConfigKMeansInputDataConfig() string {
+	return `
+		input_data_config {
+			channel_name = "train"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		input_data_config {
+			channel_name = "test"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+	`
+}
+
+func testAccHyperParameterTuningJobConfigWarmStartKMeansObjectiveAndParameterRanges() string {
+	return `
+		hyper_parameter_tuning_job_objective {
+			metric_name = "test:msd"
+			type        = "Minimize"
+		}
+
+		parameter_ranges {
+			integer_parameter_ranges {
+				max_value    = "2"
+				min_value    = "1"
+				name         = "epochs"
+				scaling_type = "Auto"
+			}
+		}
+	`
+}
+
+func testAccHyperParameterTuningJobConfigWarmStartKMeansStaticHyperParameters() string {
+	return `
+		static_hyper_parameters = {
+			feature_dim     = "3"
+			k               = "2"
+			init_method     = "kmeans++"
+			mini_batch_size = "4"
+		}
+	`
+}
+
+func testAccHyperParameterTuningJobConfigWarmStartKMeansInputDataConfig() string {
+	return `
+		input_data_config {
+			channel_name = "train"
+			content_type = "text/csv"
+			input_mode   = "File"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/warmstart-input/"
+				}
+			}
+		}
+
+		input_data_config {
+			channel_name = "test"
+			content_type = "text/csv"
+			input_mode   = "File"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/warmstart-input/"
+				}
+			}
+		}
+	`
+}
+
+func testAccHyperParameterTuningJobConfigKMeansDependencies() string {
+	return `
+data "aws_iam_policy_document" "s3" {
+	statement {
+		actions = [
+			"s3:GetObject",
+			"s3:PutObject",
+		]
+		resources = [
+			"${aws_s3_bucket.test.arn}/*",
+		]
+	}
+
+	statement {
+		actions = [
+			"s3:ListBucket",
+		]
+		resources = [
+			aws_s3_bucket.test.arn,
+		]
+	}
+
+	statement {
+		actions = [
+			"sagemaker:DescribeAlgorithm",
+		]
+		resources = [
+			"*",
+		]
+	}
+}
+
+resource "aws_iam_role_policy" "test" {
+	role   = aws_iam_role.test.name
+	policy = data.aws_iam_policy_document.s3.json
+}
+
+resource "aws_s3_object" "input" {
+	bucket  = aws_s3_bucket.test.id
+	key     = "input/placeholder.csv"
+	content = "feature1,label\n1.0,0\n"
+}
+	`
+}
+
+func testAccHyperParameterTuningJobConfigAlgorithmResource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_algorithm" "test" {
+	algorithm_name = "%[1]s-algorithm"
+
+	training_specification {
+		training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+		supported_training_instance_types = ["ml.m5.large"]
+
+		metric_definitions {
+			name  = "validation:accuracy"
+			regex = "validation:accuracy=(.*?);"
+		}
+
+		supported_hyper_parameters {
+			default_value = "0.2"
+			description   = "Learning rate"
+			is_required   = false
+			is_tunable    = true
+			name          = "learning_rate"
+			type          = "Continuous"
+
+			range {
+				continuous_parameter_range_specification {
+					min_value = "0.1"
+					max_value = "0.5"
+				}
+			}
+		}
+
+		supported_tuning_job_objective_metrics {
+			metric_name = "validation:accuracy"
+			type        = "Maximize"
+		}
+
+		training_channels {
+			name                    = "train"
+			supported_content_types = ["text/csv"]
+			supported_input_modes   = ["File"]
+		}
+	}
+}
+`, rName)
 }
 
 func testAccHyperParameterTuningJobConfig_basic(rName string) string {
@@ -695,19 +1108,336 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 `, rName))
 }
 
-func testAccHyperParameterTuningJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+func testAccHyperParameterTuningJobConfig_trainingJobDefinitions(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
-	autotune {
-		mode = "Enabled"
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs = 1
+		}
 	}
 
+	training_job_definitions {
+		definition_name = "def-1"
+		role_arn        = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		tuning_objective {
+			metric_name = "test:msd"
+			type        = "Minimize"
+		}
+
+		hyper_parameter_ranges {
+			categorical_parameter_ranges {
+				name   = "init_method"
+				values = ["kmeans++", "random"]
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "1"
+				name         = "epochs"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "4"
+				name         = "extra_center_factor"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "15000"
+				min_value    = "3000"
+				name         = "mini_batch_size"
+				scaling_type = "Auto"
+			}
+		}
+
+		%[2]s
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count    = 1
+			instance_type     = "ml.m5.large"
+			volume_size_in_gb = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	training_job_definitions {
+		definition_name = "def-2"
+		role_arn        = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		tuning_objective {
+			metric_name = "test:msd"
+			type        = "Minimize"
+		}
+
+		hyper_parameter_ranges {
+			categorical_parameter_ranges {
+				name   = "init_method"
+				values = ["kmeans++", "random"]
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "1"
+				name         = "epochs"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "4"
+				name         = "extra_center_factor"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "15000"
+				min_value    = "3000"
+				name         = "mini_batch_size"
+				scaling_type = "Auto"
+			}
+		}
+
+		%[2]s
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count    = 1
+			instance_type     = "ml.m5.large"
+			volume_size_in_gb = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
+}
+	`, rName, testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
+}
+
+func testAccHyperParameterTuningJobConfig_warmStartParent(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
+resource "aws_s3_object" "warmstart_input" {
+	bucket = aws_s3_bucket.test.id
+	key    = "warmstart-input/data.csv"
+	content = <<-EOT
+0.10,0.20,0.30,0.40
+0.12,0.22,0.28,0.39
+0.11,0.19,0.31,0.41
+0.09,0.18,0.29,0.38
+0.80,0.75,0.70,0.65
+0.82,0.78,0.69,0.66
+0.79,0.73,0.71,0.64
+0.81,0.77,0.68,0.67
+0.50,0.48,0.52,0.55
+0.52,0.49,0.50,0.56
+0.51,0.47,0.53,0.54
+0.49,0.46,0.51,0.53
+EOT
+}
+
+resource "aws_sagemaker_hyper_parameter_tuning_job" "parent" {
+	hyper_parameter_tuning_job_name = "p-${substr(%[1]q, 0, 30)}"
+
 	hyper_parameter_tuning_job_config {
-		random_seed                      = 42
-		strategy                         = "Bayesian"
-		training_job_early_stopping_type = "Auto"
+		strategy = "Bayesian"
+
+		%[2]s
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		%[4]s
+
+		%[3]s
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.warmstart_input]
+}
+`, rName, testAccHyperParameterTuningJobConfigWarmStartKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigWarmStartKMeansInputDataConfig(), testAccHyperParameterTuningJobConfigWarmStartKMeansStaticHyperParameters()))
+}
+
+func testAccHyperParameterTuningJobConfig_warmStart(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
+resource "aws_s3_object" "warmstart_input" {
+	bucket = aws_s3_bucket.test.id
+	key    = "warmstart-input/data.csv"
+	content = <<-EOT
+0.10,0.20,0.30,0.40
+0.12,0.22,0.28,0.39
+0.11,0.19,0.31,0.41
+0.09,0.18,0.29,0.38
+0.80,0.75,0.70,0.65
+0.82,0.78,0.69,0.66
+0.79,0.73,0.71,0.64
+0.81,0.77,0.68,0.67
+0.50,0.48,0.52,0.55
+0.52,0.49,0.50,0.56
+0.51,0.47,0.53,0.54
+0.49,0.46,0.51,0.53
+EOT
+}
+
+resource "aws_sagemaker_hyper_parameter_tuning_job" "parent" {
+	hyper_parameter_tuning_job_name = "p-${substr(%[1]q, 0, 30)}"
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		%[2]s
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		%[4]s
+
+		%[3]s
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.warmstart_input]
+}
+
+resource "aws_sagemaker_hyper_parameter_tuning_job" "child" {
+	hyper_parameter_tuning_job_name = "c-${substr(%[1]q, 0, 30)}"
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		%[2]s
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+		}
+	}
+
+	warm_start_config {
+		warm_start_type = "TransferLearning"
+
+		parent_hyper_parameter_tuning_jobs {
+			hyper_parameter_tuning_job_name = aws_sagemaker_hyper_parameter_tuning_job.parent.hyper_parameter_tuning_job_name
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+		}
+
+		%[4]s
+
+		%[3]s
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count     = 1
+			instance_type      = "ml.m5.large"
+			volume_size_in_gb  = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	depends_on = [aws_sagemaker_hyper_parameter_tuning_job.parent, aws_s3_object.warmstart_input]
+}
+`, rName, testAccHyperParameterTuningJobConfigWarmStartKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigWarmStartKMeansInputDataConfig(), testAccHyperParameterTuningJobConfigWarmStartKMeansStaticHyperParameters()))
+}
+
+func testAccHyperParameterTuningJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
 
 		hyper_parameter_tuning_job_objective {
 			metric_name = "validation:accuracy"
@@ -724,8 +1454,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 
 		resource_limits {
 			max_number_of_training_jobs = 2
-			max_parallel_training_jobs  = 1
-			max_runtime_in_seconds      = 3600
+			max_parallel_training_jobs = 1
 		}
 	}
 
@@ -733,19 +1462,8 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		role_arn = aws_iam_role.test.arn
 
 		algorithm_specification {
-			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
 			training_input_mode = "File"
-		}
-
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
 		}
 
 		output_data_config {
@@ -766,23 +1484,19 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	tags = {
 		%[2]q = %[3]q
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
 `, rName, tagKey1, tagValue1))
 }
 
 func testAccHyperParameterTuningJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
-	autotune {
-		mode = "Enabled"
-	}
-
 	hyper_parameter_tuning_job_config {
-		random_seed                      = 42
-		strategy                         = "Bayesian"
-		training_job_early_stopping_type = "Auto"
+		strategy = "Bayesian"
 
 		hyper_parameter_tuning_job_objective {
 			metric_name = "validation:accuracy"
@@ -799,8 +1513,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 
 		resource_limits {
 			max_number_of_training_jobs = 2
-			max_parallel_training_jobs  = 1
-			max_runtime_in_seconds      = 3600
+			max_parallel_training_jobs = 1
 		}
 	}
 
@@ -808,19 +1521,8 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		role_arn = aws_iam_role.test.arn
 
 		algorithm_specification {
-			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
 			training_input_mode = "File"
-		}
-
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
 		}
 
 		output_data_config {
@@ -842,6 +1544,8 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		%[2]q = %[3]q
 		%[4]q = %[5]q
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
@@ -867,6 +1571,15 @@ data "aws_iam_policy_document" "s3" {
 			aws_s3_bucket.test.arn,
 		]
 	}
+
+	statement {
+		actions = [
+			"sagemaker:DescribeAlgorithm",
+		]
+		resources = [
+			"*",
+		]
+	}
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -890,7 +1603,10 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_config {
 		strategy = "Bayesian"
 
+		%[2]s
+
 		resource_limits {
+				max_number_of_training_jobs = 2
 			max_parallel_training_jobs = 1
 		}
 	}
@@ -903,16 +1619,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			training_input_mode = "File"
 		}
 
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
-		}
+		%[3]s
 
 		output_data_config {
 			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
@@ -931,31 +1638,21 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 
 	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
-`, rName))
+`, rName, testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
 }
 
 func testAccHyperParameterTuningJobConfig_objective(rName string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
 	hyper_parameter_tuning_job_config {
 		strategy = "Bayesian"
 
-		hyper_parameter_tuning_job_objective {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
-		}
-
-		parameter_ranges {
-			continuous_parameter_ranges {
-				max_value = "0.5"
-				min_value = "0.1"
-				name      = "learning_rate"
-			}
-		}
+		%[2]s
 
 		resource_limits {
+				max_number_of_training_jobs = 2
 			max_parallel_training_jobs = 1
 		}
 	}
@@ -968,16 +1665,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			training_input_mode = "File"
 		}
 
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
-		}
+		%[3]s
 
 		output_data_config {
 			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
@@ -993,50 +1681,24 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			max_runtime_in_seconds = 3600
 		}
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
-`, rName))
+`, rName, testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
 }
 
 func testAccHyperParameterTuningJobConfig_parameterRanges(rName string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
 	hyper_parameter_tuning_job_config {
 		strategy = "Bayesian"
 
-		hyper_parameter_tuning_job_objective {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
-		}
-
-		parameter_ranges {
-			auto_parameters {
-				name       = "learning_rate"
-				value_hint = "0.01"
-			}
-
-			categorical_parameter_ranges {
-				name   = "optimizer"
-				values = ["adam", "sgd"]
-			}
-
-			continuous_parameter_ranges {
-				max_value    = "0.5"
-				min_value    = "0.1"
-				name         = "dropout"
-				scaling_type = "Auto"
-			}
-
-			integer_parameter_ranges {
-				max_value    = "128"
-				min_value    = "16"
-				name         = "batch_size"
-				scaling_type = "Auto"
-			}
-		}
+		%[2]s
 
 		resource_limits {
+				max_number_of_training_jobs = 2
 			max_parallel_training_jobs = 1
 		}
 	}
@@ -1049,16 +1711,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			training_input_mode = "File"
 		}
 
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
-		}
+		%[3]s
 
 		output_data_config {
 			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
@@ -1074,30 +1727,21 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			max_runtime_in_seconds = 3600
 		}
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
-`, rName))
+`, rName, testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
 }
 
 func testAccHyperParameterTuningJobConfig_strategyConfig(rName string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
 	hyper_parameter_tuning_job_config {
-		strategy = "Bayesian"
+		strategy = "Hyperband"
 
-		hyper_parameter_tuning_job_objective {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
-		}
-
-		parameter_ranges {
-			continuous_parameter_ranges {
-				max_value = "0.5"
-				min_value = "0.1"
-				name      = "learning_rate"
-			}
-		}
+		%[2]s
 
 		strategy_config {
 			hyperband_strategy_config {
@@ -1107,6 +1751,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		}
 
 		resource_limits {
+				max_number_of_training_jobs = 2
 			max_parallel_training_jobs = 1
 		}
 	}
@@ -1119,16 +1764,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			training_input_mode = "File"
 		}
 
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
-		}
+		%[3]s
 
 		output_data_config {
 			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
@@ -1144,30 +1780,21 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			max_runtime_in_seconds = 3600
 		}
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
-`, rName))
+`, rName, testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
 }
 
 func testAccHyperParameterTuningJobConfig_completionCriteria(rName string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
 	hyper_parameter_tuning_job_config {
 		strategy = "Bayesian"
 
-		hyper_parameter_tuning_job_objective {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
-		}
-
-		parameter_ranges {
-			continuous_parameter_ranges {
-				max_value = "0.5"
-				min_value = "0.1"
-				name      = "learning_rate"
-			}
-		}
+		%[2]s
 
 		tuning_job_completion_criteria {
 			target_objective_metric_value = 0.95
@@ -1182,6 +1809,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		}
 
 		resource_limits {
+				max_number_of_training_jobs = 4
 			max_parallel_training_jobs = 1
 		}
 	}
@@ -1194,16 +1822,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			training_input_mode = "File"
 		}
 
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
-		}
+		%[3]s
 
 		output_data_config {
 			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
@@ -1219,12 +1838,14 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			max_runtime_in_seconds = 3600
 		}
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
-`, rName))
+`, rName, testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
 }
 
 func testAccHyperParameterTuningJobConfig_jobConfigOptions(rName string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
@@ -1233,18 +1854,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		strategy                         = "Bayesian"
 		training_job_early_stopping_type = "Auto"
 
-		hyper_parameter_tuning_job_objective {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
-		}
-
-		parameter_ranges {
-			continuous_parameter_ranges {
-				max_value = "0.5"
-				min_value = "0.1"
-				name      = "learning_rate"
-			}
-		}
+		%[2]s
 
 		resource_limits {
 			max_number_of_training_jobs = 2
@@ -1261,16 +1871,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			training_input_mode = "File"
 		}
 
-		input_data_config {
-			channel_name = "train"
-
-			data_source {
-				s3_data_source {
-					s3_data_type = "S3Prefix"
-					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
-				}
-			}
-		}
+		%[3]s
 
 		output_data_config {
 			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
@@ -1286,8 +1887,10 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 			max_runtime_in_seconds = 3600
 		}
 	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
 }
-`, rName))
+`, rName, testAccHyperParameterTuningJobConfigKMeansObjectiveAndParameterRanges(), testAccHyperParameterTuningJobConfigKMeansInputDataConfig()))
 }
 
 func testAccHyperParameterTuningJobConfig_base(rName string) string {
