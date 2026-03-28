@@ -260,6 +260,7 @@ This resource supports the following arguments:
 * `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`, `FLINK-1_19`, `FLINK-1_20`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
+* `application_maintenance_configuration` - (Optional) The application's maintenance window configuration.
 * `application_mode` - (Optional) The application's mode. Valid values are `STREAMING`, `INTERACTIVE`.
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
@@ -277,6 +278,11 @@ The `application_configuration` object supports the following:
 * `run_configuration` - (Optional) Describes the starting properties for a Flink-based application.
 * `sql_application_configuration` - (Optional) The configuration of a SQL-based application.
 * `vpc_configuration` - (Optional) The VPC configuration of a Flink-based application.
+
+The `application_maintenance_configuration` object supports the following:
+
+* `application_maintenance_window_start_time` - (Required) The weekly maintenance window start time in `HH:MM` 24-hour format.
+* `application_maintenance_window_end_time` - (Computed) The weekly maintenance window end time.
 
 The `application_code_configuration` object supports the following:
 

@@ -350,6 +350,46 @@ func TestAccKinesisAnalyticsV2Application_applicationMode(t *testing.T) {
 	})
 }
 
+func TestAccKinesisAnalyticsV2Application_applicationMaintenanceConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_applicationMaintenanceConfiguration(rName, "01:00"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_maintenance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_maintenance_configuration.0.application_maintenance_window_start_time", "01:00"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_maintenance_configuration.0.application_maintenance_window_end_time"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_applicationMaintenanceConfiguration(rName, "02:00"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_maintenance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_maintenance_configuration.0.application_maintenance_window_start_time", "02:00"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_maintenance_configuration.0.application_maintenance_window_end_time"),
+				),
+			},
+			{
+				Config:            testAccApplicationConfig_applicationMaintenanceConfiguration(rName, "02:00"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ApplicationDetail
@@ -4523,6 +4563,36 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   service_execution_role = aws_iam_role.test[0].arn
 }
 `, rName))
+}
+
+func testAccApplicationConfig_applicationMaintenanceConfiguration(rName, startTime string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "FLINK-1_20"
+  service_execution_role = aws_iam_role.test[0].arn
+
+  application_maintenance_configuration {
+    application_maintenance_window_start_time = %[2]q
+  }
+
+  application_configuration {
+    application_code_configuration {
+      code_content {
+        s3_content_location {
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_object.test[0].key
+        }
+      }
+
+      code_content_type = "ZIPFILE"
+    }
+  }
+}
+`, rName, startTime))
 }
 
 func testAccApplicationConfig_basicSQLPlusDescription(rName string) string {
