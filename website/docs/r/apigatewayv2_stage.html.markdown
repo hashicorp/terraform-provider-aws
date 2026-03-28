@@ -56,8 +56,10 @@ Defaults to `false`. Supported only for WebSocket APIs.
 * `detailed_metrics_enabled` - (Optional) Whether detailed metrics are enabled for the default route. Defaults to `false`.
 * `logging_level` - (Optional) Logging level for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
 Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebSocket APIs. Terraform will only perform drift detection of its value when present in a configuration.
-* `throttling_burst_limit` - (Optional) Throttling burst limit for the default route.
-* `throttling_rate_limit` - (Optional) Throttling rate limit for the default route.
+* `throttling_burst_limit` - (Optional) Throttling burst limit for the default route. Defaults to `0`.
+* `throttling_rate_limit` - (Optional) Throttling rate limit for the default route. Defaults to `0`.
+
+-> **Note:** When `detailed_metrics_enabled` is set to `true` without explicitly setting throttling values, both limits default to `0`, which will cause all requests to be throttled with 429 errors.
 
 ### route_settings
 
