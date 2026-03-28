@@ -1421,15 +1421,37 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	}
 
 	// Get diff for security groups.
-	if diff.HasChange(names.AttrSecurityGroups) {
-		if v := config.GetAttr(names.AttrSecurityGroups); v.IsWhollyKnown() {
-			o, n := diff.GetChange(names.AttrSecurityGroups)
-			os, ns := o.(*schema.Set), n.(*schema.Set)
+	//
+	// When the new value is unknown at plan time (e.g. a security group
+	// created in the same apply), the SDK sees both old and new as empty
+	// sets, so HasChange and ForceNew both fail. Handle this unknown case
+	// first by injecting a placeholder value so the SDK sees a diff,
+	// calling ForceNew, then restoring the attribute to computed.
+	//
+	// This first if statement is needed to properly recreate NLBs when a security group is
+	// added, since NLBs don't support adding security groups after creation.
+	if v := config.GetAttr(names.AttrSecurityGroups); !v.IsWhollyKnown() {
+		o, _ := diff.GetChange(names.AttrSecurityGroups)
+		os := o.(*schema.Set)
 
-			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
-					return err
-				}
+		if os.Len() == 0 && !v.IsNull() {
+			if err := diff.SetNew(names.AttrSecurityGroups, schema.NewSet(schema.HashString, []any{"unknown"})); err != nil {
+				return err
+			}
+			if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+				return err
+			}
+			if err := diff.SetNewComputed(names.AttrSecurityGroups); err != nil {
+				return err
+			}
+		}
+	} else if diff.HasChange(names.AttrSecurityGroups) {
+		o, n := diff.GetChange(names.AttrSecurityGroups)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
+			if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+				return err
 			}
 		}
 	}
