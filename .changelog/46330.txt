@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_glue_connection: Add `authentication_configuration` argument
+```
+
+```release-note:enhancement
+data-source/aws_glue_connection: Add `authentication_configuration` attribute
+```
