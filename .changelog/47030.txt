@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_identity_pool: Fix phantom diff on `saml_provider_arns` by changing from `TypeList` to `TypeSet`
+```
