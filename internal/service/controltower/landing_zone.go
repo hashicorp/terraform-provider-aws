@@ -7,8 +7,11 @@ package controltower
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +32,6 @@ import (
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,7 +79,7 @@ func resourceLandingZone() *schema.Resource {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressFunc:      suppressEquivalentLandingZoneManifestDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -161,7 +163,15 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("manifest_json", v)
+		// Normalize the manifest before setting it in state
+		// This ensures that governedRegions order and retentionDays type are consistent
+		normalizedManifest, err := normalizeManifestJSON(v)
+		if err != nil {
+			log.Printf("[WARN] Failed to normalize manifest JSON: %s", err)
+			d.Set("manifest_json", v) // Fall back to original if normalization fails
+		} else {
+			d.Set("manifest_json", normalizedManifest)
+		}
 	} else {
 		d.Set("manifest_json", nil)
 	}
@@ -326,4 +336,115 @@ func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatu
 	}
 
 	return tfMap
+}
+
+// suppressEquivalentLandingZoneManifestDiffs provides custom diff suppression for Landing Zone manifests.
+// It normalizes the JSON to handle two specific issues:
+// 1. AWS API returns numeric fields (like retentionDays) as strings, but they should be accepted as numbers
+// 2. AWS API may return arrays (like governedRegions) in different order
+func suppressEquivalentLandingZoneManifestDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "" {
+		return true
+	}
+
+	if strings.TrimSpace(old) == "" || strings.TrimSpace(new) == "" {
+		return false
+	}
+
+	// Normalize both JSON strings and compare
+	normalizedOld, err := normalizeManifestJSON(old)
+	if err != nil {
+		log.Printf("[WARN] Failed to normalize old manifest JSON: %s", err)
+		return false
+	}
+
+	normalizedNew, err := normalizeManifestJSON(new)
+	if err != nil {
+		log.Printf("[WARN] Failed to normalize new manifest JSON: %s", err)
+		return false
+	}
+
+	return normalizedOld == normalizedNew
+}
+
+// normalizeManifest recursively normalizes a manifest for comparison:
+// - Converts numeric strings to numbers where appropriate (retentionDays)
+// - Sorts arrays that should be order-independent (governedRegions)
+func normalizeManifest(manifest map[string]interface{}) {
+	for key, value := range manifest {
+		switch key {
+		case "governedRegions":
+			// Sort the regions array to ignore order differences
+			if regions, ok := value.([]interface{}); ok {
+				strRegions := make([]string, 0, len(regions))
+				for _, r := range regions {
+					if str, ok := r.(string); ok {
+						strRegions = append(strRegions, str)
+					}
+				}
+				sort.Strings(strRegions)
+				newRegions := make([]interface{}, len(strRegions))
+				for i, r := range strRegions {
+					newRegions[i] = r
+				}
+				manifest[key] = newRegions
+			}
+		case "centralizedLogging":
+			// Handle nested configurations
+			if logging, ok := value.(map[string]interface{}); ok {
+				if configs, ok := logging["configurations"].(map[string]interface{}); ok {
+					// Normalize retentionDays in loggingBucket and accessLoggingBucket
+					for _, bucketKey := range []string{"loggingBucket", "accessLoggingBucket"} {
+						if bucket, ok := configs[bucketKey].(map[string]interface{}); ok {
+							normalizeRetentionDays(bucket)
+						}
+					}
+				}
+			}
+		default:
+			// Recursively normalize nested objects
+			if nested, ok := value.(map[string]interface{}); ok {
+				normalizeManifest(nested)
+			}
+		}
+	}
+}
+
+// normalizeRetentionDays converts string retentionDays to numbers for comparison
+func normalizeRetentionDays(bucket map[string]interface{}) {
+	if retention, ok := bucket["retentionDays"]; ok {
+		// Convert string to number if it's a numeric string
+		if strVal, ok := retention.(string); ok {
+			// Parse as float64 (JSON numbers are float64)
+			if numVal, err := strconv.ParseFloat(strVal, 64); err == nil {
+				bucket["retentionDays"] = numVal
+			}
+		}
+		// If it's already a number, leave it as is
+	}
+}
+
+// normalizeManifestJSON takes a JSON string, normalizes it (sorting governedRegions and
+// converting retentionDays strings to numbers), and returns the normalized JSON string.
+func normalizeManifestJSON(manifestJSON string) (string, error) {
+	if strings.TrimSpace(manifestJSON) == "" {
+		return manifestJSON, nil
+	}
+
+	var manifest map[string]interface{}
+	if err := json.Unmarshal([]byte(manifestJSON), &manifest); err != nil {
+		return "", err
+	}
+
+	// Normalize the manifest
+	normalizeManifest(manifest)
+
+	// Convert back to JSON string
+	normalized, err := json.Marshal(manifest)
+	if err != nil {
+		return "", err
+	}
+
+	// Use structure.NormalizeJsonString to ensure consistent formatting
+	return structure.NormalizeJsonString(string(normalized))
 }
