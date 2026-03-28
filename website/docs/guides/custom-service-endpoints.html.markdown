@@ -262,7 +262,7 @@ provider "aws" {
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
-|OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
+|OpenSearch Ingestion (OSIS)|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
 |Payment Cryptography Control Plane|`paymentcryptography`|`AWS_ENDPOINT_URL_PAYMENTCRYPTOGRAPHY`|`paymentcryptography`|
 |Private CA Connector for Active Directory|`pcaconnectorad`|`AWS_ENDPOINT_URL_PCA_CONNECTOR_AD`|`pca_connector_ad`|
