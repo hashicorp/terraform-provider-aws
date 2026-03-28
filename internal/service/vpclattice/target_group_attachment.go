@@ -262,7 +262,7 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 
 func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
+		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusHealthy, types.TargetStatusInitial, types.TargetStatusUnavailable, types.TargetStatusUnhealthy, types.TargetStatusUnused),
 		Target:  []string{},
 		Refresh: statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout: timeout,
