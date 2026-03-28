@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -235,8 +236,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionAssociationModel](ctx),
+						"function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -245,12 +246,15 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											validators.ARN(),
+										},
 									},
 								},
 							},
 						},
-						"lambda_function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
+						"lambda_function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -263,6 +267,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									},
 									"lambda_function_arn": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											validators.ARN(),
+										},
 									},
 								},
 							},
@@ -349,8 +356,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						"function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionAssociationModel](ctx),
+						"function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[functionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -359,12 +366,15 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									},
 									names.AttrFunctionARN: schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											validators.ARN(),
+										},
 									},
 								},
 							},
 						},
-						"lambda_function_association": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
+						"lambda_function_association": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[lambdaFunctionAssociationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"event_type": schema.StringAttribute{
@@ -377,6 +387,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									},
 									"lambda_function_arn": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											validators.ARN(),
+										},
 									},
 								},
 							},
@@ -1110,18 +1123,18 @@ type memberModel struct {
 }
 
 type defaultCacheBehaviorModel struct {
-	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
-	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
-	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
-	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
-	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
-	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
-	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
-	TargetOriginID            types.String                                                    `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]          `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
-	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]               `tfsdk:"viewer_protocol_policy"`
+	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]           `tfsdk:"allowed_methods"`
+	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
+	Compress                  types.Bool                                                     `tfsdk:"compress"`
+	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
+	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
+	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
+	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
+	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
+	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
@@ -1131,19 +1144,19 @@ type allowedMethodsModel struct {
 }
 
 type cacheBehaviorModel struct {
-	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]            `tfsdk:"allowed_methods"`
-	CachePolicyID             types.String                                                    `tfsdk:"cache_policy_id"`
-	Compress                  types.Bool                                                      `tfsdk:"compress"`
-	FieldLevelEncryptionID    types.String                                                    `tfsdk:"field_level_encryption_id"`
-	FunctionAssociation       fwtypes.ListNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
-	LambdaFunctionAssociation fwtypes.ListNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
-	OriginRequestPolicyID     types.String                                                    `tfsdk:"origin_request_policy_id"`
-	PathPattern               types.String                                                    `tfsdk:"path_pattern"`
-	RealtimeLogConfigARN      types.String                                                    `tfsdk:"realtime_log_config_arn"`
-	ResponseHeadersPolicyID   types.String                                                    `tfsdk:"response_headers_policy_id"`
-	TargetOriginID            types.String                                                    `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]          `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
-	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]               `tfsdk:"viewer_protocol_policy"`
+	AllowedMethods            fwtypes.ListNestedObjectValueOf[allowedMethodsModel]           `tfsdk:"allowed_methods"`
+	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
+	Compress                  types.Bool                                                     `tfsdk:"compress"`
+	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",xmlwrapper=Items,omitempty"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",xmlwrapper=Items"`
+	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
+	PathPattern               types.String                                                   `tfsdk:"path_pattern"`
+	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
+	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
+	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",omitempty"`
+	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
 
