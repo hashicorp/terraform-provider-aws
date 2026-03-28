@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution_tenant: Fix "inconsistent result after apply" on domain block
+```
