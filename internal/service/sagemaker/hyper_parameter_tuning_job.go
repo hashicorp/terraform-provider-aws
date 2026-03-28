@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -74,7 +75,7 @@ import (
 func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hyperParameterTuningJobResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -87,7 +88,6 @@ const (
 
 type hyperParameterTuningJobResource struct {
 	framework.ResourceWithModel[hyperParameterTuningJobResourceModel]
-	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
@@ -217,8 +217,10 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						"training_job_early_stopping_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.TrainingJobEarlyStoppingType](),
 							Optional:   true,
+							Computed:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
+								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
 					},
@@ -263,11 +265,13 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 								Attributes: map[string]schema.Attribute{
 									"max_number_of_training_jobs": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.AtLeast(1),
 										},
 										PlanModifiers: []planmodifier.Int64{
 											int64planmodifier.RequiresReplace(),
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"max_parallel_training_jobs": schema.Int64Attribute{
@@ -281,11 +285,13 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 									},
 									"max_runtime_in_seconds": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(120, 15768000),
 										},
 										PlanModifiers: []planmodifier.Int64{
 											int64planmodifier.RequiresReplace(),
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -365,11 +371,13 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 											Attributes: map[string]schema.Attribute{
 												"max_number_of_training_jobs_not_improving": schema.Int64Attribute{
 													Optional: true,
+													Computed: true,
 													Validators: []validator.Int64{
 														int64validator.AtLeast(3),
 													},
 													PlanModifiers: []planmodifier.Int64{
 														int64planmodifier.RequiresReplace(),
+														int64planmodifier.UseStateForUnknown(),
 													},
 												},
 											},
@@ -1505,6 +1513,8 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 		return
 	}
 
+	input.Tags = getTagsIn(ctx)
+
 	out, err := tfresource.RetryWhen(ctx, hyperParameterTuningJobCreatePropagationTimeout, func(ctx context.Context) (*sagemaker.CreateHyperParameterTuningJobOutput, error) {
 		return conn.CreateHyperParameterTuningJob(ctx, &input)
 	}, func(err error) (bool, error) {
@@ -1514,7 +1524,8 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 			"no identity-based policy allows the s3:ListBucket action",
 			"No S3 objects found under S3 URL",
 			"The AWS Access Key Id you provided does not exist in our records",
-			"Access denied when describing algorithm") {
+			"Access denied when describing algorithm",
+		) {
 			return true, err
 		}
 
@@ -1651,6 +1662,8 @@ func normalizeTrainingJobDefinitionAlgorithmSpec(
 		if diags.HasError() {
 			return
 		}
+		normalizeRetryStrategy(ctx, fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx), &flatDefs[0].RetryStrategy)
+		normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flatDefs[0].StaticHyperParameters)
 		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
 		return
 	}
@@ -1665,6 +1678,9 @@ func normalizeTrainingJobDefinitionAlgorithmSpec(
 	if diags.HasError() {
 		return
 	}
+
+	normalizeRetryStrategy(ctx, savedDefs[0].RetryStrategy, &flatDefs[0].RetryStrategy)
+	normalizeStaticHyperParameters(ctx, savedDefs[0].StaticHyperParameters, &flatDefs[0].StaticHyperParameters)
 
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
 }
@@ -1691,6 +1707,8 @@ func normalizeTrainingJobDefinitionsAlgorithmSpec(
 			if diags.HasError() {
 				return
 			}
+			normalizeRetryStrategy(ctx, fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx), &flatDefs[i].RetryStrategy)
+			normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flatDefs[i].StaticHyperParameters)
 		}
 		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
 		return
@@ -1707,9 +1725,122 @@ func normalizeTrainingJobDefinitionsAlgorithmSpec(
 		if diags.HasError() {
 			return
 		}
+		normalizeRetryStrategy(ctx, savedDefs[i].RetryStrategy, &flatDefs[i].RetryStrategy)
+		normalizeStaticHyperParameters(ctx, savedDefs[i].StaticHyperParameters, &flatDefs[i].StaticHyperParameters)
 	}
 
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+}
+
+func normalizeStaticHyperParameters(
+	ctx context.Context,
+	saved fwtypes.MapOfString,
+	target *fwtypes.MapOfString,
+) {
+	if saved.IsUnknown() {
+		normalizeInjectedStaticHyperParameters(ctx, target)
+		return
+	}
+
+	if saved.IsNull() {
+		normalizeInjectedStaticHyperParameters(ctx, target)
+		return
+	}
+
+	*target = saved
+}
+
+func normalizeInjectedStaticHyperParameters(
+	ctx context.Context,
+	target *fwtypes.MapOfString,
+) {
+	if target == nil || target.IsNull() || target.IsUnknown() {
+		return
+	}
+
+	filtered := make(map[string]attr.Value)
+
+	for key, value := range target.Elements() {
+		if strings.HasPrefix(key, "_") {
+			continue
+		}
+
+		filtered[key] = value
+	}
+
+	if len(filtered) == 0 {
+		*target = fwtypes.NewMapValueOfNull[types.String](ctx)
+		return
+	}
+
+	*target = fwtypes.NewMapValueOfMust[types.String](ctx, filtered)
+}
+
+func normalizeRetryStrategy(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[retryStrategyModel],
+	target *fwtypes.ListNestedObjectValueOf[retryStrategyModel],
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		*target = fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx)
+		return
+	}
+
+	*target = saved
+}
+
+func normalizeHyperParameterTuningJobConfig(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobConfigModel],
+	target *fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobConfigModel],
+	diags *diag.Diagnostics,
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	flatConfigs, d := target.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(flatConfigs) == 0 {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		flatConfigs[0].TuningJobCompletionCriteria = fwtypes.NewListNestedObjectValueOfNull[tuningJobCompletionCriteriaModel](ctx)
+		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatConfigs)
+		return
+	}
+
+	savedConfigs, d := saved.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(savedConfigs) == 0 {
+		return
+	}
+
+	normalizeTuningJobCompletionCriteria(ctx, savedConfigs[0].TuningJobCompletionCriteria, &flatConfigs[0].TuningJobCompletionCriteria)
+
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatConfigs)
+}
+
+func normalizeTuningJobCompletionCriteria(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel],
+	target *fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel],
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		*target = fwtypes.NewListNestedObjectValueOfNull[tuningJobCompletionCriteriaModel](ctx)
+		return
+	}
+
+	*target = saved
 }
 
 func normalizeAlgorithmSpecification(
@@ -1730,6 +1861,7 @@ func normalizeAlgorithmSpecification(
 
 	if saved.IsNull() || len(saved.Elements()) == 0 {
 		flatSpecs[0].AlgorithmName = normalizeHyperParameterTuningAlgorithmName(flatSpecs[0].AlgorithmName)
+		flatSpecs[0].TrainingImage = types.StringNull()
 		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[hyperParameterTuningMetricDefinitionModel](ctx)
 		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
 		return
@@ -1741,9 +1873,26 @@ func normalizeAlgorithmSpecification(
 		return
 	}
 
-	flatSpecs[0].AlgorithmName = savedSpecs[0].AlgorithmName
-	flatSpecs[0].MetricDefinitions = savedSpecs[0].MetricDefinitions
+	if algorithmSpecificationUsesTrainingImage(savedSpecs[0]) {
+		flatSpecs[0].AlgorithmName = types.StringNull()
+		flatSpecs[0].TrainingImage = savedSpecs[0].TrainingImage
+	} else if !savedSpecs[0].AlgorithmName.IsUnknown() && !savedSpecs[0].AlgorithmName.IsNull() {
+		flatSpecs[0].AlgorithmName = savedSpecs[0].AlgorithmName
+		flatSpecs[0].TrainingImage = types.StringNull()
+	} else {
+		flatSpecs[0].AlgorithmName = normalizeHyperParameterTuningAlgorithmName(flatSpecs[0].AlgorithmName)
+		flatSpecs[0].TrainingImage = types.StringNull()
+	}
+
+	if !savedSpecs[0].MetricDefinitions.IsUnknown() {
+		flatSpecs[0].MetricDefinitions = savedSpecs[0].MetricDefinitions
+	}
+
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
+}
+
+func algorithmSpecificationUsesTrainingImage(spec *algorithmSpecificationModel) bool {
+	return !spec.TrainingImage.IsUnknown() && !spec.TrainingImage.IsNull()
 }
 
 func normalizeHyperParameterTuningAlgorithmName(v types.String) types.String {
@@ -1769,10 +1918,16 @@ func (r *hyperParameterTuningJobResource) flatten(
 	target *hyperParameterTuningJobResourceModel,
 	diags *diag.Diagnostics,
 ) {
+	savedHyperParameterTuningJobConfig := target.HyperParameterTuningJobConfig
 	savedTrainingJobDefinition := target.TrainingJobDefinition
 	savedTrainingJobDefinitions := target.TrainingJobDefinitions
 
 	diags.Append(fwflex.Flatten(ctx, out, target, fwflex.WithFieldNamePrefix("HyperParameterTuningJob"))...)
+	if diags.HasError() {
+		return
+	}
+
+	normalizeHyperParameterTuningJobConfig(ctx, savedHyperParameterTuningJobConfig, &target.HyperParameterTuningJobConfig, diags)
 	if diags.HasError() {
 		return
 	}
