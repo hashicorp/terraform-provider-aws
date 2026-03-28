@@ -35,6 +35,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newResourcePrivateGraphEndpoint,
+			TypeName: "aws_neptunegraph_private_graph_endpoint",
+			Name:     "Private Graph Endpoint",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
