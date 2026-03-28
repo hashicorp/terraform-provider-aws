@@ -111,6 +111,19 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"advanced_performance_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
 									"bucket_level": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -144,6 +157,19 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													},
 												},
 												"advanced_data_protection_metrics": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrEnabled: {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"advanced_performance_metrics": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -328,6 +354,164 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"storage_lens_table_destination": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"encryption": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sse_kms": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		names.AttrKeyID: {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: verify.ValidARN,
+																		},
+																	},
+																},
+															},
+															"sse_s3": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"expanded_prefixes_data_export": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_bucket_destination": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrAccountID: {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidAccountID,
+												},
+												names.AttrARN: {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"encryption": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sse_kms": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		names.AttrKeyID: {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: verify.ValidARN,
+																		},
+																	},
+																},
+															},
+															"sse_s3": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{},
+																},
+															},
+														},
+													},
+												},
+												names.AttrFormat: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.Format](),
+												},
+												"output_schema_version": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
+												},
+												names.AttrPrefix: {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"storage_lens_table_destination": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"encryption": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sse_kms": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		names.AttrKeyID: {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: verify.ValidARN,
+																		},
+																	},
+																},
+															},
+															"sse_s3": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -384,6 +568,10 @@ func resourceStorageLensConfiguration() *schema.Resource {
 									},
 								},
 							},
+						},
+						"prefix_delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -673,6 +861,10 @@ func expandStorageLensConfiguration(tfMap map[string]any) *types.StorageLensConf
 		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["expanded_prefixes_data_export"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ExpandedPrefixesDataExport = expandExpandedPrefixesDataExport(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
@@ -683,6 +875,10 @@ func expandStorageLensConfiguration(tfMap map[string]any) *types.StorageLensConf
 
 	if v, ok := tfMap["include"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Include = expandInclude(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["prefix_delimiter"].(string); ok && v != "" {
+		apiObject.PrefixDelimiter = aws.String(v)
 	}
 
 	return apiObject
@@ -705,6 +901,10 @@ func expandAccountLevel(tfMap map[string]any) *types.AccountLevel {
 
 	if v, ok := tfMap["advanced_data_protection_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["advanced_performance_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedPerformanceMetrics = expandAdvancedPerformanceMetrics(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["bucket_level"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -753,12 +953,30 @@ func expandBucketLevel(tfMap map[string]any) *types.BucketLevel {
 		apiObject.AdvancedDataProtectionMetrics = expandAdvancedDataProtectionMetrics(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["advanced_performance_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedPerformanceMetrics = expandAdvancedPerformanceMetrics(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap["detailed_status_code_metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.DetailedStatusCodesMetrics = expandDetailedStatusCodesMetrics(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["prefix_level"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PrefixLevel = expandPrefixLevel(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandAdvancedPerformanceMetrics(tfMap map[string]any) *types.AdvancedPerformanceMetrics {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.AdvancedPerformanceMetrics{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.IsEnabled = v
 	}
 
 	return apiObject
@@ -889,6 +1107,28 @@ func expandStorageLensDataExport(tfMap map[string]any) *types.StorageLensDataExp
 		apiObject.S3BucketDestination = expandS3BucketDestination(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["storage_lens_table_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StorageLensTableDestination = expandStorageLensTableDestination(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandExpandedPrefixesDataExport(tfMap map[string]any) *types.StorageLensExpandedPrefixesDataExport {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.StorageLensExpandedPrefixesDataExport{}
+
+	if v, ok := tfMap["s3_bucket_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3BucketDestination = expandS3BucketDestination(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["storage_lens_table_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StorageLensTableDestination = expandStorageLensTableDestination(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
@@ -935,6 +1175,24 @@ func expandS3BucketDestination(tfMap map[string]any) *types.S3BucketDestination 
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandStorageLensTableDestination(tfMap map[string]any) *types.StorageLensTableDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.StorageLensTableDestination{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.IsEnabled = v
+	}
+
+	if v, ok := tfMap["encryption"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]any))
 	}
 
 	return apiObject
@@ -1027,6 +1285,10 @@ func flattenStorageLensConfiguration(apiObject *types.StorageLensConfiguration) 
 		tfMap["data_export"] = []any{flattenStorageLensDataExport(v)}
 	}
 
+	if v := apiObject.ExpandedPrefixesDataExport; v != nil {
+		tfMap["expanded_prefixes_data_export"] = []any{flattenExpandedPrefixesDataExport(v)}
+	}
+
 	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	if v := apiObject.Exclude; v != nil {
@@ -1035,6 +1297,10 @@ func flattenStorageLensConfiguration(apiObject *types.StorageLensConfiguration) 
 
 	if v := apiObject.Include; v != nil {
 		tfMap["include"] = []any{flattenInclude(v)}
+	}
+
+	if v := apiObject.PrefixDelimiter; v != nil {
+		tfMap["prefix_delimiter"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1057,6 +1323,10 @@ func flattenAccountLevel(apiObject *types.AccountLevel) map[string]any {
 
 	if v := apiObject.AdvancedDataProtectionMetrics; v != nil {
 		tfMap["advanced_data_protection_metrics"] = []any{flattenAdvancedDataProtectionMetrics(v)}
+	}
+
+	if v := apiObject.AdvancedPerformanceMetrics; v != nil {
+		tfMap["advanced_performance_metrics"] = []any{flattenAdvancedPerformanceMetrics(v)}
 	}
 
 	if v := apiObject.BucketLevel; v != nil {
@@ -1101,6 +1371,10 @@ func flattenBucketLevel(apiObject *types.BucketLevel) map[string]any {
 		tfMap["advanced_data_protection_metrics"] = []any{flattenAdvancedDataProtectionMetrics(v)}
 	}
 
+	if v := apiObject.AdvancedPerformanceMetrics; v != nil {
+		tfMap["advanced_performance_metrics"] = []any{flattenAdvancedPerformanceMetrics(v)}
+	}
+
 	if v := apiObject.DetailedStatusCodesMetrics; v != nil {
 		tfMap["detailed_status_code_metrics"] = []any{flattenDetailedStatusCodesMetrics(v)}
 	}
@@ -1125,6 +1399,18 @@ func flattenAdvancedCostOptimizationMetrics(apiObject *types.AdvancedCostOptimiz
 }
 
 func flattenAdvancedDataProtectionMetrics(apiObject *types.AdvancedDataProtectionMetrics) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
+
+	return tfMap
+}
+
+func flattenAdvancedPerformanceMetrics(apiObject *types.AdvancedPerformanceMetrics) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1224,6 +1510,28 @@ func flattenStorageLensDataExport(apiObject *types.StorageLensDataExport) map[st
 		tfMap["s3_bucket_destination"] = []any{flattenS3BucketDestination(v)}
 	}
 
+	if v := apiObject.StorageLensTableDestination; v != nil {
+		tfMap["storage_lens_table_destination"] = []any{flattenStorageLensTableDestination(v)}
+	}
+
+	return tfMap
+}
+
+func flattenExpandedPrefixesDataExport(apiObject *types.StorageLensExpandedPrefixesDataExport) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.S3BucketDestination; v != nil {
+		tfMap["s3_bucket_destination"] = []any{flattenS3BucketDestination(v)}
+	}
+
+	if v := apiObject.StorageLensTableDestination; v != nil {
+		tfMap["storage_lens_table_destination"] = []any{flattenStorageLensTableDestination(v)}
+	}
+
 	return tfMap
 }
 
@@ -1263,6 +1571,22 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 
 	if v := apiObject.Prefix; v != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenStorageLensTableDestination(apiObject *types.StorageLensTableDestination) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
+
+	if v := apiObject.Encryption; v != nil {
+		tfMap["encryption"] = []any{flattenStorageLensDataExportEncryption(v)}
 	}
 
 	return tfMap

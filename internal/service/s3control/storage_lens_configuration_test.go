@@ -38,10 +38,12 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", "0"),
@@ -153,11 +155,13 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.#", "1"),
@@ -178,6 +182,19 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.format", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.prefix", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.prefix_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.buckets.#", "2"),
@@ -203,11 +220,13 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", "0"),
@@ -224,6 +243,27 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "Parquet"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.format", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.s3_bucket_destination.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.expanded_prefixes_data_export.0.storage_lens_table_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.prefix_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "1"),
@@ -261,6 +301,8 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_performance_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_performance_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", acctest.CtTrue),
@@ -268,6 +310,8 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_performance_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_performance_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
@@ -300,10 +344,12 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_performance_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", "0"),
@@ -481,7 +527,27 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         output_schema_version = "V_1"
         prefix                = "p1"
       }
+
+      storage_lens_table_destination {
+		enabled = false
+      }
     }
+
+	expanded_prefixes_data_export {
+	  s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.test[0].arn
+        format                = "CSV"
+        output_schema_version = "V_1"
+        prefix                = "p1"
+      }
+
+      storage_lens_table_destination {
+		enabled = false
+      }
+    }
+
+    prefix_delimiter = ","
 
     exclude {
       buckets = [aws_s3_bucket.test[1].arn, aws_s3_bucket.test[2].arn]
@@ -533,7 +599,36 @@ resource "aws_s3control_storage_lens_configuration" "test" {
           sse_s3 {}
         }
       }
+
+	  storage_lens_table_destination {
+		enabled = true
+		encryption {
+          sse_s3 {}
+        }
+      }
     }
+
+	expanded_prefixes_data_export {
+	  s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.test[0].arn
+        format                = "Parquet"
+        output_schema_version = "V_1"
+
+        encryption {
+          sse_s3 {}
+        }
+      }
+
+	  storage_lens_table_destination {
+		enabled = true
+		encryption {
+          sse_s3 {}
+        }
+      }
+    }
+
+    prefix_delimiter = ","
 
     include {
       buckets = [aws_s3_bucket.test[1].arn]
@@ -564,6 +659,10 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         enabled = true
       }
 
+      advanced_performance_metrics {
+        enabled = true
+      }
+
       detailed_status_code_metrics {
         enabled = true
       }
@@ -580,6 +679,10 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         advanced_data_protection_metrics {
           enabled = true
         }
+
+		advanced_performance_metrics {
+		  enabled = true
+	    }
 
         detailed_status_code_metrics {
           enabled = true
