@@ -593,6 +593,8 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 		return true, diags
 	case *awstypes.ParametersMemberInfluxDBv3Enterprise:
 		return true, diags
+	case *awstypes.ParametersMemberInfluxDBv3Enterprise1Node:
+		return true, diags
 	default:
 		return false, diags
 	}
