@@ -59,6 +59,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Origin Access Control",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
+		{
+			Factory:  newDataSourceVPCOrigin,
+			TypeName: "aws_cloudfront_vpc_origin",
+			Name:     "VPC Origin",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 	}
 }
 
