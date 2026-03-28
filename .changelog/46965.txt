@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_arcregionswitch: Adding RDS execution blocks and automated plan execution report configurations to Region Switch plan.
+```
