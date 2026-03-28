@@ -950,9 +950,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if old, new := d.GetChange(names.AttrEngine); old.(string) != new.(string) && new.(string) == engineValkey {
+		if old, new := d.GetChange(names.AttrEngine); old.(string) != new.(string) {
+			newEngine := strings.ToLower(new.(string))
 			if !d.HasChange(names.AttrEngineVersion) {
-				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to 'valkey'", names.AttrEngineVersion, d.Id())
+				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to %q", names.AttrEngineVersion, d.Id(), newEngine)
 			}
 			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 			requestUpdate = true
