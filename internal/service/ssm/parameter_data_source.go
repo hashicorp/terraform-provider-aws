@@ -53,6 +53,11 @@ func dataSourceParameter() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"load_value": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -62,22 +67,25 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
+	loadValue := d.Get("load_value").(bool)
 	param, err := findParameterByName(ctx, conn, name, d.Get("with_decryption").(bool))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSM Parameter (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(param.Name))
 	d.Set(names.AttrARN, param.ARN)
-	d.Set("insecure_value", nil)
-	if param.Type != awstypes.ParameterTypeSecureString {
-		d.Set("insecure_value", param.Value)
-	}
 	d.Set(names.AttrName, param.Name)
 	d.Set(names.AttrType, param.Type)
-	d.Set(names.AttrValue, param.Value)
 	d.Set(names.AttrVersion, param.Version)
+
+	if loadValue {
+		d.Set("insecure_value", nil)
+		if param.Type != awstypes.ParameterTypeSecureString {
+			d.Set("insecure_value", param.Value)
+		}
+		d.Set(names.AttrValue, param.Value)
+	}
 
 	return diags
 }
