@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -19,12 +18,12 @@ import (
 
 func TestAccSSMParameterEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -52,12 +51,12 @@ func TestAccSSMParameterEphemeral_basic(t *testing.T) {
 
 func TestAccSSMParameterEphemeral_secureString(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -85,12 +84,12 @@ func TestAccSSMParameterEphemeral_secureString(t *testing.T) {
 
 func TestAccSSMParameterEphemeral_variable(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -118,12 +117,12 @@ func TestAccSSMParameterEphemeral_variable(t *testing.T) {
 
 func TestAccSSMParameterEphemeral_secureStringVariable(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -151,12 +150,12 @@ func TestAccSSMParameterEphemeral_secureStringVariable(t *testing.T) {
 
 func TestAccSSMParameterEphemeral_withDecryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -184,12 +183,12 @@ func TestAccSSMParameterEphemeral_withDecryption(t *testing.T) {
 
 func TestAccSSMParameterEphemeral_withDecryptionFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	secretString := "super-secret"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

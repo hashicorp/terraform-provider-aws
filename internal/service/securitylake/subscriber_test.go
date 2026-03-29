@@ -122,7 +122,7 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 	resourceName := "aws_securitylake_subscriber.test"
 	var subscriber types.SubscriberResource
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	sourceName := randomCustomLogSourceName()
+	sourceName := randomCustomLogSourceName(t)
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "code_editor_app_image_config.#", "1"),
@@ -55,19 +53,19 @@ func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceAppImageConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,19 +77,19 @@ func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_kernelGatewayKernalSpecs1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
@@ -107,7 +105,7 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 			{
 				Config: testAccAppImageConfigConfig_kernelGatewayKernalSpecs2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
@@ -123,19 +121,19 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
@@ -153,7 +151,7 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) 
 			{
 				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
@@ -170,20 +168,20 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) 
 func TestAccSageMakerAppImageConfig_CodeEditor(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_codeEditor(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "code_editor_app_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "code_editor_app_image_config.0.container_config.#", "1"),
@@ -202,7 +200,7 @@ func TestAccSageMakerAppImageConfig_CodeEditor(t *testing.T) {
 			{
 				Config: testAccAppImageConfigConfig_codeEditor(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "code_editor_app_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "code_editor_app_image_config.0.container_config.#", "1"),
@@ -220,20 +218,20 @@ func TestAccSageMakerAppImageConfig_CodeEditor(t *testing.T) {
 func TestAccSageMakerAppImageConfig_JupyterLab(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_jupyterLab(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.0.container_config.#", "1"),
@@ -252,7 +250,7 @@ func TestAccSageMakerAppImageConfig_JupyterLab(t *testing.T) {
 			{
 				Config: testAccAppImageConfigConfig_jupyterLab(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.0.container_config.#", "1"),
@@ -270,19 +268,19 @@ func TestAccSageMakerAppImageConfig_JupyterLab(t *testing.T) {
 func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &app),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -295,7 +293,7 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 			{
 				Config: testAccAppImageConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &app),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -304,7 +302,7 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 			{
 				Config: testAccAppImageConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &app),
+					testAccCheckAppImageConfigExists(ctx, t, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -313,9 +311,9 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppImageConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAppImageConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_app_image_config" {
@@ -339,14 +337,14 @@ func testAccCheckAppImageConfigDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckAppImageConfigExists(ctx context.Context, n string, v *sagemaker.DescribeAppImageConfigOutput) resource.TestCheckFunc {
+func testAccCheckAppImageConfigExists(ctx context.Context, t *testing.T, n string, v *sagemaker.DescribeAppImageConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindAppImageConfigByName(ctx, conn, rs.Primary.ID)
 

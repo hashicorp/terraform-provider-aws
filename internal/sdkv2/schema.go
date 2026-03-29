@@ -83,6 +83,9 @@ var IAMPolicyDocumentSchemaRequiredForceNew = sync.OnceValue(jsonDocumentSchemaR
 // JSONDocumentSchemaOptional returns the standard schema for an optional JSON document.
 var JSONDocumentSchemaOptional = sync.OnceValue(jsonDocumentSchemaOptionalFunc(SuppressEquivalentJSONDocuments))
 
+// JSONDocumentSchemaOptionalComputed returns the standard schema for an optional, computed JSON document.
+var JSONDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaOptionalComputedFunc(SuppressEquivalentJSONDocuments))
+
 // JSONDocumentWithEmptySchemaOptional returns the standard schema for an optional JSON document with empty string handling.
 var JSONDocumentWithEmptySchemaOptional = sync.OnceValue(jsonDocumentSchemaOptionalFunc(SuppressEquivalentJSONDocumentsWithEmpty))
 

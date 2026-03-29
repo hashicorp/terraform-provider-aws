@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,16 +33,16 @@ func testAccAccountPasswordPolicy_basic(t *testing.T) {
 	var policy awstypes.PasswordPolicy
 	resourceName := "aws_iam_account_password_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPasswordPolicyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "8"),
 				),
 			},
@@ -55,7 +54,7 @@ func testAccAccountPasswordPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAccountPasswordPolicyConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "7"),
 				),
 			},
@@ -68,16 +67,16 @@ func testAccAccountPasswordPolicy_disappears(t *testing.T) {
 	var policy awstypes.PasswordPolicy
 	resourceName := "aws_iam_account_password_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPasswordPolicyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccountPasswordPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,9 +85,9 @@ func testAccAccountPasswordPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountPasswordPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccountPasswordPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_account_password_policy" {
@@ -112,7 +111,7 @@ func testAccCheckAccountPasswordPolicyDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckAccountPasswordPolicyExists(ctx context.Context, n string, v *awstypes.PasswordPolicy) resource.TestCheckFunc {
+func testAccCheckAccountPasswordPolicyExists(ctx context.Context, t *testing.T, n string, v *awstypes.PasswordPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,7 +122,7 @@ func testAccCheckAccountPasswordPolicyExists(ctx context.Context, n string, v *a
 			return fmt.Errorf("No IAM Account Password Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		output, err := tfiam.FindAccountPasswordPolicy(ctx, conn)
 

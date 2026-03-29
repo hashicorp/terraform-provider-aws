@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -29,25 +27,25 @@ func TestAccIAMGroupPoliciesExclusive_basic(t *testing.T) {
 
 	var group types.Group
 	var groupPolicy string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policies_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	groupPolicyResourceName := "aws_iam_group_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyExists(ctx, groupPolicyResourceName, &groupPolicy),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyExists(ctx, t, groupPolicyResourceName, &groupPolicy),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", groupPolicyResourceName, names.AttrName),
 				),
@@ -68,25 +66,25 @@ func TestAccIAMGroupPoliciesExclusive_disappears_Group(t *testing.T) {
 
 	var group types.Group
 	var groupPolicy string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policies_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	groupPolicyResourceName := "aws_iam_group_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyExists(ctx, groupPolicyResourceName, &groupPolicy),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyExists(ctx, t, groupPolicyResourceName, &groupPolicy),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					// Inline policy must be deleted before the group can be
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicy(), groupPolicyResourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroup(), groupResourceName),
@@ -102,27 +100,27 @@ func TestAccIAMGroupPoliciesExclusive_multiple(t *testing.T) {
 
 	var group types.Group
 	var groupPolicy string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policies_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	groupPolicyResourceName := "aws_iam_group_policy.test"
 	groupPolicyResourceName2 := "aws_iam_group_policy.test2"
 	groupPolicyResourceName3 := "aws_iam_group_policy.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyExists(ctx, groupPolicyResourceName, &groupPolicy),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyExists(ctx, t, groupPolicyResourceName, &groupPolicy),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", groupPolicyResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", groupPolicyResourceName2, names.AttrName),
@@ -139,9 +137,9 @@ func TestAccIAMGroupPoliciesExclusive_multiple(t *testing.T) {
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyExists(ctx, groupPolicyResourceName, &groupPolicy),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyExists(ctx, t, groupPolicyResourceName, &groupPolicy),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", groupPolicyResourceName, names.AttrName),
 				),
@@ -154,23 +152,23 @@ func TestAccIAMGroupPoliciesExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var group types.Group
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policies_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPoliciesExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "0"),
 				),
@@ -187,30 +185,30 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var group types.Group
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policies_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
-					testAccCheckGroupPolicyRemoveInlinePolicy(ctx, &group, rName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
+					testAccCheckGroupPolicyRemoveInlinePolicy(ctx, t, &group, rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
@@ -224,31 +222,31 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var group types.Group
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	policyName := rName + "-out-of-band"
 	resourceName := "aws_iam_group_policies_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
-					testAccCheckGroupPolicyAddInlinePolicy(ctx, &group, policyName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
+					testAccCheckGroupPolicyAddInlinePolicy(ctx, t, &group, policyName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccGroupPoliciesExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPoliciesExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
@@ -257,9 +255,9 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandAddition(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupPoliciesExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGroupPoliciesExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policies_exclusive" {
@@ -282,7 +280,7 @@ func testAccCheckGroupPoliciesExclusiveDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -294,7 +292,7 @@ func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, name string) 
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameGroupPoliciesExclusive, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 		out, err := tfiam.FindGroupPoliciesByName(ctx, conn, groupName)
 		if err != nil {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameGroupPoliciesExclusive, groupName, err)
@@ -309,9 +307,9 @@ func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, name string) 
 	}
 }
 
-func testAccCheckGroupPolicyAddInlinePolicy(ctx context.Context, group *types.Group, inlinePolicy string) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAddInlinePolicy(ctx context.Context, t *testing.T, group *types.Group, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		_, err := conn.PutGroupPolicy(ctx, &iam.PutGroupPolicyInput{
 			PolicyDocument: aws.String(testAccGroupPolicyExtraInlineConfig()),
@@ -323,9 +321,9 @@ func testAccCheckGroupPolicyAddInlinePolicy(ctx context.Context, group *types.Gr
 	}
 }
 
-func testAccCheckGroupPolicyRemoveInlinePolicy(ctx context.Context, group *types.Group, inlinePolicy string) resource.TestCheckFunc {
+func testAccCheckGroupPolicyRemoveInlinePolicy(ctx context.Context, t *testing.T, group *types.Group, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		_, err := conn.DeleteGroupPolicy(ctx, &iam.DeleteGroupPolicyInput{
 			PolicyName: aws.String(inlinePolicy),

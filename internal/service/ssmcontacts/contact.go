@@ -29,7 +29,6 @@ import (
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.15.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,

@@ -9,7 +9,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,7 +17,7 @@ import (
 func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
+	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", acctest.RandString(t, 8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
 	resourceName := "aws_cloudformation_type.test"
 	dataSourceName := "data.aws_cloudformation_type.test"
@@ -85,7 +84,7 @@ func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
 func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
+	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", acctest.RandString(t, 8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
 	resourceName := "aws_cloudformation_type.test"
 	dataSourceName := "data.aws_cloudformation_type.test"

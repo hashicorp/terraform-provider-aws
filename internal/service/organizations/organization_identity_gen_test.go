@@ -49,7 +49,7 @@ func testAccOrganizationsOrganization_Identity_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -57,7 +57,7 @@ func testAccOrganizationsOrganization_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Organization/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, resourceName, &v),
+					testAccCheckOrganizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -125,14 +125,14 @@ func testAccOrganizationsOrganization_Identity_ExistingResource_basic(t *testing
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckOrganizationDestroy(ctx),
+		CheckDestroy: testAccCheckOrganizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Organization/basic_v6.4.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, resourceName, &v),
+					testAccCheckOrganizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -180,7 +180,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource_noRefreshNoChang
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckOrganizationDestroy(ctx),
+		CheckDestroy: testAccCheckOrganizationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -192,7 +192,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource_noRefreshNoChang
 				ConfigDirectory: config.StaticDirectory("testdata/Organization/basic_v6.4.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, resourceName, &v),
+					testAccCheckOrganizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

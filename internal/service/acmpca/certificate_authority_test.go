@@ -370,6 +370,73 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthority_RevocationCrl_customPath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority awstypes.CertificateAuthority
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+	customPath1 := "root"
+	customPath2 := "root/ca"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Test creating revocation configuration with custom_path on resource creation
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomPath(rName, commonName, customPath1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_path", customPath1),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
+				),
+			},
+			// Test importing revocation configuration
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+			// Test updating custom_path
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomPath(rName, commonName, customPath2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_path", customPath2),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
+				),
+			},
+			// Test removing custom_path on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateAuthorityExists(ctx, t, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.custom_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority awstypes.CertificateAuthority
@@ -882,6 +949,42 @@ resource "aws_acmpca_certificate_authority" "test" {
   ]
 }
 `, commonName, customCname))
+}
+
+func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationCustomPath(rName, commonName, customPath string) string {
+	return acctest.ConfigCompose(
+		testAccCertificateAuthorityConfig_S3Bucket(rName),
+		fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  revocation_configuration {
+    crl_configuration {
+      custom_path        = %[2]q
+      enabled            = true
+      expiration_in_days = 1
+      s3_bucket_name     = aws_s3_bucket.test.id
+      s3_object_acl      = "BUCKET_OWNER_FULL_CONTROL"
+    }
+  }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+}
+`, commonName, customPath))
 }
 
 func testAccCertificateAuthorityConfig_revocationConfigurationCrlConfigurationEnabled(rName, commonName string, enabled bool) string {

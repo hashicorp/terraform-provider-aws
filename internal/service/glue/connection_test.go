@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -471,7 +470,7 @@ func TestAccGlueConnection_dynamoDB(t *testing.T) {
 	var connection awstypes.Connection
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
-	bucketName := "tf-acc-test-" + sdkacctest.RandString(26)
+	bucketName := "tf-acc-test-" + acctest.RandString(t, 26)
 	region := acctest.Region()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -503,7 +502,7 @@ func TestAccGlueConnection_openSearch(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
 	region := acctest.Region()
-	endpoint := "https://" + rName + "-" + sdkacctest.RandString(26) + region + ".es.amazonaws.com"
+	endpoint := "https://" + rName + "-" + acctest.RandString(t, 26) + region + ".es.amazonaws.com"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

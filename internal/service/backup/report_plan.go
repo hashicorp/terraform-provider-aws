@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_backup_report_plan", name="Report Plan")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup/types;awstypes;awstypes.ReportPlan")
-// @Testing(generator="randomReportPlanName()")
+// @Testing(generator="randomReportPlanName(t)")
 func resourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,
@@ -151,7 +151,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateReportPlanInput{
-		IdempotencyToken:      aws.String(sdkid.UniqueId()),
+		IdempotencyToken:      aws.String(create.UniqueId(ctx)),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]any)),
 		ReportPlanName:        aws.String(name),
 		ReportPlanTags:        getTagsIn(ctx),
@@ -214,7 +214,7 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &backup.UpdateReportPlanInput{
-			IdempotencyToken:      aws.String(sdkid.UniqueId()),
+			IdempotencyToken:      aws.String(create.UniqueId(ctx)),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]any)),
 			ReportPlanDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			ReportPlanName:        aws.String(d.Id()),

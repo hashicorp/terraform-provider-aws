@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +25,16 @@ func TestAccWAFV2APIKey_basic(t *testing.T) {
 	resourceName := "aws_wafv2_api_key.test"
 	domain := []string{acctest.RandomDomainName()}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_basic(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey),
 					resource.TestCheckResourceAttrSet(resourceName, "api_key"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "1"),
@@ -61,16 +60,16 @@ func TestAccWAFV2APIKey_multipleTokenDomains(t *testing.T) {
 		domains = append(domains, acctest.RandomDomainName())
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_basic(domains),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey),
 					resource.TestCheckResourceAttrSet(resourceName, "api_key"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "4"),
@@ -94,16 +93,16 @@ func TestAccWAFV2APIKey_changeTokenDomainsForceNew(t *testing.T) {
 	domain := []string{acctest.RandomDomainName()}
 	domainNew := []string{acctest.RandomDomainName()}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_basic(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey),
 					resource.TestCheckResourceAttrSet(resourceName, "api_key"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "1"),
@@ -112,7 +111,7 @@ func TestAccWAFV2APIKey_changeTokenDomainsForceNew(t *testing.T) {
 			{
 				Config: testAccAPIKeyConfig_basic(domainNew),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey),
 					resource.TestCheckResourceAttrSet(resourceName, "api_key"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "1"),
@@ -128,16 +127,16 @@ func TestAccWAFV2APIKey_disappears(t *testing.T) {
 	resourceName := "aws_wafv2_api_key.test"
 	domain := []string{acctest.RandomDomainName()}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceAPIKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -151,9 +150,9 @@ func TestAccWAFV2APIKey_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPIKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafv2_api_key" {
@@ -177,14 +176,14 @@ func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAPIKeyExists(ctx context.Context, n string, v *awstypes.APIKeySummary) resource.TestCheckFunc {
+func testAccCheckAPIKeyExists(ctx context.Context, t *testing.T, n string, v *awstypes.APIKeySummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 		output, err := tfwafv2.FindAPIKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_key"], awstypes.Scope(rs.Primary.Attributes[names.AttrScope]))
 

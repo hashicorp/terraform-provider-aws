@@ -15,7 +15,7 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 ### Basic Table
 
 ```terraform
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
+resource "aws_glue_catalog_table" "example" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 }
@@ -24,7 +24,7 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 ### Parquet Table for Athena
 
 ```terraform
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
+resource "aws_glue_catalog_table" "example" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 
@@ -80,6 +80,77 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 }
 ```
 
+### Iceberg Table
+
+```terraform
+resource "aws_glue_catalog_table" "example" {
+  name          = "transactiontable1"
+  database_name = "bankdata_icebergdb"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+
+      iceberg_table_input {
+        location = "s3://sampledatabucket/bankdataiceberg/transactiontable1/"
+
+        schema {
+          schema_id = 0
+          type      = "struct"
+
+          fields {
+            id       = 1
+            name     = "transaction_id"
+            required = true
+            type     = <<EOF
+            "string"
+EOF
+          }
+          fields {
+            id       = 2
+            name     = "transaction_date"
+            required = true
+            type     = <<EOF
+            "date"
+EOF
+          }
+          fields {
+            id       = 3
+            name     = "monthly_balance"
+            required = true
+            type     = <<EOF
+            "float"
+EOF
+          }
+        }
+
+        partition_spec {
+          fields {
+            name      = "by_year"
+            source_id = 2
+            transform = "year"
+          }
+
+          spec_id = 0
+        }
+
+        sort_order {
+          fields {
+            direction  = "asc"
+            null_order = "nulls-last"
+            source_id  = 1
+            transform  = "none"
+          }
+
+          order_id = 1
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -103,6 +174,7 @@ The following arguments are optional:
 * `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
+* `view_definition` - (Optional) A structure that contains all the information that defines the view, including the dialect or dialects for the view, and the query. See [`view_definition`](#view_definition) below.
 
 ### open_table_format_input
 
@@ -116,8 +188,58 @@ This will destroy and recreate the table, possibly resulting in data loss.
 ~> **NOTE:** A `iceberg_input` cannot be added to an existing `open_table_format_input`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
+* `iceberg_table_input` - (Optional) Configuration parameters, including table properties and metadata specifications. See [`iceberg_table_input`](#iceberg_table_input) below.
 * `metadata_operation` - (Required) A required metadata operation. Can only be set to CREATE.
 * `version` - (Optional) The table version for the Iceberg table. Defaults to 2.
+
+### iceberg_table_input
+
+* `location` - (Required) The S3 location where the Iceberg table data will be stored. Maximum length of 2056 characters.
+* `partition_spec` - (Optional) The partitioning specification that defines how the Iceberg table data will be organized and partitioned for optimal query performance. See [`partition_spec`](#partition_spec) below.
+* `properties` - (Optional) Key-value pairs of additional table properties and configuration settings for the Iceberg table.
+* `schema` - (Required) The schema definition that specifies the structure, field types, and metadata for the Iceberg table. See [`schema`](#schema) below.
+* `sort_order` - (Optional) The sort order specification that defines how data should be ordered within each partition to optimize query performance. See [`sort_order`](#sort_order) below.
+
+### partition_spec
+
+* `fields` - (Required) The list of partition fields that define how the table data should be partitioned. See [`fields`](#partition-fields) below.
+* `spec_id` - (Optional) The unique identifier for this partition specification within the Iceberg table's metadata history.
+
+#### partition fields
+
+* `field_id` - (Optional) The unique identifier assigned to this partition field within the Iceberg table's partition specification.
+* `name` - (Required) The name of the partition field as it will appear in the partitioned table structure. Length between 1 and 1024 characters.
+* `source_id` - (Required) The identifier of the source field from the table schema that this partition field is based on.
+* `transform` - (Required) The transformation function applied to the source field to create the partition. Common values: `identity`, `bucket`, `truncate`, `year`, `month`, `day`, `hour`.
+
+### schema
+
+* `fields` - (Required) The list of field definitions that make up the table schema. See [`fields`](#schema-fields) below.
+* `identifier_field_ids` - (Optional) The list of field identifiers that uniquely identify records in the table, used for row-level operations and deduplication.
+* `schema_id` - (Optional) The unique identifier for this schema version within the Iceberg table's schema evolution history.
+* `type` - (Optional) The root type of the schema structure. Valid value: `struct`.
+
+#### schema fields
+
+* `doc` - (Optional) Optional documentation or description text that provides additional context about the purpose and usage of this field. Length between 0 and 255 characters.
+* `id` - (Required) The unique identifier assigned to this field within the Iceberg table schema, used for schema evolution and field tracking.
+* `initial_default` - (Optional) Default value as JSON used to populate the field's value for all records that were written before the field was added to the schema.
+* `name` - (Required) The name of the field as it appears in the table schema and query operations. Length between 1 and 1024 characters.
+* `required` - (Required) Indicates whether this field is required (non-nullable) or optional (nullable) in the table schema.
+* `type` - (Required) The data type definition for this field as a JSON string, specifying the structure and format of the data it contains. Examples: `"long"`, `"string"`, `"timestamp"`, `"decimal(10,2)"`.
+* `write_default` - (Optional) Default value as JSON used to populate the field's value for any records written after the field was added to the schema, if the writer does not supply the field's value.
+
+### sort_order
+
+* `fields` - (Required) The list of fields and their sort directions that define the ordering criteria for the Iceberg table data. See [`fields`](#sort-fields) below.
+* `order_id` - (Required) The unique identifier for this sort order specification within the Iceberg table's metadata.
+
+#### sort fields
+
+* `direction` - (Required) The sort direction for this field. Valid values: `asc`, `desc`.
+* `null_order` - (Required) The ordering behavior for null values in this field. Valid values: `nulls-first`, `nulls-last`.
+* `source_id` - (Required) The identifier of the source field from the table schema that this sort field is based on.
+* `transform` - (Required) The transformation function applied to the source field before sorting. Common values: `identity`, `bucket`, `truncate`.
 
 ### partition_index
 
@@ -194,6 +316,26 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `database_name` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
 * `region` - (Optional) Region of the target table.
+
+### view_definition
+
+* `definer` - (Optional) The definer of a view in SQL.
+* `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
+* `last_refresh_type` - (Optional) Type of the materialized view's last refresh. Valid values: `Full`, `Incremental`.
+* `refresh_seconds` - (Optional) Auto refresh interval in seconds for the materialized view.
+* `representations` - (Optional) A list of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations) below.
+* `sub_object_version_ids` - (Optional) List of the Apache Iceberg table versions referenced by the materialized view.
+* `sub_objects` - (Optional) A list of base table ARNs that make up the view.
+* `view_version_id` - (Optional) ID value that identifies this view's version. For materialized views, the version ID is the Apache Iceberg table's snapshot ID.
+* `view_version_token` - (Optional) Version ID of the Apache Iceberg table.
+
+#### representations
+
+* `dialect` - (Optional) A parameter that specifies the engine type of a specific representation. Valid values are `REDSHIFT`, `ATHENA`, and `SPARK`.
+* `dialect_version` - (Optional) A parameter that specifies the version of the engine of a specific representation.
+* `validation_connection` - (Optional) The name of the connection to be used to validate the specific representation of the view.
+* `view_expanded_text` - (Optional) A string that represents the SQL query that describes the view with expanded resource ARNs.
+* `view_original_text` - (Optional) A string that represents the original SQL query that describes the view.
 
 ## Attribute Reference
 

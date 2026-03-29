@@ -12,11 +12,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,10 +23,10 @@ import (
 func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_vpc_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -36,12 +34,12 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 				),
 			},
@@ -57,10 +55,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_vpc_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -68,12 +66,12 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 				),
@@ -90,10 +88,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 func TestAccVPCLatticeServiceNetworkVPCAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_vpc_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -101,12 +99,12 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceServiceNetworkVPCAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -118,10 +116,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_disappears(t *testing.T) {
 func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_vpc_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -129,12 +127,12 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_identifier"),
@@ -153,10 +151,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_vpc_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -164,7 +162,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_privateDNSWithSpecifiedDomains(
@@ -173,7 +171,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					[]string{"db.example.com", "cache.example.com"},
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
@@ -194,7 +192,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					[]string{"db.example.com", "cache.example.com"},
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
@@ -209,7 +207,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					string(awstypes.PrivateDnsPreferenceAllDomains),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
@@ -222,7 +220,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					string(awstypes.PrivateDnsPreferenceVerifiedDomainsOnly),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
@@ -236,10 +234,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc1, servicenetworkvpcasc2, service3 vpclattice.GetServiceNetworkVpcAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network_vpc_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -247,12 +245,12 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc1),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -265,7 +263,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc2),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -274,7 +272,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 			{
 				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &service3),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &service3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -283,9 +281,9 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceNetworkVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServiceNetworkVPCAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_service_network_vpc_association" {
@@ -309,14 +307,14 @@ func testAccCheckServiceNetworkVPCAssociationDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckServiceNetworkVPCAssociationExists(ctx context.Context, n string, v *vpclattice.GetServiceNetworkVpcAssociationOutput) resource.TestCheckFunc {
+func testAccCheckServiceNetworkVPCAssociationExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetServiceNetworkVpcAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindServiceNetworkVPCAssociationByID(ctx, conn, rs.Primary.ID)
 

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -63,7 +63,7 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", sdkid.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -237,7 +237,7 @@ func TestAccComprehendEntityRecognizer_versionNameGenerated(t *testing.T) {
 					testAccCheckEntityRecognizerExists(ctx, t, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, t, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", sdkid.UniqueIdPrefix),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
@@ -329,7 +329,7 @@ func TestAccComprehendEntityRecognizer_documents_testDocuments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", sdkid.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -385,7 +385,7 @@ func TestAccComprehendEntityRecognizer_annotations_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", sdkid.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -441,7 +441,7 @@ func TestAccComprehendEntityRecognizer_annotations_testDocuments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", sdkid.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),

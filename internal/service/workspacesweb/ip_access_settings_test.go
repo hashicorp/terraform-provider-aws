@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func TestAccWorkSpacesWebIPAccessSettings_basic(t *testing.T) {
 	var ipAccessSettings awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -32,12 +31,12 @@ func TestAccWorkSpacesWebIPAccessSettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test"),
 					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.ip_range", "10.0.0.0/16"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "ip_access_settings_arn", "workspaces-web", regexache.MustCompile(`ipAccessSettings/.+$`)),
@@ -59,7 +58,7 @@ func TestAccWorkSpacesWebIPAccessSettings_disappears(t *testing.T) {
 	var ipAccessSettings awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -67,12 +66,12 @@ func TestAccWorkSpacesWebIPAccessSettings_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIPAccessSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,7 +86,7 @@ func TestAccWorkSpacesWebIPAccessSettings_complete(t *testing.T) {
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -95,12 +94,12 @@ func TestAccWorkSpacesWebIPAccessSettings_complete(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsConfig_complete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-complete"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
@@ -128,7 +127,7 @@ func TestAccWorkSpacesWebIPAccessSettings_update(t *testing.T) {
 	var ipAccessSettings awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -136,12 +135,12 @@ func TestAccWorkSpacesWebIPAccessSettings_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsConfig_updateBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description before"),
 					resource.TestCheckResourceAttr(resourceName, "ip_rule.#", "1"),
@@ -159,7 +158,7 @@ func TestAccWorkSpacesWebIPAccessSettings_update(t *testing.T) {
 			{
 				Config: testAccIPAccessSettingsConfig_updateAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update-after"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description after"),
 					resource.TestCheckResourceAttr(resourceName, "ip_rule.#", "2"),
@@ -178,7 +177,7 @@ func TestAccWorkSpacesWebIPAccessSettings_additionalEncryptionContextUpdate(t *t
 	var ipAccessSettings awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -186,12 +185,12 @@ func TestAccWorkSpacesWebIPAccessSettings_additionalEncryptionContextUpdate(t *t
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsConfig_additionalEncryptionContextBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Test"),
 				),
@@ -206,7 +205,7 @@ func TestAccWorkSpacesWebIPAccessSettings_additionalEncryptionContextUpdate(t *t
 			{
 				Config: testAccIPAccessSettingsConfig_additionalEncryptionContextAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Live"),
 				),
@@ -222,7 +221,7 @@ func TestAccWorkSpacesWebIPAccessSettings_customerManagedKeyUpdate(t *testing.T)
 	kmsKeyResourceName1 := "aws_kms_key.test1"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -230,12 +229,12 @@ func TestAccWorkSpacesWebIPAccessSettings_customerManagedKeyUpdate(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAccessSettingsConfig_customerManagedKeyBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName1, names.AttrARN),
 				),
 			},
@@ -249,7 +248,7 @@ func TestAccWorkSpacesWebIPAccessSettings_customerManagedKeyUpdate(t *testing.T)
 			{
 				Config: testAccIPAccessSettingsConfig_customerManagedKeyAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
+					testAccCheckIPAccessSettingsExists(ctx, t, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName2, names.AttrARN),
 				),
 			},
@@ -257,9 +256,9 @@ func TestAccWorkSpacesWebIPAccessSettings_customerManagedKeyUpdate(t *testing.T)
 	})
 }
 
-func testAccCheckIPAccessSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAccessSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_ip_access_settings" {
@@ -283,14 +282,14 @@ func testAccCheckIPAccessSettingsDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckIPAccessSettingsExists(ctx context.Context, n string, v *awstypes.IpAccessSettings) resource.TestCheckFunc {
+func testAccCheckIPAccessSettingsExists(ctx context.Context, t *testing.T, n string, v *awstypes.IpAccessSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindIPAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
 

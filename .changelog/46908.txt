@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_gateway: Fix "Unable to Convert Configuration" error caused by schema/model mismatch in `authorizer_configuration.custom_jwt_authorizer`. This fixes a regression introduced in [v6.36.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6360-march-11-2026)
+```

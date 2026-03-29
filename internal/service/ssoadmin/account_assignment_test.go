@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,22 +20,22 @@ import (
 func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	groupName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(ctx, resourceName),
+					testAccCheckAccountAssignmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
 					resource.TestMatchResourceAttr(resourceName, "principal_id", regexache.MustCompile("^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}")),
@@ -55,22 +53,22 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicUser(userId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(ctx, resourceName),
+					testAccCheckAccountAssignmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
 					resource.TestMatchResourceAttr(resourceName, "principal_id", regexache.MustCompile("^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}")),
@@ -87,17 +85,17 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 
 func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	userName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// We assign a policy called rName on the assumption it doesn't exist due to being randomly generated, hoping to generate an error
@@ -111,22 +109,22 @@ func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	groupName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountAssignmentExists(ctx, resourceName),
+					testAccCheckAccountAssignmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourceAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -135,9 +133,9 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountAssignmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccountAssignmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_account_assignment" {
@@ -172,14 +170,14 @@ func testAccCheckAccountAssignmentDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckAccountAssignmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccountAssignmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
 		if err != nil {

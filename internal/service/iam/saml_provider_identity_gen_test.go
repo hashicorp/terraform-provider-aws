@@ -33,7 +33,7 @@ func TestAccIAMSAMLProvider_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccIAMSAMLProvider_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSAMLProviderExists(ctx, resourceName),
+					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -116,7 +116,7 @@ func TestAccIAMSAMLProvider_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckSAMLProviderDestroy(ctx),
+		CheckDestroy: testAccCheckSAMLProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -125,7 +125,7 @@ func TestAccIAMSAMLProvider_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSAMLProviderExists(ctx, resourceName),
+					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -171,7 +171,7 @@ func TestAccIAMSAMLProvider_Identity_ExistingResource_noRefreshNoChange(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckSAMLProviderDestroy(ctx),
+		CheckDestroy: testAccCheckSAMLProviderDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -185,7 +185,7 @@ func TestAccIAMSAMLProvider_Identity_ExistingResource_noRefreshNoChange(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSAMLProviderExists(ctx, resourceName),
+					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

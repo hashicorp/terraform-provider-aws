@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,9 +21,9 @@ func TestAccTransferConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -33,12 +31,12 @@ func TestAccTransferConnector_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_basic(rName, "http://www.example.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "connector/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "connector_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -53,7 +51,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 			{
 				Config: testAccConnectorConfig_basic(rName, "http://www.example.net"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "http://www.example.net"),
 				),
@@ -66,10 +64,10 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -77,12 +75,12 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.test.amazonaws.com", publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "connector/{id}"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
@@ -101,12 +99,12 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
 	url := "sftp://s-fakeserver.server.transfer.test.amazonaws.com"
 	securityPolicyName := "TransferSFTPConnectorSecurityPolicy-2024-03"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -114,12 +112,12 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_securityPolicyName(rName, url, publicKey, securityPolicyName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", securityPolicyName),
 				),
 			},
@@ -136,9 +134,9 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -146,12 +144,12 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_basic(rName, "http://www.example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -164,10 +162,10 @@ func TestAccTransferConnector_egressConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -175,12 +173,12 @@ func TestAccTransferConnector_egressConfig(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_egressConfig(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "egress_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "egress_config.0.vpc_lattice.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "egress_config.0.vpc_lattice.0.resource_configuration_arn"),
@@ -202,10 +200,10 @@ func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
 	resourceName := "aws_transfer_connector.test"
 	resourceConfigName := "aws_vpclattice_resource_configuration.test"
 	resourceConfigName2 := "aws_vpclattice_resource_configuration.test2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -213,12 +211,12 @@ func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_egressConfig(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "egress_config.0.vpc_lattice.0.resource_configuration_arn", resourceConfigName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "egress_config.0.vpc_lattice.0.port_number", "22"),
 				),
@@ -226,7 +224,7 @@ func TestAccTransferConnector_egressConfigUpdate(t *testing.T) {
 			{
 				Config: testAccConnectorConfig_egressConfigUpdated(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "egress_config.0.vpc_lattice.0.resource_configuration_arn", resourceConfigName2, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "egress_config.0.vpc_lattice.0.port_number", "2222"),
 				),
@@ -239,9 +237,9 @@ func TestAccTransferConnector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -249,12 +247,12 @@ func TestAccTransferConnector_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -267,7 +265,7 @@ func TestAccTransferConnector_tags(t *testing.T) {
 			{
 				Config: testAccConnectorConfig_tags2(rName, "http://www.example.com", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -276,7 +274,7 @@ func TestAccTransferConnector_tags(t *testing.T) {
 			{
 				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					testAccCheckConnectorExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -285,14 +283,14 @@ func TestAccTransferConnector_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectorExists(ctx context.Context, n string, v *awstypes.DescribedConnector) resource.TestCheckFunc {
+func testAccCheckConnectorExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedConnector) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		output, err := tftransfer.FindConnectorByID(ctx, conn, rs.Primary.ID)
 
@@ -306,9 +304,9 @@ func testAccCheckConnectorExists(ctx context.Context, n string, v *awstypes.Desc
 	}
 }
 
-func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_connector" {

@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -54,7 +53,6 @@ import (
 // @Testing(importIgnore="force_destroy")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -658,9 +656,8 @@ func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput,
 	output, err := conn.HeadObject(ctx, input, optFns...)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -763,7 +760,7 @@ func (objectImportID) Create(d *schema.ResourceData) string {
 	return createObjectImportID(d)
 }
 
-func (objectImportID) Parse(id string) (string, map[string]string, error) {
+func (objectImportID) Parse(id string) (string, map[string]any, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")
@@ -771,7 +768,7 @@ func (objectImportID) Parse(id string) (string, map[string]string, error) {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrBucket: bucket,
 		names.AttrKey:    key,
 	}

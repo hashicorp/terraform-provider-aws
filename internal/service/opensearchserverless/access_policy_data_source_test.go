@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,11 +17,11 @@ func TestAccOpenSearchServerlessAccessPolicyDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var accesspolicy types.AccessPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_access_policy.test"
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -30,12 +29,12 @@ func TestAccOpenSearchServerlessAccessPolicyDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyDataSourceConfig_basic(rName, "data"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(ctx, dataSourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, t, dataSourceName, &accesspolicy),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),

@@ -7,6 +7,7 @@ package sagemaker
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -14,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,6 +40,7 @@ func resourceDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: trustedIdentityPropagationSettingsCustomizeDiffFunc,
 
 		Schema: map[string]*schema.Schema{
 			"app_network_access_type": {
@@ -1391,6 +1392,20 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 3,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"trusted_identity_propagation_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1457,6 +1472,40 @@ func resourceDomain() *schema.Resource {
 			},
 		},
 	}
+}
+
+func trustedIdentityPropagationSettingsCustomizeDiffFunc(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	domainSettings := diff.Get("domain_settings").([]any)
+	if len(domainSettings) == 0 {
+		return nil
+	}
+
+	settings := domainSettings[0].(map[string]any)
+	if settings == nil {
+		return nil
+	}
+
+	tipSettings, ok := settings["trusted_identity_propagation_settings"].([]any)
+	if !ok || len(tipSettings) == 0 {
+		return nil
+	}
+
+	tip := tipSettings[0].(map[string]any)
+	if tip == nil {
+		return nil
+	}
+
+	status, ok := tip[names.AttrStatus].(string)
+	if !ok || status != string(awstypes.FeatureStatusEnabled) {
+		return nil
+	}
+
+	authMode := diff.Get("auth_mode").(string)
+	if authMode != string(awstypes.AuthModeSso) {
+		return fmt.Errorf("trusted_identity_propagation_settings status can only be 'ENABLED' when auth_mode is 'SSO'")
+	}
+
+	return nil
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1636,9 +1685,8 @@ func findDomainByName(ctx context.Context, conn *sagemaker.Client, domainID stri
 	output, err := conn.DescribeDomain(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1676,6 +1724,10 @@ func expandDomainSettings(l []any) *awstypes.DomainSettings {
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]any); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
+	}
+
+	if v, ok := m["trusted_identity_propagation_settings"].([]any); ok && len(v) > 0 {
+		config.TrustedIdentityPropagationSettings = expandTrustedIdentityPropagationSettings(v)
 	}
 
 	return config
@@ -1752,6 +1804,26 @@ func expandDomainSettingsUpdate(l []any) *awstypes.DomainSettingsForUpdate {
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]any); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettingsForUpdate = expandRStudioServerProDomainSettingsUpdate(v)
+	}
+
+	if v, ok := m["trusted_identity_propagation_settings"].([]any); ok && len(v) > 0 {
+		config.TrustedIdentityPropagationSettings = expandTrustedIdentityPropagationSettings(v)
+	}
+
+	return config
+}
+
+func expandTrustedIdentityPropagationSettings(l []any) *awstypes.TrustedIdentityPropagationSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.TrustedIdentityPropagationSettings{}
+
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
+		config.Status = awstypes.FeatureStatus(v)
 	}
 
 	return config
@@ -3027,10 +3099,23 @@ func flattenDomainSettings(config *awstypes.DomainSettings) []map[string]any {
 	}
 
 	m := map[string]any{
-		"docker_settings":                     flattenDockerSettings(config.DockerSettings),
-		"execution_role_identity_config":      config.ExecutionRoleIdentityConfig,
-		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
-		names.AttrSecurityGroupIDs:            flex.FlattenStringValueSet(config.SecurityGroupIds),
+		"docker_settings":                       flattenDockerSettings(config.DockerSettings),
+		"execution_role_identity_config":        config.ExecutionRoleIdentityConfig,
+		"r_studio_server_pro_domain_settings":   flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
+		names.AttrSecurityGroupIDs:              flex.FlattenStringValueSet(config.SecurityGroupIds),
+		"trusted_identity_propagation_settings": flattenTrustedIdentityPropagationSettings(config.TrustedIdentityPropagationSettings),
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenTrustedIdentityPropagationSettings(config *awstypes.TrustedIdentityPropagationSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		names.AttrStatus: config.Status,
 	}
 
 	return []map[string]any{m}

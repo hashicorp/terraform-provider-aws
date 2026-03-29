@@ -19,7 +19,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -221,7 +221,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(1, 255-sdkid.UniqueIDSuffixLength),
 			},
 			"placement_tenancy": {
 				Type:     schema.TypeString,

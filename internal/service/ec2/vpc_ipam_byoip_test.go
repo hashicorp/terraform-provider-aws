@@ -55,11 +55,11 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var associationIPv6 awstypes.VpcIpv6CidrBlockAssociation
 	netmaskLength := 56
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMBYOIPConfig_ipv4IPv6DefaultNetmask(p, m, s),
@@ -118,7 +118,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationDefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, assocName, &associationIPv6),
 					testAccCheckVPCAssociationIPv6CIDRPrefix(&associationIPv6, strconv.Itoa(netmaskLength)),
 				),
 			},
@@ -139,7 +139,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitNetmask(p, m, s, netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, assocName, &associationIPv6),
 					testAccCheckVPCAssociationIPv6CIDRPrefix(&associationIPv6, strconv.Itoa(netmaskLength)),
 				),
 			},
@@ -161,7 +161,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config:   testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitCIDR(p, m, s, ipv6CidrAssoc),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrAssoc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, t, assocName, &associationIPv6),
 					resource.TestCheckResourceAttr(assocName, "ipv6_cidr_block", ipv6CidrAssoc),
 				),
 			},

@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,19 +29,19 @@ import (
 )
 
 // @SDKResource("aws_iam_user", name="User")
+// @IdentityAttribute("name")
+// @MutableIdentity
 // @Tags(identifierAttribute="id", resourceType="User")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.35.1")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -158,16 +157,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, user.Arn)
-	d.Set(names.AttrName, user.UserName)
-	d.Set(names.AttrPath, user.Path)
-	if user.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
-	} else {
-		d.Set("permissions_boundary", nil)
-	}
-	d.Set("unique_id", user.UserId)
-
+	resourceUserFlatten(user, d)
 	setTagsOut(ctx, user.Tags)
 
 	return diags
@@ -285,9 +275,8 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 	output, err := conn.GetUser(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -668,4 +657,16 @@ func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUse
 	}
 
 	return output, err
+}
+
+func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrName, user.UserName)
+	d.Set(names.AttrPath, user.Path)
+	if user.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
+	}
+	d.Set("unique_id", user.UserId)
 }

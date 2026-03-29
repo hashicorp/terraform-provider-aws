@@ -19,7 +19,7 @@ import (
 
 // @SDKDataSource("aws_backup_report_plan", name="Report Plan")
 // @Tags(identifierAttribute="arn")
-// @Testing(generator="randomReportPlanName()")
+// @Testing(generator="randomReportPlanName(t)")
 func dataSourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReportPlanRead,

@@ -384,8 +384,8 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusGlobalCluster(conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -404,7 +404,7 @@ func waitGlobalClusterCreated(ctx context.Context, conn *docdb.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -421,7 +421,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *docdb.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -439,7 +439,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *docdb.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
-		Refresh:        statusGlobalCluster(ctx, conn, id),
+		Refresh:        statusGlobalCluster(conn, id),
 		Timeout:        timeout,
 		NotFoundChecks: 1,
 	}

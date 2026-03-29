@@ -6,6 +6,8 @@ package sdkv2
 import (
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestSuppressEquivalentCloudWatchLogsLogGroupARN(t *testing.T) {
@@ -141,6 +143,57 @@ func TestSuppressEquivalentTime(t *testing.T) {
 
 		if !tc.equivalent && value {
 			t.Fatalf("expected test case %d to not be equivalent", i)
+		}
+	}
+}
+
+func TestSuppressNewStringValueEquivalentToUnset(t *testing.T) {
+	t.Parallel()
+
+	dNew, dOld := &schema.ResourceData{}, &schema.ResourceData{}
+	dOld.SetId("THE-ID")
+
+	testCases := []struct {
+		old  string
+		new  string
+		d    *schema.ResourceData
+		want bool
+	}{
+		{
+			old: "",
+			new: "THEDEFAULT",
+			d:   dNew,
+		},
+		{
+			old:  "",
+			new:  "THEDEFAULT",
+			d:    dOld,
+			want: true,
+		},
+		{
+			old: "CONFIGURED",
+			new: "THEDEFAULT",
+			d:   dNew,
+		},
+		{
+			old: "CONFIGURED",
+			new: "THEDEFAULT",
+			d:   dOld,
+		},
+		{
+			old: "",
+			new: "CONFIGURED",
+			d:   dNew,
+		},
+		{
+			old: "",
+			new: "CONFIGURED",
+			d:   dOld,
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := SuppressNewStringValueEquivalentToUnset("THEDEFAULT")("test_property", testCase.old, testCase.new, testCase.d), testCase.want; got != want {
+			t.Errorf("SuppressNewStringValueEquivalentToUnset(%q, %q, %q) = %v, want %v", testCase.old, testCase.new, testCase.d.Id(), got, want)
 		}
 	}
 }

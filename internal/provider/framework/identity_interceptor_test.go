@@ -63,6 +63,9 @@ func TestIdentityInterceptor(t *testing.T) {
 		"read": {
 			operation: read,
 		},
+		"read_with_removed_state": {
+			operation: readWithRemovedState,
+		},
 	}
 
 	for tname, tc := range testOperations {
@@ -145,6 +148,27 @@ func read(ctx context.Context, interceptor identityInterceptor, resourceSchema s
 	}
 	response := resource.ReadResponse{
 		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     After,
+	}
+
+	interceptor.read(ctx, opts)
+
+	return response.Identity, response.Diagnostics
+}
+
+func readWithRemovedState(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.ReadRequest{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.ReadResponse{
+		State:    nullStateFromSchema(ctx, resourceSchema),
 		Identity: identity,
 	}
 	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
@@ -332,6 +356,13 @@ func stateFromSchema(ctx context.Context, schema schema.Schema, values map[strin
 	}
 	return tfsdk.State{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), val),
+		Schema: schema,
+	}
+}
+
+func nullStateFromSchema(ctx context.Context, schema schema.Schema) tfsdk.State {
+	return tfsdk.State{
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
 }

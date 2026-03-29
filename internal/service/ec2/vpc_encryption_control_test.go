@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1457,7 +1456,7 @@ resource "aws_vpc_encryption_control" "test" {
 }
 
 func testAccInstanceConfig_orderableClassPostgres() string {
-	return testAccInstanceConfig_orderableClass(rds.InstanceEnginePostgres, "postgresql-license", "standard")
+	return testAccInstanceConfig_orderableClass("postgres", "postgresql-license", "standard")
 }
 
 func testAccInstanceConfig_orderableClass(engine, license, storage string) string {

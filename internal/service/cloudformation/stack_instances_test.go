@@ -572,7 +572,7 @@ func testAccCheckStackInstancesExists(ctx context.Context, t *testing.T, resourc
 }
 
 func attributeLength(attribute string) int {
-	return errs.Must(strconv.Atoi(attribute)) // nosemgrep: ci.avoid-errs-Must
+	return errs.Must(strconv.Atoi(attribute))
 }
 
 // testAccCheckStackInstancesForOrganizationalUnitExists is a variant of the

@@ -10,21 +10,19 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSFNStartExecutionAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,7 +34,7 @@ func TestAccSFNStartExecutionAction_basic(t *testing.T) {
 			{
 				Config: testAccStartExecutionActionConfig_basic(rName, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStartExecutionAction(ctx, rName, inputJSON),
+					testAccCheckStartExecutionAction(ctx, t, rName, inputJSON),
 				),
 			},
 		},
@@ -45,11 +43,11 @@ func TestAccSFNStartExecutionAction_basic(t *testing.T) {
 
 func TestAccSFNStartExecutionAction_withName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	executionName := sdkacctest.RandomWithPrefix("execution")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	executionName := acctest.RandomWithPrefix(t, "execution")
 	inputJSON := `{"test":"data"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -61,7 +59,7 @@ func TestAccSFNStartExecutionAction_withName(t *testing.T) {
 			{
 				Config: testAccStartExecutionActionConfig_withName(rName, executionName, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStartExecutionActionWithName(ctx, rName, executionName, inputJSON),
+					testAccCheckStartExecutionActionWithName(ctx, t, rName, executionName, inputJSON),
 				),
 			},
 		},
@@ -70,9 +68,9 @@ func TestAccSFNStartExecutionAction_withName(t *testing.T) {
 
 func TestAccSFNStartExecutionAction_emptyInput(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,7 +82,7 @@ func TestAccSFNStartExecutionAction_emptyInput(t *testing.T) {
 			{
 				Config: testAccStartExecutionActionConfig_emptyInput(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStartExecutionAction(ctx, rName, "{}"),
+					testAccCheckStartExecutionAction(ctx, t, rName, "{}"),
 				),
 			},
 		},
@@ -93,9 +91,9 @@ func TestAccSFNStartExecutionAction_emptyInput(t *testing.T) {
 
 // Test helper functions
 
-func testAccCheckStartExecutionAction(ctx context.Context, stateMachineName, expectedInput string) resource.TestCheckFunc {
+func testAccCheckStartExecutionAction(ctx context.Context, t *testing.T, stateMachineName, expectedInput string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SFNClient(ctx)
 
 		// Get the state machine ARN
 		stateMachines, err := conn.ListStateMachines(ctx, &sfn.ListStateMachinesInput{})
@@ -144,9 +142,9 @@ func testAccCheckStartExecutionAction(ctx context.Context, stateMachineName, exp
 	}
 }
 
-func testAccCheckStartExecutionActionWithName(ctx context.Context, stateMachineName, executionName, expectedInput string) resource.TestCheckFunc {
+func testAccCheckStartExecutionActionWithName(ctx context.Context, t *testing.T, stateMachineName, executionName, expectedInput string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SFNClient(ctx)
 
 		// Get the state machine ARN
 		stateMachines, err := conn.ListStateMachines(ctx, &sfn.ListStateMachinesInput{})

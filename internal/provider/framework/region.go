@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -428,6 +429,10 @@ func (r listResourceInjectRegionAttributeInterceptor) schema(ctx context.Context
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+			if response.Schema.Attributes == nil {
+				// Initialize the attributes map if a custom ConfigSchema method has omitted it
+				response.Schema.Attributes = map[string]listschema.Attribute{}
+			}
 			// Inject a top-level "region" attribute.
 			response.Schema.Attributes[names.AttrRegion] = listresourceattribute.Region()
 		}

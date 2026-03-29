@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -381,10 +380,10 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.UserPoolType
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	subject := sdkacctest.RandString(10)
-	updatedSubject := sdkacctest.RandString(10)
-	message := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
-	upatedMessage := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
+	subject := acctest.RandString(t, 10)
+	updatedSubject := acctest.RandString(t, 10)
+	message := fmt.Sprintf("%s {####}", acctest.RandString(t, 10))
+	upatedMessage := fmt.Sprintf("%s {####}", acctest.RandString(t, 10))
 	resourceName := "aws_cognito_user_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -664,12 +663,12 @@ func TestAccCognitoIDPUserPool_MFA_emailConfigurationMFA(t *testing.T) {
 	var pool awstypes.UserPoolType
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
-	subject := sdkacctest.RandString(50)
+	subject := acctest.RandString(t, 50)
 	message := acctest.RandomWithPrefix(t, "{####}")
 	replyTo := acctest.DefaultEmailAddress
 	sourceARN := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_SES_VERIFIED_EMAIL_ARN")
 	emailTo := sourceARN[strings.LastIndex(sourceARN, "/")+1:]
-	updatedSubject := sdkacctest.RandString(50)
+	updatedSubject := acctest.RandString(t, 50)
 	updatedMessage := acctest.RandomWithPrefix(t, "{####}")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1886,8 +1885,8 @@ func TestAccCognitoIDPUserPool_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	optionalMfa := "OPTIONAL"
 	offMfa := "OFF"
-	authenticationMessage := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
-	updatedAuthenticationMessage := fmt.Sprintf("%s {####}", sdkacctest.RandString(10))
+	authenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(t, 10))
+	updatedAuthenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(t, 10))
 	resourceName := "aws_cognito_user_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

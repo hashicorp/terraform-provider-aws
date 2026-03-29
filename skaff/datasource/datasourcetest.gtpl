@@ -193,7 +193,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 					// Alternatively, if the data source returns the values for a corresponding resource, use `resource.TestCheckResourceAttrPair` to
 					// check that the values are the same.
 					{{- end }}
-					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "{{ .ARNNamespace }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
 				),
 			},
 		},

@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 
 func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_protection_health_check_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
@@ -34,12 +32,12 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionHealthCheckAssociationExists(ctx, resourceName),
+					testAccCheckProtectionHealthCheckAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -53,10 +51,10 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 
 func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_protection_health_check_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
@@ -64,12 +62,12 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionHealthCheckAssociationExists(ctx, resourceName),
+					testAccCheckProtectionHealthCheckAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,9 +76,9 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProtectionHealthCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProtectionHealthCheckAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_protection_health_check_association" {
@@ -116,7 +114,7 @@ func testAccCheckProtectionHealthCheckAssociationDestroy(ctx context.Context) re
 	}
 }
 
-func testAccCheckProtectionHealthCheckAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckProtectionHealthCheckAssociationExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -133,7 +131,7 @@ func testAccCheckProtectionHealthCheckAssociationExists(ctx context.Context, res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(protectionId),

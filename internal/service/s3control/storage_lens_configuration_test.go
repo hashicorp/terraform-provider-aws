@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +18,19 @@ import (
 
 func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -66,19 +64,19 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 
 func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceStorageLensConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -89,19 +87,19 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 
 func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -114,7 +112,7 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -123,7 +121,7 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -134,19 +132,19 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 
 func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -196,7 +194,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -240,19 +238,19 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 
 func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_advancedMetrics(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -294,7 +292,7 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_freeMetrics(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -324,9 +322,9 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 	})
 }
 
-func testAccCheckStorageLensConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStorageLensConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_object_lambda_access_point" {
@@ -355,7 +353,7 @@ func testAccCheckStorageLensConfigurationDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckStorageLensConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckStorageLensConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -367,7 +365,7 @@ func testAccCheckStorageLensConfigurationExists(ctx context.Context, n string) r
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
 

@@ -11,11 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,12 +23,12 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
 	acctest.AccountID(ctx)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -38,7 +36,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_initResources(rName),
@@ -46,7 +44,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 			{
 				Config: testAccMembershipConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_creator_display_name", TEST_CREATOR_DISPLAY_NAME),
 					resource.TestCheckResourceAttrSet(resourceName, "collaboration_id"),
@@ -80,10 +78,10 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -91,7 +89,7 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_initResources(rName),
@@ -99,7 +97,7 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 			{
 				Config: testAccMembershipConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcleanrooms.ResourceMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,11 +110,11 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameSecond := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameSecond := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -124,7 +122,7 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_initDoubledResources(rName, rNameSecond),
@@ -132,7 +130,7 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 			{
 				Config: testAccMembershipConfig_mutableProperties(rName, rNameSecond, rName, TEST_QUERY_LOG_STATUS, TEST_RESULT_FORMAT, TEST_KEY_PREFIX, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 			{
@@ -156,10 +154,10 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -167,12 +165,12 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_outputConfigurationWithEmptyAdditionalParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 		},
@@ -183,10 +181,10 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -194,12 +192,12 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_base(rName, TEST_CREATOR_DISPLAY_NAME, "[]", "[\"CAN_QUERY\",\"CAN_RECEIVE_RESULTS\"]", TEST_QUERY_LOG_STATUS, "", TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 		},
@@ -210,11 +208,11 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var membership cleanrooms.GetMembershipOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_cleanrooms_membership.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -222,18 +220,18 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMembershipConfig_base(rName, TEST_CREATOR_DISPLAY_NAME, "[]", "[\"CAN_QUERY\",\"CAN_RECEIVE_RESULTS\"]", TEST_QUERY_LOG_STATUS, "", TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 				),
 			},
 			{
 				Config: testAccMembershipConfig_outputConfigurationWithEmptyAdditionalParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &membership),
+					testAccCheckMembershipExists(ctx, t, resourceName, &membership),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_result_configuration.0.output_configuration.0.s3.*", map[string]string{
 						names.AttrBucket: rName,
 						"result_format":  TEST_RESULT_FORMAT,
@@ -244,7 +242,7 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckMembershipExists(ctx context.Context, name string, membership *cleanrooms.GetMembershipOutput) resource.TestCheckFunc {
+func testAccCheckMembershipExists(ctx context.Context, t *testing.T, name string, membership *cleanrooms.GetMembershipOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -255,7 +253,7 @@ func testAccCheckMembershipExists(ctx context.Context, name string, membership *
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameMembership, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 		resp, err := tfcleanrooms.FindMembershipByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -268,9 +266,9 @@ func testAccCheckMembershipExists(ctx context.Context, name string, membership *
 	}
 }
 
-func testAccCheckMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMembershipDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cleanrooms_membership" {

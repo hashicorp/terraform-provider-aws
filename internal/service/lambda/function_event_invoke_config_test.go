@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,20 +21,20 @@ func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "0"),
@@ -55,19 +53,19 @@ func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 
 func TestAccLambdaFunctionEventInvokeConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunctionEventInvokeConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,20 +76,20 @@ func TestAccLambdaFunctionEventInvokeConfig_disappears(t *testing.T) {
 
 func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunction(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), lambdaFunctionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,21 +103,21 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, names.AttrARN),
@@ -133,7 +131,7 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSNSTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", snsTopicResourceName, names.AttrARN),
@@ -148,21 +146,21 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", sqsQueueResourceName, names.AttrARN),
@@ -176,7 +174,7 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSNSTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", snsTopicResourceName, names.AttrARN),
@@ -191,20 +189,20 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, names.AttrARN),
@@ -218,7 +216,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "0"),
 				),
 			},
@@ -231,20 +229,20 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, names.AttrARN),
@@ -258,7 +256,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", sqsQueueResourceName, names.AttrARN),
@@ -273,20 +271,20 @@ func TestAccLambdaFunctionEventInvokeConfig_FunctionName_arn(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_nameARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 				),
@@ -305,20 +303,20 @@ func TestAccLambdaFunctionEventInvokeConfig_QualifierFunctionName_arn(t *testing
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierNameARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", tflambda.FunctionVersionLatest),
 				),
@@ -337,19 +335,19 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_maximumAgeInSeconds(rName, 100),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "100"),
 				),
 			},
@@ -361,7 +359,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_maximumAgeInSeconds(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "200"),
 				),
 			},
@@ -374,19 +372,19 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "0"),
 				),
 			},
@@ -398,14 +396,14 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "1"),
 				),
 			},
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "0"),
 				),
 			},
@@ -415,20 +413,20 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 
 func TestAccLambdaFunctionEventInvokeConfig_Qualifier_aliasName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierAliasName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, names.AttrName),
 				),
 			},
@@ -443,20 +441,20 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_aliasName(t *testing.T) {
 
 func TestAccLambdaFunctionEventInvokeConfig_Qualifier_functionVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, names.AttrVersion),
 				),
@@ -472,19 +470,19 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_functionVersion(t *testing
 
 func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionEventInvokeConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierLatest(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
+					testAccCheckFunctionEventInvokeConfigExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", tflambda.FunctionVersionLatest),
 				),
 			},
@@ -497,9 +495,9 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 	})
 }
 
-func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function_event_invoke_config" {
@@ -528,14 +526,14 @@ func testAccCheckFunctionEventInvokeConfigDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckFunctionEventInvokeConfigExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckFunctionEventInvokeConfigExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		functionName, qualifier, err := tflambda.FunctionEventInvokeConfigParseResourceID(rs.Primary.ID)
 		if err != nil {

@@ -31,6 +31,7 @@ import (
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -922,6 +923,10 @@ func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
+	}
+
 	return ctx, diags
 }
 
@@ -983,13 +988,19 @@ var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
 	var interceptors interceptorInvocations
 
-	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
 		interceptors = append(interceptors, listResourceInjectRegionAttribute())
 		// TODO: validate region in partition, needs tweaked error message
 	}
 
 	inner := spec.Factory()
 
+	// Updates SDKv2 schema
 	if v, ok := inner.(framework.WithRegionSpec); ok {
 		v.SetRegionSpec(spec.Region)
 	}
@@ -999,6 +1010,14 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	}
 
 	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
+		v.AppendResultInterceptor(listresource.SetResourceStateSDK())
+
+		if isRegionOverrideEnabled {
+			v.AppendResultInterceptor(listresource.SetRegionInterceptorSDK())
+		}
+
+		v.AppendResultInterceptor(listresource.IdentityInterceptorSDK(spec.Identity.Attributes))
+
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
@@ -1047,6 +1066,10 @@ func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAt
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
 	}
 
 	return ctx, diags

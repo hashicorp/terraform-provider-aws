@@ -205,10 +205,26 @@ func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...Ident
 	return identity
 }
 
+type IdentityType uint16
+
+const (
+	StringIdentityType IdentityType = iota
+	IntIdentityType
+	Int64IdentityType
+	BoolIdentityType
+	FloatIdentityType
+	Float64IdentityType
+)
+
 type IdentityAttribute struct {
 	name                  string
 	required              bool
 	resourceAttributeName string
+	identityType          IdentityType
+}
+
+func (ia IdentityAttribute) IdentityType() IdentityType {
+	return ia.identityType
 }
 
 func (ia IdentityAttribute) Name() string {
@@ -226,10 +242,51 @@ func (ia IdentityAttribute) ResourceAttributeName() string {
 	return ia.resourceAttributeName
 }
 
+func BoolIdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: BoolIdentityType,
+	}
+}
+
+func FloatIdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: FloatIdentityType,
+	}
+}
+
+func Float64IdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: Float64IdentityType,
+	}
+}
+
+func IntIdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: IntIdentityType,
+	}
+}
+
+func Int64IdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		name:         name,
+		required:     required,
+		identityType: Int64IdentityType,
+	}
+}
+
 func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	return IdentityAttribute{
-		name:     name,
-		required: required,
+		name:         name,
+		required:     required,
+		identityType: StringIdentityType,
 	}
 }
 
@@ -480,7 +537,7 @@ func WithSDKv2IdentityUpgraders(identityUpgraders ...schema.IdentityUpgrader) Id
 }
 
 type ImportIDParser interface {
-	Parse(id string) (string, map[string]string, error)
+	Parse(id string) (string, map[string]any, error)
 }
 
 type FrameworkImportIDCreator interface {

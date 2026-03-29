@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Template")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTemplateCreate,
@@ -331,9 +329,8 @@ func findTemplate(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	output, err := conn.DescribeTemplate(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -362,9 +359,8 @@ func findTemplateDefinition(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeTemplateDefinition(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -392,9 +388,8 @@ func findTemplatePermissions(ctx context.Context, conn *quicksight.Client, input
 	output, err := conn.DescribeTemplatePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -409,8 +404,8 @@ func findTemplatePermissions(ctx context.Context, conn *quicksight.Client, input
 	return output.Permissions, nil
 }
 
-func statusTemplate(ctx context.Context, conn *quicksight.Client, awsAccountID, templateID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTemplate(conn *quicksight.Client, awsAccountID, templateID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTemplateByTwoPartKey(ctx, conn, awsAccountID, templateID)
 
 		if retry.NotFound(err) {
@@ -426,10 +421,10 @@ func statusTemplate(ctx context.Context, conn *quicksight.Client, awsAccountID, 
 }
 
 func waitTemplateCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, templateID string, timeout time.Duration) (*awstypes.Template, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
-		Refresh: statusTemplate(ctx, conn, awsAccountID, templateID),
+		Refresh: statusTemplate(conn, awsAccountID, templateID),
 		Timeout: timeout,
 	}
 
@@ -447,10 +442,10 @@ func waitTemplateCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 }
 
 func waitTemplateUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, templateID string, timeout time.Duration) (*awstypes.Template, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
-		Refresh: statusTemplate(ctx, conn, awsAccountID, templateID),
+		Refresh: statusTemplate(conn, awsAccountID, templateID),
 		Timeout: timeout,
 	}
 

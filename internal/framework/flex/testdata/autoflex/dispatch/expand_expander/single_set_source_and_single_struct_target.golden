@@ -43,8 +43,6 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
     "autoflex.target.path": "Field1",
     "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
-    "target_kind": "struct",
-    "target_type": "flex.awsExpander",
     "xmlWrapper": false,
     "xmlWrapperField": ""
   },

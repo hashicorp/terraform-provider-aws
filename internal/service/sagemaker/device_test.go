@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,19 +22,19 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName, &device),
+					testAccCheckDeviceExists(ctx, t, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "device.#", "1"),
@@ -57,19 +55,19 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName, &device),
+					testAccCheckDeviceExists(ctx, t, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device.0.description", rName),
 				),
 			},
@@ -81,7 +79,7 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 			{
 				Config: testAccDeviceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName, &device),
+					testAccCheckDeviceExists(ctx, t, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device.0.description", "test"),
 				),
 			},
@@ -94,19 +92,19 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName, &device),
+					testAccCheckDeviceExists(ctx, t, resourceName, &device),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,19 +118,19 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var device sagemaker.DescribeDeviceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
+		CheckDestroy:             testAccCheckDeviceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName, &device),
+					testAccCheckDeviceExists(ctx, t, resourceName, &device),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDeviceFleet(), "aws_sagemaker_device_fleet.test"),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDevice(), resourceName),
 				),
@@ -142,9 +140,9 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDeviceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_device" {
@@ -172,7 +170,7 @@ func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeviceExists(ctx context.Context, n string, device *sagemaker.DescribeDeviceOutput) resource.TestCheckFunc {
+func testAccCheckDeviceExists(ctx context.Context, t *testing.T, n string, device *sagemaker.DescribeDeviceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -188,7 +186,7 @@ func testAccCheckDeviceExists(ctx context.Context, n string, device *sagemaker.D
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
 		if err != nil {
 			return err

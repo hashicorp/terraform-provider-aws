@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +21,7 @@ func testAccStandardsControlAssociation_basic(t *testing.T) {
 	var standardsControlAssociation awstypes.StandardsControlAssociationSummary
 	resourceName := "aws_securityhub_standards_control_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -31,7 +30,7 @@ func testAccStandardsControlAssociation_basic(t *testing.T) {
 			{
 				Config: testAccStandardsControlAssociationConfig_associationStatusEnabled(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStandardsControlAssociationExists(ctx, resourceName, &standardsControlAssociation),
+					testAccCheckStandardsControlAssociationExists(ctx, t, resourceName, &standardsControlAssociation),
 					resource.TestCheckResourceAttr(resourceName, "association_status", string(awstypes.AssociationStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "security_control_id", "IAM.1"),
 					resource.TestCheckResourceAttrPair(resourceName, "standards_arn", "aws_securityhub_standards_subscription.test", "standards_arn"),
@@ -40,7 +39,7 @@ func testAccStandardsControlAssociation_basic(t *testing.T) {
 			{
 				Config: testAccStandardsControlAssociationConfig_associationStatusDisabled(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStandardsControlAssociationExists(ctx, resourceName, &standardsControlAssociation),
+					testAccCheckStandardsControlAssociationExists(ctx, t, resourceName, &standardsControlAssociation),
 					resource.TestCheckResourceAttr(resourceName, "association_status", string(awstypes.AssociationStatusDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "security_control_id", "IAM.1"),
 					resource.TestCheckResourceAttrPair(resourceName, "standards_arn", "aws_securityhub_standards_subscription.test", "standards_arn"),
@@ -51,14 +50,14 @@ func testAccStandardsControlAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStandardsControlAssociationExists(ctx context.Context, n string, v *awstypes.StandardsControlAssociationSummary) resource.TestCheckFunc {
+func testAccCheckStandardsControlAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.StandardsControlAssociationSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		output, err := tfsecurityhub.FindStandardsControlAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_control_id"], rs.Primary.Attributes["standards_arn"])
 

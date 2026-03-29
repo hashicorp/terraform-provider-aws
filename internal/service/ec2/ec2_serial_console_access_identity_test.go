@@ -49,7 +49,7 @@ func testAccEC2SerialConsoleAccess_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckSerialConsoleAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckSerialConsoleAccessDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -230,7 +230,7 @@ func testAccEC2SerialConsoleAccess_Identity_ExistingResource_basic(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx),
+		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -295,7 +295,7 @@ func testAccEC2SerialConsoleAccess_Identity_ExistingResource_basic_NoRefresh_NoC
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx),
+		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -333,7 +333,7 @@ func testAccEC2SerialConsoleAccess_Identity_Upgrade(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx),
+		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create with Identity version 0
 			{
@@ -380,7 +380,7 @@ func testAccEC2SerialConsoleAccess_Identity_Upgrade_NoRefresh(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx),
+		CheckDestroy: testAccCheckSerialConsoleAccessDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,

@@ -18,8 +18,8 @@ import (
 
 func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := testAccRandomDomainName()
-	pkgName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package_association.test"
 	packageResourceName := "aws_opensearch_package.test"
 	domainResourceName := "aws_opensearch_domain.test"
@@ -44,8 +44,8 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 
 func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := testAccRandomDomainName()
-	pkgName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package_association.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

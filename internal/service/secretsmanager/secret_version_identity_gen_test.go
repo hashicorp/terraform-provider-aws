@@ -35,7 +35,7 @@ func TestAccSecretsManagerSecretVersion_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSecretsManagerSecretVersion_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecretVersionExists(ctx, resourceName, &v),
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -224,7 +224,7 @@ func TestAccSecretsManagerSecretVersion_Identity_ExistingResource_basic(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy: testAccCheckSecretVersionDestroy(ctx),
+		CheckDestroy: testAccCheckSecretVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -233,7 +233,7 @@ func TestAccSecretsManagerSecretVersion_Identity_ExistingResource_basic(t *testi
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecretVersionExists(ctx, resourceName, &v),
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -284,7 +284,7 @@ func TestAccSecretsManagerSecretVersion_Identity_ExistingResource_noRefreshNoCha
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy: testAccCheckSecretVersionDestroy(ctx),
+		CheckDestroy: testAccCheckSecretVersionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -298,7 +298,7 @@ func TestAccSecretsManagerSecretVersion_Identity_ExistingResource_noRefreshNoCha
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecretVersionExists(ctx, resourceName, &v),
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

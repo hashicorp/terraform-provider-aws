@@ -7,7 +7,9 @@ package datasync
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -104,11 +106,11 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	activationKey := d.Get("activation_key").(string)
-	agentIpAddress := d.Get(names.AttrIPAddress).(string)
+	agentIPAddress := d.Get(names.AttrIPAddress).(string)
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
-		if agentIpAddress == "" {
+		if agentIPAddress == "" {
 			return sdkdiag.AppendErrorf(diags, "one of activation_key or ip_address is required")
 		}
 
@@ -120,23 +122,32 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 		region := meta.(*conns.AWSClient).Region(ctx)
 
+		// https://docs.aws.amazon.com/datasync/latest/userguide/activate-agent.html#get-activation-key.
 		var requestURL string
 		if v, ok := d.GetOk("private_link_endpoint"); ok {
-			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIpAddress, region, v.(string))
+			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIPAddress, region, v.(string))
 		} else {
-			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
+			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIPAddress, region)
 		}
 
-		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
+		request, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}
 
+		appendedNoRedirect := false
 		var response *http.Response
 		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			response, err = client.Do(request)
 
 			if errs.IsA[net.Error](err) {
+				if errors.Is(err, io.EOF) && !appendedNoRedirect {
+					// Likely an advanced mode agent.
+					q := request.URL.Query()
+					q.Add("no_redirect", "")
+					request.URL.RawQuery = q.Encode()
+					appendedNoRedirect = true
+				}
 				return tfresource.RetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
@@ -148,32 +159,42 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return tfresource.NonRetryableError(fmt.Errorf("no response for activation key request"))
 			}
 
+			defer response.Body.Close()
+
 			log.Printf("[DEBUG] Received HTTP response: %#v", response)
-			if expected := http.StatusFound; expected != response.StatusCode {
-				return tfresource.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
-			}
+			switch statusCode := response.StatusCode; statusCode {
+			case http.StatusOK: // Advanced mode agent.
+				bytes, err := io.ReadAll(response.Body)
+				if err != nil {
+					return tfresource.NonRetryableError(fmt.Errorf("reading response body: %w", err))
+				}
 
-			redirectURL, err := response.Location()
-			if err != nil {
-				return tfresource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
-			}
+				activationKey = string(bytes)
+			case http.StatusFound: // Basic mode agent.
+				redirectURL, err := response.Location()
+				if err != nil {
+					return tfresource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
+				}
 
-			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
-				errMessage := fmt.Errorf("during activation: %s", errorType)
-				return tfresource.RetryableError(errMessage)
-			}
+				if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
+					errMessage := fmt.Errorf("during activation: %s", errorType)
+					return tfresource.RetryableError(errMessage)
+				}
 
-			activationKey = redirectURL.Query().Get("activationKey")
+				activationKey = redirectURL.Query().Get("activationKey")
+			default:
+				return tfresource.NonRetryableError(fmt.Errorf("unexpected HTTP status code: %d", statusCode))
+			}
 
 			return nil
 		})
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
+			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", agentIPAddress, err)
 		}
 
 		if activationKey == "" {
-			return sdkdiag.AppendErrorf(diags, "empty activationKey received from IP Address: %s", agentIpAddress)
+			return sdkdiag.AppendErrorf(diags, "empty activationKey received from IP Address: %s", agentIPAddress)
 		}
 	}
 

@@ -1694,6 +1694,10 @@ func TestAccECSTaskDefinition_Volume_detectChangeInConfigureAtLaunch(t *testing.
 	})
 }
 
+func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrImportStateIdFunc(resourceName, names.AttrARN)
+}
+
 func testAccCheckTaskDefinitionProxyConfiguration(after *awstypes.TaskDefinition, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) resource.TestCheckFunc {

@@ -113,7 +113,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Account Assignments using the `principal_id`, `principal_type`, `target_id`, `target_type`, `permission_set_arn`, `instance_arn` separated by commas (`,`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssoadmin_account_assignment.example
+  identity = {
+    principal_id       = "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
+    principal_type     = "GROUP"
+    target_id          = "123456789012"
+    target_type        = "AWS_ACCOUNT"
+    permission_set_arn = "arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef"
+    instance_arn       = "arn:aws:sso:::instance/ssoins-0123456789abcdef"
+  }
+}
+
+resource "aws_ssoadmin_account_assignment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `instance_arn` (String) ARN of the SSO Instance.
+* `permission_set_arn` (String) ARN of the Permission Set.
+* `principal_id` (String) Identifier of the principal in IAM Identity Center.
+* `principal_type` (String) Type of principal. Valid values are `USER` and `GROUP`.
+* `target_id` (String) AWS account identifier.
+* `target_type` (String) Target type. Valid value is `AWS_ACCOUNT`.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Account Assignments using `principal_id`, `principal_type`, `target_id`, `target_type`, `permission_set_arn`, and `instance_arn`, in that order, separated by commas (`,`). For example:
 
 ```terraform
 import {

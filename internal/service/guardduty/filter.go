@@ -15,7 +15,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -25,7 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -165,11 +166,12 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
+	detectorID, name := d.Get("detector_id").(string), d.Get(names.AttrName).(string)
 	input := guardduty.CreateFilterInput{
 		Action:      awstypes.FilterAction(d.Get(names.AttrAction).(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
-		DetectorId:  aws.String(d.Get("detector_id").(string)),
-		Name:        aws.String(d.Get(names.AttrName).(string)),
+		DetectorId:  aws.String(detectorID),
+		Name:        aws.String(name),
 		Rank:        aws.Int32(int32(d.Get("rank").(int))),
 		Tags:        getTagsIn(ctx),
 	}
@@ -180,75 +182,49 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
 
-	log.Printf("[DEBUG] Creating GuardDuty Filter: %+v", input)
-	output, err := conn.CreateFilter(ctx, &input)
+	_, err = conn.CreateFilter(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
 
-	d.SetId(filterCreateID(d.Get("detector_id").(string), aws.ToString(output.Name)))
+	d.SetId(filterCreateResourceID(detectorID, name))
 
 	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
 func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GuardDutyClient(ctx)
 
-	var detectorID, name string
-	var err error
-
-	if _, ok := d.GetOk("detector_id"); !ok {
-		// If there is no "detector_id" passed, then it's an import.
-		detectorID, name, err = FilterParseID(d.Id())
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading GuardDuty Filter (%s): %s", name, err)
-		}
-	} else {
-		detectorID = d.Get("detector_id").(string)
-		name = d.Get(names.AttrName).(string)
+	detectorID, name, err := filterParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := guardduty.GetFilterInput{
-		DetectorId: aws.String(detectorID),
-		FilterName: aws.String(name),
-	}
+	filter, err := findFilterByTwoPartKey(ctx, conn, detectorID, name)
 
-	log.Printf("[DEBUG] Reading GuardDuty Filter: %+v", input)
-	filter, err := conn.GetFilter(ctx, &input)
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] GuardDuty Filter (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") {
-			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Filter (%s): %s", name, err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
-	}.String()
-	d.Set(names.AttrARN, arn)
-
-	err = d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Setting GuardDuty Filter FindingCriteria failed: %s", err)
-	}
-
 	d.Set(names.AttrAction, filter.Action)
+	d.Set(names.AttrARN, filterARN(ctx, c, detectorID, name))
 	d.Set(names.AttrDescription, filter.Description)
-	d.Set(names.AttrName, filter.Name)
 	d.Set("detector_id", detectorID)
+	if err := d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting finding_criteria: %s", err)
+	}
+	d.Set(names.AttrName, filter.Name)
 	d.Set("rank", filter.Rank)
 
 	setTagsOut(ctx, filter.Tags)
-
-	d.SetId(filterCreateID(detectorID, name))
 
 	return diags
 }
@@ -258,23 +234,28 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	if d.HasChanges(names.AttrAction, names.AttrDescription, "finding_criteria", "rank") {
+		detectorID, name, err := filterParseResourceID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		input := guardduty.UpdateFilterInput{
 			Action:      awstypes.FilterAction(d.Get(names.AttrAction).(string)),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-			DetectorId:  aws.String(d.Get("detector_id").(string)),
-			FilterName:  aws.String(d.Get(names.AttrName).(string)),
+			DetectorId:  aws.String(detectorID),
+			FilterName:  aws.String(name),
 			Rank:        aws.Int32(int32(d.Get("rank").(int))),
 		}
 
-		var err error
 		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
 		}
 
 		_, err = conn.UpdateFilter(ctx, &input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -285,38 +266,77 @@ func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	detectorId := d.Get("detector_id").(string)
-	name := d.Get(names.AttrName).(string)
-
-	input := guardduty.DeleteFilterInput{
-		FilterName: aws.String(name),
-		DetectorId: aws.String(detectorId),
+	detectorID, name, err := filterParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Delete GuardDuty Filter: %+v", input)
+	log.Printf("[DEBUG] Deleting GuardDuty Filter: %s", d.Id())
+	input := guardduty.DeleteFilterInput{
+		DetectorId: aws.String(detectorID),
+		FilterName: aws.String(name),
+	}
+	_, err = conn.DeleteFilter(ctx, &input)
 
-	_, err := conn.DeleteFilter(ctx, &input)
-	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") {
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") ||
+		errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the given filter name is invalid.") {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Filter %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Filter (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-const filterIDSeparator = ":"
+const filterResourceIDSeparator = ":"
 
-func filterCreateID(detectorID, filterName string) string {
-	return detectorID + filterIDSeparator + filterName
+func filterCreateResourceID(detectorID, filterName string) string {
+	parts := []string{detectorID, filterName}
+	id := strings.Join(parts, filterResourceIDSeparator)
+
+	return id
 }
 
-func FilterParseID(importedId string) (string, string, error) {
-	parts := strings.Split(importedId, filterIDSeparator)
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)
+func filterParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, filterResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <Detector ID>%[2]s<Filter name>", id, filterResourceIDSeparator)
 	}
+
 	return parts[0], parts[1], nil
+}
+
+func findFilterByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*guardduty.GetFilterOutput, error) {
+	input := guardduty.GetFilterInput{
+		DetectorId: aws.String(detectorID),
+		FilterName: aws.String(name),
+	}
+
+	return findFilter(ctx, conn, &input)
+}
+
+func findFilter(ctx context.Context, conn *guardduty.Client, input *guardduty.GetFilterInput) (*guardduty.GetFilterOutput, error) {
+	output, err := conn.GetFilter(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") ||
+		errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
 func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
@@ -472,4 +492,8 @@ func flattenConditionIntField(field string, v int64) string {
 		return date.Format(time.RFC3339)
 	}
 	return strconv.FormatInt(v, 10)
+}
+
+func filterARN(ctx context.Context, c *conns.AWSClient, detectorID, name string) string {
+	return c.RegionalARN(ctx, "guardduty", "detector/"+detectorID+"/filter/"+name)
 }

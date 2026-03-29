@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,18 +19,18 @@ import (
 func TestAccSESReceiptFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ses_receipt_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckReceiptFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptFilterExists(ctx, resourceName),
+					testAccCheckReceiptFilterExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-filter/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.10.10.10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -51,18 +49,18 @@ func TestAccSESReceiptFilter_basic(t *testing.T) {
 func TestAccSESReceiptFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ses_receipt_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckReceiptFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptFilterExists(ctx, resourceName),
+					testAccCheckReceiptFilterExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,9 +69,9 @@ func TestAccSESReceiptFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReceiptFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReceiptFilterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_receipt_filter" {
@@ -97,14 +95,14 @@ func testAccCheckReceiptFilterDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckReceiptFilterExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckReceiptFilterExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		_, err := tfses.FindReceiptFilterByName(ctx, conn, rs.Primary.ID)
 

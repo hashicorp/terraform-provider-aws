@@ -100,6 +100,15 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
+// createTags creates workmail service tags for new resources.
+func createTags(ctx context.Context, conn *workmail.Client, identifier string, tags []awstypes.Tag, optFns ...func(*workmail.Options)) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags), optFns...)
+}
+
 // updateTags updates workmail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

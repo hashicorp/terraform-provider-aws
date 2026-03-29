@@ -35,7 +35,7 @@ func TestAccSSMMaintenanceWindowTask_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy:             testAccCheckMaintenanceWindowTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTaskDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSSMMaintenanceWindowTask_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &v),
+					testAccCheckMaintenanceWindowTaskExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -218,7 +218,7 @@ func TestAccSSMMaintenanceWindowTask_Identity_ExistingResource_basic(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckMaintenanceWindowTaskDestroy(ctx),
+		CheckDestroy: testAccCheckMaintenanceWindowTaskDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -227,7 +227,7 @@ func TestAccSSMMaintenanceWindowTask_Identity_ExistingResource_basic(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &v),
+					testAccCheckMaintenanceWindowTaskExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -278,7 +278,7 @@ func TestAccSSMMaintenanceWindowTask_Identity_ExistingResource_noRefreshNoChange
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckMaintenanceWindowTaskDestroy(ctx),
+		CheckDestroy: testAccCheckMaintenanceWindowTaskDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -292,7 +292,7 @@ func TestAccSSMMaintenanceWindowTask_Identity_ExistingResource_noRefreshNoChange
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &v),
+					testAccCheckMaintenanceWindowTaskExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

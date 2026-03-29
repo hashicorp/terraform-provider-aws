@@ -168,6 +168,33 @@ func resourceConnection() *schema.Resource {
 								MaxItems: 1,
 								Elem:     connectionHttpParameters("auth_parameters.0.invocation_http_parameters"),
 							},
+							"connectivity_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"resource_parameters": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"resource_association_arn": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"resource_configuration_arn": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"oauth": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -474,11 +501,11 @@ func statusConnectionState(conn *eventbridge.Client, name string) retry.StateRef
 
 func waitConnectionCreated(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeConnectionOutput, error) {
 	const (
-		timeout = 2 * time.Minute
+		timeout = 20 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateCreating, types.ConnectionStateAuthorizing),
-		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized),
+		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized, types.ConnectionStateActive),
 		Refresh: statusConnectionState(conn, name),
 		Timeout: timeout,
 	}
@@ -496,11 +523,11 @@ func waitConnectionCreated(ctx context.Context, conn *eventbridge.Client, name s
 
 func waitConnectionUpdated(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeConnectionOutput, error) {
 	const (
-		timeout = 2 * time.Minute
+		timeout = 20 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConnectionStateUpdating, types.ConnectionStateAuthorizing, types.ConnectionStateDeauthorizing),
-		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized),
+		Target:  enum.Slice(types.ConnectionStateAuthorized, types.ConnectionStateDeauthorized, types.ConnectionStateActive),
 		Refresh: statusConnectionState(conn, name),
 		Timeout: timeout,
 	}
@@ -558,6 +585,9 @@ func expandCreateConnectionAuthRequestParameters(tfList []any) *types.CreateConn
 		}
 		if v, ok := tfMap["invocation_http_parameters"].([]any); ok && len(v) > 0 {
 			apiObject.InvocationHttpParameters = expandConnectionHTTPParameters(v)
+		}
+		if v, ok := tfMap["connectivity_parameters"].([]any); ok && len(v) > 0 {
+			apiObject.ConnectivityParameters = expandConnectivityResourceParameters(v[0].(map[string]any))
 		}
 	}
 
@@ -788,6 +818,10 @@ func flattenConnectionAuthParameters(apiObject *types.ConnectionAuthResponsePara
 		tfMap["invocation_http_parameters"] = flattenConnectionHTTPParameters(apiObject.InvocationHttpParameters, d, "auth_parameters.0.invocation_http_parameters")
 	}
 
+	if apiObject.ConnectivityParameters != nil {
+		tfMap["connectivity_parameters"] = []map[string]any{flattenDescribeConnectionConnectivityParameters(apiObject.ConnectivityParameters)}
+	}
+
 	return []map[string]any{tfMap}
 }
 
@@ -934,6 +968,9 @@ func expandUpdateConnectionAuthRequestParameters(tfList []any) *types.UpdateConn
 		}
 		if v, ok := tfMap["invocation_http_parameters"].([]any); ok && len(v) > 0 {
 			apiObject.InvocationHttpParameters = expandConnectionHTTPParameters(v)
+		}
+		if v, ok := tfMap["connectivity_parameters"].([]any); ok && len(v) > 0 {
+			apiObject.ConnectivityParameters = expandConnectivityResourceParameters(v[0].(map[string]any))
 		}
 	}
 

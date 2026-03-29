@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,7 +14,7 @@ import (
 
 func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
+	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(t, 5))
 	resourceName := "aws_proxy_protocol_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

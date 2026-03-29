@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,19 +23,19 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 	var ingestion awstypes.Ingestion
 	dataSetName := "aws_quicksight_data_set.test"
 	resourceName := "aws_quicksight_ingestion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
+		CheckDestroy:             testAccCheckIngestionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIngestionConfig_basic(rId, rName, string(awstypes.IngestionTypeFullRefresh)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", string(awstypes.IngestionTypeFullRefresh)),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", dataSetName, "data_set_id"),
@@ -65,19 +63,19 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 	var ingestion awstypes.Ingestion
 	dataSetName := "aws_quicksight_data_set.test"
 	resourceName := "aws_quicksight_ingestion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
+		CheckDestroy:             testAccCheckIngestionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIngestionConfig_basic(rId, rName, string(awstypes.IngestionTypeFullRefresh)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSet(), dataSetName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,14 +84,14 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 	})
 }
 
-func testAccCheckIngestionExists(ctx context.Context, n string, v *awstypes.Ingestion) resource.TestCheckFunc {
+func testAccCheckIngestionExists(ctx context.Context, t *testing.T, n string, v *awstypes.Ingestion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		output, err := tfquicksight.FindIngestionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"], rs.Primary.Attributes["ingestion_id"])
 
@@ -107,9 +105,9 @@ func testAccCheckIngestionExists(ctx context.Context, n string, v *awstypes.Inge
 	}
 }
 
-func testAccCheckIngestionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIngestionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_ingestion" {

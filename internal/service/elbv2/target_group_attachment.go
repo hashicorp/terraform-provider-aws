@@ -7,14 +7,16 @@ package elbv2
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -22,12 +24,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_alb_target_group_attachment", name="Target Group Attachment")
 // @SDKResource("aws_lb_target_group_attachment", name="Target Group Attachment")
+// @IdentityAttribute("target_group_arn")
+// @IdentityAttribute("target_id")
+// @IdentityAttribute("port", valueType="int", optional="true", testNotNull="true")
+// @IdentityAttribute("availability_zone", optional="true")
+// @IdentityAttribute("quic_server_id", optional="true")
+// @MutableIdentity
+// @ImportIDHandler("targetGroupAttachmentImportID")
+// @Testing(preIdentityVersion="v6.33.0")
 func resourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,
@@ -100,8 +111,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "registering ELBv2 Target Group (%s) target: %s", targetGroupARN, err)
 	}
 
-	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(targetGroupARN + "-"))
+	d.SetId(targetGroupAttachmentImportID{}.Create(d))
 
 	return diags
 }
@@ -132,7 +142,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 		input.Targets[0].QuicServerId = aws.String(v.(string))
 	}
 
-	_, err := findTargetHealthDescription(ctx, conn, &input)
+	target, err := findTargetHealthDescription(ctx, conn, &input)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
@@ -142,6 +152,26 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group Attachment (%s): %s", d.Id(), err)
+	}
+
+	if target == nil || target.Target == nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group Attachment (%s): target not found", d.Id())
+	}
+
+	d.Set("target_group_arn", targetGroupARN)
+	d.Set("target_id", target.Target.Id)
+
+	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+		if rawPort := rawConfig.GetAttr(names.AttrPort); rawPort.IsKnown() && !rawPort.IsNull() {
+			d.Set(names.AttrPort, target.Target.Port)
+		}
+		if rawAZ := rawConfig.GetAttr(names.AttrAvailabilityZone); rawAZ.IsKnown() && !rawAZ.IsNull() {
+			d.Set(names.AttrAvailabilityZone, target.Target.AvailabilityZone)
+		}
+	}
+
+	if v := aws.ToString(target.Target.QuicServerId); v != "" {
+		d.Set("quic_server_id", v)
 	}
 
 	return diags
@@ -235,4 +265,56 @@ func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancin
 	}
 
 	return targetHealthDescriptions, nil
+}
+
+const targetGroupAttachmentResourceIDSeparator = ","
+
+var _ inttypes.SDKv2ImportID = targetGroupAttachmentImportID{}
+
+type targetGroupAttachmentImportID struct{}
+
+func (targetGroupAttachmentImportID) Create(d *schema.ResourceData) string {
+	parts := []string{
+		d.Get("target_group_arn").(string),
+		d.Get("target_id").(string),
+	}
+
+	if v, ok := d.GetOk(names.AttrPort); ok {
+		parts = append(parts, strconv.Itoa(v.(int)))
+	}
+
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+		if len(parts) == 2 {
+			parts = append(parts, "") // placeholder for port when only AZ is set
+		}
+		parts = append(parts, v.(string))
+	}
+
+	return strings.Join(parts, targetGroupAttachmentResourceIDSeparator)
+}
+
+func (targetGroupAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, targetGroupAttachmentResourceIDSeparator)
+	if len(parts) < 2 || len(parts) > 4 {
+		return id, nil, fmt.Errorf("unexpected format for ID (%s), expected TARGET_GROUP_ARN,TARGET_ID[,PORT][,AVAILABILITY_ZONE]", id)
+	}
+
+	results := map[string]any{
+		"target_group_arn": parts[0],
+		"target_id":        parts[1],
+	}
+
+	if len(parts) >= 3 && parts[2] != "" {
+		port, err := strconv.Atoi(parts[2])
+		if err != nil {
+			return id, nil, fmt.Errorf("parsing port: %w", err)
+		}
+		results[names.AttrPort] = port
+	}
+
+	if len(parts) >= 4 && parts[3] != "" {
+		results[names.AttrAvailabilityZone] = parts[3]
+	}
+
+	return id, results, nil
 }

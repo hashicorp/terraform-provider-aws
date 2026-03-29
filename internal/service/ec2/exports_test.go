@@ -70,12 +70,12 @@ var (
 	ResourceRoute                                         = resourceRoute
 	ResourceRouteTable                                    = resourceRouteTable
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
+	ResourceSecondaryNetwork                              = newSecondaryNetworkResource
+	ResourceSecondarySubnet                               = newSecondarySubnetResource
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
 	ResourceSecurityGroupVPCAssociation                   = newSecurityGroupVPCAssociationResource
-	ResourceSecondaryNetwork                              = newSecondaryNetworkResource
-	ResourceSecondarySubnet                               = newSecondarySubnetResource
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -96,6 +96,8 @@ var (
 	ResourceTransitGatewayMulticastGroupSource            = resourceTransitGatewayMulticastGroupSource
 	ResourceTransitGatewayPeeringAttachment               = resourceTransitGatewayPeeringAttachment
 	ResourceTransitGatewayPeeringAttachmentAccepter       = resourceTransitGatewayPeeringAttachmentAccepter
+	ResourceTransitGatewayMeteringPolicy                  = newTransitGatewayMeteringPolicyResource
+	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
@@ -212,11 +214,11 @@ var (
 	FindRouteServerPropagationByTwoPartKey                      = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                               = findRouteTableAssociationByID
 	FindRouteTableByID                                          = findRouteTableByID
+	FindSecondaryNetworkByID                                    = findSecondaryNetworkByID
+	FindSecondarySubnetByID                                     = findSecondarySubnetByID
 	FindSecurityGroupByID                                       = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
-	FindSecondaryNetworkResourceByID                            = findSecondaryNetworkResourceByID
-	FindSecondarySubnetByID                                     = findSecondarySubnetByID
 	FindSecurityGroupRuleIDsBySecurityGroupID                   = findSecurityGroupRuleIDsBySecurityGroupID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
@@ -241,6 +243,8 @@ var (
 	FindTransitGatewayMulticastGroupMemberByThreePartKey        = findTransitGatewayMulticastGroupMemberByThreePartKey
 	FindTransitGatewayMulticastGroupSourceByThreePartKey        = findTransitGatewayMulticastGroupSourceByThreePartKey
 	FindTransitGatewayPeeringAttachmentByID                     = findTransitGatewayPeeringAttachmentByID
+	FindTransitGatewayMeteringPolicyByID                        = findTransitGatewayMeteringPolicyByID
+	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey
@@ -288,6 +292,7 @@ var (
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
 	NetworkACLRuleImportIDSeparator                             = networkACLRuleImportIDSeparator
+	IanaProtocolIToA                                            = ianaProtocolIToA
 	NewAttributeFilterList                                      = newAttributeFilterList
 	NewCustomFilterList                                         = newCustomFilterList
 	NewTagFilterList                                            = newTagFilterList

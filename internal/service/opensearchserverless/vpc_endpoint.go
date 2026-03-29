@@ -23,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -128,7 +126,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
 	if err != nil {
@@ -242,7 +240,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.UpdateVpcEndpointInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, new.ID),
 	}
 
@@ -324,7 +322,7 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Id:          fwflex.StringFromFramework(ctx, data.ID),
 	})
 
@@ -381,9 +379,8 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	output, err := conn.BatchGetVpcEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -398,8 +395,8 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	return output.VpcEndpointDetails, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCEndpoint(conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -415,10 +412,10 @@ func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, i
 }
 
 func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -438,10 +435,10 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 }
 
 func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -460,10 +457,10 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 }
 
 func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
 		Target:                    []string{},
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Refresh:                   statusVPCEndpoint(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 5,
 	}

@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,18 +39,18 @@ func testAccSpotDatafeedSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotDatafeedSubscription(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpotDatafeedSubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckSpotDatafeedSubscriptionExists(ctx, t, resourceName, &subscription),
 				),
 			},
 			{
@@ -68,18 +66,18 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotDatafeedSubscription(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpotDatafeedSubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckSpotDatafeedSubscriptionExists(ctx, t, resourceName, &subscription),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,7 +86,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSpotDatafeedSubscriptionExists(ctx context.Context, n string, v *awstypes.SpotDatafeedSubscription) resource.TestCheckFunc {
+func testAccCheckSpotDatafeedSubscriptionExists(ctx context.Context, t *testing.T, n string, v *awstypes.SpotDatafeedSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -99,7 +97,7 @@ func testAccCheckSpotDatafeedSubscriptionExists(ctx context.Context, n string, v
 			return fmt.Errorf("No EC2 Spot Datafeed Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindSpotDatafeedSubscription(ctx, conn)
 
@@ -113,9 +111,9 @@ func testAccCheckSpotDatafeedSubscriptionExists(ctx context.Context, n string, v
 	}
 }
 
-func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_datafeed_subscription" {
@@ -140,7 +138,7 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 }
 
 func testAccPreCheckSpotDatafeedSubscription(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
 	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)

@@ -9,13 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func acceleratedRecoveryStatus(ctx context.Context, conn *route53.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func acceleratedRecoveryStatus(conn *route53.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostedZoneByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -37,10 +36,10 @@ func waitUpdateAcceleratedRecoveryCompleted(ctx context.Context, conn *route53.C
 		minTimeout   = 5 * time.Second
 		pollInterval = 15 * time.Second
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.AcceleratedRecoveryStatusEnabling, awstypes.AcceleratedRecoveryStatusEnablingHostedZoneLocked, awstypes.AcceleratedRecoveryStatusDisabling, awstypes.AcceleratedRecoveryStatusDisablingHostedZoneLocked),
 		Target:       enum.Slice(awstypes.AcceleratedRecoveryStatusEnabled, awstypes.AcceleratedRecoveryStatusDisabled),
-		Refresh:      acceleratedRecoveryStatus(ctx, conn, id),
+		Refresh:      acceleratedRecoveryStatus(conn, id),
 		Delay:        delay,
 		MinTimeout:   minTimeout,
 		PollInterval: pollInterval,

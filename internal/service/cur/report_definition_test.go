@@ -6,7 +6,6 @@ package cur_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
@@ -376,6 +375,7 @@ func testAccReportDefinition_disappears(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/43153.
 func testAccReportDefinition_upgradeNoPrefixFromV5(t *testing.T) {
+	acctest.Skip(t, `ValidationException: 1 validation error detected: Value '' at 'reportDefinition.s3Prefix' failed to satisfy constraint: Member must satisfy regular expression pattern: ^.+[^/|.]$`)
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -455,11 +455,12 @@ func testAccCheckReportDefinitionDestroy(ctx context.Context, t *testing.T) reso
 
 func testAccCheckReportDefinitionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).CURClient(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		conn := acctest.ProviderMeta(ctx, t).CURClient(ctx)
 
 		_, err := tfcur.FindReportDefinitionByName(ctx, conn, rs.Primary.ID)
 
@@ -467,13 +468,14 @@ func testAccCheckReportDefinitionExists(ctx context.Context, t *testing.T, n str
 	}
 }
 
-func testAccReportDefinitionConfig_basic(rName, s3Prefix string) string {
+func testAccReportDefinitionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
 
+data "aws_billing_service_account" "test" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket_policy" "test" {
@@ -488,7 +490,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURBillingACLPolicy",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": [
         "s3:GetBucketAcl",
@@ -500,7 +502,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": "s3:PutObject",
       "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
@@ -509,7 +511,11 @@ resource "aws_s3_bucket_policy" "test" {
 }
 POLICY
 }
+`, rName)
+}
 
+func testAccReportDefinitionConfig_basic(rName, s3Prefix string) string {
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -523,60 +529,18 @@ resource "aws_cur_report_definition" "test" {
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, rName, s3Prefix)
+`, rName, s3Prefix))
 }
 
 func testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression string, additionalArtifacts []string, refreshClosedReports bool, reportVersioning string) string {
-	artifactsStr := strings.Join(additionalArtifacts, "\", \"")
-
+	artifactsStr := acctest.ListOfStrings(additionalArtifacts...)
 	if len(additionalArtifacts) > 0 {
-		artifactsStr = fmt.Sprintf("additional_artifacts       = [\"%s\"]", artifactsStr)
+		artifactsStr = fmt.Sprintf("additional_artifacts       = [%s]", artifactsStr)
 	} else {
 		artifactsStr = ""
 	}
 
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -592,52 +556,11 @@ resource "aws_cur_report_definition" "test" {
   refresh_closed_reports = %[6]t
   report_versioning      = %[7]q
 }
-`, rName, s3Prefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
+`, rName, s3Prefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning))
 }
 
 func testAccReportDefinitionConfig_tags1(rName, s3Prefix, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -655,52 +578,11 @@ resource "aws_cur_report_definition" "test" {
     %[3]q = %[4]q
   }
 }
-`, rName, s3Prefix, tagKey1, tagValue1)
+`, rName, s3Prefix, tagKey1, tagValue1))
 }
 
 func testAccReportDefinitionConfig_tags2(rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -719,52 +601,11 @@ resource "aws_cur_report_definition" "test" {
     %[5]q = %[6]q
   }
 }
-`, rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccReportDefinitionConfig_noS3Prefix(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2008-10-17",
-  "Id": "s3policy",
-  "Statement": [
-    {
-      "Sid": "AllowCURBillingACLPolicy",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
-    },
-    {
-      "Sid": "AllowCURPutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
-    }
-  ]
-}
-POLICY
-}
-
+	return acctest.ConfigCompose(testAccReportDefinitionConfig_base(rName), fmt.Sprintf(`
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
@@ -777,7 +618,7 @@ resource "aws_cur_report_definition" "test" {
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, rName)
+`, rName))
 }
 
 func TestCheckDefinitionPropertyCombination(t *testing.T) {

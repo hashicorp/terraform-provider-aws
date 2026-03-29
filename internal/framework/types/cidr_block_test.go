@@ -36,7 +36,7 @@ func TestCIDRBlockTypeValueFromTerraform(t *testing.T) {
 		},
 		"invalid CIDR block": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
-			expected: fwtypes.CIDRBlockUnknown(),
+			expected: fwtypes.CIDRBlockValue("not ok"),
 		},
 	}
 

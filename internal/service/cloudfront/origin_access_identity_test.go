@@ -10,7 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -36,7 +36,7 @@ func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 					testAccCheckOriginAccessIdentityExists(ctx, t, resourceName, &origin),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-access-identity/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some comment"),
-					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", sdkid.UniqueIdPrefix))),
 					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexache.MustCompile("^[0-9a-z]+")),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexache.MustCompile("^origin-access-identity/cloudfront/[0-9A-Z]+")),
 					//lintignore:AWSAT001
@@ -67,7 +67,7 @@ func TestAccCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 				Config: testAccOriginAccessIdentityConfig_noComment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExists(ctx, t, resourceName, &origin),
-					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", sdkid.UniqueIdPrefix))),
 					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexache.MustCompile("^[0-9a-z]+")),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexache.MustCompile("^origin-access-identity/cloudfront/[0-9A-Z]+")),
 					//lintignore:AWSAT001

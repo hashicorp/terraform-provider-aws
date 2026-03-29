@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -111,8 +112,8 @@ func (a *publishAction) Invoke(ctx context.Context, req action.InvokeRequest, re
 
 	conn := a.Meta().SNSClient(ctx)
 
-	topicArn := config.TopicArn.ValueString()
-	message := config.Message.ValueString()
+	topicArn := fwflex.StringValueFromFramework(ctx, config.TopicArn)
+	message := fwflex.StringValueFromFramework(ctx, config.Message)
 
 	tflog.Info(ctx, "Starting SNS publish message action", map[string]any{
 		names.AttrTopicARN: topicArn,
@@ -120,9 +121,8 @@ func (a *publishAction) Invoke(ctx context.Context, req action.InvokeRequest, re
 		"has_subject":      !config.Subject.IsNull(),
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Publishing message to SNS topic %s...", topicArn),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Publishing message to SNS topic %s...", topicArn)
 
 	input := &sns.PublishInput{}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, config, input)...)
@@ -144,9 +144,7 @@ func (a *publishAction) Invoke(ctx context.Context, req action.InvokeRequest, re
 	}
 
 	messageId := aws.ToString(output.MessageId)
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Message published successfully to SNS topic %s (Message ID: %s)", topicArn, messageId),
-	})
+	cb(ctx, "Message published successfully to SNS topic %s (Message ID: %s)", topicArn, messageId)
 
 	tflog.Info(ctx, "SNS publish message action completed successfully", map[string]any{
 		names.AttrTopicARN: topicArn,

@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,10 +16,10 @@ import (
 func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
-	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rCount := strconv.Itoa(acctest.RandIntRange(t, 1, 4))
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,11 +38,11 @@ func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
 func TestAccIAMUsersDataSource_pathPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
-	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
+	rCount := strconv.Itoa(acctest.RandIntRange(t, 1, 4))
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rPathPrefix := acctest.RandomWithPrefix(t, "tf-acc-path")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -63,7 +62,7 @@ func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -83,7 +82,7 @@ func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

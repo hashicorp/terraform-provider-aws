@@ -10,12 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,10 +22,10 @@ import (
 func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securitypolicy types.SecurityPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -35,12 +33,12 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "encryption"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
@@ -58,10 +56,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 func TestAccOpenSearchServerlessSecurityPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securitypolicy types.SecurityPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -69,12 +67,12 @@ func TestAccOpenSearchServerlessSecurityPolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "encryption"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
@@ -82,7 +80,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_update(t *testing.T) {
 			{
 				Config: testAccSecurityPolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "encryption"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
@@ -95,10 +93,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var securitypolicy types.SecurityPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -106,12 +104,12 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -123,10 +121,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securitypolicy types.SecurityPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -134,12 +132,12 @@ func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_string(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrPolicy, testAccSecurityPolicyConfig_String_ExpectedJSON(rName)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -174,10 +172,10 @@ func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
 func TestAccOpenSearchServerlessSecurityPolicy_stringUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securitypolicy types.SecurityPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -185,19 +183,19 @@ func TestAccOpenSearchServerlessSecurityPolicy_stringUpdate(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityPolicyConfig_string(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrPolicy, testAccSecurityPolicyConfig_String_ExpectedJSON(rName)),
 				),
 			},
 			{
 				Config: testAccSecurityPolicyConfig_stringUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
+					testAccCheckSecurityPolicyExists(ctx, t, resourceName, &securitypolicy),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrPolicy, testAccSecurityPolicyConfig_String_ExpectedJSON(rName)),
 				),
 			},
@@ -205,9 +203,9 @@ func TestAccOpenSearchServerlessSecurityPolicy_stringUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSecurityPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_security_policy" {
@@ -231,14 +229,14 @@ func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckSecurityPolicyExists(ctx context.Context, n string, v *types.SecurityPolicyDetail) resource.TestCheckFunc {
+func testAccCheckSecurityPolicyExists(ctx context.Context, t *testing.T, n string, v *types.SecurityPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		output, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
@@ -253,7 +251,7 @@ func testAccCheckSecurityPolicyExists(ctx context.Context, n string, v *types.Se
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListSecurityPoliciesInput{
 		Type: types.SecurityPolicyTypeEncryption,

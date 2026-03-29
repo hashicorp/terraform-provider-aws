@@ -645,7 +645,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testTimeStr := "2023-12-08T09:34:01Z"
-	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
 	intentDescribeTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
@@ -1859,6 +1859,64 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsIntent_qnaIntentConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_qnaIntentBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "parent_intent_signature", "AMAZON.QnAIntent"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.0.kendra_index"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.0.exact_response", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccIntentConfig_qnaIntentWithKendraUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.0.exact_response", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccIntentConfig_qnaIntentWithOpenSearch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.domain_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.index_name", "test-index"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.exact_response", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.include_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.include_fields.0", "answer"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.include_fields.1", "question"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIntentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LexV2ModelsClient(ctx)
@@ -2576,4 +2634,246 @@ resource "aws_lexv2models_intent" "test" {
   }
 }
 `, rName, utter1, utter2, utter3, utter4))
+}
+
+func testAccIntentConfig_qnaIntentBase_Kendra(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "kendra_role" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "kendra.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "kendra_attach" {
+  role       = aws_iam_role.kendra_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonKendraFullAccess"
+}
+
+resource "aws_kendra_index" "test" {
+  name       = %[1]q
+  edition    = "DEVELOPER_EDITION"
+  role_arn   = aws_iam_role.kendra_role.arn
+  depends_on = [aws_iam_role.kendra_role]
+}
+
+resource "aws_lexv2models_bot" "test" {
+  name        = %[1]q
+  description = "Test bot for QnA intent"
+  role_arn    = aws_iam_role.kendra_role.arn
+  data_privacy {
+    child_directed = false
+  }
+  idle_session_ttl_in_seconds = 300
+}
+
+resource "aws_lexv2models_bot_locale" "test_en_us" {
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  locale_id                        = "en_US"
+  n_lu_intent_confidence_threshold = 0.4
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_Kendra(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      kendra_configuration {
+        kendra_index                = aws_kendra_index.test.arn
+        exact_response              = true
+        query_filter_string_enabled = false
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "Hello"
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.test,
+    aws_lexv2models_bot_locale.test_en_us,
+    aws_kendra_index.test,
+  ]
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentWithKendraUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_Kendra(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      kendra_configuration {
+        kendra_index                = aws_kendra_index.test.arn
+        exact_response              = false
+        query_filter_string_enabled = false
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "Hello"
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.test,
+    aws_lexv2models_bot_locale.test_en_us,
+    aws_kendra_index.test,
+  ]
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentBase_OpenSearch(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_security_group" "opensearch" {
+  name   = "%[1]s-os"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_iam_role" "opensearch_role" {
+  name = "%[1]s-opensearch"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "opensearch.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name    = substr("%[1]s-os", 0, 28)
+  engine_version = "OpenSearch_2.11"
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_type = "gp3"
+    volume_size = 20
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.opensearch.id]
+    subnet_ids         = [aws_subnet.test[0].id]
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  timeouts {
+    delete = "2h"
+  }
+
+  depends_on = [aws_vpc.test]
+}
+
+resource "aws_lexv2models_bot" "test" {
+  name        = %[1]q
+  description = "Test bot for QnA intent"
+  role_arn    = aws_iam_role.opensearch_role.arn
+  data_privacy {
+    child_directed = false
+  }
+  idle_session_ttl_in_seconds = 300
+}
+
+resource "aws_lexv2models_bot_locale" "test_en_us" {
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  locale_id                        = "en_US"
+  n_lu_intent_confidence_threshold = 0.4
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentWithOpenSearch(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_OpenSearch(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      opensearch_configuration {
+        domain_endpoint = "https://${aws_opensearch_domain.test.endpoint}"
+        index_name      = "test-index"
+        exact_response  = false
+        include_fields  = ["answer", "question"]
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "Hello"
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.test,
+    aws_lexv2models_bot_locale.test_en_us,
+    aws_opensearch_domain.test,
+  ]
+}
+`, rName))
 }

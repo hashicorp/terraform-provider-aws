@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.CollectionSummary
 	resourceName := "aws_route53_cidr_collection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCIDRCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCIDRCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
+					testAccCheckCIDRCollectionExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile(`cidrcollection/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -53,18 +51,18 @@ func TestAccRoute53CIDRCollection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.CollectionSummary
 	resourceName := "aws_route53_cidr_collection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCIDRCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCIDRCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
+					testAccCheckCIDRCollectionExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53.ResourceCIDRCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,9 +71,9 @@ func TestAccRoute53CIDRCollection_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCIDRCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCIDRCollectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_cidr_collection" {
@@ -99,14 +97,14 @@ func testAccCheckCIDRCollectionDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckCIDRCollectionExists(ctx context.Context, n string, v *awstypes.CollectionSummary) resource.TestCheckFunc {
+func testAccCheckCIDRCollectionExists(ctx context.Context, t *testing.T, n string, v *awstypes.CollectionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		output, err := tfroute53.FindCIDRCollectionByID(ctx, conn, rs.Primary.ID)
 

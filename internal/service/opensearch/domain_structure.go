@@ -4,6 +4,7 @@
 package opensearch
 
 import (
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,6 +27,10 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 
 			if v, ok := group["internal_user_database_enabled"].(bool); ok {
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
+			}
+
+			if v, ok := group["jwt_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+				config.JWTOptions = expandJWTOptionsInput(v[0].(map[string]any))
 			}
 
 			if v, ok := group["master_user_options"].([]any); ok {
@@ -52,6 +57,34 @@ func expandAdvancedSecurityOptions(m []any) *awstypes.AdvancedSecurityOptionsInp
 	}
 
 	return &config
+}
+
+func expandJWTOptionsInput(tfMap map[string]any) *awstypes.JWTOptionsInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.JWTOptionsInput{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrPublicKey].(string); ok && v != "" {
+		// AWS expects the public key without newlines
+		publicKey := strings.ReplaceAll(v, "\n", "")
+		apiObject.PublicKey = aws.String(publicKey)
+	}
+
+	if v, ok := tfMap["subject_key"].(string); ok && v != "" {
+		apiObject.SubjectKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["roles_key"].(string); ok && v != "" {
+		apiObject.RolesKey = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func expandAIMLOptionsInput(tfMap map[string]any) *awstypes.AIMLOptionsInput {
@@ -307,6 +340,36 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *awstypes.AdvancedSe
 
 	if aws.ToBool(advancedSecurityOptions.Enabled) && advancedSecurityOptions.InternalUserDatabaseEnabled != nil {
 		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
+	}
+
+	if advancedSecurityOptions.JWTOptions != nil && aws.ToBool(advancedSecurityOptions.JWTOptions.Enabled) {
+		m["jwt_options"] = flattenJWTOptionsOutput(advancedSecurityOptions.JWTOptions)
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenJWTOptionsOutput(apiObject *awstypes.JWTOptionsOutput) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if apiObject.Enabled != nil {
+		m[names.AttrEnabled] = aws.ToBool(apiObject.Enabled)
+	}
+
+	if apiObject.PublicKey != nil {
+		m[names.AttrPublicKey] = aws.ToString(apiObject.PublicKey)
+	}
+
+	if apiObject.SubjectKey != nil {
+		m["subject_key"] = aws.ToString(apiObject.SubjectKey)
+	}
+
+	if apiObject.RolesKey != nil {
+		m["roles_key"] = aws.ToString(apiObject.RolesKey)
 	}
 
 	return []map[string]any{m}
