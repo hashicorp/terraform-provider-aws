@@ -136,8 +136,8 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 								"strategy": knownvalue.StringExact("Bayesian"),
 								"hyper_parameter_tuning_job_objective": knownvalue.ListExact([]knownvalue.Check{
 									knownvalue.ObjectPartial(map[string]knownvalue.Check{
-										"metric_name": knownvalue.StringExact("validation:accuracy"),
-										"type":        knownvalue.StringExact("Maximize"),
+										names.AttrMetricName: knownvalue.StringExact("validation:accuracy"),
+										names.AttrType:       knownvalue.StringExact("Maximize"),
 									}),
 								}),
 								"resource_limits": knownvalue.ListExact([]knownvalue.Check{
@@ -150,7 +150,7 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("training_job_definition"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
-								"role_arn": knownvalue.NotNull(),
+								names.AttrRoleARN: knownvalue.NotNull(),
 								"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
 									knownvalue.ObjectPartial(map[string]knownvalue.Check{
 										"algorithm_name":      knownvalue.NotNull(),

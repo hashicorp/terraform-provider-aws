@@ -14,9 +14,9 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 
     parameter_ranges {
       integer_parameter_ranges {
-        max_value    = "2"
-        min_value    = "1"
-        name         = "epochs"
+        max_value = "2"
+        min_value = "1"
+        name      = "epochs"
       }
     }
 
@@ -50,9 +50,9 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     }
 
     resource_config {
-      instance_count     = 1
-      instance_type      = "ml.m5.large"
-      volume_size_in_gb  = 30
+      instance_count    = 1
+      instance_type     = "ml.m5.large"
+      volume_size_in_gb = 30
     }
 
     stopping_condition {
