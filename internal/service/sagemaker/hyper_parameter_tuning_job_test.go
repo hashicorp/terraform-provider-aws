@@ -237,32 +237,32 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 							"strategy": knownvalue.StringExact("Bayesian"),
 							"hyper_parameter_tuning_job_objective": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                  names.AttrMetricName: knownvalue.StringExact("test:msd"),
-                  names.AttrType:       knownvalue.StringExact("Minimize"),
+									names.AttrMetricName: knownvalue.StringExact("test:msd"),
+									names.AttrType:       knownvalue.StringExact("Minimize"),
 								}),
 							}),
 							"parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"categorical_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName: knownvalue.StringExact("init_method"),
+											acctest.CtName: knownvalue.StringExact("init_method"),
 										}),
 									}),
 									"integer_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName: knownvalue.StringExact("epochs"),
-											"min_value": knownvalue.StringExact("1"),
-											"max_value": knownvalue.StringExact("10"),
+											acctest.CtName: knownvalue.StringExact("epochs"),
+											"min_value":    knownvalue.StringExact("1"),
+											"max_value":    knownvalue.StringExact("10"),
 										}),
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName: knownvalue.StringExact("extra_center_factor"),
-											"min_value": knownvalue.StringExact("4"),
-											"max_value": knownvalue.StringExact("10"),
+											acctest.CtName: knownvalue.StringExact("extra_center_factor"),
+											"min_value":    knownvalue.StringExact("4"),
+											"max_value":    knownvalue.StringExact("10"),
 										}),
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName: knownvalue.StringExact("mini_batch_size"),
-											"min_value": knownvalue.StringExact("3000"),
-											"max_value": knownvalue.StringExact("15000"),
+											acctest.CtName: knownvalue.StringExact("mini_batch_size"),
+											"min_value":    knownvalue.StringExact("3000"),
+											"max_value":    knownvalue.StringExact("15000"),
 										}),
 									}),
 								}),
@@ -285,14 +285,14 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 							}),
 							"input_data_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"channel_name": knownvalue.StringExact("train"),
-                  names.AttrContentType: knownvalue.StringExact("text/csv"),
-									"input_mode":   knownvalue.StringExact("File"),
+									"channel_name":        knownvalue.StringExact("train"),
+									names.AttrContentType: knownvalue.StringExact("text/csv"),
+									"input_mode":          knownvalue.StringExact("File"),
 								}),
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"channel_name": knownvalue.StringExact("test"),
-                  names.AttrContentType: knownvalue.StringExact("text/csv"),
-									"input_mode":   knownvalue.StringExact("File"),
+									"channel_name":        knownvalue.StringExact("test"),
+									names.AttrContentType: knownvalue.StringExact("text/csv"),
+									"input_mode":          knownvalue.StringExact("File"),
 								}),
 							}),
 							"output_data_config": knownvalue.ListExact([]knownvalue.Check{
@@ -302,9 +302,9 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 							}),
 							"resource_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                  names.AttrInstanceCount: knownvalue.Int64Exact(1),
-                  names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
-									"volume_size_in_gb": knownvalue.Int64Exact(30),
+									names.AttrInstanceCount: knownvalue.Int64Exact(1),
+									names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
+									"volume_size_in_gb":     knownvalue.Int64Exact(30),
 								}),
 							}),
 							"static_hyper_parameters": knownvalue.MapExact(map[string]knownvalue.Check{
@@ -368,12 +368,12 @@ func TestAccSageMakerHyperParameterTuningJob_metricDefinitions(t *testing.T) {
 									"training_input_mode": knownvalue.StringExact("File"),
 									"metric_definitions": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName: knownvalue.StringExact("test:msd"),
-											"regex": knownvalue.StringExact("#quality_metric: host=\\S+, test msd <loss>=(\\S+)"),
+											acctest.CtName: knownvalue.StringExact("test:msd"),
+											"regex":        knownvalue.StringExact("#quality_metric: host=\\S+, test msd <loss>=(\\S+)"),
 										}),
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName: knownvalue.StringExact("test:accuracy"),
-											"regex": knownvalue.StringExact("#quality_metric: host=\\S+, test accuracy=(\\S+)"),
+											acctest.CtName: knownvalue.StringExact("test:accuracy"),
+											"regex":        knownvalue.StringExact("#quality_metric: host=\\S+, test accuracy=(\\S+)"),
 										}),
 									}),
 								}),
@@ -414,7 +414,7 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_job_definitions"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"definition_name": knownvalue.StringExact("def-1"),
-              names.AttrRoleARN:  knownvalue.NotNull(),
+							names.AttrRoleARN: knownvalue.NotNull(),
 							"enable_inter_container_traffic_encryption": knownvalue.Bool(true),
 							"enable_managed_spot_training":              knownvalue.Bool(true),
 							"enable_network_isolation":                  knownvalue.Bool(true),
@@ -435,9 +435,9 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T
 									"allocation_strategy": knownvalue.StringExact("Prioritized"),
 									"instance_configs": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      names.AttrInstanceCount: knownvalue.Int64Exact(1),
-                      names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
-											"volume_size_in_gb": knownvalue.Int64Exact(30),
+											names.AttrInstanceCount: knownvalue.Int64Exact(1),
+											names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
+											"volume_size_in_gb":     knownvalue.Int64Exact(30),
 										}),
 									}),
 								}),
@@ -446,7 +446,7 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"channel_name":        knownvalue.StringExact("train"),
 									"compression_type":    knownvalue.StringExact("None"),
-                  names.AttrContentType:  knownvalue.StringExact("text/csv"),
+									names.AttrContentType: knownvalue.StringExact("text/csv"),
 									"input_mode":          knownvalue.StringExact("File"),
 									"record_wrapper_type": knownvalue.StringExact("None"),
 									"shuffle_config": knownvalue.ListExact([]knownvalue.Check{
@@ -471,7 +471,7 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"channel_name":        knownvalue.StringExact("test"),
 									"compression_type":    knownvalue.StringExact("None"),
-                  names.AttrContentType:  knownvalue.StringExact("text/csv"),
+									names.AttrContentType: knownvalue.StringExact("text/csv"),
 									"input_mode":          knownvalue.StringExact("File"),
 									"record_wrapper_type": knownvalue.StringExact("None"),
 									"shuffle_config": knownvalue.ListExact([]knownvalue.Check{
@@ -499,16 +499,16 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T
 									"max_wait_time_in_seconds":    knownvalue.Int64Exact(3500),
 								}),
 							}),
-              names.AttrVPCConfig: knownvalue.ListExact([]knownvalue.Check{
+							names.AttrVPCConfig: knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                  names.AttrSecurityGroupIDs: knownvalue.NotNull(),
-                  names.AttrSubnets:          knownvalue.NotNull(),
+									names.AttrSecurityGroupIDs: knownvalue.NotNull(),
+									names.AttrSubnets:          knownvalue.NotNull(),
 								}),
 							}),
 						}),
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"definition_name": knownvalue.StringExact("def-2"),
-              names.AttrRoleARN:  knownvalue.NotNull(),
+							names.AttrRoleARN: knownvalue.NotNull(),
 							"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"training_input_mode": knownvalue.StringExact("File"),
@@ -516,9 +516,9 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions(t *testing.T
 							}),
 							"resource_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                  names.AttrInstanceCount: knownvalue.Int64Exact(1),
-                  names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
-									"volume_size_in_gb": knownvalue.Int64Exact(30),
+									names.AttrInstanceCount: knownvalue.Int64Exact(1),
+									names.AttrInstanceType:  knownvalue.StringExact("ml.m5.large"),
+									"volume_size_in_gb":     knownvalue.Int64Exact(30),
 								}),
 							}),
 						}),
@@ -662,9 +662,9 @@ func TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitionEnvironment(t 
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_job_definition"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-              names.AttrEnvironment: knownvalue.MapExact(map[string]knownvalue.Check{
+							names.AttrEnvironment: knownvalue.MapExact(map[string]knownvalue.Check{
 								"MODEL_VARIANT": knownvalue.StringExact("kmeans"),
-                "TEST_ENV":      knownvalue.StringExact(names.AttrEnabled),
+								"TEST_ENV":      knownvalue.StringExact(names.AttrEnabled),
 							}),
 						}),
 					})),
@@ -705,27 +705,27 @@ func TestAccSageMakerHyperParameterTuningJob_parameterRanges(t *testing.T) {
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"categorical_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
-                      acctest.CtName:    knownvalue.StringExact("init_method"),
-                      names.AttrValues: knownvalue.NotNull(),
+											acctest.CtName:   knownvalue.StringExact("init_method"),
+											names.AttrValues: knownvalue.NotNull(),
 										}),
 									}),
 									"integer_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
 											"max_value":    knownvalue.StringExact("10"),
 											"min_value":    knownvalue.StringExact("1"),
-                      acctest.CtName:  knownvalue.StringExact("epochs"),
+											acctest.CtName: knownvalue.StringExact("epochs"),
 											"scaling_type": knownvalue.StringExact("Auto"),
 										}),
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
 											"max_value":    knownvalue.StringExact("10"),
 											"min_value":    knownvalue.StringExact("4"),
-                      acctest.CtName:  knownvalue.StringExact("extra_center_factor"),
+											acctest.CtName: knownvalue.StringExact("extra_center_factor"),
 											"scaling_type": knownvalue.StringExact("Auto"),
 										}),
 										knownvalue.ObjectPartial(map[string]knownvalue.Check{
 											"max_value":    knownvalue.StringExact("15000"),
 											"min_value":    knownvalue.StringExact("3000"),
-                      acctest.CtName:  knownvalue.StringExact("mini_batch_size"),
+											acctest.CtName: knownvalue.StringExact("mini_batch_size"),
 											"scaling_type": knownvalue.StringExact("Auto"),
 										}),
 									}),
