@@ -41,6 +41,13 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 		},
 	})
 
+	configuredMetrics := testHyperParameterTuningMetricDefinitionsValue(ctx, []*tfsagemaker.HyperParameterTuningMetricDefinitionModel{
+		{
+			Name:  types.StringValue("test:msd"),
+			Regex: types.StringValue(`#quality_metric: host=\S+, test msd <loss>=(\S+)`),
+		},
+	})
+
 	nullMetrics := fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningMetricDefinitionModel](ctx)
 
 	testCases := []struct {
@@ -53,14 +60,17 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 			name: "config preserves algorithm name and omitted metric definitions",
 			config: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("example-algorithm"),
+				types.StringNull(),
 				nullMetrics,
 			),
 			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"),
+				types.StringNull(),
 				injectedMetrics,
 			),
 			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("example-algorithm"),
+				types.StringNull(),
 				nullMetrics,
 			),
 		},
@@ -69,10 +79,12 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 			config: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
 			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"),
+				types.StringNull(),
 				injectedMetrics,
 			),
 			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("example-algorithm"),
+				types.StringNull(),
 				injectedMetrics,
 			),
 		},
@@ -81,10 +93,12 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 			config: fwtypes.NewListNestedObjectValueOfUnknown[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
 			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"),
+				types.StringNull(),
 				injectedMetrics,
 			),
 			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringValue("arn:aws:sagemaker:us-west-2:123456789012:algorithm/example-algorithm"),
+				types.StringNull(),
 				injectedMetrics,
 			),
 		},
@@ -92,14 +106,49 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 			name: "training image config does not retain unknown algorithm name",
 			config: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringUnknown(),
+				types.StringNull(),
 				nullMetrics,
 			),
 			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
 				types.StringNull(),
 				injectedMetrics,
 			),
 			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
 				types.StringNull(),
+				types.StringNull(),
+				nullMetrics,
+			),
+		},
+		{
+			name: "training image config preserves configured metric definitions",
+			config: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				types.StringValue("174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"),
+				configuredMetrics,
+			),
+			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				types.StringValue("174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"),
+				injectedMetrics,
+			),
+			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				types.StringValue("174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"),
+				configuredMetrics,
+			),
+		},
+		{
+			name:   "training image import drops injected metric definitions",
+			config: fwtypes.NewListNestedObjectValueOfNull[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel](ctx),
+			remote: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				types.StringValue("174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"),
+				injectedMetrics,
+			),
+			want: testHyperParameterTuningAlgorithmSpecificationValue(ctx,
+				types.StringNull(),
+				types.StringValue("174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"),
 				nullMetrics,
 			),
 		},
@@ -128,12 +177,14 @@ func TestNormalizeHyperParameterTuningAlgorithmSpecification(t *testing.T) {
 func testHyperParameterTuningAlgorithmSpecificationValue(
 	ctx context.Context,
 	algorithmName types.String,
+	trainingImage types.String,
 	metricDefinitions fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningMetricDefinitionModel],
 ) fwtypes.ListNestedObjectValueOf[tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel] {
 	return fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tfsagemaker.HyperParameterTuningAlgorithmSpecificationModel{
 		{
 			AlgorithmName:     algorithmName,
 			MetricDefinitions: metricDefinitions,
+			TrainingImage:     trainingImage,
 			TrainingInputMode: types.StringValue("File"),
 		},
 	})
@@ -181,6 +232,38 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"strategy": knownvalue.StringExact("Bayesian"),
+							"hyper_parameter_tuning_job_objective": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"metric_name": knownvalue.StringExact("test:msd"),
+									"type":        knownvalue.StringExact("Minimize"),
+								}),
+							}),
+							"parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"categorical_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"name": knownvalue.StringExact("init_method"),
+										}),
+									}),
+									"integer_parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"name":      knownvalue.StringExact("epochs"),
+											"min_value": knownvalue.StringExact("1"),
+											"max_value": knownvalue.StringExact("10"),
+										}),
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"name":      knownvalue.StringExact("extra_center_factor"),
+											"min_value": knownvalue.StringExact("4"),
+											"max_value": knownvalue.StringExact("10"),
+										}),
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"name":      knownvalue.StringExact("mini_batch_size"),
+											"min_value": knownvalue.StringExact("3000"),
+											"max_value": knownvalue.StringExact("15000"),
+										}),
+									}),
+								}),
+							}),
 							"resource_limits": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"max_number_of_training_jobs": knownvalue.Int64Exact(2),
@@ -193,8 +276,41 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"algorithm_name":      knownvalue.StringExact(fmt.Sprintf("%s-algorithm", rName)),
+									"training_image":      knownvalue.NotNull(),
 									"training_input_mode": knownvalue.StringExact("File"),
+								}),
+							}),
+							"input_data_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"channel_name": knownvalue.StringExact("train"),
+									"content_type": knownvalue.StringExact("text/csv"),
+									"input_mode":   knownvalue.StringExact("File"),
+								}),
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"channel_name": knownvalue.StringExact("test"),
+									"content_type": knownvalue.StringExact("text/csv"),
+									"input_mode":   knownvalue.StringExact("File"),
+								}),
+							}),
+							"output_data_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"s3_output_path": knownvalue.NotNull(),
+								}),
+							}),
+							"resource_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"instance_count":    knownvalue.Int64Exact(1),
+									"instance_type":     knownvalue.StringExact("ml.m5.large"),
+									"volume_size_in_gb": knownvalue.Int64Exact(30),
+								}),
+							}),
+							"static_hyper_parameters": knownvalue.MapExact(map[string]knownvalue.Check{
+								"feature_dim": knownvalue.StringExact("3"),
+								"k":           knownvalue.StringExact("2"),
+							}),
+							"stopping_condition": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"max_runtime_in_seconds": knownvalue.Int64Exact(3600),
 								}),
 							}),
 						}),
@@ -208,10 +324,52 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "hyper_parameter_tuning_job_name",
-				ImportStateVerifyIgnore: []string{
-					"failure_reason",
-					"hyper_parameter_tuning_job_status",
-					"training_job_definition.0.algorithm_specification.0.metric_definitions",
+			},
+		},
+	})
+}
+
+func TestAccSageMakerHyperParameterTuningJob_metricDefinitions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tuningJob sagemaker.DescribeHyperParameterTuningJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_hyper_parameter_tuning_job.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccHyperParameterTuningJobPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHyperParameterTuningJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHyperParameterTuningJobConfig_metricDefinitions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("training_job_definition"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"algorithm_specification": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"training_image":      knownvalue.NotNull(),
+									"training_input_mode": knownvalue.StringExact("File"),
+									"metric_definitions": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectPartial(map[string]knownvalue.Check{
+											"name":  knownvalue.StringExact("test:msd"),
+											"regex": knownvalue.NotNull(),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
 				},
 			},
 		},
@@ -972,89 +1130,7 @@ resource "aws_sagemaker_algorithm" "test" {
 }
 
 func testAccHyperParameterTuningJobConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), fmt.Sprintf(`
-data "aws_iam_policy_document" "s3" {
-	statement {
-		actions = [
-			"s3:GetObject",
-			"s3:PutObject",
-		]
-		resources = [
-			"${aws_s3_bucket.test.arn}/*",
-		]
-	}
-
-	statement {
-		actions = [
-			"s3:ListBucket",
-		]
-		resources = [
-			aws_s3_bucket.test.arn,
-		]
-	}
-
-	statement {
-		actions = [
-			"sagemaker:DescribeAlgorithm",
-		]
-		resources = [
-			"*",
-		]
-	}
-}
-
-resource "aws_iam_role_policy" "test" {
-	role   = aws_iam_role.test.name
-	policy = data.aws_iam_policy_document.s3.json
-}
-
-resource "aws_s3_object" "input" {
-	bucket  = aws_s3_bucket.test.id
-	key     = "input/placeholder.csv"
-	content = "feature1,label\n1.0,0\n"
-}
-
-resource "aws_sagemaker_algorithm" "test" {
-	algorithm_name = "%[1]s-algorithm"
-
-	training_specification {
-		training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-		supported_training_instance_types = ["ml.m5.large"]
-
-		metric_definitions {
-			name  = "validation:accuracy"
-			regex = "validation:accuracy=(.*?);"
-		}
-
-		supported_hyper_parameters {
-			default_value = "0.2"
-			description   = "Learning rate"
-			is_required   = false
-			is_tunable    = true
-			name          = "learning_rate"
-			type          = "Continuous"
-
-			range {
-				continuous_parameter_range_specification {
-					min_value = "0.1"
-					max_value = "0.5"
-				}
-			}
-		}
-
-		supported_tuning_job_objective_metrics {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
-		}
-
-		training_channels {
-			name                    = "train"
-			supported_content_types = ["text/csv"]
-			supported_input_modes   = ["File"]
-		}
-	}
-}
-
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 	hyper_parameter_tuning_job_name = %[1]q
 
@@ -1062,21 +1138,41 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		strategy = "Bayesian"
 
 		hyper_parameter_tuning_job_objective {
-			metric_name = "validation:accuracy"
-			type        = "Maximize"
+			metric_name = "test:msd"
+			type        = "Minimize"
 		}
 
 		parameter_ranges {
-			continuous_parameter_ranges {
-				max_value = "0.5"
-				min_value = "0.1"
-				name      = "learning_rate"
+			categorical_parameter_ranges {
+				name   = "init_method"
+				values = ["kmeans++", "random"]
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "1"
+				name         = "epochs"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "4"
+				name         = "extra_center_factor"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "15000"
+				min_value    = "3000"
+				name         = "mini_batch_size"
+				scaling_type = "Auto"
 			}
 		}
 
 		resource_limits {
 			max_number_of_training_jobs = 2
-			max_parallel_training_jobs = 1
+			max_parallel_training_jobs  = 1
 		}
 	}
 
@@ -1084,8 +1180,39 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		role_arn = aws_iam_role.test.arn
 
 		algorithm_specification {
-			algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
 			training_input_mode = "File"
+		}
+
+		static_hyper_parameters = {
+			feature_dim = "3"
+			k           = "2"
+		}
+
+		input_data_config {
+			channel_name = "train"
+			content_type = "text/csv"
+			input_mode   = "File"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		input_data_config {
+			channel_name = "test"
+			content_type = "text/csv"
+			input_mode   = "File"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
 		}
 
 		output_data_config {
@@ -1093,9 +1220,120 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 		}
 
 		resource_config {
-			instance_count     = 1
-			instance_type      = "ml.m5.large"
-			volume_size_in_gb  = 30
+			instance_count    = 1
+			instance_type     = "ml.m5.large"
+			volume_size_in_gb = 30
+		}
+
+		stopping_condition {
+			max_runtime_in_seconds = 3600
+		}
+	}
+
+	depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
+}
+`, rName))
+}
+
+func testAccHyperParameterTuningJobConfig_metricDefinitions(rName string) string {
+	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
+resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
+	hyper_parameter_tuning_job_name = %[1]q
+
+	hyper_parameter_tuning_job_config {
+		strategy = "Bayesian"
+
+		hyper_parameter_tuning_job_objective {
+			metric_name = "test:msd"
+			type        = "Minimize"
+		}
+
+		parameter_ranges {
+			categorical_parameter_ranges {
+				name   = "init_method"
+				values = ["kmeans++", "random"]
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "1"
+				name         = "epochs"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "10"
+				min_value    = "4"
+				name         = "extra_center_factor"
+				scaling_type = "Auto"
+			}
+
+			integer_parameter_ranges {
+				max_value    = "15000"
+				min_value    = "3000"
+				name         = "mini_batch_size"
+				scaling_type = "Auto"
+			}
+		}
+
+		resource_limits {
+			max_number_of_training_jobs = 2
+			max_parallel_training_jobs  = 1
+		}
+	}
+
+	training_job_definition {
+		role_arn = aws_iam_role.test.arn
+
+		algorithm_specification {
+			training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+			training_input_mode = "File"
+
+			metric_definitions {
+				name  = "test:msd"
+				regex = "#quality_metric: host=\\S+, test msd <loss>=(\\S+)"
+			}
+		}
+
+		static_hyper_parameters = {
+			feature_dim = "3"
+			k           = "2"
+		}
+
+		input_data_config {
+			channel_name = "train"
+			content_type = "text/csv"
+			input_mode   = "File"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		input_data_config {
+			channel_name = "test"
+			content_type = "text/csv"
+			input_mode   = "File"
+
+			data_source {
+				s3_data_source {
+					s3_data_type = "S3Prefix"
+					s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+				}
+			}
+		}
+
+		output_data_config {
+			s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		}
+
+		resource_config {
+			instance_count    = 1
+			instance_type     = "ml.m5.large"
+			volume_size_in_gb = 30
 		}
 
 		stopping_condition {
