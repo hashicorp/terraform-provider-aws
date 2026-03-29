@@ -1029,6 +1029,12 @@ resource "aws_autoscaling_policy" "test" {
   target_tracking_configuration {
     customized_metric_specification {
       metrics {
+        id          = "m1"
+        expression  = "TIME_SERIES(20)"
+		period      = 10
+        return_data = false
+      }
+      metrics {
         id = "m2"
         metric_stat {
           metric {
@@ -1037,7 +1043,7 @@ resource "aws_autoscaling_policy" "test" {
           }
           unit   = "Percent"
           stat   = "Sum"
-          period = 10
+		  period = 10
         }
         return_data = false
       }
@@ -1058,13 +1064,20 @@ resource "aws_autoscaling_policy" "test" {
           }
           unit   = "Percent"
           stat   = "Sum"
-          period = 10
+		  period = 10
         }
+        return_data = false
+      }
+      metrics {
+        id          = "e1"
+        expression  = "m1 + m2 + m3"
+		period      = 10
         return_data = true
       }
     }
 
     target_value = 12.3
+
   }
 }
 `, rName))
