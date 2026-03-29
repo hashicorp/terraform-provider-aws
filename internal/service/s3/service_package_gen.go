@@ -168,6 +168,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "Objects",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  DataSourceBucketNotification,
+			TypeName: "aws_s3_bucket_notification",
+		},
 	}
 }
 
