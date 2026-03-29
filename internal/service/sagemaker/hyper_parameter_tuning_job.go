@@ -1662,6 +1662,7 @@ func normalizeTrainingJobDefinitionAlgorithmSpec(
 		if diags.HasError() {
 			return
 		}
+		normalizeHyperParameterRanges(ctx, fwtypes.NewListNestedObjectValueOfNull[parameterRangesModel](ctx), &flatDefs[0].HyperParameterRanges)
 		normalizeRetryStrategy(ctx, fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx), &flatDefs[0].RetryStrategy)
 		normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flatDefs[0].StaticHyperParameters)
 		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
@@ -1679,6 +1680,7 @@ func normalizeTrainingJobDefinitionAlgorithmSpec(
 		return
 	}
 
+	normalizeHyperParameterRanges(ctx, savedDefs[0].HyperParameterRanges, &flatDefs[0].HyperParameterRanges)
 	normalizeRetryStrategy(ctx, savedDefs[0].RetryStrategy, &flatDefs[0].RetryStrategy)
 	normalizeStaticHyperParameters(ctx, savedDefs[0].StaticHyperParameters, &flatDefs[0].StaticHyperParameters)
 
@@ -1707,6 +1709,7 @@ func normalizeTrainingJobDefinitionsAlgorithmSpec(
 			if diags.HasError() {
 				return
 			}
+			normalizeHyperParameterRanges(ctx, fwtypes.NewListNestedObjectValueOfNull[parameterRangesModel](ctx), &flatDefs[i].HyperParameterRanges)
 			normalizeRetryStrategy(ctx, fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx), &flatDefs[i].RetryStrategy)
 			normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flatDefs[i].StaticHyperParameters)
 		}
@@ -1725,6 +1728,7 @@ func normalizeTrainingJobDefinitionsAlgorithmSpec(
 		if diags.HasError() {
 			return
 		}
+		normalizeHyperParameterRanges(ctx, savedDefs[i].HyperParameterRanges, &flatDefs[i].HyperParameterRanges)
 		normalizeRetryStrategy(ctx, savedDefs[i].RetryStrategy, &flatDefs[i].RetryStrategy)
 		normalizeStaticHyperParameters(ctx, savedDefs[i].StaticHyperParameters, &flatDefs[i].StaticHyperParameters)
 	}
@@ -1737,12 +1741,7 @@ func normalizeStaticHyperParameters(
 	saved fwtypes.MapOfString,
 	target *fwtypes.MapOfString,
 ) {
-	if saved.IsUnknown() {
-		normalizeInjectedStaticHyperParameters(ctx, target)
-		return
-	}
-
-	if saved.IsNull() {
+	if saved.IsUnknown() || saved.IsNull() {
 		normalizeInjectedStaticHyperParameters(ctx, target)
 		return
 	}
@@ -1787,6 +1786,23 @@ func normalizeRetryStrategy(
 
 	if saved.IsNull() || len(saved.Elements()) == 0 {
 		*target = fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx)
+		return
+	}
+
+	*target = saved
+}
+
+func normalizeHyperParameterRanges(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[parameterRangesModel],
+	target *fwtypes.ListNestedObjectValueOf[parameterRangesModel],
+) {
+	if saved.IsUnknown() {
+		return
+	}
+
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		*target = fwtypes.NewListNestedObjectValueOfNull[parameterRangesModel](ctx)
 		return
 	}
 
@@ -1860,9 +1876,13 @@ func normalizeAlgorithmSpecification(
 	}
 
 	if saved.IsNull() || len(saved.Elements()) == 0 {
-		flatSpecs[0].AlgorithmName = normalizeHyperParameterTuningAlgorithmName(flatSpecs[0].AlgorithmName)
-		flatSpecs[0].TrainingImage = types.StringNull()
-		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[hyperParameterTuningMetricDefinitionModel](ctx)
+		if algorithmSpecificationUsesTrainingImage(flatSpecs[0]) {
+			flatSpecs[0].AlgorithmName = types.StringNull()
+			flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[hyperParameterTuningMetricDefinitionModel](ctx)
+		} else {
+			flatSpecs[0].AlgorithmName = normalizeHyperParameterTuningAlgorithmName(flatSpecs[0].AlgorithmName)
+			flatSpecs[0].TrainingImage = types.StringNull()
+		}
 		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
 		return
 	}
@@ -1892,7 +1912,11 @@ func normalizeAlgorithmSpecification(
 }
 
 func algorithmSpecificationUsesTrainingImage(spec *algorithmSpecificationModel) bool {
-	return !spec.TrainingImage.IsUnknown() && !spec.TrainingImage.IsNull()
+	if spec.TrainingImage.IsUnknown() || spec.TrainingImage.IsNull() {
+		return false
+	}
+
+	return strings.TrimSpace(spec.TrainingImage.ValueString()) != ""
 }
 
 func normalizeHyperParameterTuningAlgorithmName(v types.String) types.String {
@@ -1927,11 +1951,13 @@ func (r *hyperParameterTuningJobResource) flatten(
 		return
 	}
 
+	// training_job_definition[0].static_hyper_parameters: new element "_tuning_objective_metric" has appeared
 	normalizeHyperParameterTuningJobConfig(ctx, savedHyperParameterTuningJobConfig, &target.HyperParameterTuningJobConfig, diags)
 	if diags.HasError() {
 		return
 	}
 
+	// .training_job_definition[0].algorithm_specification[0].metric_definitions: block count changed from 0 to 6
 	normalizeTrainingJobDefinitionAlgorithmSpec(ctx, savedTrainingJobDefinition, &target.TrainingJobDefinition, diags)
 	if diags.HasError() {
 		return
@@ -1963,20 +1989,6 @@ func findHyperParameterTuningJobByName(ctx context.Context, conn *sagemaker.Clie
 
 	return output, nil
 }
-
-// TIP: ==== TERRAFORM IMPORTING ====
-// The built-in import function, and Import ID Handler, if any, should handle populating the required
-// attributes from the Import ID or Resource Identity.
-// In some cases, additional attributes must be set when importing.
-// Adding a custom ImportState function can handle those.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
-// func (r *hyperParameterTuningJobResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	r.WithImportByIdentity.ImportState(ctx, req, resp)
-//
-// 	// Set needed attribute values here
-// }
 
 type hyperParameterTuningJobResourceModel struct {
 	framework.WithRegionModel
