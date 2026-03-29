@@ -125,22 +125,35 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 1 * time.Minute
 	)
-	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout,
-		func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
-			output, err := findCertificates(ctx, conn, &input, f)
-			switch {
-			case err != nil:
-				return nil, err
-			case len(output) == 0:
-				return nil, tfresource.NewEmptyResultError()
-			default:
-				return output, nil
-			}
-		},
-	)
+	var certificateSummaries []awstypes.CertificateSummary
+	var err error
+	if d.Get("most_recent").(bool) {
+		certificateSummaries, err = findCertificates(ctx, conn, &input, f)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
+		if len(certificateSummaries) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
+		}
+	} else {
+		certificateSummaries, err = tfresource.RetryWhenNotFound(ctx, timeout,
+			func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
+				output, err := findCertificates(ctx, conn, &input, f)
+				switch {
+				case err != nil:
+					return nil, err
+				case len(output) == 0:
+					return nil, tfresource.NewEmptyResultError()
+				default:
+					return output, nil
+				}
+			},
+		)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
+		}
 	}
 
 	var certificates []*awstypes.CertificateDetail
