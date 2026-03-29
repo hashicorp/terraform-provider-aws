@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -478,7 +477,7 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgr
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
