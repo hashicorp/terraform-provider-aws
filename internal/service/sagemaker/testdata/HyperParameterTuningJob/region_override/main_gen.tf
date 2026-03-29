@@ -10,15 +10,15 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     strategy = "Bayesian"
 
     hyper_parameter_tuning_job_objective {
-      metric_name = "validation:accuracy"
-      type        = "Maximize"
+      metric_name = "test:msd"
+      type        = "Minimize"
     }
 
     parameter_ranges {
-      continuous_parameter_ranges {
-        max_value = "0.5"
-        min_value = "0.1"
-        name      = "learning_rate"
+      integer_parameter_ranges {
+        max_value    = "2"
+        min_value    = "1"
+        name         = "epochs"
       }
     }
 
@@ -32,7 +32,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
     role_arn = aws_iam_role.test.arn
 
     algorithm_specification {
-      algorithm_name      = aws_sagemaker_algorithm.test.algorithm_name
+      training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
       training_input_mode = "File"
     }
 
@@ -63,49 +63,6 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test, aws_s3_object.input]
-}
-
-resource "aws_sagemaker_algorithm" "test" {
-  region = var.region
-
-  algorithm_name = "${var.rName}-algorithm"
-
-  training_specification {
-    training_image                    = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    supported_training_instance_types = ["ml.m5.large"]
-
-    metric_definitions {
-      name  = "validation:accuracy"
-      regex = "validation:accuracy=(.*?);"
-    }
-
-    supported_hyper_parameters {
-      default_value = "0.2"
-      description   = "Learning rate"
-      is_required   = false
-      is_tunable    = true
-      name          = "learning_rate"
-      type          = "Continuous"
-
-      range {
-        continuous_parameter_range_specification {
-          min_value = "0.1"
-          max_value = "0.5"
-        }
-      }
-    }
-
-    supported_tuning_job_objective_metrics {
-      metric_name = "validation:accuracy"
-      type        = "Maximize"
-    }
-
-    training_channels {
-      name                    = "train"
-      supported_content_types = ["text/csv"]
-      supported_input_modes   = ["File"]
-    }
-  }
 }
 
 data "aws_partition" "current" {}
@@ -149,15 +106,6 @@ data "aws_iam_policy_document" "s3" {
     ]
   }
 
-  statement {
-    actions = [
-      "sagemaker:DescribeAlgorithm",
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
 }
 
 resource "aws_iam_role" "test" {

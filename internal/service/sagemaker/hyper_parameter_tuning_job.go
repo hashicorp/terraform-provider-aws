@@ -52,16 +52,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_sagemaker_hyper_parameter_tuning_job", name="Hyper Parameter Tuning Job")
 // @Tags(identifierAttribute="arn")
@@ -71,7 +61,6 @@ import (
 // @Testing(importIgnore="failure_reason;hyper_parameter_tuning_job_status;training_job_definition.0.algorithm_specification.0.metric_definitions")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(tagsTest=false)
 func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hyperParameterTuningJobResource{}
 
@@ -92,50 +81,6 @@ type hyperParameterTuningJobResource struct {
 	framework.WithImportByIdentity
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -228,8 +173,6 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						"hyper_parameter_tuning_job_objective": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningConfigObjectiveModel](ctx),
 							Validators: []validator.List{
-								//listvalidator.IsRequired(), // TODO : API seems to enforce it , come abck later
-								//listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -616,8 +559,10 @@ func parameterRangesBlock(ctx context.Context) schema.ListNestedBlock {
 						"scaling_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.HyperParameterScalingType](),
 							Optional:   true,
+							Computed:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
+								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
 					}},
@@ -843,6 +788,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningResourceConfigModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
+						listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("resource_config")),
 					},
 					PlanModifiers: []planmodifier.List{
 						listplanmodifier.RequiresReplace(),
@@ -1191,7 +1137,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					},
 					NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
 						"compression_type": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+							CustomType: fwtypes.StringEnumType[awstypes.OutputCompressionType](),
 							Optional:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -1223,6 +1169,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					CustomType: fwtypes.NewListNestedObjectTypeOf[trainingResourceConfigModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
+						listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("hyper_parameter_tuning_resource_config")),
 					},
 					PlanModifiers: []planmodifier.List{
 						listplanmodifier.RequiresReplace(),
@@ -1638,9 +1585,37 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 	}
 }
 
-// SageMaker returns algorithm ARNs and may inject metric definitions for
-// algorithm-backed training job definitions. Preserve configured values when
-// available to avoid unexpected new value errors during apply.
+func (r *hyperParameterTuningJobResource) flatten(
+	ctx context.Context,
+	out *sagemaker.DescribeHyperParameterTuningJobOutput,
+	target *hyperParameterTuningJobResourceModel,
+	diags *diag.Diagnostics,
+) {
+	savedHyperParameterTuningJobConfig := target.HyperParameterTuningJobConfig
+	savedTrainingJobDefinition := target.TrainingJobDefinition
+	savedTrainingJobDefinitions := target.TrainingJobDefinitions
+
+	diags.Append(fwflex.Flatten(ctx, out, target, fwflex.WithFieldNamePrefix("HyperParameterTuningJob"))...)
+	if diags.HasError() {
+		return
+	}
+
+	// training_job_definition[0].static_hyper_parameters: new element "_tuning_objective_metric" has appeared
+	normalizeHyperParameterTuningJobConfig(ctx, savedHyperParameterTuningJobConfig, &target.HyperParameterTuningJobConfig, diags)
+	if diags.HasError() {
+		return
+	}
+
+	// .training_job_definition[0].algorithm_specification[0].metric_definitions: block count changed from 0 to 6
+	normalizeTrainingJobDefinitionAlgorithmSpec(ctx, savedTrainingJobDefinition, &target.TrainingJobDefinition, diags)
+	if diags.HasError() {
+		return
+	}
+
+	normalizeTrainingJobDefinitionsAlgorithmSpec(ctx, savedTrainingJobDefinitions, &target.TrainingJobDefinitions, diags)
+}
+
+// SageMaker returns algorithm ARNs and may inject metric definitions
 func normalizeTrainingJobDefinitionAlgorithmSpec(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
@@ -1683,6 +1658,7 @@ func normalizeTrainingJobDefinitionAlgorithmSpec(
 	normalizeHyperParameterRanges(ctx, savedDefs[0].HyperParameterRanges, &flatDefs[0].HyperParameterRanges)
 	normalizeRetryStrategy(ctx, savedDefs[0].RetryStrategy, &flatDefs[0].RetryStrategy)
 	normalizeStaticHyperParameters(ctx, savedDefs[0].StaticHyperParameters, &flatDefs[0].StaticHyperParameters)
+	normalizeTrainingJobDefinitionConfig(savedDefs[0], flatDefs[0])
 
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
 }
@@ -1731,9 +1707,91 @@ func normalizeTrainingJobDefinitionsAlgorithmSpec(
 		normalizeHyperParameterRanges(ctx, savedDefs[i].HyperParameterRanges, &flatDefs[i].HyperParameterRanges)
 		normalizeRetryStrategy(ctx, savedDefs[i].RetryStrategy, &flatDefs[i].RetryStrategy)
 		normalizeStaticHyperParameters(ctx, savedDefs[i].StaticHyperParameters, &flatDefs[i].StaticHyperParameters)
+		normalizeTrainingJobDefinitionConfig(savedDefs[i], flatDefs[i])
 	}
 
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+}
+
+/*
+=== CONT  TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions
+
+	hyper_parameter_tuning_job_test.go:393: Step 1/1 error: Error running apply: exit status 1
+
+	    Error: Provider produced inconsistent result after apply
+
+	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
+	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
+	    unexpected new value:
+	    .training_job_definitions[0].hyper_parameter_tuning_resource_config: block
+	    count changed from 1 to 0.
+
+	    This is a bug in the provider, which should be reported in the provider's own
+	    issue tracker.
+
+	    Error: Provider produced inconsistent result after apply
+
+	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
+	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
+	    unexpected new value:
+	    .training_job_definitions[0].output_data_config[0].compression_type: was
+	    cty.StringVal("GZIP"), but now null.
+
+	    This is a bug in the provider, which should be reported in the provider's own
+	    issue tracker.
+
+	    Error: Provider produced inconsistent result after apply
+
+	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
+	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
+	    unexpected new value:
+	    .training_job_definitions[0].stopping_condition[0].max_pending_time_in_seconds:
+	    was cty.NumberIntVal(7200), but now null.
+
+	    This is a bug in the provider, which should be reported in the provider's own
+	    issue tracker.
+
+	    Error: Provider produced inconsistent result after apply
+
+	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
+	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
+	    unexpected new value:
+	    .training_job_definitions[0].input_data_config[0].data_source[0].s3_data_source[0].instance_group_names:
+	    was cty.SetVal([]cty.Value{cty.StringVal("instance-group-1")}), but now null.
+
+	    This is a bug in the provider, which should be reported in the provider's own
+	    issue tracker.
+
+	    Error: Provider produced inconsistent result after apply
+
+	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
+	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
+	    unexpected new value: .training_job_definitions[0].resource_config: block
+	    count changed from 0 to 1.
+*/
+func normalizeTrainingJobDefinitionConfig(
+	saved *hyperParameterTrainingJobDefinitionModel,
+	target *hyperParameterTrainingJobDefinitionModel,
+) {
+	if !saved.HyperParameterTuningResourceConfig.IsUnknown() {
+		target.HyperParameterTuningResourceConfig = saved.HyperParameterTuningResourceConfig
+	}
+
+	if !saved.ResourceConfig.IsUnknown() {
+		target.ResourceConfig = saved.ResourceConfig
+	}
+
+	if !saved.OutputDataConfig.IsUnknown() {
+		target.OutputDataConfig = saved.OutputDataConfig
+	}
+
+	if !saved.StoppingCondition.IsUnknown() {
+		target.StoppingCondition = saved.StoppingCondition
+	}
+
+	if !saved.InputDataConfig.IsUnknown() {
+		target.InputDataConfig = saved.InputDataConfig
+	}
 }
 
 func normalizeStaticHyperParameters(
@@ -1934,36 +1992,6 @@ func normalizeHyperParameterTuningAlgorithmName(v types.String) types.String {
 	}
 
 	return types.StringValue(v.ValueString()[idx+1:])
-}
-
-func (r *hyperParameterTuningJobResource) flatten(
-	ctx context.Context,
-	out *sagemaker.DescribeHyperParameterTuningJobOutput,
-	target *hyperParameterTuningJobResourceModel,
-	diags *diag.Diagnostics,
-) {
-	savedHyperParameterTuningJobConfig := target.HyperParameterTuningJobConfig
-	savedTrainingJobDefinition := target.TrainingJobDefinition
-	savedTrainingJobDefinitions := target.TrainingJobDefinitions
-
-	diags.Append(fwflex.Flatten(ctx, out, target, fwflex.WithFieldNamePrefix("HyperParameterTuningJob"))...)
-	if diags.HasError() {
-		return
-	}
-
-	// training_job_definition[0].static_hyper_parameters: new element "_tuning_objective_metric" has appeared
-	normalizeHyperParameterTuningJobConfig(ctx, savedHyperParameterTuningJobConfig, &target.HyperParameterTuningJobConfig, diags)
-	if diags.HasError() {
-		return
-	}
-
-	// .training_job_definition[0].algorithm_specification[0].metric_definitions: block count changed from 0 to 6
-	normalizeTrainingJobDefinitionAlgorithmSpec(ctx, savedTrainingJobDefinition, &target.TrainingJobDefinition, diags)
-	if diags.HasError() {
-		return
-	}
-
-	normalizeTrainingJobDefinitionsAlgorithmSpec(ctx, savedTrainingJobDefinitions, &target.TrainingJobDefinitions, diags)
 }
 
 func findHyperParameterTuningJobByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
@@ -2169,9 +2197,9 @@ type hyperParameterTuningShuffleConfigModel struct {
 }
 
 type hyperParameterTuningOutputDataConfigModel struct {
-	CompressionType fwtypes.StringEnum[awstypes.CompressionType] `tfsdk:"compression_type"`
-	KMSKeyID        types.String                                 `tfsdk:"kms_key_id"`
-	S3OutputPath    types.String                                 `tfsdk:"s3_output_path"`
+	CompressionType fwtypes.StringEnum[awstypes.OutputCompressionType] `tfsdk:"compression_type"`
+	KMSKeyID        types.String                                       `tfsdk:"kms_key_id"`
+	S3OutputPath    types.String                                       `tfsdk:"s3_output_path"`
 }
 
 type hyperParameterTuningResourceConfigModel struct {
