@@ -63,10 +63,8 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hyperParameterTuningJobResource{}
-
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -1470,8 +1468,8 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 			"Could not assume role",
 			"no identity-based policy allows the s3:ListBucket action",
 			"No S3 objects found under S3 URL",
-			"The AWS Access Key Id you provided does not exist in our records",
 			"Access denied when describing algorithm",
+			"Unable to describe algorithm",
 		) {
 			return true, err
 		}
@@ -1591,7 +1589,6 @@ func (r *hyperParameterTuningJobResource) flatten(
 	target *hyperParameterTuningJobResourceModel,
 	diags *diag.Diagnostics,
 ) {
-	savedHyperParameterTuningJobConfig := target.HyperParameterTuningJobConfig
 	savedTrainingJobDefinition := target.TrainingJobDefinition
 	savedTrainingJobDefinitions := target.TrainingJobDefinitions
 
@@ -1600,23 +1597,16 @@ func (r *hyperParameterTuningJobResource) flatten(
 		return
 	}
 
-	// training_job_definition[0].static_hyper_parameters: new element "_tuning_objective_metric" has appeared
-	normalizeHyperParameterTuningJobConfig(ctx, savedHyperParameterTuningJobConfig, &target.HyperParameterTuningJobConfig, diags)
+	normalizeTrainingJobDefinition(ctx, savedTrainingJobDefinition, &target.TrainingJobDefinition, diags)
 	if diags.HasError() {
 		return
 	}
 
-	// .training_job_definition[0].algorithm_specification[0].metric_definitions: block count changed from 0 to 6
-	normalizeTrainingJobDefinitionAlgorithmSpec(ctx, savedTrainingJobDefinition, &target.TrainingJobDefinition, diags)
-	if diags.HasError() {
-		return
-	}
-
-	normalizeTrainingJobDefinitionsAlgorithmSpec(ctx, savedTrainingJobDefinitions, &target.TrainingJobDefinitions, diags)
+	normalizeTrainingJobDefinitions(ctx, savedTrainingJobDefinitions, &target.TrainingJobDefinitions, diags)
 }
 
-// SageMaker returns algorithm ARNs and may inject metric definitions
-func normalizeTrainingJobDefinitionAlgorithmSpec(
+// AWS may reshape several training job definition fields
+func normalizeTrainingJobDefinition(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
 	target *fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
@@ -1626,44 +1616,42 @@ func normalizeTrainingJobDefinitionAlgorithmSpec(
 		return
 	}
 
-	flatDefs, d := target.ToSlice(ctx)
+	flattenedDefinitions, d := target.ToSlice(ctx)
 	diags.Append(d...)
-	if diags.HasError() || len(flatDefs) == 0 {
+	if diags.HasError() || len(flattenedDefinitions) == 0 {
 		return
 	}
 
 	if saved.IsNull() || len(saved.Elements()) == 0 {
-		normalizeAlgorithmSpecification(ctx, fwtypes.NewListNestedObjectValueOfNull[algorithmSpecificationModel](ctx), &flatDefs[0].AlgorithmSpecification, diags)
+		normalizeAlgorithmSpecification(ctx, fwtypes.NewListNestedObjectValueOfNull[algorithmSpecificationModel](ctx), &flattenedDefinitions[0].AlgorithmSpecification, diags)
 		if diags.HasError() {
 			return
 		}
-		normalizeHyperParameterRanges(ctx, fwtypes.NewListNestedObjectValueOfNull[parameterRangesModel](ctx), &flatDefs[0].HyperParameterRanges)
-		normalizeRetryStrategy(ctx, fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx), &flatDefs[0].RetryStrategy)
-		normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flatDefs[0].StaticHyperParameters)
-		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+		normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flattenedDefinitions[0].StaticHyperParameters)
+		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flattenedDefinitions)
 		return
 	}
 
-	savedDefs, d := saved.ToSlice(ctx)
+	savedDefinitions, d := saved.ToSlice(ctx)
 	diags.Append(d...)
-	if diags.HasError() || len(savedDefs) == 0 {
+	if diags.HasError() || len(savedDefinitions) == 0 {
 		return
 	}
 
-	normalizeAlgorithmSpecification(ctx, savedDefs[0].AlgorithmSpecification, &flatDefs[0].AlgorithmSpecification, diags)
+	normalizeAlgorithmSpecification(ctx, savedDefinitions[0].AlgorithmSpecification, &flattenedDefinitions[0].AlgorithmSpecification, diags)
 	if diags.HasError() {
 		return
 	}
 
-	normalizeHyperParameterRanges(ctx, savedDefs[0].HyperParameterRanges, &flatDefs[0].HyperParameterRanges)
-	normalizeRetryStrategy(ctx, savedDefs[0].RetryStrategy, &flatDefs[0].RetryStrategy)
-	normalizeStaticHyperParameters(ctx, savedDefs[0].StaticHyperParameters, &flatDefs[0].StaticHyperParameters)
-	normalizeTrainingJobDefinitionConfig(savedDefs[0], flatDefs[0])
+	normalizeRetryStrategy(ctx, savedDefinitions[0].RetryStrategy, &flattenedDefinitions[0].RetryStrategy)
+	normalizeStaticHyperParameters(ctx, savedDefinitions[0].StaticHyperParameters, &flattenedDefinitions[0].StaticHyperParameters)
+	normalizeTrainingJobDefinitionConfig(savedDefinitions[0], flattenedDefinitions[0])
 
-	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flattenedDefinitions)
 }
 
-func normalizeTrainingJobDefinitionsAlgorithmSpec(
+// AWS may reshape several training job definitions fields
+func normalizeTrainingJobDefinitions(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
 	target *fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel],
@@ -1673,102 +1661,49 @@ func normalizeTrainingJobDefinitionsAlgorithmSpec(
 		return
 	}
 
-	flatDefs, d := target.ToSlice(ctx)
+	flattenedDefinitions, d := target.ToSlice(ctx)
 	diags.Append(d...)
-	if diags.HasError() || len(flatDefs) == 0 {
+	if diags.HasError() || len(flattenedDefinitions) == 0 {
 		return
 	}
 
 	if saved.IsNull() || len(saved.Elements()) == 0 {
-		for i := range flatDefs {
-			normalizeAlgorithmSpecification(ctx, fwtypes.NewListNestedObjectValueOfNull[algorithmSpecificationModel](ctx), &flatDefs[i].AlgorithmSpecification, diags)
+		for i := range flattenedDefinitions {
+			normalizeAlgorithmSpecification(ctx, fwtypes.NewListNestedObjectValueOfNull[algorithmSpecificationModel](ctx), &flattenedDefinitions[i].AlgorithmSpecification, diags)
 			if diags.HasError() {
 				return
 			}
-			normalizeHyperParameterRanges(ctx, fwtypes.NewListNestedObjectValueOfNull[parameterRangesModel](ctx), &flatDefs[i].HyperParameterRanges)
-			normalizeRetryStrategy(ctx, fwtypes.NewListNestedObjectValueOfNull[retryStrategyModel](ctx), &flatDefs[i].RetryStrategy)
-			normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flatDefs[i].StaticHyperParameters)
+			normalizeStaticHyperParameters(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), &flattenedDefinitions[i].StaticHyperParameters)
 		}
-		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flattenedDefinitions)
 		return
 	}
 
-	savedDefs, d := saved.ToSlice(ctx)
+	savedDefinitions, d := saved.ToSlice(ctx)
 	diags.Append(d...)
-	if diags.HasError() {
+	if diags.HasError() || len(savedDefinitions) == 0 {
 		return
 	}
 
-	for i := range min(len(flatDefs), len(savedDefs)) {
-		normalizeAlgorithmSpecification(ctx, savedDefs[i].AlgorithmSpecification, &flatDefs[i].AlgorithmSpecification, diags)
+	for i := range min(len(flattenedDefinitions), len(savedDefinitions)) {
+		normalizeAlgorithmSpecification(ctx, savedDefinitions[i].AlgorithmSpecification, &flattenedDefinitions[i].AlgorithmSpecification, diags)
 		if diags.HasError() {
 			return
 		}
-		normalizeHyperParameterRanges(ctx, savedDefs[i].HyperParameterRanges, &flatDefs[i].HyperParameterRanges)
-		normalizeRetryStrategy(ctx, savedDefs[i].RetryStrategy, &flatDefs[i].RetryStrategy)
-		normalizeStaticHyperParameters(ctx, savedDefs[i].StaticHyperParameters, &flatDefs[i].StaticHyperParameters)
-		normalizeTrainingJobDefinitionConfig(savedDefs[i], flatDefs[i])
+		normalizeRetryStrategy(ctx, savedDefinitions[i].RetryStrategy, &flattenedDefinitions[i].RetryStrategy)
+		normalizeStaticHyperParameters(ctx, savedDefinitions[i].StaticHyperParameters, &flattenedDefinitions[i].StaticHyperParameters)
+		normalizeTrainingJobDefinitionConfig(savedDefinitions[i], flattenedDefinitions[i])
 	}
 
-	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatDefs)
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flattenedDefinitions)
 }
 
-/*
-=== CONT  TestAccSageMakerHyperParameterTuningJob_trainingJobDefinitions
-
-	hyper_parameter_tuning_job_test.go:393: Step 1/1 error: Error running apply: exit status 1
-
-	    Error: Provider produced inconsistent result after apply
-
-	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
-	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
-	    unexpected new value:
-	    .training_job_definitions[0].hyper_parameter_tuning_resource_config: block
-	    count changed from 1 to 0.
-
-	    This is a bug in the provider, which should be reported in the provider's own
-	    issue tracker.
-
-	    Error: Provider produced inconsistent result after apply
-
-	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
-	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
-	    unexpected new value:
-	    .training_job_definitions[0].output_data_config[0].compression_type: was
-	    cty.StringVal("GZIP"), but now null.
-
-	    This is a bug in the provider, which should be reported in the provider's own
-	    issue tracker.
-
-	    Error: Provider produced inconsistent result after apply
-
-	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
-	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
-	    unexpected new value:
-	    .training_job_definitions[0].stopping_condition[0].max_pending_time_in_seconds:
-	    was cty.NumberIntVal(7200), but now null.
-
-	    This is a bug in the provider, which should be reported in the provider's own
-	    issue tracker.
-
-	    Error: Provider produced inconsistent result after apply
-
-	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
-	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
-	    unexpected new value:
-	    .training_job_definitions[0].input_data_config[0].data_source[0].s3_data_source[0].instance_group_names:
-	    was cty.SetVal([]cty.Value{cty.StringVal("instance-group-1")}), but now null.
-
-	    This is a bug in the provider, which should be reported in the provider's own
-	    issue tracker.
-
-	    Error: Provider produced inconsistent result after apply
-
-	    When applying changes to aws_sagemaker_hyper_parameter_tuning_job.test,
-	    provider "provider[\"registry.terraform.io/hashicorp/aws\"]" produced an
-	    unexpected new value: .training_job_definitions[0].resource_config: block
-	    count changed from 0 to 1.
-*/
+// AWS does not return few values while it adds few(If this happens for any reason, preserve config values):
+// training_job_definitions[0].input_data_config[0].data_source[0].s3_data_source[0].instance_group_names. Example : "instance-group-1" to null
+// training_job_definitions[0].resource_config : block count changed from X to Y
+// training_job_definitions[0].hyper_parameter_tuning_resource_config: block count changed from X to Y
+// training_job_definitions[0].output_data_config[0].compression_type. Example "GZIP" to null.
+// training_job_definitions[0].stopping_condition[0].max_pending_time_in_seconds. Example 7200 to null.
 func normalizeTrainingJobDefinitionConfig(
 	saved *hyperParameterTrainingJobDefinitionModel,
 	target *hyperParameterTrainingJobDefinitionModel,
@@ -1794,45 +1729,40 @@ func normalizeTrainingJobDefinitionConfig(
 	}
 }
 
+// AWS injects few static hyper params which seem to start with "_" : training_job_definition[0].static_hyper_parameters - new element "_tuning_objective_metric" has appeared
 func normalizeStaticHyperParameters(
 	ctx context.Context,
 	saved fwtypes.MapOfString,
 	target *fwtypes.MapOfString,
 ) {
 	if saved.IsUnknown() || saved.IsNull() {
-		normalizeInjectedStaticHyperParameters(ctx, target)
+		if target == nil || target.IsNull() || target.IsUnknown() {
+			return
+		}
+
+		filtered := make(map[string]attr.Value)
+
+		for key, value := range target.Elements() {
+			if strings.HasPrefix(key, "_") {
+				continue
+			}
+
+			filtered[key] = value
+		}
+
+		if len(filtered) == 0 {
+			*target = fwtypes.NewMapValueOfNull[types.String](ctx)
+			return
+		}
+
+		*target = fwtypes.NewMapValueOfMust[types.String](ctx, filtered)
 		return
 	}
 
 	*target = saved
 }
 
-func normalizeInjectedStaticHyperParameters(
-	ctx context.Context,
-	target *fwtypes.MapOfString,
-) {
-	if target == nil || target.IsNull() || target.IsUnknown() {
-		return
-	}
-
-	filtered := make(map[string]attr.Value)
-
-	for key, value := range target.Elements() {
-		if strings.HasPrefix(key, "_") {
-			continue
-		}
-
-		filtered[key] = value
-	}
-
-	if len(filtered) == 0 {
-		*target = fwtypes.NewMapValueOfNull[types.String](ctx)
-		return
-	}
-
-	*target = fwtypes.NewMapValueOfMust[types.String](ctx, filtered)
-}
-
+// AWS injects injects retry strategy : training_job_definition[0].retry_strategy: block count changed from X to Y
 func normalizeRetryStrategy(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[retryStrategyModel],
@@ -1850,73 +1780,8 @@ func normalizeRetryStrategy(
 	*target = saved
 }
 
-func normalizeHyperParameterRanges(
-	ctx context.Context,
-	saved fwtypes.ListNestedObjectValueOf[parameterRangesModel],
-	target *fwtypes.ListNestedObjectValueOf[parameterRangesModel],
-) {
-	if saved.IsUnknown() {
-		return
-	}
-
-	if saved.IsNull() || len(saved.Elements()) == 0 {
-		*target = fwtypes.NewListNestedObjectValueOfNull[parameterRangesModel](ctx)
-		return
-	}
-
-	*target = saved
-}
-
-func normalizeHyperParameterTuningJobConfig(
-	ctx context.Context,
-	saved fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobConfigModel],
-	target *fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobConfigModel],
-	diags *diag.Diagnostics,
-) {
-	if saved.IsUnknown() {
-		return
-	}
-
-	flatConfigs, d := target.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() || len(flatConfigs) == 0 {
-		return
-	}
-
-	if saved.IsNull() || len(saved.Elements()) == 0 {
-		flatConfigs[0].TuningJobCompletionCriteria = fwtypes.NewListNestedObjectValueOfNull[tuningJobCompletionCriteriaModel](ctx)
-		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatConfigs)
-		return
-	}
-
-	savedConfigs, d := saved.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() || len(savedConfigs) == 0 {
-		return
-	}
-
-	normalizeTuningJobCompletionCriteria(ctx, savedConfigs[0].TuningJobCompletionCriteria, &flatConfigs[0].TuningJobCompletionCriteria)
-
-	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatConfigs)
-}
-
-func normalizeTuningJobCompletionCriteria(
-	ctx context.Context,
-	saved fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel],
-	target *fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel],
-) {
-	if saved.IsUnknown() {
-		return
-	}
-
-	if saved.IsNull() || len(saved.Elements()) == 0 {
-		*target = fwtypes.NewListNestedObjectValueOfNull[tuningJobCompletionCriteriaModel](ctx)
-		return
-	}
-
-	*target = saved
-}
-
+// AWS injects metric definitions : training_job_definition[0].algorithm_specification[0].metric_definitions - block count changed from X to Y"
+// AWS returns ARN for user configured algorithm name : ".training_job_definition[0].algorithm_specification[0].algorithm_name: "xyz-algorithm" to "arn:aws:sagemaker:<region>:<account-id>:algorithm/xyz-algorithm"
 func normalizeAlgorithmSpecification(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[algorithmSpecificationModel],
@@ -1936,11 +1801,11 @@ func normalizeAlgorithmSpecification(
 	if saved.IsNull() || len(saved.Elements()) == 0 {
 		if algorithmSpecificationUsesTrainingImage(flatSpecs[0]) {
 			flatSpecs[0].AlgorithmName = types.StringNull()
-			flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[hyperParameterTuningMetricDefinitionModel](ctx)
 		} else {
 			flatSpecs[0].AlgorithmName = normalizeHyperParameterTuningAlgorithmName(flatSpecs[0].AlgorithmName)
 			flatSpecs[0].TrainingImage = types.StringNull()
 		}
+		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[hyperParameterTuningMetricDefinitionModel](ctx)
 		*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
 		return
 	}
@@ -1969,14 +1834,7 @@ func normalizeAlgorithmSpecification(
 	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
 }
 
-func algorithmSpecificationUsesTrainingImage(spec *algorithmSpecificationModel) bool {
-	if spec.TrainingImage.IsUnknown() || spec.TrainingImage.IsNull() {
-		return false
-	}
-
-	return strings.TrimSpace(spec.TrainingImage.ValueString()) != ""
-}
-
+// AWS returns `algorithm_name` as an ARN.
 func normalizeHyperParameterTuningAlgorithmName(v types.String) types.String {
 	if v.IsNull() || v.IsUnknown() {
 		return v
@@ -1992,6 +1850,14 @@ func normalizeHyperParameterTuningAlgorithmName(v types.String) types.String {
 	}
 
 	return types.StringValue(v.ValueString()[idx+1:])
+}
+
+func algorithmSpecificationUsesTrainingImage(spec *algorithmSpecificationModel) bool {
+	if spec.TrainingImage.IsUnknown() || spec.TrainingImage.IsNull() {
+		return false
+	}
+
+	return strings.TrimSpace(spec.TrainingImage.ValueString()) != ""
 }
 
 func findHyperParameterTuningJobByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHyperParameterTuningJobOutput, error) {
