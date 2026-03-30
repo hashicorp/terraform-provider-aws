@@ -172,6 +172,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Domain.
 * `id` - ID of the Domain.
 * `portal_url` - URL of the data portal for the Domain.
+* `root_domain_unit_id` - ID of the root domain unit.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

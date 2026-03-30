@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,13 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,18 +21,18 @@ func TestAccVPCNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, names.AttrID),
 				),
@@ -52,19 +50,19 @@ func TestAccVPCNetworkInterfaceSGAttachment_basic(t *testing.T) {
 func TestAccVPCNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterfaceSGAttachment(), resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,18 +75,18 @@ func TestAccVPCNetworkInterfaceSGAttachment_instance(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_viaInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, names.AttrID),
 				),
@@ -108,27 +106,27 @@ func TestAccVPCNetworkInterfaceSGAttachment_multiple(t *testing.T) {
 	resourceName2 := "aws_network_interface_sg_attachment.test.1"
 	resourceName3 := "aws_network_interface_sg_attachment.test.2"
 	resourceName4 := "aws_network_interface_sg_attachment.test.3"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceSGAttachmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName1),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName1),
 					resource.TestCheckResourceAttrPair(resourceName1, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName1, "security_group_id", securityGroupResourceName1, names.AttrID),
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName2),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName2),
 					resource.TestCheckResourceAttrPair(resourceName2, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName2, "security_group_id", securityGroupResourceName2, names.AttrID),
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName3),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName3),
 					resource.TestCheckResourceAttrPair(resourceName3, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName3, "security_group_id", securityGroupResourceName3, names.AttrID),
-					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, resourceName4),
+					testAccCheckNetworkInterfaceSGAttachmentExists(ctx, t, resourceName4),
 					resource.TestCheckResourceAttrPair(resourceName4, names.AttrNetworkInterfaceID, networkInterfaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName4, "security_group_id", securityGroupResourceName4, names.AttrID),
 				),
@@ -137,7 +135,7 @@ func TestAccVPCNetworkInterfaceSGAttachment_multiple(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkInterfaceSGAttachmentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckNetworkInterfaceSGAttachmentExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -148,7 +146,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(ctx context.Context, resourc
 			return fmt.Errorf("No EC2 Network Interface Security Group Attachment ID is set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindNetworkInterfaceSecurityGroup(ctx, conn, rs.Primary.Attributes[names.AttrNetworkInterfaceID], rs.Primary.Attributes["security_group_id"])
 
@@ -156,9 +154,9 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(ctx context.Context, resourc
 	}
 }
 
-func testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_interface_sg_attachment" {
@@ -167,7 +165,7 @@ func testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx context.Context) resour
 
 			_, err := tfec2.FindNetworkInterfaceSecurityGroup(ctx, conn, rs.Primary.Attributes[names.AttrNetworkInterfaceID], rs.Primary.Attributes["security_group_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

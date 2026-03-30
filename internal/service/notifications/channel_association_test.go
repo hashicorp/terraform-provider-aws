@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package notifications_test
@@ -9,25 +9,23 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notifications_channel_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -35,12 +33,12 @@ func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelAssociationConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelAssociationExists(ctx, resourceName),
+					testAccCheckChannelAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -56,11 +54,11 @@ func TestAccNotificationsChannelAssociation_basic(t *testing.T) {
 
 func TestAccNotificationsChannelAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notifications_channel_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -68,13 +66,13 @@ func TestAccNotificationsChannelAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelAssociationConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceChannelAssociation, resourceName),
+					testAccCheckChannelAssociationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceChannelAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -87,9 +85,9 @@ func TestAccNotificationsChannelAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckChannelAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckChannelAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_notifications_channel_association" {
@@ -98,7 +96,7 @@ func testAccCheckChannelAssociationDestroy(ctx context.Context) resource.TestChe
 
 			err := tfnotifications.FindChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -113,14 +111,14 @@ func testAccCheckChannelAssociationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckChannelAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckChannelAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		err := tfnotifications.FindChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes[names.AttrARN])
 

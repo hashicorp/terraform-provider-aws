@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -15,11 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -117,7 +119,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 
 	backup, err := findDBInstanceAutomatedBackupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance Automated Backup %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -141,7 +143,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 	backup, err := findDBInstanceAutomatedBackupByARN(ctx, conn, d.Id())
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		return diags
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance Automated Backup (%s): %s", d.Id(), err)
@@ -195,17 +197,14 @@ func findDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.Client, a
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceAutomatedBackupsArn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	// AWS flip-flop on the capitalization of status codes. Case-insensitive comparison.
 	if status := aws.ToString(output.Status); strings.EqualFold(status, instanceAutomatedBackupStatusRetained) {
 		// If the automated backup is retained, the replication is stopped.
 		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+			Message: status,
 		}
 	}
 
@@ -231,8 +230,7 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 
 		if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -250,11 +248,11 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 	return output, nil
 }
 
-func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstanceAutomatedBackup(conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceAutomatedBackupByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -271,7 +269,7 @@ func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{instanceAutomatedBackupStatusPending},
 		Target:  []string{instanceAutomatedBackupStatusReplicating},
-		Refresh: statusDBInstanceAutomatedBackup(ctx, conn, arn),
+		Refresh: statusDBInstanceAutomatedBackup(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -290,7 +288,7 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func(ctx context.Context) (bool, error) {
 		dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceID, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 

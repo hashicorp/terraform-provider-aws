@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `tenancy_config` argument
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `tenancy_config` attribute
+```
+
+```release-note:enhancement
+resource/aws_lambda_invocation: Add `tenant_id` argument
+```
+
+```release-note:enhancement
+data-source/aws_lambda_invocation: Add `tenant_id` argument
+```
+
+```release-note:enhancement
+action/aws_lambda_invoke: Add `tenant_id` argument
+```

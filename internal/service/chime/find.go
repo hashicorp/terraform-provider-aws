@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chime
@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +20,7 @@ func FindVoiceConnectorResourceWithRetry[T any](ctx context.Context, isNewResour
 	err := tfresource.Retry(ctx, voiceConnectorResourcePropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = f()
-		if isNewResource && tfresource.NotFound(err) {
+		if isNewResource && retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecommit_test
@@ -8,31 +8,29 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodecommit "github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeCommitTrigger_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_trigger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTriggerExists(ctx, resourceName),
+					testAccCheckTriggerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "1"),
@@ -46,20 +44,20 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 
 func TestAccCodeCommitTrigger_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_trigger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceTrigger(), resourceName),
+					testAccCheckTriggerExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,19 +67,19 @@ func TestAccCodeCommitTrigger_disappears(t *testing.T) {
 
 func TestAccCodeCommitTrigger_branches(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_trigger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_branches(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTriggerExists(ctx, resourceName),
+					testAccCheckTriggerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.0", "main"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.1", "develop"),
@@ -95,9 +93,9 @@ func TestAccCodeCommitTrigger_branches(t *testing.T) {
 	})
 }
 
-func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTriggerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCommitClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecommit_trigger" {
@@ -106,7 +104,7 @@ func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodecommit.FindRepositoryTriggersByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -121,14 +119,14 @@ func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTriggerExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTriggerExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCommitClient(ctx)
 
 		_, err := tfcodecommit.FindRepositoryTriggersByName(ctx, conn, rs.Primary.ID)
 

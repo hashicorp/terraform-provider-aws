@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -17,12 +19,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -211,7 +213,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	globalCluster, err := findGlobalClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -415,9 +417,7 @@ func findGlobalClusterByID(ctx context.Context, conn *rds.Client, id string) (*t
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -442,8 +442,7 @@ func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.Descri
 
 		if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -461,11 +460,11 @@ func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.Descri
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalCluster(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -481,7 +480,7 @@ func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -498,7 +497,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
-		Refresh: statusGlobalCluster(ctx, conn, id),
+		Refresh: statusGlobalCluster(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -516,7 +515,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
-		Refresh:        statusGlobalCluster(ctx, conn, id),
+		Refresh:        statusGlobalCluster(conn, id),
 		Timeout:        timeout,
 		NotFoundChecks: 1,
 	}
@@ -546,10 +545,11 @@ func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClu
 // either a MAJOR or MINOR version upgrade. Given only the old and new versions, determining whether to
 // perform a MAJOR or MINOR upgrade is challenging. Instead of attempting to parse numerous combinations
 // of engines and versions, we initially attempt a major upgrade. If AWS returns an error indicating that
-// a minor version upgrade is supported ("InvalidParameterValue"/"only supports Major Version Upgrades"),
-// we infer that a minor upgrade will suffice. Therefore, it's crucial to recognize that this error serves
-// as more than just an error; it guides our decision between major and minor upgrades.
-
+// a minor version upgrade isn't supported ("InvalidParameterValue"/"doesn't support minor version upgrades"),
+// we infer that a minor upgrade was intended, and should be therefore be performed on individual cluster
+// members instead. It's crucial to recognize that this error serves as more than just an error; it guides
+// our decision between major and minor upgrades.
+//
 // IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
 // logic, including the handling of errors that signify the need for a minor version upgrade.
 func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d *schema.ResourceData, timeout time.Duration) error {
@@ -557,7 +557,7 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d 
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -592,7 +592,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 				return false, err
 			}
 
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
 			}
 
@@ -771,7 +771,7 @@ func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id st
 			clusterStatusUpgrading,
 		},
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id, false, optFns...),
+		Refresh:    statusDBCluster(conn, id, false, optFns...),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

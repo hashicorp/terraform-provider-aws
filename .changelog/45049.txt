@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_docdb_cluster: Allow adding and modifying `serverless_v2_scaling_configuration` without forcing cluster replacement
+```

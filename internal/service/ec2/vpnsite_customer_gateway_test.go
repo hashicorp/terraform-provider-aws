@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -12,32 +12,30 @@ import (
 	"github.com/YakDriver/regexache"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
+				Config: testAccCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
@@ -59,19 +57,19 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_bgpASNExtended(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsnExtended := sdkacctest.RandIntRange(2147483648, 4294967295)
+	rBgpAsnExtended := acctest.RandIntRange(t, 2147483648, 4294967295)
 	resourceName := "aws_customer_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_bgpASNExtended(rBgpAsnExtended),
+				Config: testAccCustomerGatewayConfig_bgpASNExtended(rBgpAsnExtended),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn_extended", strconv.Itoa(rBgpAsnExtended)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
@@ -93,20 +91,20 @@ func TestAccSiteVPNCustomerGateway_bgpASNExtended(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
+				Config: testAccCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCustomerGateway(), resourceName),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceCustomerGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,19 +115,19 @@ func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_customer_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccCustomerGatewayConfig_tags1(rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1)),
 			},
@@ -139,17 +137,17 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_tags2(rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCustomerGatewayConfig_tags2(rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCustomerGatewayConfig_tags1(rBgpAsn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
 			},
@@ -160,20 +158,20 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
+				Config: testAccCustomerGatewayConfig_deviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "test"),
 				),
 			},
@@ -189,20 +187,20 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsn := strconv.FormatInt(int64(sdkacctest.RandIntRange(64512, 65534))*10000, 10)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := strconv.FormatInt(int64(acctest.RandIntRange(t, 64512, 65534))*10000, 10)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn),
+				Config: testAccCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", rBgpAsn),
 				),
 			},
@@ -220,35 +218,35 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	var gateway awstypes.CustomerGateway
 	var caRoot acmpca_types.CertificateAuthority
 	var caSubordinate acmpca_types.CertificateAuthority
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
 	acmRootCAResourceName := "aws_acmpca_certificate_authority.root"
 	acmSubordinateCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.RandomDomainName()
-	subDomain := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), rootDomain)
+	subDomain := fmt.Sprintf("%s.%s", acctest.RandString(t, 8), rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// We need to create and activate the CAs before issuing a certificate.
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_cas(rootDomain, subDomain),
+				Config: testAccCustomerGatewayConfig_cas(rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmRootCAResourceName, &caRoot),
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmSubordinateCAResourceName, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, t, acmRootCAResourceName, &caRoot),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, t, acmSubordinateCAResourceName, &caSubordinate),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &caRoot),
 					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx, &caRoot, &caSubordinate),
 				),
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain),
+				Config: testAccCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
+					testAccCheckCustomerGatewayExists(ctx, t, resourceName, &gateway),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, ""),
 				),
@@ -259,7 +257,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain),
+				Config: testAccCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
 					// CAs must be DISABLED for deletion.
 					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &caSubordinate),
@@ -271,9 +269,9 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomerGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomerGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_customer_gateway" {
@@ -282,7 +280,7 @@ func testAccCheckCustomerGatewayDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfec2.FindCustomerGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -297,7 +295,7 @@ func testAccCheckCustomerGatewayDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckCustomerGatewayExists(ctx context.Context, n string, v *awstypes.CustomerGateway) resource.TestCheckFunc {
+func testAccCheckCustomerGatewayExists(ctx context.Context, t *testing.T, n string, v *awstypes.CustomerGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -308,7 +306,7 @@ func testAccCheckCustomerGatewayExists(ctx context.Context, n string, v *awstype
 			return fmt.Errorf("No EC2 Customer Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindCustomerGatewayByID(ctx, conn, rs.Primary.ID)
 
@@ -322,7 +320,7 @@ func testAccCheckCustomerGatewayExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn int) string {
+func testAccCustomerGatewayConfig_basic(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[1]d
@@ -332,7 +330,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_bgpASNExtended(rBgpAsnExtended int) string {
+func testAccCustomerGatewayConfig_bgpASNExtended(rBgpAsnExtended int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn_extended = %[1]d
@@ -342,7 +340,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsnExtended)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn int, tagKey1, tagValue1 string) string {
+func testAccCustomerGatewayConfig_tags1(rBgpAsn int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[1]d
@@ -356,7 +354,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn, tagKey1, tagValue1)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_tags2(rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCustomerGatewayConfig_tags2(rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[1]d
@@ -371,7 +369,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_deviceName(rName string, rBgpAsn int) string {
+func testAccCustomerGatewayConfig_deviceName(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d
@@ -386,7 +384,7 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn string) string {
+func testAccCustomerGatewayConfig_siteVPN4ByteASN(rName, rBgpAsn string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]q
@@ -400,7 +398,7 @@ resource "aws_customer_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_cas(rootDomain, subDomain string) string {
+func testAccCustomerGatewayConfig_cas(rootDomain, subDomain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "root" {
   permanent_deletion_time_in_days = 7
@@ -432,8 +430,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, rootDomain, subDomain)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_certificate(rName string, rBgpAsn int, rootDomain, subDomain string) string {
-	return acctest.ConfigCompose(testAccSiteVPNCustomerGatewayConfig_cas(rootDomain, subDomain), fmt.Sprintf(`
+func testAccCustomerGatewayConfig_certificate(rName string, rBgpAsn int, rootDomain, subDomain string) string {
+	return acctest.ConfigCompose(testAccCustomerGatewayConfig_cas(rootDomain, subDomain), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = %[3]q
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn

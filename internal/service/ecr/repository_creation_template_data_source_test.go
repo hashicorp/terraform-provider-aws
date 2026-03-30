@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,10 +15,10 @@ import (
 
 func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -28,7 +27,8 @@ func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateDataSourceConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
-					resource.TestCheckResourceAttr(dataSource, "applied_for.#", "1"),
+					resource.TestCheckResourceAttr(dataSource, "applied_for.#", "2"),
+					resource.TestCheckTypeSetElemAttr(dataSource, "applied_for.*", string(types.RCTAppliedForCreateOnPush)),
 					resource.TestCheckTypeSetElemAttr(dataSource, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
 					resource.TestCheckResourceAttr(dataSource, "custom_role_arn", ""),
 					resource.TestCheckResourceAttr(dataSource, names.AttrDescription, ""),
@@ -51,7 +51,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,10 +68,10 @@ func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplateDataSource_mutabilityWithExclusion(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,6 +97,7 @@ resource "aws_ecr_repository_creation_template" "test" {
   prefix = %[1]q
 
   applied_for = [
+    "CREATE_ON_PUSH",
     "PULL_THROUGH_CACHE",
   ]
 

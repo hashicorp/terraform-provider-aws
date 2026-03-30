@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_batch_job_definition: Fix crash during update when `node_properties` has `NodeRangeProperties.ecsProperties` set
+```

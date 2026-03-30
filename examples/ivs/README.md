@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # IVS (Interactive Video Service) Example
 
 This example shows how to deploy an AWS IVS channel using Terraform only. The

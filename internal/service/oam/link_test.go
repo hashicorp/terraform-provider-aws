@@ -1,39 +1,30 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/oam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfoam "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -42,12 +33,12 @@ func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "oam", "link/{link_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
@@ -69,15 +60,11 @@ func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -86,13 +73,13 @@ func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfoam.ResourceLink(), resourceName),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfoam.ResourceLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,15 +89,11 @@ func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -119,12 +102,12 @@ func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
@@ -138,7 +121,7 @@ func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 			{
 				Config: testAccLinkConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
@@ -161,15 +144,11 @@ func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -178,12 +157,12 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -191,7 +170,7 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 			{
 				Config: testAccLinkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -200,7 +179,7 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 			{
 				Config: testAccLinkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -216,17 +195,13 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
 	filter1 := "LogGroupName LIKE 'aws/lambda/%' OR LogGroupName LIKE 'AWSLogs%'"
 	filter2 := "LogGroupName NOT IN ('Private-Log-Group', 'Private-Log-Group-2')"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -235,12 +210,12 @@ func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_logGroupConfiguration(rName, filter1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "0"),
@@ -255,7 +230,7 @@ func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 			{
 				Config: testAccLinkConfig_logGroupConfiguration(rName, filter2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "0"),
@@ -268,17 +243,13 @@ func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
 	filter1 := "Namespace IN ('AWS/EC2', 'AWS/ELB', 'AWS/S3')"
 	filter2 := "Namespace NOT LIKE 'AWS/%'"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -287,12 +258,12 @@ func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkConfig_metricConfiguration(rName, filter1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "1"),
@@ -307,7 +278,7 @@ func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 			{
 				Config: testAccLinkConfig_metricConfiguration(rName, filter2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName, &link),
+					testAccCheckLinkExists(ctx, t, resourceName, &link),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.log_group_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "link_configuration.0.metric_configuration.#", "1"),
@@ -318,56 +289,48 @@ func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckLinkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLinkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ObservabilityAccessManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_oam_link" {
 				continue
 			}
 
-			input := &oam.GetLinkInput{
-				Identifier: aws.String(rs.Primary.ID),
+			_, err := tfoam.FindLinkByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
-			_, err := conn.GetLink(ctx, input)
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingDestroyed, tfoam.ResNameLink, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("ObservabilityAccessManager Link %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLinkExists(ctx context.Context, name string, link *oam.GetLinkOutput) resource.TestCheckFunc {
+func testAccCheckLinkExists(ctx context.Context, t *testing.T, n string, v *oam.GetLinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).ObservabilityAccessManagerClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
-
-		resp, err := conn.GetLink(ctx, &oam.GetLinkInput{
-			Identifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfoam.FindLinkByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, rs.Primary.ID, err)
+			return err
 		}
 
-		*link = *resp
+		*v = *output
 
 		return nil
 	}

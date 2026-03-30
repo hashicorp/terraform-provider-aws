@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains
@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,13 +22,13 @@ func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id
 		Pending: enum.Slice(awstypes.OperationStatusSubmitted, awstypes.OperationStatusInProgress),
 		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
 		Timeout: timeout,
-		Refresh: statusOperation(ctx, conn, id),
+		Refresh: statusOperation(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53domains.GetOperationDetailOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 
 		return output, err
 	}
@@ -36,11 +36,11 @@ func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id
 	return nil, err
 }
 
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOperation(conn *route53domains.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOperationDetailByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -61,8 +61,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "No operation found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -71,7 +70,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

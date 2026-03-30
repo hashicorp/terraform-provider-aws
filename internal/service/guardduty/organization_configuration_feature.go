@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -82,7 +85,7 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 	conns.GlobalMutexKV.Lock(detectorID)
 	defer conns.GlobalMutexKV.Unlock(detectorID)
 
-	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
+	output, err := findOrganizationConfigurationByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): %s", detectorID, err)
@@ -126,9 +129,9 @@ func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	feature, err := FindOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, detectorID, name)
+	feature, err := findOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Configuration Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -167,8 +170,8 @@ func organizationConfigurationFeatureParseResourceID(id string) (string, string,
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, organizationConfigurationFeatureResourceIDSeparator)
 }
 
-func FindOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.OrganizationFeatureConfigurationResult, error) {
-	output, err := FindOrganizationConfigurationByID(ctx, conn, detectorID)
+func findOrganizationConfigurationFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.OrganizationFeatureConfigurationResult, error) {
+	output, err := findOrganizationConfigurationByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err

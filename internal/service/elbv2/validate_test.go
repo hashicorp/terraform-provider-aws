@@ -1,12 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package elbv2
+package elbv2_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -18,7 +19,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range validNames {
-		_, errors := validName(s, names.AttrName)
+		_, errors := tfelbv2.ValidName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name: %v", s, errors)
 		}
@@ -33,7 +34,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := validName(s, names.AttrName)
+		_, errors := tfelbv2.ValidName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name: %v", s, errors)
 		}
@@ -48,7 +49,7 @@ func TestValidNamePrefix(t *testing.T) {
 	}
 
 	for _, s := range validNamePrefixes {
-		_, errors := validNamePrefix(s, names.AttrNamePrefix)
+		_, errors := tfelbv2.ValidNamePrefix(s, names.AttrNamePrefix)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name prefix: %v", s, errors)
 		}
@@ -62,7 +63,7 @@ func TestValidNamePrefix(t *testing.T) {
 	}
 
 	for _, s := range invalidNamePrefixes {
-		_, errors := validNamePrefix(s, names.AttrNamePrefix)
+		_, errors := tfelbv2.ValidNamePrefix(s, names.AttrNamePrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name prefix: %v", s, errors)
 		}
@@ -89,12 +90,12 @@ func TestValidTargetGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(33, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 33, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validTargetGroupName(tc.Value, "aws_lb_target_group")
+		_, errors := tfelbv2.ValidTargetGroupName(tc.Value, "aws_lb_target_group")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
 		}
@@ -117,12 +118,12 @@ func TestValidTargetGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    sdkacctest.RandStringFromCharSet(32, sdkacctest.CharSetAlpha),
+			Value:    acctest.RandStringFromCharSet(t, 32, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validTargetGroupNamePrefix(tc.Value, "aws_lb_target_group")
+		_, errors := tfelbv2.ValidTargetGroupNamePrefix(tc.Value, "aws_lb_target_group")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS LB Target Group Name to trigger a validation error for %q", tc.Value)
 		}

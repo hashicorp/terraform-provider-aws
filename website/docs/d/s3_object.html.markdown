@@ -74,6 +74,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `checksum_mode` - (Optional) To retrieve the object's checksum, this argument must be `ENABLED`. If you enable `checksum_mode` and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `ENABLED`
+* `download_body` - Set to `true` to always download object data to `body_base64` attribute. If unset and [conditions described above](#data-source-aws_s3_object) are met, `body` will be available but `body_base64` will not be. If set to `false`, the body is not downloaded and neither `body` nor `body_base64` is available, which may improve performance.
 * `key` - (Required) Full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
@@ -82,7 +83,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the object.
-* `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
+* `body` - Object data (see [**limitations above**](#data-source-aws_s3_object) to understand cases in which this field is actually available). If `download_body` is set to `false`, `body` is not available.
+* `body_base64` - Object data as base64 encoded string. **This is only available if `download_body` is set to `true`.**
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cache_control` - Caching behavior along the request/reply chain.
 * `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.

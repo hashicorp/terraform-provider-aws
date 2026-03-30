@@ -1,0 +1,11 @@
+```release-note:enhancement
+aws_apigatewayv2_domain_name: Add `routing_mode` argument to support dynamic routing via routing rules
+```
+
+```release-note:enhancement
+aws_api_gateway_domain_name: Add `routing_mode` argument to support dynamic routing via routing rules
+```
+
+```release-note:new-resource
+aws_apigatewayv2_routing_rule
+```

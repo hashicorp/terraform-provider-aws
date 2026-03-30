@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram_test
@@ -27,7 +27,7 @@ func testAccSharingWithOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_sharing_with_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -52,7 +52,7 @@ func testAccSharingWithOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_sharing_with_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -64,7 +64,7 @@ func testAccSharingWithOrganization_disappears(t *testing.T) {
 			{
 				Config: testAccSharingWithOrganizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceSharingWithOrganization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceSharingWithOrganization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

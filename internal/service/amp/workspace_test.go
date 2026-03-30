@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -10,13 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,19 +23,19 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "workspace/{id}"),
 					func(s *terraform.State) error {
@@ -63,20 +61,20 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamp.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,22 +85,22 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 func TestAccAMPWorkspace_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -113,23 +111,23 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 func TestAccAMPWorkspace_alias(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3, v4 types.WorkspaceDescription
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
@@ -141,7 +139,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_alias(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v2),
 					testAccCheckWorkspaceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName2),
 				),
@@ -149,7 +147,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v3),
 					testAccCheckWorkspaceRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 				),
@@ -157,7 +155,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v4),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v4),
 					testAccCheckWorkspaceNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
@@ -169,19 +167,19 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
@@ -194,7 +192,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
@@ -202,14 +200,14 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
@@ -218,14 +216,14 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkspaceExists(ctx context.Context, n string, v *types.WorkspaceDescription) resource.TestCheckFunc {
+func testAccCheckWorkspaceExists(ctx context.Context, t *testing.T, n string, v *types.WorkspaceDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		output, err := tfamp.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
 
@@ -239,9 +237,9 @@ func testAccCheckWorkspaceExists(ctx context.Context, n string, v *types.Workspa
 	}
 }
 
-func testAccCheckWorkspaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkspaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_workspace" {
@@ -250,7 +248,7 @@ func testAccCheckWorkspaceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfamp.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,10 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +26,7 @@ func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphor
 	var v awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -35,12 +34,12 @@ func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphor
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttr(resourceName, "verified_access_trust_providers.#", "0"),
@@ -63,7 +62,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -71,12 +70,12 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessInstanceConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
@@ -89,7 +88,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 			{
 				Config: testAccVerifiedAccessInstanceConfig_description(updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
@@ -105,7 +104,7 @@ func testAccVerifiedAccessInstance_fipsEnabled(t *testing.T, semaphore tfsync.Se
 	originalFipsEnabled := true
 	updatedFipsEnabled := false
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -113,12 +112,12 @@ func testAccVerifiedAccessInstance_fipsEnabled(t *testing.T, semaphore tfsync.Se
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessInstanceConfig_fipsEnabled(originalFipsEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "fips_enabled", strconv.FormatBool(originalFipsEnabled)),
 				),
 			},
@@ -131,7 +130,7 @@ func testAccVerifiedAccessInstance_fipsEnabled(t *testing.T, semaphore tfsync.Se
 			{
 				Config: testAccVerifiedAccessInstanceConfig_fipsEnabled(updatedFipsEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "fips_enabled", strconv.FormatBool(updatedFipsEnabled)),
 				),
@@ -145,7 +144,7 @@ func testAccVerifiedAccessInstance_disappears(t *testing.T, semaphore tfsync.Sem
 	var v awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -153,13 +152,13 @@ func testAccVerifiedAccessInstance_disappears(t *testing.T, semaphore tfsync.Sem
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstance(), resourceName),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +171,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 	var v1, v2, v3 awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -180,12 +179,12 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessInstanceConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -193,7 +192,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 			{
 				Config: testAccVerifiedAccessInstanceConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -203,7 +202,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 			{
 				Config: testAccVerifiedAccessInstanceConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v3),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v3),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -225,7 +224,7 @@ func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, se
 	resourceName := "aws_verifiedaccess_instance.test"
 	subDomainName := "test.demo.com"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -233,12 +232,12 @@ func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, se
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, subDomainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					testAccCheckVerifiedAccessInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", subDomainName),
 				),
 			},
@@ -272,14 +271,14 @@ func testAccCheckVerifiedAccessInstanceRecreated(before, after *awstypes.Verifie
 	}
 }
 
-func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *awstypes.VerifiedAccessInstance) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, t *testing.T, n string, v *awstypes.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVerifiedAccessInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -293,9 +292,9 @@ func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckVerifiedAccessInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessInstanceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedaccess_instance" {
@@ -304,7 +303,7 @@ func testAccCheckVerifiedAccessInstanceDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfec2.FindVerifiedAccessInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -320,7 +319,7 @@ func testAccCheckVerifiedAccessInstanceDestroy(ctx context.Context) resource.Tes
 }
 
 func testAccPreCheckVerifiedAccessInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 	input := &ec2.DescribeVerifiedAccessInstancesInput{}
 	_, err := conn.DescribeVerifiedAccessInstances(ctx, input)

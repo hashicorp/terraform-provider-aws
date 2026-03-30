@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -87,7 +89,7 @@ func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	dnssecConfig, err := findResolverDNSSECConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver DNSSEC Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -150,8 +152,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -163,8 +164,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 			if aws.ToString(v.Id) == id {
 				if validationStatus := v.ValidationStatus; validationStatus == awstypes.ResolverDNSSECValidationStatusDisabled {
 					return nil, &retry.NotFoundError{
-						Message:     string(validationStatus),
-						LastRequest: input,
+						Message: string(validationStatus),
 					}
 				}
 				return &v, nil
@@ -172,14 +172,14 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
-func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDNSSECConfig(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverDNSSECConfigByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -200,7 +200,7 @@ func waitDNSSECConfigCreated(ctx context.Context, conn *route53resolver.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverDNSSECValidationStatusEnabling),
 		Target:  enum.Slice(awstypes.ResolverDNSSECValidationStatusEnabled),
-		Refresh: statusDNSSECConfig(ctx, conn, id),
+		Refresh: statusDNSSECConfig(conn, id),
 		Timeout: dnssecConfigCreatedTimeout,
 	}
 
@@ -217,7 +217,7 @@ func waitDNSSECConfigDeleted(ctx context.Context, conn *route53resolver.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverDNSSECValidationStatusDisabling),
 		Target:  []string{},
-		Refresh: statusDNSSECConfig(ctx, conn, id),
+		Refresh: statusDNSSECConfig(conn, id),
 		Timeout: dnssecConfigDeletedTimeout,
 	}
 

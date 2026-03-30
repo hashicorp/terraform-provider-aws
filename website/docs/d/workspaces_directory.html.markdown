@@ -69,3 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `workspace_directory_name` - The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
 * `workspace_security_group_id` - The identifier of the security group that is assigned to new WorkSpaces.
 * `workspace_type` - The type of WorkSpaces directory.
+* `tenancy`- Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`.

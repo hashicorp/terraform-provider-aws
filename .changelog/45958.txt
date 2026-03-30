@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53profiles_resource_association: Fix `Invalid JSON String Value` error on initial apply and `ConflictException` on subsequent apply when associating Route53 Resolver Query Log Configs
+```

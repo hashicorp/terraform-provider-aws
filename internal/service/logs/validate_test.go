@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -169,7 +169,7 @@ func TestValidLogStreamName(t *testing.T) {
 	}
 
 	invalidNames := []string{
-		sdkacctest.RandString(513),
+		acctest.RandString(t, 513),
 		"",
 		"stringwith:colon",
 	}

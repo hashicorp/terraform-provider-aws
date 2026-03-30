@@ -1,88 +1,54 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_eks_addon", &resource.Sweeper{
-		Name: "aws_eks_addon",
-		F:    sweepAddons,
-	})
-
-	resource.AddTestSweepers("aws_eks_cluster", &resource.Sweeper{
-		Name: "aws_eks_cluster",
-		F:    sweepClusters,
-		Dependencies: []string{
-			"aws_eks_addon",
-			"aws_eks_fargate_profile",
-			"aws_eks_node_group",
-			"aws_emrcontainers_virtual_cluster",
-			"aws_prometheus_scraper",
-		},
-	})
-
-	resource.AddTestSweepers("aws_eks_fargate_profile", &resource.Sweeper{
-		Name: "aws_eks_fargate_profile",
-		F:    sweepFargateProfiles,
-	})
-
-	resource.AddTestSweepers("aws_eks_identity_provider_config", &resource.Sweeper{
-		Name: "aws_eks_identity_provider_config",
-		F:    sweepIdentityProvidersConfig,
-	})
-
-	resource.AddTestSweepers("aws_eks_node_group", &resource.Sweeper{
-		Name: "aws_eks_node_group",
-		F:    sweepNodeGroups,
-	})
+	awsv2.Register("aws_eks_addon", sweepAddons)
+	awsv2.Register("aws_eks_cluster", sweepClusters,
+		"aws_eks_addon",
+		"aws_eks_fargate_profile",
+		"aws_eks_node_group",
+		"aws_emrcontainers_virtual_cluster",
+		"aws_prometheus_scraper",
+	)
+	awsv2.Register("aws_eks_fargate_profile", sweepFargateProfiles)
+	awsv2.Register("aws_eks_identity_provider_config", sweepIdentityProvidersConfig)
+	awsv2.Register("aws_eks_node_group", sweepNodeGroups)
 }
 
-func sweepAddons(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepAddons(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EKSClient(ctx)
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
+	var input eks.ListClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := eks.NewListClustersPaginator(conn, input)
+	pages := eks.NewListClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Add-On sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-			break
+			return nil, err
 		}
 
 		for _, clusterName := range page.Clusters {
-			input := &eks.ListAddonsInput{
+			input := eks.ListAddonsInput{
 				ClusterName: aws.String(clusterName),
 			}
 
-			pages := eks.NewListAddonsPaginator(conn, input)
+			pages := eks.NewListAddonsPaginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -97,8 +63,7 @@ func sweepAddons(region string) error {
 				}
 
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Add-Ons (%s): %w", region, err))
-					break
+					return nil, err
 				}
 
 				for _, v := range page.Addons {
@@ -112,36 +77,20 @@ func sweepAddons(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Add-Ons (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EKSClient(ctx)
-	input := &eks.ListClustersInput{}
+	var input eks.ListClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := eks.NewListClustersPaginator(conn, input)
+	pages := eks.NewListClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing EKS Clusters (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Clusters {
@@ -156,10 +105,6 @@ func sweepClusters(region string) error {
 				continue
 			}
 
-			if err != nil {
-				log.Printf("[WARN] Setting EKS Cluster %s DeletionProtection=false: %s", v, err)
-			}
-
 			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(v)
@@ -168,46 +113,28 @@ func sweepClusters(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EKS Clusters (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFargateProfiles(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepFargateProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EKSClient(ctx)
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
+	var input eks.ListClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := eks.NewListClustersPaginator(conn, input)
+	pages := eks.NewListClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Fargate Profile sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-			break
+			return nil, err
 		}
 
 		for _, clusterName := range page.Clusters {
-			input := &eks.ListFargateProfilesInput{
+			input := eks.ListFargateProfilesInput{
 				ClusterName: aws.String(clusterName),
 			}
 
-			pages := eks.NewListFargateProfilesPaginator(conn, input)
+			pages := eks.NewListFargateProfilesPaginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -222,8 +149,7 @@ func sweepFargateProfiles(region string) error {
 				}
 
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Fargate Profiles (%s): %w", region, err))
-					break
+					return nil, err
 				}
 
 				for _, v := range page.FargateProfileNames {
@@ -237,46 +163,28 @@ func sweepFargateProfiles(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Fargate Profiles (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepIdentityProvidersConfig(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepIdentityProvidersConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EKSClient(ctx)
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
+	var input eks.ListClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := eks.NewListClustersPaginator(conn, input)
+	pages := eks.NewListClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Identity Provider Config sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-			break
+			return nil, err
 		}
 
 		for _, clusterName := range page.Clusters {
-			input := &eks.ListIdentityProviderConfigsInput{
+			input := eks.ListIdentityProviderConfigsInput{
 				ClusterName: aws.String(clusterName),
 			}
 
-			pages := eks.NewListIdentityProviderConfigsPaginator(conn, input)
+			pages := eks.NewListIdentityProviderConfigsPaginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -291,8 +199,7 @@ func sweepIdentityProvidersConfig(region string) error {
 				}
 
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Identity Provider Configs (%s): %w", region, err))
-					break
+					return nil, err
 				}
 
 				for _, v := range page.IdentityProviderConfigs {
@@ -306,46 +213,28 @@ func sweepIdentityProvidersConfig(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Identity Provider Configs (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepNodeGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepNodeGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EKSClient(ctx)
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
+	var input eks.ListClustersInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := eks.NewListClustersPaginator(conn, input)
+	pages := eks.NewListClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Node Group sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-			break
+			return nil, err
 		}
 
 		for _, clusterName := range page.Clusters {
-			input := &eks.ListNodegroupsInput{
+			input := eks.ListNodegroupsInput{
 				ClusterName: aws.String(clusterName),
 			}
 
-			pages := eks.NewListNodegroupsPaginator(conn, input)
+			pages := eks.NewListNodegroupsPaginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -360,8 +249,7 @@ func sweepNodeGroups(region string) error {
 				}
 
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
-					break
+					return nil, err
 				}
 
 				for _, v := range page.Nodegroups {
@@ -375,11 +263,5 @@ func sweepNodeGroups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Node Groups (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }

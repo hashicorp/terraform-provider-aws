@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # RDS Blue/Green Deployments
 
 **Summary:** Discussion of which resource types can support RDS Blue/Green Deployments for updates<br>

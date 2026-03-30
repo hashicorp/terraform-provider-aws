@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_lambda_invoke
 
-~> **Note:** `aws_lambda_invoke` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Invokes an AWS Lambda function with the specified payload. This action allows for imperative invocation of Lambda functions with full control over invocation parameters.
 
 For information about AWS Lambda functions, see the [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/). For specific information about invoking Lambda functions, see the [Invoke](https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html) page in the AWS Lambda API Reference.
@@ -220,3 +218,4 @@ This action supports the following arguments:
 * `payload` - (Required) JSON payload to send to the Lambda function. This should be a valid JSON string that represents the event data for your function. The payload size limit is 6 MB for synchronous invocations and 256 KB for asynchronous invocations.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `qualifier` - (Optional) Version or alias of the Lambda function to invoke. If not specified, the `$LATEST` version will be invoked. Can be a version number (e.g., `1`) or an alias (e.g., `PROD`).
+* `tenant_id` - (Optional)  Tenant Id to serve invocations from specified tenant.

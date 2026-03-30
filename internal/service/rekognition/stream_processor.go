@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rekognition
 
@@ -28,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -36,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -521,7 +523,7 @@ func (r *streamProcessorResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	out, err := findStreamProcessorByName(ctx, conn, state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -723,7 +725,7 @@ func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, n
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, name),
+		Refresh:                   statusStreamProcessor(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -741,7 +743,7 @@ func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, n
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StreamProcessorStatusUpdating),
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, name),
+		Refresh:                   statusStreamProcessor(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -766,7 +768,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 			awstypes.StreamProcessorStatusUpdating,
 		),
 		Target:  []string{},
-		Refresh: statusStreamProcessor(ctx, conn, name),
+		Refresh: statusStreamProcessor(conn, name),
 		Timeout: timeout,
 	}
 
@@ -778,10 +780,10 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 	return nil, err
 }
 
-func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStreamProcessor(conn *rekognition.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -802,8 +804,7 @@ func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, na
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -811,7 +812,7 @@ func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, na
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

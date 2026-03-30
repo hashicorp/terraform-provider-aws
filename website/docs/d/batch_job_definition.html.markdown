@@ -12,7 +12,7 @@ Terraform data source for managing an AWS Batch Job Definition.
 
 ## Example Usage
 
-### Lookup via Arn
+### Lookup via ARN
 
 ```terraform
 data "aws_batch_job_definition" "arn" {
@@ -34,7 +34,7 @@ data "aws_batch_job_definition" "name" {
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `arn` - ARN of the Job Definition. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Job Definition.
 * `revision` - The revision of the job definition.
 * `name` - The name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
 * `status` - The status of the job definition.
@@ -115,11 +115,12 @@ This data source exports the following attributes in addition to the arguments a
 
 ### eks_security_context
 
-* `privileged` - When this parameter is true, the container is given elevated permissions on the host container instance. The level of permissions are similar to the root user permissions. The default value is false.
-* `read_only_root_filesystem` - When this parameter is true, the container is given read-only access to its root file system. The default value is false.
-* `run_as_user` - When this parameter is specified, the container is run as the specified user ID (uid). If this parameter isn't specified, the default is the user that's specified in the image metadata.
+* `allow_privilege_escalation` - Whether or not a container or a Kubernetes pod is allowed to gain more privileges than its parent process. The default value is `false`.
+* `privileged` - When this parameter is `true`, the container is given elevated permissions on the host container instance. The level of permissions are similar to the root user permissions. The default value is `false`.
+* `read_only_root_filesystem` - When this parameter is `true`, the container is given read-only access to its root file system. The default value is `false`.
 * `run_as_group` - When this parameter is specified, the container is run as the specified group ID (gid). If this parameter isn't specified, the default is the group that's specified in the image metadata.
 * `run_as_non_root` - When this parameter is specified, the container is run as a user with a uid other than 0. If this parameter isn't specified, so such rule is enforced.
+* `run_as_user` - When this parameter is specified, the container is run as the specified user ID (uid). If this parameter isn't specified, the default is the user that's specified in the image metadata.
 
 ### eks_volume_mounts
 

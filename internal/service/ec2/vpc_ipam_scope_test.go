@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,16 +23,16 @@ func TestAccIPAMScope_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	resourceName := "aws_vpc_ipam_scope.test"
 	ipamName := "aws_vpc_ipam.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
@@ -50,7 +49,7 @@ func TestAccIPAMScope_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMScopeConfig_basic("test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
 				),
 			},
@@ -63,17 +62,17 @@ func TestAccIPAMScope_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-nam
 	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMScope(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,16 +85,16 @@ func TestAccIPAMScope_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMScopeConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -108,7 +107,7 @@ func TestAccIPAMScope_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMScopeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -117,7 +116,7 @@ func TestAccIPAMScope_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMScopeConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -126,14 +125,14 @@ func TestAccIPAMScope_tags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	})
 }
 
-func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *awstypes.IpamScope) resource.TestCheckFunc {
+func testAccCheckIPAMScopeExists(ctx context.Context, t *testing.T, n string, v *awstypes.IpamScope) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
 
@@ -147,9 +146,9 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *awstypes.Ipam
 	}
 }
 
-func testAccCheckIPAMScopeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAMScopeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_scope" {
@@ -158,7 +157,7 @@ func testAccCheckIPAMScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

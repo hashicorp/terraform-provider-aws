@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 // The providerlint command is a static checker for the Terraform AWS Provider.
 package main
 

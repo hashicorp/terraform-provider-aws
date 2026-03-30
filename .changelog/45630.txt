@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_route53_resolver_endpoint: Add `rni_enhanced_metrics_enabled` argument
+```
+
+```release-note:enhancement
+resource/aws_route53_resolver_endpoint: Add `target_name_server_metrics_enabled` argument
+```
+
+```release-note:enhancement
+data-source/aws_route53_resolver_endpoint: Add `rni_enhanced_metrics_enabled` attribute
+```
+
+```release-note:enhancement
+data-source/aws_route53_resolver_endpoint: Add `target_name_server_metrics_enabled` attribute
+```

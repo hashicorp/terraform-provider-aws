@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package docdbelastic
 
@@ -17,14 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -139,6 +141,13 @@ func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					int64validator.Between(1, 32),
 				},
 			},
+			"shard_instance_count": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrSubnetIDs: schema.SetAttribute{
 				CustomType: fwtypes.SetOfStringType,
 				Optional:   true,
@@ -189,7 +198,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	createOut, err := conn.CreateCluster(ctx, &input)
@@ -244,7 +253,7 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 
 	out, err := findClusterByID(ctx, conn, state.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -295,7 +304,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
-		input.ClientToken = aws.String(id.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.ClusterArn = plan.ID.ValueStringPointer()
 
 		_, err := conn.UpdateCluster(ctx, &input)
@@ -390,6 +399,7 @@ type clusterResourceModel struct {
 	PreferredMaintenanceWindow fwtypes.OnceAWeekWindow           `tfsdk:"preferred_maintenance_window"`
 	ShardCapacity              types.Int64                       `tfsdk:"shard_capacity"`
 	ShardCount                 types.Int64                       `tfsdk:"shard_count"`
+	ShardInstanceCount         types.Int64                       `tfsdk:"shard_instance_count"`
 	SubnetIds                  fwtypes.SetValueOf[types.String]  `tfsdk:"subnet_ids"`
 	Tags                       tftags.Map                        `tfsdk:"tags"`
 	TagsAll                    tftags.Map                        `tfsdk:"tags_all"`
@@ -401,7 +411,7 @@ func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusCreating),
 		Target:                    enum.Slice(awstypes.StatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -419,7 +429,7 @@ func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusUpdating),
 		Target:                    enum.Slice(awstypes.StatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -437,7 +447,7 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusActive, awstypes.StatusDeleting),
 		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -449,10 +459,10 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 	return nil, err
 }
 
-func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findClusterByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -472,8 +482,7 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -482,7 +491,7 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	}
 
 	if out == nil || out.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Cluster, nil

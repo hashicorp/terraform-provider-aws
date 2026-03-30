@@ -1,9 +1,12 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Development Environment Setup
 
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.26+ (to run acceptance tests)
-- [Go](https://golang.org/doc/install) 1.23+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) (to build the provider plugin). Check `.go-version` for the required version
 - Mac, Linux or WSL (to build the provider plugin)
 
 ## Quick Start
@@ -76,4 +79,14 @@ provider_installation {
   }
   direct {}
 }
+```
+
+### Managing Go Cache
+
+Consistent work on the provider can cause your Go cache to reach hundreds of GB in just a few days due to the large number of dependencies and frequent builds. We recommend using [cachegoat](https://github.com/YakDriver/cachegoat) to help manage your Go cache size, setting up scheduled cache cleaning.
+
+Install cachegoat:
+
+```console
+go install github.com/YakDriver/cachegoat@latest
 ```

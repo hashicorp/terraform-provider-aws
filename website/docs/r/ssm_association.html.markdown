@@ -251,6 +251,7 @@ This resource supports the following arguments:
 * `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `association_name` - (Optional) The descriptive name for the association.
 * `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
+* `calendar_names` - (Optional) One or more Systems Manager Change Calendar names. The association runs only when the Change Calendar is open.
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
@@ -271,8 +272,8 @@ Output Location (`output_location`) is an S3 bucket where you want to store the 
 
 Targets specify what instance IDs or tags to apply the document to and has these keys:
 
-* `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
-* `values` - (Required) User-defined criteria that maps to Key. A list of instance IDs or tag values.
+* `key` - (Required) User-defined criteria for sending commands that target managed nodes that meet the criteria. See the [AWS documentation](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_Target.html) for the list of available keys.
+* `values` - (Required) List of values that correspond to the specified `key`. See the [AWS documentation](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_Target.html) for details.
 
 ## Attribute Reference
 

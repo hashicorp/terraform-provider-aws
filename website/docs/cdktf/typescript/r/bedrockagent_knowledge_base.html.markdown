@@ -144,6 +144,22 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+### Kendra Knowledge Base
+
+```hcl
+resource "aws_bedrockagent_knowledge_base" "kendra_example" {
+  name     = "example-kendra-kb"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "KENDRA"
+    kendra_knowledge_base_configuration {
+      kendra_index_arn = "arn:aws:kendra:us-east-1:123456789012:index/example-index-id"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -163,8 +179,9 @@ The following arguments are optional:
 
 The `knowledgeBaseConfiguration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`.
-* `vectorKnowledgeBaseConfiguration` - (Optional) Details about the embeddings model that'sused to convert the data source. See [`vectorKnowledgeBaseConfiguration` block](#vector_knowledge_base_configuration-block) for details.
+* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`.
+* `vectorKnowledgeBaseConfiguration` - (Optional) Details about the embeddings model that's used to convert the data source. See [`vectorKnowledgeBaseConfiguration` block](#vector_knowledge_base_configuration-block) for details.
+* `kendraKnowledgeBaseConfiguration` - (Optional) Configuration for Kendra knowledge base. See [`kendraKnowledgeBaseConfiguration` block](#kendra_knowledge_base_configuration-block) for details.
 
 ### `vectorKnowledgeBaseConfiguration` block
 
@@ -205,6 +222,12 @@ The `storageLocation` configuration block supports the following arguments:
 The `s3Location` configuration block supports the following arguments:
 
 * `uri` - (Required) URI of the location.
+
+### `kendraKnowledgeBaseConfiguration` block
+
+The `kendraKnowledgeBaseConfiguration` configuration block supports the following arguments:
+
+* `kendraIndexArn` - (Required) ARN of the Amazon Kendra index.
 
 ### `storageConfiguration` block
 

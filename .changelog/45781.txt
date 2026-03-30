@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpn_connection: Support in-place updates for `tunnel*_inside_cidr` and `tunnel*_inside_ipv6_cidr` arguments
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_kinesisanalyticsv2_application: Add `application_configuration.application_encryption_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_20` as a valid value for `runtime_environment`
+```

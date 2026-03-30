@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWS WorkSpaces Example
 
 This example demonstrates how to create a WorkSpace and WorkSpace directory using AWS WorkSpaces.

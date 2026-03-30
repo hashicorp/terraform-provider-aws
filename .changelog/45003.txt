@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_odb_cloud_vm_cluster: support for hyphen in odb cloud vm cluster hostname prefix.
+```
+```release-note:enhancement
+resource/aws_odb_cloud_vm_cluster: vm cluster creation using odb network ARN and exadata infrastructure ARN for resource sharing model.
+```

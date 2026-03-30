@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -8,44 +8,49 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-type EmptyResultError struct {
+type emptyResultError struct {
 	LastRequest any
 }
 
-var ErrEmptyResult = &EmptyResultError{}
+var ErrEmptyResult = &emptyResultError{}
 
-func NewEmptyResultError(lastRequest any) error {
-	return &EmptyResultError{
-		LastRequest: lastRequest,
-	}
+func NewEmptyResultError() error {
+	return &emptyResultError{}
 }
 
-func (e *EmptyResultError) Error() string {
+func (e *emptyResultError) Error() string {
 	return "empty result"
 }
 
-func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError)
+func (e *emptyResultError) Is(err error) bool {
+	_, ok := err.(*emptyResultError)
 	return ok
 }
 
-func (e *EmptyResultError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
-	if !ok {
+func (e *emptyResultError) As(target any) bool {
+	switch v := target.(type) {
+	case **sdkretry.NotFoundError:
+		*v = &sdkretry.NotFoundError{
+			Message:     e.Error(),
+			LastRequest: e.LastRequest,
+		}
+		return true
+
+	case **retry.NotFoundError:
+		*v = &retry.NotFoundError{
+			Message: e.Error(),
+		}
+		return true
+
+	default:
 		return false
 	}
-
-	*t = &retry.NotFoundError{
-		Message:     e.Error(),
-		LastRequest: e.LastRequest,
-	}
-
-	return true
 }
 
 type TooManyResultsError struct {
@@ -72,12 +77,12 @@ func (e *TooManyResultsError) Is(err error) bool {
 }
 
 func (e *TooManyResultsError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -87,11 +92,11 @@ func (e *TooManyResultsError) As(target any) bool {
 
 // SingularDataSourceFindError returns a standard error message for a singular data source's non-nil resource find error.
 func SingularDataSourceFindError(resourceType string, err error) error {
-	if NotFound(err) {
-		if errors.Is(err, &TooManyResultsError{}) {
-			return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
-		}
+	if errors.Is(err, &TooManyResultsError{}) {
+		return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
+	}
 
+	if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 
@@ -117,14 +122,14 @@ func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
 // Returns a `NotFound` error otherwise.
 func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
 	} else {
 		v := &a[0]
 		for _, f := range fs {
 			if !f(v) {
-				return nil, NewEmptyResultError(nil)
+				return nil, NewEmptyResultError()
 			}
 		}
 		return v, nil
@@ -139,7 +144,7 @@ func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
 
 	v, err, ok := next()
 	if !ok {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -172,7 +177,7 @@ func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
 // Returns a `NotFound` error otherwise.
 func AssertFirstValueResult[T any](a []T) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 	return &a[0], nil
 }

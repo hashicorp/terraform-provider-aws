@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -35,6 +35,10 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 					}
 
 					if tfawserr.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") { // CreateClientVpnRoute, DeleteClientVpnRoute
+						return aws.TrueTernary
+					}
+
+					if tfawserr.ErrMessageContains(err, errCodeVPNConcentratorLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConcentrator
 						return aws.TrueTernary
 					}
 

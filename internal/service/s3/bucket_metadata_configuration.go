@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -35,6 +37,10 @@ import (
 )
 
 // @FrameworkResource("aws_s3_bucket_metadata_configuration", name="Bucket Metadata Configuration")
+// @IdentityAttribute("bucket")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;awstypes;awstypes.MetadataConfigurationResult")
+// @Testing(importStateIdAttribute="bucket")
+// @Testing(preIdentityVersion="6.32.0")
 func newBucketMetadataConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &bucketMetadataConfigurationResource{}
 
@@ -45,6 +51,7 @@ func newBucketMetadataConfigurationResource(_ context.Context) (resource.Resourc
 
 type bucketMetadataConfigurationResource struct {
 	framework.ResourceWithModel[bucketMetadataConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -65,6 +72,7 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -207,7 +215,11 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 
 	conn := r.Meta().S3Client(ctx)
 
-	bucket, expectedBucketOwner := fwflex.StringValueFromFramework(ctx, data.Bucket), fwflex.StringValueFromFramework(ctx, data.ExpectedBucketOwner)
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+	expectedBucketOwner := fwflex.StringValueFromFramework(ctx, data.ExpectedBucketOwner)
 	var input s3.CreateBucketMetadataConfigurationInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -215,6 +227,10 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 	}
 
 	_, err := conn.CreateBucketMetadataConfiguration(ctx, &input)
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
@@ -279,7 +295,7 @@ func (r *bucketMetadataConfigurationResource) Read(ctx context.Context, request 
 	bucket, expectedBucketOwner := fwflex.StringValueFromFramework(ctx, data.Bucket), fwflex.StringValueFromFramework(ctx, data.ExpectedBucketOwner)
 	output, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -451,20 +467,6 @@ func (r *bucketMetadataConfigurationResource) Delete(ctx context.Context, reques
 	}
 }
 
-func (r *bucketMetadataConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	bucket, expectedBucketOwner, err := parseResourceID(request.ID)
-	if err != nil {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
-	if expectedBucketOwner != "" {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
-	}
-}
-
 func waitBucketMetadataInventoryTableConfigurationCreated(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, timeout time.Duration) (*awstypes.InventoryTableConfigurationResult, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{inventoryTableConfigurationStatusCreating},
@@ -478,7 +480,7 @@ func waitBucketMetadataInventoryTableConfigurationCreated(ctx context.Context, c
 
 	if output, ok := outputRaw.(*awstypes.InventoryTableConfigurationResult); ok {
 		if v := output.Error; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
 		}
 
 		return output, err
@@ -500,7 +502,7 @@ func waitBucketMetadataJournalTableConfigurationCreated(ctx context.Context, con
 
 	if output, ok := outputRaw.(*awstypes.JournalTableConfigurationResult); ok {
 		if v := output.Error; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
 		}
 
 		return output, err
@@ -513,7 +515,7 @@ func statusBucketMetadataInventoryTableConfiguration(conn *s3.Client, bucket, ex
 	return func(ctx context.Context) (any, string, error) {
 		mcr, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -534,7 +536,7 @@ func statusBucketMetadataJournalTableConfiguration(conn *s3.Client, bucket, expe
 	return func(ctx context.Context) (any, string, error) {
 		mcr, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -576,7 +578,7 @@ func findBucketMetadataConfiguration(ctx context.Context, conn *s3.Client, input
 	}
 
 	if output == nil || output.GetBucketMetadataConfigurationResult == nil || output.GetBucketMetadataConfigurationResult.MetadataConfigurationResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GetBucketMetadataConfigurationResult.MetadataConfigurationResult, nil

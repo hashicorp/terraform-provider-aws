@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -279,11 +281,9 @@ func findSchemaByID(ctx context.Context, conn *glue.Client, id string) (*glue.Ge
 }
 
 // statusSchema fetches the Schema and its Status
-func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	const (
-		schemaStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusSchema(conn *glue.Client, id string) retry.StateRefreshFunc {
+	const schemaStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSchemaByID(ctx, conn, id)
 
 		if err != nil {
@@ -305,7 +305,7 @@ func waitSchemaAvailable(ctx context.Context, conn *glue.Client, registryID stri
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusPending),
 		Target:  enum.Slice(awstypes.SchemaStatusAvailable),
-		Refresh: statusSchema(ctx, conn, registryID),
+		Refresh: statusSchema(conn, registryID),
 		Timeout: timeout,
 	}
 
@@ -325,7 +325,7 @@ func waitSchemaDeleted(ctx context.Context, conn *glue.Client, registryID string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusDeleting),
 		Target:  []string{},
-		Refresh: statusSchema(ctx, conn, registryID),
+		Refresh: statusSchema(conn, registryID),
 		Timeout: timeout,
 	}
 
@@ -355,11 +355,9 @@ func findSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*
 }
 
 // statusSchemaVersion fetches the Schema Version and its Status
-func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	const (
-		schemaVersionStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusSchemaVersion(conn *glue.Client, id string) retry.StateRefreshFunc {
+	const schemaVersionStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSchemaVersionByID(ctx, conn, id)
 
 		if err != nil {
@@ -381,7 +379,7 @@ func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Client, registry
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaVersionStatusPending),
 		Target:  enum.Slice(awstypes.SchemaVersionStatusAvailable),
-		Refresh: statusSchemaVersion(ctx, conn, registryID),
+		Refresh: statusSchemaVersion(conn, registryID),
 		Timeout: timeout,
 	}
 

@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_inspector_assessment_template: Add plan-time validation of `rules_package_arns` and `target_arn`
+```
+
+```release-note:enhancement
+resource/aws_inspector_assessment_target: Add plan-time validation of `resource_group_arn`
+```
+
+```release-note:enhancement
+resource/aws_redshift_data_share_consumer_association: Add plan-time validation of `consumer_region`
+```

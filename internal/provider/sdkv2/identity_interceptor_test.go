@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -304,6 +304,10 @@ func (c mockClient) DefaultTagsConfig(ctx context.Context) *tftags.DefaultConfig
 }
 
 func (c mockClient) IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig {
+	panic("not implemented") //lintignore:R009
+}
+
+func (c mockClient) TagPolicyConfig(ctx context.Context) *tftags.TagPolicyConfig {
 	panic("not implemented") //lintignore:R009
 }
 

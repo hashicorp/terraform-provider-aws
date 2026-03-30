@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Support `account-id`, not `account`, as a valid value for `attachment_policies.conditions.type`. This fixes a regression introduced in [v6.27.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6270-december-17-2025)
+```

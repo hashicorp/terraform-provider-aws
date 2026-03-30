@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -12,23 +12,21 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaInvokeAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "value3"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	expectedResult := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
@@ -43,7 +41,7 @@ func TestAccLambdaInvokeAction_basic(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_basic(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeAction(ctx, rName, inputJSON, expectedResult),
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, ""),
 				),
 			},
 		},
@@ -52,12 +50,12 @@ func TestAccLambdaInvokeAction_basic(t *testing.T) {
 
 func TestAccLambdaInvokeAction_withQualifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "qualifier_test"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	expectedResult := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
@@ -72,7 +70,7 @@ func TestAccLambdaInvokeAction_withQualifier(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_withQualifier(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionWithQualifier(ctx, rName, inputJSON, expectedResult),
+					testAccCheckInvokeActionWithQualifier(ctx, t, rName, inputJSON, expectedResult),
 				),
 			},
 		},
@@ -81,11 +79,11 @@ func TestAccLambdaInvokeAction_withQualifier(t *testing.T) {
 
 func TestAccLambdaInvokeAction_invocationTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "invocation_types_test"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
@@ -100,19 +98,19 @@ func TestAccLambdaInvokeAction_invocationTypes(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_invocationType(rName, testData, inputJSON, "RequestResponse"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionInvocationType(ctx, rName, inputJSON, awstypes.InvocationTypeRequestResponse),
+					testAccCheckInvokeActionInvocationType(ctx, t, rName, inputJSON, awstypes.InvocationTypeRequestResponse),
 				),
 			},
 			{
 				Config: testAccInvokeActionConfig_invocationType(rName, testData, inputJSON, "Event"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionInvocationType(ctx, rName, inputJSON, awstypes.InvocationTypeEvent),
+					testAccCheckInvokeActionInvocationType(ctx, t, rName, inputJSON, awstypes.InvocationTypeEvent),
 				),
 			},
 			{
 				Config: testAccInvokeActionConfig_invocationType(rName, testData, inputJSON, "DryRun"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionInvocationType(ctx, rName, inputJSON, awstypes.InvocationTypeDryRun),
+					testAccCheckInvokeActionInvocationType(ctx, t, rName, inputJSON, awstypes.InvocationTypeDryRun),
 				),
 			},
 		},
@@ -121,11 +119,11 @@ func TestAccLambdaInvokeAction_invocationTypes(t *testing.T) {
 
 func TestAccLambdaInvokeAction_logTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "log_types_test"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
@@ -140,13 +138,13 @@ func TestAccLambdaInvokeAction_logTypes(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, "None"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionLogType(ctx, rName, inputJSON, awstypes.LogTypeNone),
+					testAccCheckInvokeActionLogType(ctx, t, rName, inputJSON, awstypes.LogTypeNone),
 				),
 			},
 			{
 				Config: testAccInvokeActionConfig_logType(rName, testData, inputJSON, "Tail"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionLogType(ctx, rName, inputJSON, awstypes.LogTypeTail),
+					testAccCheckInvokeActionLogType(ctx, t, rName, inputJSON, awstypes.LogTypeTail),
 				),
 			},
 		},
@@ -155,12 +153,12 @@ func TestAccLambdaInvokeAction_logTypes(t *testing.T) {
 
 func TestAccLambdaInvokeAction_clientContext(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "client_context_test"
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	clientContext := base64.StdEncoding.EncodeToString([]byte(`{"client":{"client_id":"test_client","app_version":"1.0.0"},"env":{"locale":"en_US"}}`))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
@@ -175,7 +173,7 @@ func TestAccLambdaInvokeAction_clientContext(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_clientContext(rName, testData, inputJSON, clientContext),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeActionClientContext(ctx, rName, inputJSON, clientContext),
+					testAccCheckInvokeActionClientContext(ctx, t, rName, inputJSON, clientContext),
 				),
 			},
 		},
@@ -184,12 +182,12 @@ func TestAccLambdaInvokeAction_clientContext(t *testing.T) {
 
 func TestAccLambdaInvokeAction_complexPayload(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	testData := "complex_test"
 	inputJSON := `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a":"b"}}}`
 	expectedResult := fmt.Sprintf(`{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a":"b"}},"key3":%q}`, testData)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
@@ -204,7 +202,36 @@ func TestAccLambdaInvokeAction_complexPayload(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_basic(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeAction(ctx, rName, inputJSON, expectedResult),
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvokeAction_tenantId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	expectedResult := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvokeActionConfig_tenantId(rName, testData, inputJSON),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, "tenant-1"),
 				),
 			},
 		},
@@ -214,15 +241,19 @@ func TestAccLambdaInvokeAction_complexPayload(t *testing.T) {
 // Test helper functions
 
 // testAccCheckInvokeAction verifies that the action can successfully invoke a Lambda function
-func testAccCheckInvokeAction(ctx context.Context, functionName, inputJSON, expectedResult string) resource.TestCheckFunc {
+func testAccCheckInvokeAction(ctx context.Context, t *testing.T, functionName, inputJSON, expectedResult, tenantID string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		// Invoke the function directly to verify it's working and compare results
 		input := &lambda.InvokeInput{
 			FunctionName:   &functionName,
 			InvocationType: awstypes.InvocationTypeRequestResponse,
 			Payload:        []byte(inputJSON),
+		}
+
+		if tenantID != "" {
+			input.TenantId = &tenantID
 		}
 
 		output, err := conn.Invoke(ctx, input)
@@ -244,9 +275,9 @@ func testAccCheckInvokeAction(ctx context.Context, functionName, inputJSON, expe
 }
 
 // testAccCheckInvokeActionWithQualifier verifies action works with function qualifiers
-func testAccCheckInvokeActionWithQualifier(ctx context.Context, functionName, inputJSON, expectedResult string) resource.TestCheckFunc {
+func testAccCheckInvokeActionWithQualifier(ctx context.Context, t *testing.T, functionName, inputJSON, expectedResult string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		// Get the function to retrieve the version
 		getFunc, err := conn.GetFunction(ctx, &lambda.GetFunctionInput{
@@ -283,9 +314,9 @@ func testAccCheckInvokeActionWithQualifier(ctx context.Context, functionName, in
 }
 
 // testAccCheckInvokeActionInvocationType verifies different invocation types work
-func testAccCheckInvokeActionInvocationType(ctx context.Context, functionName, inputJSON string, invocationType awstypes.InvocationType) resource.TestCheckFunc {
+func testAccCheckInvokeActionInvocationType(ctx context.Context, t *testing.T, functionName, inputJSON string, invocationType awstypes.InvocationType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		input := &lambda.InvokeInput{
 			FunctionName:   &functionName,
@@ -317,9 +348,9 @@ func testAccCheckInvokeActionInvocationType(ctx context.Context, functionName, i
 }
 
 // testAccCheckInvokeActionLogType verifies log type configuration works
-func testAccCheckInvokeActionLogType(ctx context.Context, functionName, inputJSON string, logType awstypes.LogType) resource.TestCheckFunc {
+func testAccCheckInvokeActionLogType(ctx context.Context, t *testing.T, functionName, inputJSON string, logType awstypes.LogType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		input := &lambda.InvokeInput{
 			FunctionName:   &functionName,
@@ -349,9 +380,9 @@ func testAccCheckInvokeActionLogType(ctx context.Context, functionName, inputJSO
 }
 
 // testAccCheckInvokeActionClientContext verifies client context is passed correctly
-func testAccCheckInvokeActionClientContext(ctx context.Context, functionName, inputJSON, clientContext string) resource.TestCheckFunc {
+func testAccCheckInvokeActionClientContext(ctx context.Context, t *testing.T, functionName, inputJSON, clientContext string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		input := &lambda.InvokeInput{
 			FunctionName:   &functionName,
@@ -558,4 +589,53 @@ resource "terraform_data" "trigger" {
   }
 }
 `, inputJSON, clientContext))
+}
+
+func testAccInvokeActionConfig_function_tenant(rName, testData string) string {
+	return acctest.ConfigCompose(
+		testAccInvokeActionConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs18.x"
+
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+  environment {
+    variables = {
+      TEST_DATA = %[2]q
+    }
+  }
+}
+`, rName, testData))
+}
+
+func testAccInvokeActionConfig_tenantId(rName, testData, inputJSON string) string {
+	return acctest.ConfigCompose(
+		testAccInvokeActionConfig_function_tenant(rName, testData),
+		fmt.Sprintf(`
+action "aws_lambda_invoke" "test" {
+  config {
+    function_name = aws_lambda_function.test.function_name
+    payload       = %[1]q
+    tenant_id     = "tenant-1"
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_lambda_invoke.test]
+    }
+  }
+}
+`, inputJSON))
 }

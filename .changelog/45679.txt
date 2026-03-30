@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` arguments
+```
+
+```release-note:bug
+resource/aws_vpc_endpoint: `private_dns_enabled` argument is now marked as `ForceNew`
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint: Add `dns_options.private_dns_preference` and `dns_options.private_dns_specified_domains` attributes
+```
+
+```release-note:bug
+data-source/aws_vpc_endpoint: Add missing implementation for `service_region` attribute
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint: Promote `service_region` and `vpc_endpoint_type` from attributes to arguments for filtering
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
@@ -20,11 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -647,7 +645,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testTimeStr := "2023-12-08T09:34:01Z"
-	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
 	intentDescribeTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
@@ -900,11 +898,11 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -912,12 +910,12 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -937,10 +935,10 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -948,13 +946,13 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceIntent, resourceName),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceIntent, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -966,11 +964,11 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -978,12 +976,12 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1003,7 +1001,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 650, 660),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1031,11 +1029,11 @@ func TestAccLexV2ModelsIntent_confirmationSetting_promptSpecifications_defaults(
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1043,12 +1041,12 @@ func TestAccLexV2ModelsIntent_confirmationSetting_promptSpecifications_defaults(
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_NoDefaults(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1058,7 +1056,7 @@ func TestAccLexV2ModelsIntent_confirmationSetting_promptSpecifications_defaults(
 			{
 				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_WithDefault(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1073,11 +1071,11 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1085,12 +1083,12 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateClosingSetting(rName, "test1", "test2", "test3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1111,7 +1109,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateClosingSetting(rName, "Hvad", "er", "hygge"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1137,11 +1135,11 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1149,12 +1147,12 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateInputContext(rName, "sammanhang1", "sammanhang2", "sammanhang3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1171,7 +1169,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateInputContext(rName, "kropp", "utan", "blod"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1193,11 +1191,11 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1205,12 +1203,12 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "branch1", "tre", "slumpmässiga", "ord"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1310,7 +1308,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "gren1", "några", "olika", "bokstäver"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1415,11 +1413,11 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1427,12 +1425,12 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "meddelande", 10, "slumpmässiga", "gren1", "alfanumerisk", "olika"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1558,7 +1556,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "dagdröm", 10, "dansa", "dumbom", "gås", "mat"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1689,11 +1687,11 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1701,12 +1699,12 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1719,7 +1717,7 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1737,11 +1735,11 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1749,12 +1747,12 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateOutputContext(rName, "name1", "name2", "name3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1777,7 +1775,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateOutputContext(rName, "name2", "name3", "name4"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1805,11 +1803,11 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 	botLocaleName := "aws_lexv2models_bot_locale.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
@@ -1817,12 +1815,12 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "yttrande", "twocolors", "danny", "dansa"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1841,7 +1839,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 			{
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "rustedroot", "sendme", "onmy", "way"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
@@ -1861,9 +1859,67 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 	})
 }
 
-func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccLexV2ModelsIntent_qnaIntentConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_qnaIntentBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "parent_intent_signature", "AMAZON.QnAIntent"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.0.kendra_index"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.0.exact_response", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccIntentConfig_qnaIntentWithKendraUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.kendra_configuration.0.exact_response", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccIntentConfig_qnaIntentWithOpenSearch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, t, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.domain_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.index_name", "test-index"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.exact_response", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.include_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.include_fields.0", "answer"),
+					resource.TestCheckResourceAttr(resourceName, "qna_intent_configuration.0.data_source_configuration.0.opensearch_configuration.0.include_fields.1", "question"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckIntentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexV2ModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lexv2models_intent" {
@@ -1890,7 +1946,7 @@ func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIntentExists(ctx context.Context, name string, intent *lexmodelsv2.DescribeIntentOutput) resource.TestCheckFunc {
+func testAccCheckIntentExists(ctx context.Context, t *testing.T, name string, intent *lexmodelsv2.DescribeIntentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1901,7 +1957,7 @@ func testAccCheckIntentExists(ctx context.Context, name string, intent *lexmodel
 			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameIntent, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexV2ModelsClient(ctx)
 		resp, err := conn.DescribeIntent(ctx, &lexmodelsv2.DescribeIntentInput{
 			IntentId:   aws.String(rs.Primary.Attributes["intent_id"]),
 			BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
@@ -2578,4 +2634,246 @@ resource "aws_lexv2models_intent" "test" {
   }
 }
 `, rName, utter1, utter2, utter3, utter4))
+}
+
+func testAccIntentConfig_qnaIntentBase_Kendra(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "kendra_role" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "kendra.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "kendra_attach" {
+  role       = aws_iam_role.kendra_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonKendraFullAccess"
+}
+
+resource "aws_kendra_index" "test" {
+  name       = %[1]q
+  edition    = "DEVELOPER_EDITION"
+  role_arn   = aws_iam_role.kendra_role.arn
+  depends_on = [aws_iam_role.kendra_role]
+}
+
+resource "aws_lexv2models_bot" "test" {
+  name        = %[1]q
+  description = "Test bot for QnA intent"
+  role_arn    = aws_iam_role.kendra_role.arn
+  data_privacy {
+    child_directed = false
+  }
+  idle_session_ttl_in_seconds = 300
+}
+
+resource "aws_lexv2models_bot_locale" "test_en_us" {
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  locale_id                        = "en_US"
+  n_lu_intent_confidence_threshold = 0.4
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_Kendra(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      kendra_configuration {
+        kendra_index                = aws_kendra_index.test.arn
+        exact_response              = true
+        query_filter_string_enabled = false
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "Hello"
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.test,
+    aws_lexv2models_bot_locale.test_en_us,
+    aws_kendra_index.test,
+  ]
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentWithKendraUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_Kendra(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      kendra_configuration {
+        kendra_index                = aws_kendra_index.test.arn
+        exact_response              = false
+        query_filter_string_enabled = false
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "Hello"
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.test,
+    aws_lexv2models_bot_locale.test_en_us,
+    aws_kendra_index.test,
+  ]
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentBase_OpenSearch(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_security_group" "opensearch" {
+  name   = "%[1]s-os"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_iam_role" "opensearch_role" {
+  name = "%[1]s-opensearch"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "opensearch.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name    = substr("%[1]s-os", 0, 28)
+  engine_version = "OpenSearch_2.11"
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_type = "gp3"
+    volume_size = 20
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.opensearch.id]
+    subnet_ids         = [aws_subnet.test[0].id]
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  timeouts {
+    delete = "2h"
+  }
+
+  depends_on = [aws_vpc.test]
+}
+
+resource "aws_lexv2models_bot" "test" {
+  name        = %[1]q
+  description = "Test bot for QnA intent"
+  role_arn    = aws_iam_role.opensearch_role.arn
+  data_privacy {
+    child_directed = false
+  }
+  idle_session_ttl_in_seconds = 300
+}
+
+resource "aws_lexv2models_bot_locale" "test_en_us" {
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  locale_id                        = "en_US"
+  n_lu_intent_confidence_threshold = 0.4
+}
+`, rName))
+}
+
+func testAccIntentConfig_qnaIntentWithOpenSearch(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_qnaIntentBase_OpenSearch(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = "DRAFT"
+  locale_id               = "en_US"
+  name                    = %[1]q
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      opensearch_configuration {
+        domain_endpoint = "https://${aws_opensearch_domain.test.endpoint}"
+        index_name      = "test-index"
+        exact_response  = false
+        include_fields  = ["answer", "question"]
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "Hello"
+  }
+
+  depends_on = [
+    aws_lexv2models_bot.test,
+    aws_lexv2models_bot_locale.test_en_us,
+    aws_opensearch_domain.test,
+  ]
+}
+`, rName))
 }

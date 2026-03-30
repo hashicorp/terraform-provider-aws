@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpointsmsvoicev2_test
@@ -10,38 +10,36 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointSMSVoiceV2ConfigurationSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configurationSet awstypes.ConfigurationSetInformation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckConfigurationSet(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName, &configurationSet),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
@@ -62,23 +60,23 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_basic(t *testing.T) {
 func TestAccPinpointSMSVoiceV2ConfigurationSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configurationSet awstypes.ConfigurationSetInformation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckConfigurationSet(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName, &configurationSet),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceConfigurationSet, resourceName),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceConfigurationSet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,22 +87,22 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_disappears(t *testing.T) {
 func TestAccPinpointSMSVoiceV2ConfigurationSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configurationSet awstypes.ConfigurationSetInformation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_configuration_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckConfigurationSet(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName, &configurationSet),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -120,7 +118,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName, &configurationSet),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -132,7 +130,7 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationSetExists(ctx, resourceName, &configurationSet),
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -144,9 +142,9 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpointsmsvoicev2_configuration_set" {
@@ -155,7 +153,7 @@ func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfpinpointsmsvoicev2.FindConfigurationSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -170,14 +168,14 @@ func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckConfigurationSetExists(ctx context.Context, n string, v *awstypes.ConfigurationSetInformation) resource.TestCheckFunc {
+func testAccCheckConfigurationSetExists(ctx context.Context, t *testing.T, n string, v *awstypes.ConfigurationSetInformation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		output, err := tfpinpointsmsvoicev2.FindConfigurationSetByID(ctx, conn, rs.Primary.ID)
 
@@ -192,7 +190,7 @@ func testAccCheckConfigurationSetExists(ctx context.Context, n string, v *awstyp
 }
 
 func testAccPreCheckConfigurationSet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 	input := &pinpointsmsvoicev2.DescribeConfigurationSetsInput{}
 

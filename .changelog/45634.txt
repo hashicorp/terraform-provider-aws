@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` arguments
+```
+
+```release-note:enhancement
+data-source/aws_db_proxy: Add `endpoint_network_type` and `target_connection_network_type` attributes
+```

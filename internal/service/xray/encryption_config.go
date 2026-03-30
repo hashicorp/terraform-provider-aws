@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package xray
 
@@ -12,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -83,7 +85,7 @@ func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	config, err := findEncryptionConfig(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] XRay Encryption Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,17 +111,17 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	}
 
 	if output == nil || output.EncryptionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfig, nil
 }
 
-func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEncryptionConfig(conn *xray.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -138,7 +140,7 @@ func waitEncryptionConfigAvailable(ctx context.Context, conn *xray.Client) (*typ
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EncryptionStatusUpdating),
 		Target:  enum.Slice(types.EncryptionStatusActive),
-		Refresh: statusEncryptionConfig(ctx, conn),
+		Refresh: statusEncryptionConfig(conn),
 		Timeout: timeout,
 	}
 

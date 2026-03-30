@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_api_key_credential_provider: Add tagging support
+```

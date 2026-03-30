@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appflow
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1476,7 +1479,7 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	connectorProfile, err := findConnectorProfileByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1486,20 +1489,7 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
-	// Credentials are not returned by any API operation. Instead, a
-	// "credentials_arn" property is returned.
-	//
-	// It may be possible to implement a function that reads from this
-	// credentials resource -- but it is not documented in the API reference.
-	// (https://docs.aws.amazon.com/appflow/1.0/APIReference/API_ConnectorProfile.html#appflow-Type-ConnectorProfile-credentialsArn)
-	credentials := d.Get("connector_profile_config.0.connector_profile_credentials").([]any)
-	d.Set(names.AttrARN, connectorProfile.ConnectorProfileArn)
-	d.Set("connection_mode", connectorProfile.ConnectionMode)
-	d.Set("connector_label", connectorProfile.ConnectorLabel)
-	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
-	d.Set("connector_type", connectorProfile.ConnectorType)
-	d.Set("credentials_arn", connectorProfile.CredentialsArn)
-	d.Set(names.AttrName, connectorProfile.ConnectorProfileName)
+	resourceConnectorProfileFlatten(ctx, connectorProfile, d)
 
 	return diags
 }
@@ -1561,7 +1551,7 @@ func findConnectorProfileByName(ctx context.Context, conn *appflow.Client, name 
 	}
 
 	if output == nil || len(output.ConnectorProfileDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.ConnectorProfileDetails)
@@ -2400,4 +2390,21 @@ func flattenOAuth2Properties(properties *types.OAuth2Properties) []any {
 	m["token_url_custom_properties"] = properties.TokenUrlCustomProperties
 
 	return []any{m}
+}
+
+func resourceConnectorProfileFlatten(_ context.Context, connectorProfile *types.ConnectorProfile, rd *schema.ResourceData) {
+	// Credentials are not returned by any API operation. Instead, a
+	// "credentials_arn" property is returned.
+	//
+	// It may be possible to implement a function that reads from this
+	// credentials resource -- but it is not documented in the API reference.
+	// (https://docs.aws.amazon.com/appflow/1.0/APIReference/API_ConnectorProfile.html#appflow-Type-ConnectorProfile-credentialsArn)
+	credentials := rd.Get("connector_profile_config.0.connector_profile_credentials").([]any)
+	rd.Set(names.AttrARN, connectorProfile.ConnectorProfileArn)
+	rd.Set("connection_mode", connectorProfile.ConnectionMode)
+	rd.Set("connector_label", connectorProfile.ConnectorLabel)
+	rd.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
+	rd.Set("connector_type", connectorProfile.ConnectorType)
+	rd.Set("credentials_arn", connectorProfile.CredentialsArn)
+	rd.Set(names.AttrName, connectorProfile.ConnectorProfileName)
 }

@@ -173,6 +173,7 @@ The following arguments are optional:
 * `lifecycle_scope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `CREATE_ONLY` and `CRUD`. Defaults to `CREATE_ONLY`. `CREATE_ONLY` will invoke the function only on creation or replacement. `CRUD` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
 * `qualifier` - (Optional) Qualifier (i.e., version) of the Lambda function. Defaults to `$LATEST`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tenant_id` - (Optional) Tenant Id to serve invocations from specified tenant.
 * `terraform_key` - (Optional) JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://developer.hashicorp.com/terraform/cli/commands/taint).
 
@@ -181,3 +182,23 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `result` - String result of the Lambda function invocation.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Invocation using the `function_name,qualifier,result_hash`. For example:
+
+```terraform
+import {
+  to = aws_lambda_invocation.test_lambda
+  id = "my_test_lambda_function,$LATEST,b326b5062b2f0e69046810717534cb09"
+}
+```
+
+Using `terraform import`, import Lambda Invocation using the `function_name,qualifier,result_hash`. For example:
+
+```console
+% terraform import aws_lambda_invocation.test_lambda my_test_lambda_function,$LATEST,b326b5062b2f0e69046810717534cb09
+```
+
+Because it is not possible to retrieve previous invocations, during the next apply `terraform` will update the resource calling again the function.
+To compute the `result_hash`, it is necessary to hash it with the standard `md5` hash function.

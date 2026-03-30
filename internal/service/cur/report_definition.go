@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cur
 
@@ -11,9 +13,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -106,9 +109,9 @@ func resourceReportDefinition() *schema.Resource {
 				),
 			},
 			"s3_region": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.AWSRegion](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -143,7 +146,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &cur.PutReportDefinitionInput{
+	input := cur.PutReportDefinitionInput{
 		ReportDefinition: &types.ReportDefinition{
 			AdditionalArtifacts:      additionalArtifacts,
 			AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -160,7 +163,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 		Tags: getTagsIn(ctx),
 	}
 
-	_, err := conn.PutReportDefinition(ctx, input)
+	_, err := conn.PutReportDefinition(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cost And Usage Report Definition (%s): %s", reportName, err)
@@ -173,11 +176,12 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.CURClient(ctx)
 
 	reportDefinition, err := findReportDefinitionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cost And Usage Report Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -191,14 +195,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(reportName)
 	d.Set("additional_artifacts", reportDefinition.AdditionalArtifacts)
 	d.Set("additional_schema_elements", reportDefinition.AdditionalSchemaElements)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.CUR,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "definition/" + reportName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, c.RegionalARN(ctx, "cur", "definition/"+reportName))
 	d.Set("compression", reportDefinition.Compression)
 	d.Set(names.AttrFormat, reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
@@ -233,7 +230,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &cur.ModifyReportDefinitionInput{
+		input := cur.ModifyReportDefinitionInput{
 			ReportDefinition: &types.ReportDefinition{
 				AdditionalArtifacts:      additionalArtifacts,
 				AdditionalSchemaElements: flex.ExpandStringyValueSet[types.SchemaElement](d.Get("additional_schema_elements").(*schema.Set)),
@@ -250,7 +247,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			ReportName: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyReportDefinition(ctx, input)
+		_, err := conn.ModifyReportDefinition(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Cost And Usage Report Definition (%s): %s", d.Id(), err)
@@ -347,9 +344,9 @@ func checkReportDefinitionPropertyCombination(additionalArtifacts []types.Additi
 }
 
 func findReportDefinitionByName(ctx context.Context, conn *cur.Client, name string) (*types.ReportDefinition, error) {
-	input := &cur.DescribeReportDefinitionsInput{}
+	var input cur.DescribeReportDefinitionsInput
 
-	return findReportDefinition(ctx, conn, input, func(v *types.ReportDefinition) bool {
+	return findReportDefinition(ctx, conn, &input, func(v *types.ReportDefinition) bool {
 		return aws.ToString(v.ReportName) == name
 	})
 }
@@ -383,4 +380,8 @@ func findReportDefinitions(ctx context.Context, conn *cur.Client, input *cur.Des
 	}
 
 	return output, nil
+}
+
+func awsRegion_Values() []string { // nosemgrep:ci.aws-in-func-name
+	return tfslices.AppendUnique(enum.Values[types.AWSRegion](), endpoints.ApSoutheast5RegionID, endpoints.EuscDeEast1RegionID)
 }

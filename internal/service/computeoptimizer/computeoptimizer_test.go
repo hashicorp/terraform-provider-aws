@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package computeoptimizer_test
@@ -9,7 +9,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/computeoptimizer/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomputeoptimizer "github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 )
 
@@ -33,7 +32,7 @@ func TestAccComputeOptimizer_serial(t *testing.T) {
 }
 
 func testAccPreCheckEnrollmentStatus(ctx context.Context, t *testing.T, want awstypes.Status) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComputeOptimizerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ComputeOptimizerClient(ctx)
 
 	output, err := tfcomputeoptimizer.FindEnrollmentStatus(ctx, conn)
 

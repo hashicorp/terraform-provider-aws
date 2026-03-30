@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpclattice_resource_configuration: Add `custom_domain_name` and `domain_verification_id` arguments and `domain_verification_arn` and `domain_verification_status` attributes to support custom domain names for resource configurations
+```
+
+```release-note:new-resource
+aws_vpclattice_domain_verification
+```

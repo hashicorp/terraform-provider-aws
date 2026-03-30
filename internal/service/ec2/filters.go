@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -279,6 +279,25 @@ func newAttributeFilterList(m map[string]string) []awstypes.Filter {
 		}
 
 		filters = append(filters, newFilter(name, []string{value}))
+	}
+
+	return filters
+}
+
+func newMultiValueAttributeFilterList(m map[string][]string) []awstypes.Filter {
+	var filters []awstypes.Filter
+
+	// Sort the filters by name to make the output deterministic.
+	names := tfmaps.Keys(m)
+	slices.Sort(names)
+
+	for _, name := range names {
+		values := m[name]
+		if len(values) == 0 {
+			continue
+		}
+
+		filters = append(filters, newFilter(name, values))
 	}
 
 	return filters

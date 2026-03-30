@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package resiliencehub
 
@@ -25,12 +27,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -278,7 +280,7 @@ func (r *resiliencyPolicyResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	out, err := findResiliencyPolicyByARN(ctx, conn, state.PolicyARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -436,7 +438,7 @@ func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
-		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
+		Refresh:                   statusResiliencyPolicy(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -454,7 +456,7 @@ func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
-		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
+		Refresh:                   statusResiliencyPolicy(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -472,7 +474,7 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{},
-		Refresh: statusResiliencyPolicy(ctx, conn, arn),
+		Refresh: statusResiliencyPolicy(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -484,10 +486,10 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 	return nil, err
 }
 
-func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResiliencyPolicy(conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -508,8 +510,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -517,7 +518,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	}
 
 	if out == nil || out.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Policy, nil

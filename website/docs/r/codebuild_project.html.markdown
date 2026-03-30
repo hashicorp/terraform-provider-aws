@@ -356,6 +356,7 @@ The following arguments are optional:
 
 ### cache
 
+* `cache_namespace` - (Optional) Namespace that determines the scope in which a cache is shared across multiple projects.
 * `location` - (Required when cache type is `S3`) Location where the AWS CodeBuild project stores cached resources. For
   type `S3`, the value must be a valid S3 bucket name/prefix.
 * `modes` - (Required when cache type is `LOCAL`) Specifies settings that AWS CodeBuild uses to store and reuse build
