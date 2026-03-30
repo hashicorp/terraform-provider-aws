@@ -32,9 +32,7 @@ func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_basicRedis(rName),
@@ -77,9 +75,7 @@ func TestAccElastiCacheServerlessCache_basicValkey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_basicValkey(rName),
@@ -121,9 +117,7 @@ func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_full(rName),
@@ -169,9 +163,7 @@ func TestAccElastiCacheServerlessCache_fullRedis(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_fullRedis(rName),
@@ -212,9 +204,7 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroup(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_redisUpdateWithUserGroup(rName, "test description"),
@@ -257,9 +247,7 @@ func TestAccElastiCacheServerlessCache_updateWithUserGroupRemoval(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineRedis, tfelasticache.EngineRedis, tfelasticache.EngineRedis),
@@ -353,9 +341,7 @@ func TestAccElastiCacheServerlessCache_fullValkey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_fullValkey(rName),
@@ -398,9 +384,7 @@ func TestAccElastiCacheServerlessCache_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_description(rName, descriptionOld),
@@ -466,9 +450,7 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 1, 1000),
@@ -581,9 +563,7 @@ func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineRedis),
@@ -639,9 +619,7 @@ func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_majorEngineVersion(rName, tfelasticache.EngineValkey, "7"),
@@ -701,7 +679,6 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
-
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_basic(rName),
@@ -750,9 +727,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_tags(rName, tags1),
@@ -798,9 +773,7 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimitsRemovedValkey(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_cacheUsageLimitsWithEngine(rName, "valkey", "7", description, 1, 1000),
@@ -860,9 +833,7 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimitsRemovedRedis(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_cacheUsageLimitsWithEngine(rName, "redis", "7", description, 1, 1000),
