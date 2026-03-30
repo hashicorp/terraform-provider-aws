@@ -1787,7 +1787,7 @@ func TestAccGlueCatalogTable_viewDefinitionMultiDialect(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", "true"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "2"),
 				),
 			},

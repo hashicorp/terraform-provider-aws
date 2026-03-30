@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -671,8 +672,11 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
-		if err := waitCatalogTableViewCreated(ctx, conn, catalogID, dbName, name); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view creation: %s", id, err)
+		const (
+			timeout = 3 * time.Minute
+		)
+		if _, err := waitTableViewSucceeded(ctx, conn, catalogID, dbName, name, timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view create: %s", id, err)
 		}
 	}
 
@@ -805,7 +809,10 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
-		if err := waitCatalogTableViewCreated(ctx, conn, catalogID, dbName, name); err != nil {
+		const (
+			timeout = 3 * time.Minute
+		)
+		if _, err := waitTableViewSucceeded(ctx, conn, catalogID, dbName, name, timeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view update: %s", d.Id(), err)
 		}
 	}
@@ -888,6 +895,46 @@ func findTable(ctx context.Context, conn *glue.Client, input *glue.GetTableInput
 	}
 
 	return output.Table, nil
+}
+
+func statusTableView(conn *glue.Client, catalogID, dbName, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.Status == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.Status.State), nil
+	}
+}
+
+func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, dbName, name string, timeout time.Duration) (*awstypes.Table, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStateQueued, awstypes.ResourceStateInProgress),
+		Target:  enum.Slice(awstypes.ResourceStateSuccess, awstypes.ResourceStateStopped),
+		Refresh: statusTableView(conn, catalogID, dbName, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Table); ok {
+		if v := output.Status.Error; v != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+		}
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
@@ -1880,27 +1927,4 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
 	return c.RegionalARN(ctx, "glue", "table/"+dbName+"/"+name)
-}
-
-func waitCatalogTableViewCreated(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) error {
-	return tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
-		table, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
-
-		if err != nil {
-			return tfresource.NonRetryableError(err)
-		}
-
-		if table.Status == nil {
-			return nil
-		}
-
-		switch string(table.Status.State) {
-		case "QUEUED", "IN_PROGRESS":
-			return tfresource.RetryableError(fmt.Errorf("view creation is in state: %s", table.Status.State))
-		case "FAILED":
-			return tfresource.NonRetryableError(fmt.Errorf("view creation failed"))
-		default:
-			return nil
-		}
-	})
 }
