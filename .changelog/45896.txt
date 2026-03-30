@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_batch_job_definition: Add `allow_privilege_escalation` attribute to `eks_properties.pod_properties.containers.security_context`
+```
+```release-note:enhancement
+data-source/aws_batch_job_definition: Add `allow_privilege_escalation` attribute to `eks_properties.pod_properties.containers.security_context`
+```

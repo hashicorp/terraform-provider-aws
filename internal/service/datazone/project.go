@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -26,13 +28,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -208,7 +210,7 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	out, err := findProjectByID(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -327,7 +329,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ProjectStatusActive),
-		Refresh:                   statusProject(ctx, conn, domain, identifier),
+		Refresh:                   statusProject(conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            40,
 		ContinuousTargetOccurence: 10,
@@ -345,7 +347,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:       []string{},
-		Refresh:      statusProject(ctx, conn, domain, identifier),
+		Refresh:      statusProject(conn, domain, identifier),
 		Delay:        5 * time.Second,
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
@@ -359,10 +361,10 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	return nil, err
 }
 
-func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProject(conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -391,15 +393,14 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

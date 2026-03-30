@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_dynamodb_create_backup
 
-~> **Note:** `aws_dynamodb_create_backup` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Creates an on-demand backup of a DynamoDB table. This action will initiate a backup and wait for it to complete, providing progress updates during execution.
 
 For information about DynamoDB backups, see the [DynamoDB Developer Guide](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/BackupRestore.html). For specific information about creating backups, see the [CreateBackup](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateBackup.html) page in the DynamoDB API Reference.

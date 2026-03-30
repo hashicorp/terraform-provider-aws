@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package awsv2
 
 import (
 	"net"
+	"net/http"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -16,6 +17,11 @@ func SkipSweepError(err error) bool {
 	// Ignore missing API endpoints
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok {
 		return dnsErr.IsNotFound
+	}
+
+	// Example (lexmodels): https response error StatusCode: 503, RequestID: , api error UnknownError: UnknownError
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusServiceUnavailable) {
+		return true
 	}
 
 	// Example: AccessDenied: The operation ListQueryLoggingConfigs is not available for the current AWS account ...
@@ -35,6 +41,10 @@ func SkipSweepError(err error) bool {
 	}
 	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
 	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
+		return true
+	}
+	// Example (GovCloud): DisabledOperationException: This Operation is currently not supported for your account
+	if tfawserr.ErrMessageContains(err, "DisabledOperationException", "is currently not supported") {
 		return true
 	}
 	// Example (GovCloud): ForbiddenException: HTTP status code 403: Access forbidden. You do not have permission to perform this operation. Check your credentials and try your request again
@@ -106,6 +116,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
 		return true
 	}
+	// Example (athena): InvalidRequestException: Not authorized to make this request.
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "Not authorized to make this request") {
+		return true
+	}
 	// Example (GovCloud): InvalidSignatureException: Credential should be scoped to a valid region
 	if tfawserr.ErrMessageContains(err, "InvalidSignatureException", "Credential should be scoped to a valid region") {
 		return true
@@ -144,6 +158,10 @@ func SkipSweepError(err error) bool {
 	}
 	//  Example (ec2): UnsupportedOperation: The functionality you requested is not available in this region
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
+		return true
+	}
+	//  Example (ec2): UnsupportedOperation: The functionality you requested is not supported in this region
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not supported in this region") {
 		return true
 	}
 	//  Example (fsx): UnsupportedOperation: This operation is unsupported.

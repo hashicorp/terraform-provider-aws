@@ -163,6 +163,7 @@ This data source exports the following attributes in addition to the arguments a
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
 * `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
 * `reserved_concurrent_executions` - Amount of reserved concurrent executions for this Lambda function or `-1` if unreserved.
+* `response_streaming_invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway with response streaming.
 * `role` - IAM role attached to the Lambda Function.
 * `runtime` - Runtime environment for the Lambda function.
 * `signing_job_arn` - ARN of a signing job.

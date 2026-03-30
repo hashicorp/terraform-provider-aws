@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -158,7 +160,7 @@ func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, me
 
 	pack, err := findConformancePackByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,8 +237,7 @@ func findConformancePacks(ctx context.Context, conn *configservice.Client, input
 
 		if errs.IsA[*types.NoSuchConformancePackException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -277,8 +278,7 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 
 		if errs.IsA[*types.NoSuchConformancePackException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -292,11 +292,11 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 	return output, nil
 }
 
-func statusConformancePack(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConformancePack(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConformancePackStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -312,14 +312,14 @@ func waitConformancePackCreated(ctx context.Context, conn *configservice.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConformancePackStateCreateInProgress),
 		Target:  enum.Slice(types.ConformancePackStateCreateComplete),
-		Refresh: statusConformancePack(ctx, conn, name),
+		Refresh: statusConformancePack(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.ConformancePackStatusDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
 
 		return output, err
 	}
@@ -331,14 +331,14 @@ func waitConformancePackDeleted(ctx context.Context, conn *configservice.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConformancePackStateDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusConformancePack(ctx, conn, name),
+		Refresh: statusConformancePack(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.ConformancePackStatusDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
 
 		return output, err
 	}

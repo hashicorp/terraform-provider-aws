@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb
@@ -31,4 +31,9 @@ var (
 	ProxyProtocolPolicyParseResourceID              = proxyProtocolPolicyParseResourceID
 	ServiceAccountPerRegionMap                      = serviceAccountPerRegionMap
 	SSLNegotiationPolicyParseResourceID             = sslNegotiationPolicyParseResourceID
+
+	ValidAccessLogsInterval = validAccessLogsInterval
+	ValidHeathCheckTarget   = validHeathCheckTarget
+	ValidName               = validName
+	ValidNamePrefix         = validNamePrefix
 )

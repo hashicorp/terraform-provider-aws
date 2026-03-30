@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer_test
@@ -67,7 +67,7 @@ func testAccAnalyzer_disappears(t *testing.T) {
 				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfaccessanalyzer.ResourceAnalyzer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfaccessanalyzer.ResourceAnalyzer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

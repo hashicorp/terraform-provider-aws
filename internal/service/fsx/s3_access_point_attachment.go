@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -25,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -237,7 +239,7 @@ func (r *s3AccessPointAttachmentResource) Create(ctx context.Context, request re
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 	_, err := conn.CreateAndAttachS3AccessPoint(ctx, &input)
 
@@ -274,7 +276,7 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -343,7 +345,7 @@ func (r *s3AccessPointAttachmentResource) Delete(ctx context.Context, request re
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	input := fsx.DetachAndDeleteS3AccessPointInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		Name:               aws.String(name),
 	}
 
@@ -381,7 +383,7 @@ func findS3AccessPointAttachmentByName(ctx context.Context, conn *fsx.Client, na
 	}
 
 	if output.S3AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -428,7 +430,7 @@ func statusS3AccessPointAttachment(conn *fsx.Client, name string) retry.StateRef
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -453,7 +455,7 @@ func waitS3AccessPointAttachmentCreated(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -475,7 +477,7 @@ func waitS3AccessPointAttachmentDeleted(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err

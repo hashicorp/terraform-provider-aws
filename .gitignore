@@ -17,6 +17,7 @@
 *.test
 *~
 /.kiro
+/.bob
 /pkg/
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
 bin/

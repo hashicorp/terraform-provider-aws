@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_invocation: Fix panic when deleting or replacing resource with empty input in CRUD lifecycle scope
+```

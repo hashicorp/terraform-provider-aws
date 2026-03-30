@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -12,6 +12,7 @@ package flex
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -116,6 +117,14 @@ func (t *tfFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) 
 	switch val := v.(type) {
 	case awsExpander:
 		t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		return diags
+
+	case *awsExpander:
+		if val != nil {
+			t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		} else {
+			t.Field1 = types.StringNull()
+		}
 		return diags
 
 	default:
@@ -273,7 +282,7 @@ func TestExpandLogging_collections(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandInterfaceContract(t *testing.T) {
@@ -287,7 +296,7 @@ func TestExpandInterfaceContract(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandExpander(t *testing.T) {
@@ -548,7 +557,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
@@ -700,7 +709,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandInterfaceTypedExpander(t *testing.T) {
@@ -848,7 +857,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandTypedExpander(t *testing.T) {
@@ -1095,7 +1104,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenLogging_collections(t *testing.T) {
@@ -1153,7 +1162,7 @@ func TestFlattenLogging_collections(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestFlattenInterfaceContract(t *testing.T) {
@@ -1187,7 +1196,7 @@ func TestFlattenInterfaceContract(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenInterface(t *testing.T) {
@@ -1372,7 +1381,7 @@ func TestFlattenInterface(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenFlattener(t *testing.T) {
@@ -1633,5 +1642,147 @@ func TestFlattenFlattener(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
+
+// TestFlattenFlattener_PointerToListNestedObject tests that AutoFlex properly calls
+// custom Flatteners when flattening *struct -> ListNestedObjectValueOf[Model].
+// This is a regression test for the issue where AutoFlex detects the Flattener
+// but doesn't call it because ListNestedObjectValueOf is treated as a List type.
+func TestFlattenFlattener_PointerToListNestedObject(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"*struct with custom Flattener to ListNestedObjectValueOf": {
+			Source: awsFlattenerSinglePtr{
+				Field1: &awsFlattenerUnion{
+					FieldA: aws.String("value-a"),
+				},
+			},
+			Target: &tfFlattenerListNestedObject{},
+			WantTarget: &tfFlattenerListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlattenerUnionModel{
+					{
+						FieldA: types.StringValue("value-a"),
+						FieldB: types.StringNull(),
+					},
+				}),
+			},
+		},
+		"nil *struct to null ListNestedObjectValueOf": {
+			Source: awsFlattenerSinglePtr{
+				Field1: nil,
+			},
+			Target: &tfFlattenerListNestedObject{},
+			WantTarget: &tfFlattenerListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[tfFlattenerUnionModel](ctx),
+			},
+		},
+	}
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+}
+
+// Test types for TestFlattenFlattener_PointerToListNestedObject
+
+type awsFlattenerUnion struct {
+	FieldA *string
+	FieldB *string
+}
+
+type awsFlattenerSinglePtr struct {
+	Field1 *awsFlattenerUnion
+}
+
+type tfFlattenerUnionModel struct {
+	FieldA types.String `tfsdk:"field_a"`
+	FieldB types.String `tfsdk:"field_b"`
+}
+
+var _ Flattener = &tfFlattenerUnionModel{}
+
+func (m *tfFlattenerUnionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	val, ok := v.(awsFlattenerUnion)
+	if !ok {
+		m.FieldA = types.StringNull()
+		m.FieldB = types.StringNull()
+		return diags
+	}
+
+	if val.FieldA != nil {
+		m.FieldA = types.StringValue(*val.FieldA)
+	} else {
+		m.FieldA = types.StringNull()
+	}
+
+	if val.FieldB != nil {
+		m.FieldB = types.StringValue(*val.FieldB)
+	} else {
+		m.FieldB = types.StringNull()
+	}
+
+	return diags
+}
+
+type tfFlattenerListNestedObject tfListNestedObject[tfFlattenerUnionModel]
+
+// TestFlattenFlattener_StructValue tests that custom Flatteners receive struct values
+// (not pointers) when flattening *struct -> ListNestedObjectValueOf[Model].
+// This is a regression test for issue #46761 where the S3 lifecycleRuleAndOperatorModel
+// Flattener broke because it received *LifecycleRuleAndOperator instead of LifecycleRuleAndOperator.
+func TestFlattenFlattener_StructValue(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"Flattener receives struct value, not pointer": {
+			Source: awsFlattenerSinglePtr{
+				Field1: &awsFlattenerUnion{
+					FieldA: aws.String("test-value"),
+				},
+			},
+			Target: &tfFlattenerStructValueListNestedObject{},
+			WantTarget: &tfFlattenerStructValueListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlattenerStructValueModel{
+					{
+						FieldA: types.StringValue("test-value"),
+					},
+				}),
+			},
+		},
+	}
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+}
+
+// tfFlattenerStructValueModel is a Flattener that strictly requires a struct value.
+// It returns an error diagnostic if it receives a pointer, catching regressions
+// where AutoFlex incorrectly passes pointers to Flatteners.
+type tfFlattenerStructValueModel struct {
+	FieldA types.String `tfsdk:"field_a"`
+}
+
+var _ Flattener = &tfFlattenerStructValueModel{}
+
+func (m *tfFlattenerStructValueModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	// This Flattener strictly expects a struct value, not a pointer.
+	// If AutoFlex passes a pointer, this type assertion fails and we return an error.
+	val, ok := v.(awsFlattenerUnion)
+	if !ok {
+		diags.AddError(
+			"Flattener received wrong type",
+			fmt.Sprintf("Expected awsFlattenerUnion (struct), got %T. AutoFlex should dereference pointers before calling Flatteners.", v),
+		)
+		return diags
+	}
+
+	if val.FieldA != nil {
+		m.FieldA = types.StringValue(*val.FieldA)
+	} else {
+		m.FieldA = types.StringNull()
+	}
+	return diags
+}
+
+type tfFlattenerStructValueListNestedObject tfListNestedObject[tfFlattenerStructValueModel]

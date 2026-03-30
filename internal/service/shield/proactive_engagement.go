@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package shield
 
@@ -16,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -132,7 +134,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 	subscription, err := findSubscription(ctx, conn)
 
 	if err == nil && subscription.ProactiveEngagementStatus == "" {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	var emergencyContacts []awstypes.EmergencyContact
@@ -141,7 +143,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		emergencyContacts, err = findEmergencyContactSettings(ctx, conn)
 	}
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -299,8 +301,7 @@ func findEmergencyContactSettings(ctx context.Context, conn *shield.Client) ([]a
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -309,7 +310,7 @@ func findEmergencyContactSettings(ctx context.Context, conn *shield.Client) ([]a
 	}
 
 	if output == nil || len(output.EmergencyContactList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmergencyContactList, nil
@@ -322,8 +323,7 @@ func findSubscription(ctx context.Context, conn *shield.Client) (*awstypes.Subsc
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -332,7 +332,7 @@ func findSubscription(ctx context.Context, conn *shield.Client) (*awstypes.Subsc
 	}
 
 	if output == nil || output.Subscription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Subscription, nil

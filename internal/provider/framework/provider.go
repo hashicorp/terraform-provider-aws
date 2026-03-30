@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -14,6 +14,7 @@ import (
 	"sync"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/metaschema"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -31,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -49,6 +50,7 @@ var (
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 	_ provider.ProviderWithListResources      = &frameworkProvider{}
+	_ provider.ProviderWithMetaSchema         = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
@@ -223,13 +225,18 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"assume_role": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"duration": schema.StringAttribute{
-							CustomType:  fwtypes.DurationType,
+							CustomType:  timetypes.GoDurationType{},
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 						},
@@ -278,7 +285,7 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"duration": schema.StringAttribute{
-							CustomType:  fwtypes.DurationType,
+							CustomType:  timetypes.GoDurationType{},
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 						},
@@ -351,6 +358,18 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 	}
 }
 
+func (p *frameworkProvider) MetaSchema(ctx context.Context, req provider.MetaSchemaRequest, resp *provider.MetaSchemaResponse) {
+	resp.Schema = metaschema.Schema{
+		Attributes: map[string]metaschema.Attribute{
+			"user_agent": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+			},
+		},
+	}
+}
+
 // Configure is called at the beginning of the provider lifecycle, when
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
@@ -406,6 +425,7 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
 		tffunction.NewTrimIAMRolePathFunction,
+		tffunction.NewUserAgentFunction,
 	}
 }
 

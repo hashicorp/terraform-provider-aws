@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_sfn_state_machine" "test" {
@@ -127,6 +127,7 @@ resource "aws_iam_role" "for_sfn" {
 }
 EOF
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

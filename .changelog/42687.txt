@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_quicksight_data_set: Support `use_as` property to create special RLS rules dataset
+```

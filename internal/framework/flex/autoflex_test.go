@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -31,9 +31,10 @@ type autoFlexTestCase struct {
 type autoFlexTestCases map[string]autoFlexTestCase
 
 type runChecks struct {
-	CompareDiags  bool
-	CompareTarget bool
-	GoldenLogs    bool // use golden snapshots for log comparison
+	CompareDiags   bool
+	CompareTarget  bool
+	SkipGoldenLogs bool // skip golden snapshots for log comparison
+	PrintLogs      bool // print logs to test output
 }
 
 // diagAF is a testing helper that creates a diag.Diagnostics containing
@@ -86,7 +87,7 @@ func setFieldValue(structPtr any, fieldName string, value any) {
 	}
 }
 
-func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks) {
+func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks, opts ...cmp.Option) {
 	t.Helper()
 	for testName, tc := range testCases {
 		t.Run(testName, func(t *testing.T) {
@@ -105,20 +106,32 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 				}
 			}
 
-			if checks.GoldenLogs {
+			if !checks.SkipGoldenLogs {
 				lines, err := tflogtest.MultilineJSONDecode(&buf)
 				if err != nil {
 					t.Fatalf("Expand: decoding log lines: %s", err)
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
 
+			if checks.PrintLogs {
+				lines, err := tflogtest.MultilineJSONDecode(&buf)
+				if err != nil {
+					t.Fatalf("Expand: decoding log lines: %s", err)
+				}
+				for _, line := range lines {
+					if msg, ok := line["@message"].(string); ok {
+						t.Logf("%s", msg)
+					}
+				}
+			}
+
 			if checks.CompareTarget && !diags.HasError() {
-				if diff := cmp.Diff(tc.Target, tc.WantTarget); diff != "" {
+				if diff := cmp.Diff(tc.Target, tc.WantTarget, opts...); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
@@ -146,16 +159,28 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 				}
 			}
 
-			if checks.GoldenLogs {
+			if !checks.SkipGoldenLogs {
 				lines, err := tflogtest.MultilineJSONDecode(&buf)
 				if err != nil {
 					t.Fatalf("Flatten: decoding log lines: %s", err)
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
+			}
+
+			if checks.PrintLogs {
+				lines, err := tflogtest.MultilineJSONDecode(&buf)
+				if err != nil {
+					t.Fatalf("Flatten: decoding log lines: %s", err)
+				}
+				for _, line := range lines {
+					if msg, ok := line["@message"].(string); ok {
+						t.Logf("%s", msg)
+					}
+				}
 			}
 
 			if checks.CompareTarget && !diags.HasError() {
@@ -202,14 +227,14 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 				}
 			}
 
-			if checks.GoldenLogs {
+			if !checks.SkipGoldenLogs {
 				lines, err := tflogtest.MultilineJSONDecode(&buf)
 				if err != nil {
 					t.Fatalf("Flatten: decoding log lines: %s", err)
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}

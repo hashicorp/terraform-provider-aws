@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -254,7 +257,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		if route.Origin == awstypes.RouteOriginCreateRoute {
 			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
 		}
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
@@ -312,7 +315,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
 		d.SetId("")
 		return diags
@@ -522,7 +525,7 @@ func (routeImportID) Create(d *schema.ResourceData) string {
 	return routeCreateID(routeTableID, destination)
 }
 
-func (routeImportID) Parse(id string) (string, map[string]string, error) {
+func (routeImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, "_")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", id)
@@ -530,7 +533,7 @@ func (routeImportID) Parse(id string) (string, map[string]string, error) {
 
 	routeTableID := parts[0]
 	destination := parts[1]
-	result := map[string]string{
+	result := map[string]any{
 		"route_table_id": routeTableID,
 	}
 	if strings.Contains(destination, ":") {

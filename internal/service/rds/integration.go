@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -20,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -188,7 +190,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findIntegrationByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -276,8 +278,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 
 		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -295,11 +296,11 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIntegration(conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -315,14 +316,14 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{integrationStatusCreating, integrationStatusModifying},
 		Target:  []string{integrationStatusActive},
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
@@ -334,14 +335,14 @@ func waitIntegrationDeleted(ctx context.Context, conn *rds.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{integrationStatusDeleting, integrationStatusActive},
 		Target:  []string{},
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}

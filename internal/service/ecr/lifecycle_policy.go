@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -97,7 +99,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return findLifecyclePolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -153,8 +155,7 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 
 	if errs.IsA[*types.LifecyclePolicyNotFoundException](err) || errs.IsA[*types.RepositoryNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -163,7 +164,7 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -173,13 +174,15 @@ type lifecyclePolicyRuleSelection struct {
 	TagStatus      *string   `json:"tagStatus,omitempty"`
 	TagPatternList []*string `json:"tagPatternList,omitempty"`
 	TagPrefixList  []*string `json:"tagPrefixList,omitempty"`
+	StorageClass   *string   `json:"storageClass,omitempty"`
 	CountType      *string   `json:"countType,omitempty"`
 	CountUnit      *string   `json:"countUnit,omitempty"`
 	CountNumber    *int64    `json:"countNumber,omitempty"`
 }
 
 type lifecyclePolicyRuleAction struct {
-	Type *string `json:"type"`
+	TargetStorageClass *string `json:"targetStorageClass,omitempty"`
+	Type               *string `json:"type"`
 }
 
 type lifecyclePolicyRule struct {

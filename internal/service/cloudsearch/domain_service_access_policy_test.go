@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudsearch_test
@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +19,7 @@ import (
 func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudsearch_domain_service_access_policy.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := acctest.ResourcePrefix + "-" + acctest.RandString(t, 28-(len(acctest.ResourcePrefix)+1))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -51,7 +50,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudsearch_domain_service_access_policy.test"
-	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
+	rName := acctest.ResourcePrefix + "-" + acctest.RandString(t, 28-(len(acctest.ResourcePrefix)+1))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

@@ -206,6 +206,7 @@ The following arguments are mutually exclusive.
 
 * `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
 * `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
+* `update_strategy` - (Optional) Strategy to use for updating the node group. Valid values: `MINIMAL` and `DEFAULT`.
 
 ## Attribute Reference
 

@@ -1,7 +1,6 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {}
 
 resource "aws_subnet" "test" {
   cidr_block = cidrsubnet(data.aws_vpc.default.cidr_block, 12, 4000)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics_test
@@ -10,32 +10,30 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSyntheticsGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.Group
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`group:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -53,20 +51,20 @@ func TestAccSyntheticsGroup_basic(t *testing.T) {
 func TestAccSyntheticsGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.Group
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceGroup(), resourceName),
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,19 +75,19 @@ func TestAccSyntheticsGroup_disappears(t *testing.T) {
 func TestAccSyntheticsGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.Group
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
 	resourceName := "aws_synthetics_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -102,7 +100,7 @@ func TestAccSyntheticsGroup_tags(t *testing.T) {
 			{
 				Config: testAccGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -111,7 +109,7 @@ func TestAccSyntheticsGroup_tags(t *testing.T) {
 			{
 				Config: testAccGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &group),
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -120,7 +118,7 @@ func TestAccSyntheticsGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupExists(ctx context.Context, name string, group *awstypes.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, t *testing.T, name string, group *awstypes.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -131,7 +129,7 @@ func testAccCheckGroupExists(ctx context.Context, name string, group *awstypes.G
 			return fmt.Errorf("no Synthetics Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SyntheticsClient(ctx)
 		output, err := tfsynthetics.FindGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -144,9 +142,9 @@ func testAccCheckGroupExists(ctx context.Context, name string, group *awstypes.G
 	}
 }
 
-func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SyntheticsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_group" {
@@ -155,7 +153,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsynthetics.FindGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

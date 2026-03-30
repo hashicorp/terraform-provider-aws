@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -14,14 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +31,7 @@ import (
 
 const (
 	instanceProfileNameMaxLen       = 128
-	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - id.UniqueIDSuffixLength
+	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
@@ -95,7 +97,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get(names.AttrPath).(string)),
@@ -161,7 +163,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	instanceProfile, err := findInstanceProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -176,7 +178,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		_, err := findRoleByName(ctx, conn, roleName)
 
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				err := instanceProfileRemoveRole(ctx, conn, d.Id(), roleName)
 
 				if err != nil {
@@ -325,8 +327,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -335,7 +336,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	if output == nil || output.InstanceProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceProfile, nil
@@ -346,10 +347,10 @@ const (
 	instanceProfileInvalidARNState = "InvalidARN"
 )
 
-func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceProfile(conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceProfileByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -370,7 +371,7 @@ func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"", instanceProfileInvalidARNState},
 		Target:                    enum.Slice(instanceProfileFoundState),
-		Refresh:                   statusInstanceProfile(ctx, conn, id),
+		Refresh:                   statusInstanceProfile(conn, id),
 		Timeout:                   timeout,
 		Delay:                     5 * time.Second,
 		NotFoundChecks:            5,

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,16 +15,16 @@ import (
 
 func TestAccSiteVPNConnectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 65501, 65534)
 	dataSourceName := "data.aws_vpn_connection.test"
 	resourceName := "aws_vpn_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNConnectionDataSourceConfig_byId(rName, rBgpAsn),
@@ -49,16 +48,16 @@ func TestAccSiteVPNConnectionDataSource_basic(t *testing.T) {
 
 func TestAccSiteVPNConnectionDataSource_byFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(65501, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 65501, 65534)
 	dataSourceName := "data.aws_vpn_connection.test"
 	resourceName := "aws_vpn_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPNConnectionDataSourceConfig_byFilter(rName, rBgpAsn),
@@ -78,7 +77,7 @@ func TestAccSiteVPNConnectionDataSource_byFilter(t *testing.T) {
 func TestAccSiteVPNConnectionDataSource_nonExistentId(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -94,7 +93,7 @@ func TestAccSiteVPNConnectionDataSource_nonExistentId(t *testing.T) {
 func TestAccSiteVPNConnectionDataSource_noInput(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

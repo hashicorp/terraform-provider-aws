@@ -61,6 +61,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
       discovery_url    = "https://auth.example.com/.well-known/openid-configuration"
       allowed_audience = ["app-client", "web-client"]
       allowed_clients  = ["client-123", "client-456"]
+      allowed_scopes   = ["openid", "email"]
     }
   }
 
@@ -70,6 +71,40 @@ resource "aws_bedrockagentcore_gateway" "example" {
       instructions       = "Gateway for handling MCP requests"
       search_type        = "HYBRID"
       supported_versions = ["2025-03-26", "2025-06-18"]
+    }
+  }
+}
+```
+
+### Gateway with Interceptor Configuration
+
+```terraform
+resource "aws_lambda_function" "interceptor" {
+  filename      = "interceptor.zip"
+  function_name = "gateway-interceptor"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+resource "aws_bedrockagentcore_gateway" "example" {
+  name     = "gateway-with-interceptor"
+  role_arn = aws_iam_role.example.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST", "RESPONSE"]
+
+    interceptor {
+      lambda {
+        arn = aws_lambda_function.interceptor.arn
+      }
+    }
+
+    input_configuration {
+      pass_request_headers = true
     }
   }
 }
@@ -90,6 +125,7 @@ The following arguments are optional:
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
+* `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -107,6 +143,56 @@ The `custom_jwt_authorizer` block supports the following:
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
+* `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
+
+### `custom_claim`
+
+The `custom_claim` block supports the following:
+
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
+* `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
+
+### `authorizing_claim_match_value`
+
+The `authorizing_claim_match_value` block supports the following:
+
+* `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+
+### `claim_match_value`
+
+The `claim_match_value` block supports the following:
+
+* `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+* `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+
+### `interceptor_configuration`
+
+The `interceptor_configuration` block supports the following:
+
+* `interception_points` - (Required) Set of interception points. Valid values: `REQUEST`, `RESPONSE`.
+* `interceptor` - (Required) Interceptor infrastructure configuration. See [`interceptor`](#interceptor) below.
+* `input_configuration` - (Optional) Input configuration for the interceptor. See [`input_configuration`](#input_configuration) below.
+
+### `interceptor`
+
+The `interceptor` block supports the following:
+
+* `lambda` - (Required) Lambda function configuration for the interceptor. See [`lambda`](#lambda) below.
+
+### `lambda`
+
+The `lambda` block supports the following:
+
+* `arn` - (Required) ARN of the Lambda function to invoke for the interceptor.
+
+### `input_configuration`
+
+The `input_configuration` block supports the following:
+
+* `pass_request_headers` - (Required) Whether to pass request headers to the interceptor.
 
 ### `protocol_configuration`
 

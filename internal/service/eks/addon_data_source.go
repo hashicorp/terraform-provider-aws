@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -18,6 +20,8 @@ import (
 )
 
 // @SDKDataSource("aws_eks_addon", name="Add-On")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceAddon() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonRead,
@@ -79,9 +83,7 @@ func dataSourceAddon() *schema.Resource {
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get(names.AttrClusterName).(string)
@@ -108,9 +110,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	if err := d.Set(names.AttrTags, keyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, addon.Tags)
 
 	return diags
 }

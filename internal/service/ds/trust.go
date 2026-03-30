@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ds
 
@@ -25,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -33,6 +34,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -211,7 +213,7 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 	trustID := data.ID.ValueString()
 	trust, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -431,8 +433,7 @@ func findTrusts(ctx context.Context, conn *directoryservice.Client, input *direc
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -469,11 +470,11 @@ func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, direc
 	})
 }
 
-func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrust(conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -489,7 +490,7 @@ func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, direct
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TrustStateCreating),
 		Target:  enum.Slice(awstypes.TrustStateCreated),
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -503,7 +504,7 @@ func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -523,7 +524,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 			awstypes.TrustStateVerified,
 			awstypes.TrustStateVerifyFailed,
 		),
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -537,7 +538,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -556,7 +557,7 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 			awstypes.TrustStateVerified,
 			awstypes.TrustStateVerifyFailed,
 		),
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -570,7 +571,7 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -586,7 +587,7 @@ func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, direct
 			awstypes.TrustStateDeleted,
 		),
 		Target:  []string{},
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -600,7 +601,7 @@ func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}

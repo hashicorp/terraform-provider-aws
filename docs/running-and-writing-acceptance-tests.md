@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Running and Writing Acceptance Tests
 
@@ -758,7 +761,7 @@ func TestAccExampleThing_disappears(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName, &job),
-          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
+          acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
         ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -777,7 +780,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if !d.IsNewResource() && tfresource.NotFound(err) {
+if !d.IsNewResource() && retry.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
@@ -807,7 +810,7 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName),
-          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
+          acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
         ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -9,35 +9,33 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
-	rName1 := "tfacctest" + sdkacctest.RandString(10)
+	rName1 := "tfacctest" + acctest.RandString(t, 10)
 	resourceName1 := "aws_quicksight_user." + rName1
-	rName2 := "tfacctest" + sdkacctest.RandString(10)
+	rName2 := "tfacctest" + acctest.RandString(t, 10)
 	resourceName2 := "aws_quicksight_user." + rName2
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName1, &user),
+					testAccCheckUserExists(ctx, t, resourceName1, &user),
 					resource.TestCheckResourceAttr(resourceName1, names.AttrUserName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName1, "user_invitation_url"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName1, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName1)),
@@ -46,7 +44,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 			{
 				Config: testAccUserConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName2, &user),
+					testAccCheckUserExists(ctx, t, resourceName2, &user),
 					resource.TestCheckResourceAttr(resourceName2, names.AttrUserName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName2, "user_invitation_url"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName2, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName2)),
@@ -59,19 +57,19 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user." + rName
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_email(rName, "nottarealemailbutworks"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, "nottarealemailbutworks"),
 				),
 			},
@@ -83,7 +81,7 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, "nottarealemailbutworks2"),
 				),
 			},
@@ -95,19 +93,19 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
 	namespace := acctest.SkipIfEnvVarNotSet(t, "QUICKSIGHT_NAMESPACE")
 	var user awstypes.User
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user." + rName
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_namespace(rName, namespace),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespace),
 				),
 			},
@@ -118,20 +116,20 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 func TestAccQuickSightUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user." + rName
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(ctx, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceUser(), resourceName),
+					testAccCheckUserExists(ctx, t, resourceName, &user),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,14 +137,14 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, t *testing.T, n string, v *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		output, err := tfquicksight.FindUserByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes[names.AttrNamespace], rs.Primary.Attributes[names.AttrUserName])
 
@@ -160,9 +158,9 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) res
 	}
 }
 
-func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_user" {
@@ -171,7 +169,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfquicksight.FindUserByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes[names.AttrNamespace], rs.Primary.Attributes[names.AttrUserName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

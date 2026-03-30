@@ -222,6 +222,7 @@ The following arguments are optional:
 
 * `event_source_token` - (Optional) Event Source Token for Alexa Skills
 * `function_url_auth_type` - (Optional) Lambda Function URL authentication type. Valid values: `AWS_IAM` or `NONE`. Only valid with `lambda:InvokeFunctionUrl` action
+* `invoked_via_function_url` (Optional) Lambda Function URL invoke permission. Only valid with `lambda:InvokeFunction` action
 * `principal_org_id` - (Optional) AWS Organizations ID to grant permission to all accounts under this organization
 * `qualifier` - (Optional) Lambda function version or alias name
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference)

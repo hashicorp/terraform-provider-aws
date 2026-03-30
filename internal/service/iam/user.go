@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -15,30 +17,31 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user", name="User")
-// @Tags(identifierAttribute="name", resourceType="User")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
+// @IdentityAttribute("name")
+// @MutableIdentity
+// @Tags(identifierAttribute="id", resourceType="User")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.35.1")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -144,7 +147,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return findUserByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -154,16 +157,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, user.Arn)
-	d.Set(names.AttrName, user.UserName)
-	d.Set(names.AttrPath, user.Path)
-	if user.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
-	} else {
-		d.Set("permissions_boundary", nil)
-	}
-	d.Set("unique_id", user.UserId)
-
+	resourceUserFlatten(user, d)
 	setTagsOut(ctx, user.Tags)
 
 	return diags
@@ -282,8 +276,7 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -292,7 +285,7 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil
@@ -470,7 +463,7 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, user string) 
 func deleteUserAccessKeys(ctx context.Context, conn *iam.Client, user string) error {
 	accessKeys, err := findAccessKeysByUser(ctx, conn, user)
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return fmt.Errorf("listing IAM User (%s) access keys: %w", user, err)
 	}
 
@@ -664,4 +657,16 @@ func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUse
 	}
 
 	return output, err
+}
+
+func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrName, user.UserName)
+	d.Set(names.AttrPath, user.Path)
+	if user.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
+	}
+	d.Set("unique_id", user.UserId)
 }

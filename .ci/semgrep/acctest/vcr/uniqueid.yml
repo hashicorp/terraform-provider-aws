@@ -1,0 +1,22 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: vcr-migrate-uniqueid
+    languages:
+      - go
+    message: "Use create.UniqueId(ctx) instead of sdkid.UniqueId() for VCR compatibility. This ensures deterministic ID generation during test playback."
+    severity: WARNING
+    patterns:
+      - pattern-inside: |
+          func $FUNC(..., $CTX context.Context, ...) {
+            ...
+          }
+      - pattern: sdkid.UniqueId()
+    fix: create.UniqueId($CTX)
+    paths:
+      include:
+        - "**/*.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/odb"

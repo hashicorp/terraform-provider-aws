@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53_resolver_firewall_rule: Add `dns_threat_protection`, `confidence_threshold`, and `firewall_threat_protection_id` arguments to support DNS Firewall Advanced rules
+```
+
+```release-note:enhancement
+data-source/aws_route53_resolver_firewall_rules: Add `dns_threat_protection`, `confidence_threshold`, `firewall_threat_protection_id`, `firewall_domain_redirection_action`, and `q_type` attributes
+```

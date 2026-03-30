@@ -1,6 +1,6 @@
 resource "aws_s3_bucket_versioning" "test" {
 {{- template "region" }}
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   versioning_configuration {
     status = "Enabled"
   }

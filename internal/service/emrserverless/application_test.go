@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrserverless_test
@@ -17,6 +17,39 @@ import (
 	tfemrserverless "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfemrserverless.PrometheusRemoteWriteURLPattern)
+
+	validURLs := []string{
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",     //lintignore:AWSAT003
+		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write", //lintignore:AWSAT003
+		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write", //lintignore:AWSAT003
+	}
+
+	for _, url := range validURLs {
+		if !regex.MatchString(url) {
+			t.Errorf("Expected %q to be valid", url)
+		}
+	}
+
+	invalidURLs := []string{
+		"https://aps-workspaces.invalid-region.amazonaws.com/workspaces/test/api/v1/remote_write",
+		"http://aps-workspaces.us-east-1.amazonaws.com/workspaces/test/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces//api/v1/remote_write",      //lintignore:AWSAT003
+		"https://aps-workspaces.us--east-1.amazonaws.com/workspaces/test/api/v1/remote_write", // double dash
+		"https://aps-workspaces.us-east-.amazonaws.com/workspaces/test/api/v1/remote_write",   // trailing dash
+	}
+
+	for _, url := range invalidURLs {
+		if regex.MatchString(url) {
+			t.Errorf("Expected %q to be invalid", url)
+		}
+	}
+}
 
 func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -46,6 +79,8 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -369,8 +404,8 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -430,7 +465,7 @@ func TestAccEMRServerlessApplication_runtimeConfiguration(t *testing.T) {
 	resourceName := "aws_emrserverless_application.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -587,6 +622,49 @@ func TestAccEMRServerlessApplication_schedulerConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.max_concurrent_runs", "15"),
 					resource.TestCheckResourceAttr(resourceName, "scheduler_configuration.0.queue_timeout_minutes", "180"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEMRServerlessApplication_jobLevelCostAllocationConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_jobLevelCostAllocationConfiguration(rName, "emr-6.6.0", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_jobLevelCostAllocationConfiguration(rName, "emr-6.6.0", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -967,7 +1045,7 @@ func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
 	resourceName := "aws_emrserverless_application.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1208,4 +1286,18 @@ resource "aws_emrserverless_application" "test" {
   }
 }
 `, rName)
+}
+
+func testAccApplicationConfig_jobLevelCostAllocationConfiguration(rName, releaseLabel string, jobLevelCostAllocationConfiguration bool) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = %[2]q
+  type          = "hive"
+
+  job_level_cost_allocation_configuration {
+    enabled = %[3]t
+  }
+}
+`, rName, releaseLabel, jobLevelCostAllocationConfiguration)
 }

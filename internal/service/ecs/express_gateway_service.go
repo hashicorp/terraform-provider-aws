@@ -1,12 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -26,12 +30,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -270,10 +275,15 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 
 	// Set values for unknowns.
 	if len(waitOut.ActiveConfigurations) > 0 {
+		// Save plan's env/secret ordering before flattening (API may reorder).
+		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 	}
 
 	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
@@ -295,7 +305,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 
 	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceARN)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -312,10 +322,19 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	if len(out.ActiveConfigurations) > 0 {
+		// Save state's env/secret ordering before flattening (API may reorder).
+		stateEnv, stateSecrets := preservePlanContainerOrdering(ctx, state.PrimaryContainer)
+
+		// Sort alphabetically as canonical ordering (used as default during import).
+		orderExpressGatewayContainerEnvironmentVariables(&out.ActiveConfigurations[0])
+
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.ActiveConfigurations[0], &state))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Restore state ordering if env vars are unchanged (no-op during import).
+		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -419,10 +438,16 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 
 	// Set values for unknowns.
 	if len(waitOut.ActiveConfigurations) > 0 {
+		// Save plan's env/secret ordering before flattening (API may reorder).
+		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
+
+		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -436,7 +461,9 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		}
 	}
 
-	plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
+	if !plan.CurrentDeployment.IsNull() {
+		plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -493,7 +520,7 @@ const (
 )
 
 func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
 		Target:  []string{gatewayServiceStatusActive},
 		Refresh: statusExpressGatewayService(ctx, conn, ARN),
@@ -509,7 +536,7 @@ func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN 
 }
 
 func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining, gatewayServiceStatusPending},
 		Target:  []string{gatewayServiceStatusActive, gatewayServiceStatusStable},
 		Refresh: statusExpressGatewayServiceWaitForStable(ctx, conn, gatewayServiceARN, operationTime),
@@ -525,7 +552,7 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 }
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{gatewayServiceStatusActive},
 		Target:     []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
 		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
@@ -541,10 +568,10 @@ func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id
 	return nil, smarterr.NewError(err)
 }
 
-func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -556,11 +583,11 @@ func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayS
 	}
 }
 
-func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
+func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if err != nil {
-			if tfresource.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
+			if retry.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
 				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
 				mockService := &awstypes.ECSExpressGatewayService{
 					ServiceArn: aws.String(gatewayServiceARN),
@@ -611,14 +638,14 @@ func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs
 	out, err := conn.DescribeExpressGatewayService(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			})
 		}
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
-			return nil, smarterr.NewError(&retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			})
@@ -628,7 +655,7 @@ func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs
 	}
 
 	if out == nil || out.Service == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Service, nil
@@ -648,13 +675,13 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 	if err == nil {
 		return fmt.Errorf("Express Gateway Service %s already exists in cluster %s", serviceName.ValueString(), clusterName)
 	}
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 	return err
 }
 
-func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) retry.StateRefreshFunc {
+func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) sdkretry.StateRefreshFunc {
 	var deploymentArn *string
 
 	return func() (any, string, error) {
@@ -769,6 +796,149 @@ type expressGatewayScalingTargetModel struct {
 type ingressPathSummaryModel struct {
 	AccessType fwtypes.StringEnum[awstypes.AccessType] `tfsdk:"access_type"`
 	Endpoint   types.String                            `tfsdk:"endpoint"`
+}
+
+// preservePlanContainerOrdering extracts the environment and secret lists from the plan's
+// primary container so they can be restored after flattening the API response.
+func preservePlanContainerOrdering(ctx context.Context, primaryContainer fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel]) (
+	fwtypes.ListNestedObjectValueOf[keyValuePairModel],
+	fwtypes.ListNestedObjectValueOf[secretModel],
+) {
+	containers, diags := primaryContainer.ToSlice(ctx)
+	if diags.HasError() || len(containers) == 0 {
+		return fwtypes.NewListNestedObjectValueOfNull[keyValuePairModel](ctx),
+			fwtypes.NewListNestedObjectValueOfNull[secretModel](ctx)
+	}
+	return containers[0].Environment, containers[0].Secrets
+}
+
+// restorePlanContainerOrdering restores the environment and secret lists from the plan
+// into the primary container after flattening the API response. This ensures the state
+// after apply matches the plan's ordering, preventing "Provider produced inconsistent
+// result after apply" errors.
+func restorePlanContainerOrdering(
+	ctx context.Context,
+	primaryContainer *fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel],
+	planEnv fwtypes.ListNestedObjectValueOf[keyValuePairModel],
+	planSecrets fwtypes.ListNestedObjectValueOf[secretModel],
+) {
+	containers, diags := primaryContainer.ToSlice(ctx)
+	if diags.HasError() || len(containers) == 0 {
+		return
+	}
+	containers[0].Environment = planEnv
+	containers[0].Secrets = planSecrets
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, containers, nil)
+	if diags.HasError() {
+		return
+	}
+	*primaryContainer = updated
+}
+
+// restoreContainerOrderingIfUnchanged restores the previous state's environment and secret
+// ordering after flattening the API response, but only if the same set of key-value pairs
+// exists. If the environment variables or secrets have actually changed (added/removed/modified),
+// the API response ordering is kept.
+func restoreContainerOrderingIfUnchanged(
+	ctx context.Context,
+	primaryContainer *fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel],
+	prevEnv fwtypes.ListNestedObjectValueOf[keyValuePairModel],
+	prevSecrets fwtypes.ListNestedObjectValueOf[secretModel],
+) {
+	containers, diags := primaryContainer.ToSlice(ctx)
+	if diags.HasError() || len(containers) == 0 {
+		return
+	}
+
+	// Check if environment variables are the same set (just reordered)
+	if envListsEquivalent(ctx, prevEnv, containers[0].Environment) {
+		containers[0].Environment = prevEnv
+	}
+
+	// Check if secrets are the same set (just reordered)
+	if secretListsEquivalent(ctx, prevSecrets, containers[0].Secrets) {
+		containers[0].Secrets = prevSecrets
+	}
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, containers, nil)
+	if diags.HasError() {
+		return
+	}
+	*primaryContainer = updated
+}
+
+// envListsEquivalent returns true if two environment variable lists contain the same
+// set of name/value pairs, regardless of ordering.
+func envListsEquivalent(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[keyValuePairModel]) bool {
+	aSlice, diags := a.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	bSlice, diags := b.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	if len(aSlice) != len(bSlice) {
+		return false
+	}
+
+	// Build a map from a
+	aMap := make(map[string]string, len(aSlice))
+	for _, item := range aSlice {
+		aMap[item.Name.ValueString()] = item.Value.ValueString()
+	}
+
+	// Check all items in b exist in a with the same value
+	for _, item := range bSlice {
+		if v, ok := aMap[item.Name.ValueString()]; !ok || v != item.Value.ValueString() {
+			return false
+		}
+	}
+	return true
+}
+
+// secretListsEquivalent returns true if two secret lists contain the same
+// set of name/value_from pairs, regardless of ordering.
+func secretListsEquivalent(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[secretModel]) bool {
+	aSlice, diags := a.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	bSlice, diags := b.ToSlice(ctx)
+	if diags.HasError() {
+		return false
+	}
+	if len(aSlice) != len(bSlice) {
+		return false
+	}
+
+	aMap := make(map[string]string, len(aSlice))
+	for _, item := range aSlice {
+		aMap[item.Name.ValueString()] = item.ValueFrom.ValueString()
+	}
+
+	for _, item := range bSlice {
+		if v, ok := aMap[item.Name.ValueString()]; !ok || v != item.ValueFrom.ValueString() {
+			return false
+		}
+	}
+	return true
+}
+
+// orderExpressGatewayContainerEnvironmentVariables sorts the environment variables and secrets
+// in an ExpressGatewayServiceConfiguration by name. This prevents spurious diffs when the API
+// returns environment variables in a different order than the Terraform configuration.
+func orderExpressGatewayContainerEnvironmentVariables(config *awstypes.ExpressGatewayServiceConfiguration) {
+	if config == nil || config.PrimaryContainer == nil {
+		return
+	}
+	slices.SortFunc(config.PrimaryContainer.Environment, func(a, b awstypes.KeyValuePair) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
+	slices.SortFunc(config.PrimaryContainer.Secrets, func(a, b awstypes.Secret) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
 }
 
 func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateExpressGatewayServiceInput) (*ecs.CreateExpressGatewayServiceOutput, error) {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -394,7 +396,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -704,7 +706,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -832,8 +834,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 
 		if errs.IsA[*awstypes.NoSuchHostedZone](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1132,7 +1133,7 @@ func (recordImportID) Create(d *schema.ResourceData) string {
 	return createRecordImportID(d)
 }
 
-func (recordImportID) Parse(id string) (string, map[string]string, error) {
+func (recordImportID) Parse(id string) (string, map[string]any, error) {
 	parts := recordParseResourceID(id)
 	// We check that we have parsed the id into the correct number of segments.
 	// We need at least 3 segments!
@@ -1142,7 +1143,7 @@ func (recordImportID) Parse(id string) (string, map[string]string, error) {
 		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"zone_id":      parts[0],
 		names.AttrName: parts[1],
 		names.AttrType: parts[2],

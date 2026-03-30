@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package mq
 
@@ -20,8 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -325,18 +327,8 @@ func resourceBroker() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Set:      resourceUserHash,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
-					// User list is not returned back after creation.
-					// Updates to users can only be in the RabbitMQ UI.
-					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get(names.AttrARN).(string) != "" {
-						return true
-					}
-
-					return false
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -400,7 +392,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	input := &mq.CreateBrokerInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
+		CreatorRequestId:        aws.String(sdkid.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
 		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -469,7 +461,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findBrokerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && (tfresource.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
+	if !d.IsNewResource() && (retry.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
 		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -520,14 +512,18 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
-	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
+	// AWS does not return user information for RabbitMQ brokers after creation.
+	// Skip setting user state to prevent non-idempotent behavior.
+	if !strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) || d.IsNewResource() {
+		rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
+		}
 
-	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		}
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -700,8 +696,7 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -710,17 +705,17 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBrokerState(conn *mq.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -737,7 +732,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout 
 		Pending: enum.Slice(types.BrokerStateCreationInProgress, types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -758,7 +753,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 		),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -774,7 +769,7 @@ func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout
 		Pending: enum.Slice(types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 

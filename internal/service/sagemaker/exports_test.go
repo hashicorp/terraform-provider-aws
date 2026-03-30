@@ -1,12 +1,37 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
+
+type (
+	AlgorithmResourceModel                = algorithmResourceModel
+	AlgorithmValidationSpecificationModel = algorithmValidationSpecificationModel
+	AlgorithmValidationProfileModel       = algorithmValidationProfileModel
+	TrainingJobDefinitionModel            = trainingJobDefinitionModel
+	ChannelModel                          = channelModel
+	DataSourceModel                       = dataSourceModel
+	ShuffleConfigModel                    = shuffleConfigModel
+	OutputDataConfigModel                 = outputDataConfigModel
+	ResourceConfigModel                   = resourceConfigModel
+	InstanceGroupModel                    = instanceGroupModel
+	InstancePlacementConfigModel          = instancePlacementConfigModel
+	StoppingConditionModel                = stoppingConditionModel
+	TransformJobDefinitionModel           = transformJobDefinitionModel
+
+	TrainingJobAlgorithmSpecificationModel = trainingJobAlgorithmSpecificationModel
+	TrainingJobMetricDefinitionModel       = trainingJobMetricDefinitionModel
+	TrainingJobModelPackageConfigModel     = trainingJobModelPackageConfigModel
+	TrainingJobTrainingImageConfigModel    = trainingJobTrainingImageConfigModel
+	TrainingJobServerlessJobConfigModel    = trainingJobServerlessJobConfigModel
+	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
+	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
+)
 
 // Exports for use in tests only.
 var (
 	ResourceApp                                    = resourceApp
 	ResourceAppImageConfig                         = resourceAppImageConfig
+	ResourceAlgorithm                              = newAlgorithmResource
 	ResourceCodeRepository                         = resourceCodeRepository
 	ResourceDataQualityJobDefinition               = resourceDataQualityJobDefinition
 	ResourceDevice                                 = resourceDevice
@@ -19,9 +44,12 @@ var (
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
+	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
+	ResourceModelCard                              = newModelCardResource
 	ResourceModelPackageGroup                      = resourceModelPackageGroup
 	ResourceModelPackageGroupPolicy                = resourceModelPackageGroupPolicy
 	ResourceMonitoringSchedule                     = resourceMonitoringSchedule
@@ -31,11 +59,13 @@ var (
 	ResourceProject                                = resourceProject
 	ResourceSpace                                  = resourceSpace
 	ResourceStudioLifecycleConfig                  = resourceStudioLifecycleConfig
+	ResourceTrainingJob                            = newResourceTrainingJob
 	ResourceUserProfile                            = resourceUserProfile
 	ResourceWorkforce                              = resourceWorkforce
 	ResourceWorkteam                               = resourceWorkteam
 
 	FindAppByName                             = findAppByName
+	FindAlgorithmByName                       = findAlgorithmByName
 	FindAppImageConfigByName                  = findAppImageConfigByName
 	FindCodeRepositoryByName                  = findCodeRepositoryByName
 	FindDataQualityJobDefinitionByName        = findDataQualityJobDefinitionByName
@@ -50,8 +80,12 @@ var (
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindLabelingJobByName                     = findLabelingJobByName
+	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
+	FindModelCardByName                       = findModelCardByName
+	FindModelCardExportJobByARN               = findModelCardExportJobByARN
 	FindModelPackageGroupByName               = findModelPackageGroupByName
 	FindModelPackageGroupPolicyByName         = findModelPackageGroupPolicyByName
 	FindMonitoringScheduleByName              = findMonitoringScheduleByName
@@ -62,12 +96,14 @@ var (
 	FindServicecatalogPortfolioStatus         = findServicecatalogPortfolioStatus
 	FindSpaceByName                           = findSpaceByName
 	FindStudioLifecycleConfigByName           = findStudioLifecycleConfigByName
+	FindTrainingJobByName                     = findTrainingJobByName
 	FindUserProfileByName                     = findUserProfileByName
 	FindWorkforceByName                       = findWorkforceByName
 	FindWorkteamByName                        = findWorkteamByName
 
 	DecodeAppID                                    = decodeAppID
 	DecodeDeviceId                                 = decodeDeviceId
+	ImageVersionFromARN                            = imageVersionFromARN
 	PrebuiltECRImageCreatePath                     = prebuiltECRImageCreatePath
 	PrebuiltECRImageIDByRegion_factorMachines      = prebuiltECRImageIDByRegion_factorMachines
 	PrebuiltECRImageIDByRegion_XGBoost             = prebuiltECRImageIDByRegion_XGBoost
@@ -80,6 +116,11 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
+
+	NormalizeAlgoSpecMetricDefinitions = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition         = normalizeStoppingCondition
+	ServerlessJobConfigEqualityFunc    = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix

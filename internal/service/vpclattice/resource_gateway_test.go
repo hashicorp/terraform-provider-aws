@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -10,35 +10,33 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -57,23 +55,23 @@ func TestAccVPCLatticeResourceGateway_basic(t *testing.T) {
 func TestAccVPCLatticeResourceGateway_addressTypeDualstack(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 	addressType := "DUALSTACK"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_addressType(rName, addressType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, addressType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -93,23 +91,23 @@ func TestAccVPCLatticeResourceGateway_addressTypeDualstack(t *testing.T) {
 func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 	addressType := "IPV6"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_addressType(rName, addressType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, addressType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -129,24 +127,24 @@ func TestAccVPCLatticeResourceGateway_addressTypeIPv6(t *testing.T) {
 func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 	subnetResourceName1 := "aws_subnet.test"
 	subnetResourceName2 := "aws_subnet.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_multipleSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -168,23 +166,23 @@ func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
 func TestAccVPCLatticeResourceGateway_ipv4AddressesPerEni(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 	addressType := "IPV4"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_ipv4AddressesPerEni(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, addressType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -205,24 +203,24 @@ func TestAccVPCLatticeResourceGateway_ipv4AddressesPerEni(t *testing.T) {
 func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 	securityGroup1 := "aws_security_group.test"
 	securityGroup2 := "aws_security_group.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -239,7 +237,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 			{
 				Config: testAccResourceGatewayConfig_update2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
@@ -257,7 +255,7 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 			{
 				Config: testAccResourceGatewayConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -273,23 +271,23 @@ func TestAccVPCLatticeResourceGateway_update(t *testing.T) {
 func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceGateway, resourceName),
+					testAccCheckResourceGatewayExists(ctx, t, resourceName, &resourcegateway),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -297,9 +295,9 @@ func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceGatewayDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_resource_gateway" {
@@ -308,7 +306,7 @@ func testAccCheckResourceGatewayDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfvpclattice.FindResourceGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -323,14 +321,14 @@ func testAccCheckResourceGatewayDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckResourceGatewayExists(ctx context.Context, n string, v *vpclattice.GetResourceGatewayOutput) resource.TestCheckFunc {
+func testAccCheckResourceGatewayExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetResourceGatewayOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindResourceGatewayByID(ctx, conn, rs.Primary.ID)
 
