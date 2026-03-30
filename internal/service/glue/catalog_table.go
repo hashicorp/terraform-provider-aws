@@ -928,14 +928,13 @@ func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, d
 
 	output, err := stateConf.WaitForStateContext(ctx)
 
-	if err != nil {
+	if output != nil && output.Status != nil {
 		if v := output.Status.Error; v != nil {
 			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
 		}
-		return output, err
 	}
 
-	return nil, err
+	return output, err
 }
 
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
