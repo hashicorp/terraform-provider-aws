@@ -26,9 +26,28 @@ type (
 	TrainingJobStoppingConditionModel      = trainingJobStoppingConditionModel
 	TrainingJobVPCConfigModel              = trainingJobVPCConfigModel
 
-	HyperParameterTrainingJobDefinitionModel        = hyperParameterTrainingJobDefinitionModel
-	HyperParameterTuningAlgorithmSpecificationModel = algorithmSpecificationModel
-	HyperParameterTuningMetricDefinitionModel       = hyperParameterTuningMetricDefinitionModel
+	HyperParameterTrainingJobDefinitionModel         = hyperParameterTrainingJobDefinitionModel
+	HyperParameterTuningAlgorithmSpecificationModel  = algorithmSpecificationModel
+	HyperParameterTuningCheckpointConfigModel        = checkpointConfigModel
+	HyperParameterTuningParameterRangesModel         = parameterRangesModel
+	HyperParameterTuningMetricDefinitionModel        = hyperParameterTuningMetricDefinitionModel
+	HyperParameterTuningInputDataConfigModel         = inputDataConfigModel
+	HyperParameterTuningDataSourceModel              = hyperParameterTuningDataSourceModel
+	HyperParameterTuningFileSystemDataSourceModel    = hyperParameterTuningFileSystemDataSourceModel
+	HyperParameterTuningHubAccessConfigModel         = hyperParameterTuningHubAccessConfigModel
+	HyperParameterTuningModelAccessConfigModel       = hyperParameterTuningModelAccessConfigModel
+	HyperParameterTuningS3DataSourceModel            = s3DataSourceModel
+	HyperParameterTuningShuffleConfigModel           = hyperParameterTuningShuffleConfigModel
+	HyperParameterTuningOutputDataConfigModel        = hyperParameterTuningOutputDataConfigModel
+	HyperParameterTuningResourceConfigModel          = hyperParameterTuningResourceConfigModel
+	HyperParameterTuningInstanceConfigModel          = hyperParameterTuningInstanceConfigModel
+	HyperParameterTuningRetryStrategyModel           = retryStrategyModel
+	HyperParameterTuningStoppingConditionModel       = hyperParameterTuningStoppingConditionModel
+	HyperParameterTuningTrainingResourceConfigModel  = trainingResourceConfigModel
+	HyperParameterTuningInstanceGroupModel           = hyperParameterTuningInstanceGroupModel
+	HyperParameterTuningInstancePlacementConfigModel = hyperParameterTuningInstancePlacementConfigModel
+	HyperParameterTuningTuningObjectiveModel         = tuningObjectiveModel
+	HyperParameterTuningJobVPCConfigModel            = hyperParameterTuningJobVPCConfigModel
 )
 
 // Exports for use in tests only.
@@ -124,10 +143,16 @@ var (
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
 	PreserveAlgorithmValidationSpecification       = preserveAlgorithmValidationSpecification
 
-	NormalizeAlgoSpecMetricDefinitions                  = normalizeAlgoSpecMetricDefinitions
-	NormalizeStoppingCondition                          = normalizeStoppingCondition
-	NormalizeHyperParameterTuningAlgorithmSpecification = normalizeAlgorithmSpecification
-	ServerlessJobConfigEqualityFunc                     = serverlessJobConfigEqualityFunc
+	NormalizeAlgoSpecMetricDefinitions         = normalizeAlgoSpecMetricDefinitions
+	NormalizeStoppingCondition                 = normalizeStoppingCondition
+	NormalizeTrainingJobDefinition             = normalizeTrainingJobDefinition
+	NormalizeTrainingJobDefinitions            = normalizeTrainingJobDefinitions
+	NormalizeTrainingJobDefinitionConfig       = normalizeTrainingJobDefinitionConfig
+	NormalizeStaticHyperParameters             = normalizeStaticHyperParameters
+	NormalizeRetryStrategy                     = normalizeRetryStrategy
+	NormalizeAlgorithmSpecification            = normalizeAlgorithmSpecification
+	NormalizeHyperParameterTuningAlgorithmName = normalizeHyperParameterTuningAlgorithmName
+	ServerlessJobConfigEqualityFunc            = serverlessJobConfigEqualityFunc
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
