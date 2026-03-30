@@ -36,7 +36,7 @@ func TestAccMediaConvertJobTemplate_basic(t *testing.T) {
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`jobTemplates/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "0"),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "hop_destinations.#", "0"),
 				),

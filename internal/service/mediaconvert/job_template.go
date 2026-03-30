@@ -54,7 +54,7 @@ func resourceJobTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.AccelerationMode](),
@@ -79,7 +79,7 @@ func resourceJobTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -99,7 +99,7 @@ func resourceJobTemplate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
@@ -163,7 +163,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.HopDestinations = expandHopDestinations(v.([]any))
 	}
 
-	input.Priority = aws.Int32(int32(d.Get("priority").(int)))
+	input.Priority = aws.Int32(int32(d.Get(names.AttrPriority).(int)))
 
 	if v, ok := d.GetOk("queue"); ok {
 		input.Queue = aws.String(v.(string))
@@ -203,7 +203,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("category", jobTemplate.Category)
 	d.Set(names.AttrDescription, jobTemplate.Description)
 	d.Set(names.AttrName, jobTemplate.Name)
-	d.Set("priority", jobTemplate.Priority)
+	d.Set(names.AttrPriority, jobTemplate.Priority)
 	d.Set("queue", jobTemplate.Queue)
 	d.Set("status_update_interval", jobTemplate.StatusUpdateInterval)
 
@@ -263,7 +263,7 @@ func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.HopDestinations = expandHopDestinations(v.([]any))
 		}
 
-		input.Priority = aws.Int32(int32(d.Get("priority").(int)))
+		input.Priority = aws.Int32(int32(d.Get(names.AttrPriority).(int)))
 
 		if v, ok := d.GetOk("queue"); ok {
 			input.Queue = aws.String(v.(string))
@@ -347,7 +347,7 @@ func expandJobTemplateAccelerationSettings(tfMap map[string]any) *types.Accelera
 		return nil
 	}
 	return &types.AccelerationSettings{
-		Mode: types.AccelerationMode(tfMap["mode"].(string)),
+		Mode: types.AccelerationMode(tfMap[names.AttrMode].(string)),
 	}
 }
 
@@ -356,7 +356,7 @@ func flattenJobTemplateAccelerationSettings(apiObject *types.AccelerationSetting
 		return nil
 	}
 	return map[string]any{
-		"mode": apiObject.Mode,
+		names.AttrMode: apiObject.Mode,
 	}
 }
 
@@ -369,7 +369,7 @@ func expandHopDestinations(tfList []any) []types.HopDestination {
 	for _, item := range tfList {
 		m := item.(map[string]any)
 		apiObject := types.HopDestination{
-			Priority:    aws.Int32(int32(m["priority"].(int))),
+			Priority:    aws.Int32(int32(m[names.AttrPriority].(int))),
 			WaitMinutes: aws.Int32(int32(m["wait_minutes"].(int))),
 		}
 		if v, ok := m["queue"].(string); ok && v != "" {
@@ -388,7 +388,7 @@ func flattenHopDestinations(apiObjects []types.HopDestination) []any {
 	var tfList []any
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]any{
-			"priority":     aws.ToInt32(apiObject.Priority),
+			names.AttrPriority:     aws.ToInt32(apiObject.Priority),
 			"queue":        aws.ToString(apiObject.Queue),
 			"wait_minutes": aws.ToInt32(apiObject.WaitMinutes),
 		})
