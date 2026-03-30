@@ -388,9 +388,9 @@ func flattenHopDestinations(apiObjects []types.HopDestination) []any {
 	var tfList []any
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]any{
-			names.AttrPriority:     aws.ToInt32(apiObject.Priority),
-			"queue":        aws.ToString(apiObject.Queue),
-			"wait_minutes": aws.ToInt32(apiObject.WaitMinutes),
+			names.AttrPriority: aws.ToInt32(apiObject.Priority),
+			"queue":            aws.ToString(apiObject.Queue),
+			"wait_minutes":     aws.ToInt32(apiObject.WaitMinutes),
 		})
 	}
 	return tfList
