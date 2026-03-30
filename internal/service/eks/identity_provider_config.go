@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_eks_identity_provider_config", name="Identity Provider Config")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdentityProviderConfigCreate,

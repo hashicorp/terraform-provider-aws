@@ -42,6 +42,7 @@ import (
 
 // @FrameworkResource("aws_eks_capability", name="Capability")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newCapabilityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capabilityResource{}
 

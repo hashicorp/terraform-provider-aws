@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_eks_fargate_profile", name="Fargate Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceFargateProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFargateProfileCreate,

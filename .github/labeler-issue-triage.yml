@@ -732,6 +732,8 @@ service/transitgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_transit_gateway'
 service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
+service/uxc:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_uxc_'
 service/verifiedaccess:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
 service/verifiedpermissions:
