@@ -8,8 +8,8 @@ import (
 )
 
 // servicePrincipalRegexp matches AWS service principal names.
-// Service principals follow the pattern: service-id.amazonaws.com or service-id.amazon.com
-// Examples: ec2.amazonaws.com, s3.amazonaws.com, elasticmapreduce.amazonaws.com
+// Service principals follow the pattern: service-id.amazonaws.com, service-id.amazon.com, or service-id.amazonaws.com.cn.
+// Examples: ec2.amazonaws.com, s3.amazonaws.com, elasticmapreduce.amazonaws.com, s3.amazonaws.com.cn.
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.(com|com\.cn)$`)
 
 // IsServicePrincipal returns whether or not the specified string is a valid AWS service principal.
