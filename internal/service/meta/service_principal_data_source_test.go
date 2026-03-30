@@ -68,11 +68,11 @@ func TestAccMetaServicePrincipalDataSource_ByRegion(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: testAccServicePrincipalDataSourceConfig_withRegion("s3", region),
+						Config: testAccServicePrincipalDataSourceConfig_withRegion("autoscaling", region),
 						Check: resource.ComposeTestCheckFunc(
 							//lintignore:AWSR001
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("s3.%s.amazonaws.com", region)),
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("autoscaling.%s.amazonaws.com", region)),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "autoscaling.amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, "suffix", "amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
 						),
