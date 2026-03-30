@@ -1,17 +1,30 @@
 ## 6.39.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_eks_access_entry: The `tags_all` attribute is deprecated and will be removed in a future major version ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
+
 FEATURES:
 
 * **New Data Source:** `aws_iam_role_policies` ([#46936](https://github.com/hashicorp/terraform-provider-aws/issues/46936))
 * **New Data Source:** `aws_iam_role_policy_attachments` ([#47119](https://github.com/hashicorp/terraform-provider-aws/issues/47119))
 * **New Data Source:** `aws_networkmanager_core_network` ([#45798](https://github.com/hashicorp/terraform-provider-aws/issues/45798))
+* **New Data Source:** `aws_uxc_services` ([#47115](https://github.com/hashicorp/terraform-provider-aws/issues/47115))
+* **New List Resource:** `aws_eks_cluster` ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 * **New List Resource:** `aws_sagemaker_training_job` ([#46892](https://github.com/hashicorp/terraform-provider-aws/issues/46892))
 * **New Resource:** `aws_sagemaker_training_job` ([#46892](https://github.com/hashicorp/terraform-provider-aws/issues/46892))
+* **New Resource:** `aws_uxc_account_customizations` ([#47115](https://github.com/hashicorp/terraform-provider-aws/issues/47115))
 
 ENHANCEMENTS:
 
+* resource/aws_eks_cluster: Add resource identity support ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 * resource/aws_eks_cluster: Support `tier-8xl` as a valid value for `control_plane_scaling_config.tier` ([#46976](https://github.com/hashicorp/terraform-provider-aws/issues/46976))
 * resource/aws_network_acl_rule: Add Resource Identity support ([#47090](https://github.com/hashicorp/terraform-provider-aws/issues/47090))
+
+BUG FIXES:
+
+* data-source/aws_eks_access_entry: Fixed tags not being returned ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
+* resource/aws_eks_cluster: Set `bootstrap_self_managed_addons` to `true` when importing ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 
 ## 6.38.0 (March 25, 2026)
 
