@@ -13,7 +13,9 @@ func TestIsServicePrincipal(t *testing.T) {
 		valid     bool
 	}{
 		{"ec2.amazonaws.com", true},
+		{"ec2.amazonaws.com.cn", true},
 		{"s3.amazonaws.com", true},
+		{"s3.amazonaws.com.cn", true},
 		{"elasticmapreduce.amazonaws.com", true},
 		{"lambda.amazonaws.com", true},
 		{"ecs-tasks.amazonaws.com", true},

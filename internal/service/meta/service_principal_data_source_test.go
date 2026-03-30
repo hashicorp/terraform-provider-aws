@@ -115,7 +115,7 @@ func TestAccMetaServicePrincipalDataSource_UniqueForServiceInRegion(t *testing.T
 		{
 			Region:   "cn-north-1", //lintignore:AWSAT003
 			Suffix:   "amazonaws.com.cn",
-			Services: []string{"codedeploy", "elasticmapreduce", "logs"},
+			Services: []string{"codedeploy", "elasticmapreduce", "logs", "ec2", "s3"},
 		},
 	}
 
