@@ -703,10 +703,6 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	if table.Status != nil && table.Status.State == "FAILED" {
-		return sdkdiag.AppendErrorf(diags, "Glue Catalog Table (%s) view creation failed with state: %s", d.Id(), table.Status.State)
-	}
-
 	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
