@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -430,6 +431,41 @@ func testAccOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 	})
 }
 
+func testAccOrganizationConformancePack_delegatedAdministrator(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+	var pack types.OrganizationConformancePack
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_config_organization_conformance_pack.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckOrganizationConformancePackDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConformancePackConfig_delegatedAdministratorInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccOrganizationConformancePackConfig_delegatedAdministrator(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConformancePackExists(ctx, t, resourceName, &pack),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOrganizationConformancePackDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
@@ -486,7 +522,7 @@ func testAccCheckOrganizationConformancePackRecreated(before, after *types.Organ
 	}
 }
 
-func testAccOrganizationConformancePackBase(rName string) string {
+func testAccOrganizationConformancePackConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -529,7 +565,7 @@ resource "aws_organizations_organization" "test" {
 
 func testAccOrganizationConformancePackConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -550,7 +586,7 @@ EOT
 
 func testAccOrganizationConformancePackConfig_inputParameter(rName, pKey, pValue string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -580,7 +616,7 @@ EOT
 
 func testAccOrganizationConformancePackConfig_updateInputParameter(rName, pName1, pName2 string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -617,7 +653,7 @@ EOT
 
 func testAccOrganizationConformancePackConfig_s3Delivery(rName, bName string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on             = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -645,7 +681,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccOrganizationConformancePackConfig_s3Template(rName, bName string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -677,7 +713,7 @@ EOT
 
 func testAccOrganizationConformancePackConfig_update(rName string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -698,7 +734,7 @@ EOT
 
 func testAccOrganizationConformancePackConfig_excludedAccounts1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -722,7 +758,7 @@ EOT
 
 func testAccOrganizationConformancePackConfig_excludedAccounts2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccOrganizationConformancePackBase(rName),
+		testAccOrganizationConformancePackConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
@@ -730,6 +766,98 @@ resource "aws_config_organization_conformance_pack" "test" {
   excluded_accounts = ["111111111111", "222222222222"]
   name              = %q
 
+  template_body = <<EOT
+Resources:
+  IAMPasswordPolicy:
+    Properties:
+      ConfigRuleName: IAMPasswordPolicy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+    Type: AWS::Config::ConfigRule
+EOT
+}
+`, rName))
+}
+
+// The primary provider is expected to be an organizations member account and the alternate provider is expected to be the organizations management account.
+// The organizations member account is registered as a delegated administrator for AWS Config.
+// See https://docs.aws.amazon.com/config/latest/developerguide/aggregated-register-delegated-administrator.html.
+func testAccOrganizationConformancePackConfig_baseDelegatedAdministrator(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "member" {}
+
+data "aws_caller_identity" "management" {
+  provider = awsalternate
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  provider = awsalternate
+
+  aws_service_access_principals = ["config-multiaccountsetup.${data.aws_partition.current.dns_suffix}"]
+  feature_set                   = "ALL"
+}
+
+resource "aws_organizations_delegated_administrator" "test" {
+  provider = awsalternate
+
+  account_id        = data.aws_caller_identity.member.account_id
+  service_principal = "config-multiaccountsetup.${data.aws_partition.current.dns_suffix}"
+
+  depends_on = [aws_organizations_organization.test]
+}
+
+resource "aws_config_configuration_recorder" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test, aws_organizations_delegated_administrator.test]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "config.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
+  role       = aws_iam_role.test.name
+}
+`, rName)
+}
+
+// Initialize all the providers used by acceptance tests.
+var testAccOrganizationConformancePackConfig_delegatedAdministratorInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+data "aws_caller_identity" "member" {}
+
+data "aws_caller_identity" "management" {
+  provider = awsalternate
+}
+`)
+
+func testAccOrganizationConformancePackConfig_delegatedAdministrator(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		testAccOrganizationConformancePackConfig_baseDelegatedAdministrator(rName),
+		fmt.Sprintf(`
+resource "aws_config_organization_conformance_pack" "test" {
+  depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+  name          = %[1]q
   template_body = <<EOT
 Resources:
   IAMPasswordPolicy:
