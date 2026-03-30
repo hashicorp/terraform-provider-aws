@@ -897,8 +897,8 @@ func findTable(ctx context.Context, conn *glue.Client, input *glue.GetTableInput
 	return output.Table, nil
 }
 
-func statusTableView(conn *glue.Client, catalogID, dbName, name string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
+func statusTableView(conn *glue.Client, catalogID, dbName, name string) retry.StateRefreshFuncOf[*awstypes.Table, awstypes.ResourceState] {
+	return func(ctx context.Context) (*awstypes.Table, awstypes.ResourceState, error) {
 		output, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
 
 		if retry.NotFound(err) {
@@ -909,25 +909,26 @@ func statusTableView(conn *glue.Client, catalogID, dbName, name string) retry.St
 			return nil, "", err
 		}
 
+		// https://docs.aws.amazon.com/lake-formation/latest/dg/views-api-usage-async-states.html.
 		if output.Status == nil {
-			return nil, "", nil
+			return output, awstypes.ResourceStateSuccess, nil
 		}
 
-		return output, string(output.Status.State), nil
+		return output, output.Status.State, nil
 	}
 }
 
 func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, dbName, name string, timeout time.Duration) (*awstypes.Table, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ResourceStateQueued, awstypes.ResourceStateInProgress),
-		Target:  enum.Slice(awstypes.ResourceStateSuccess, awstypes.ResourceStateStopped),
+	stateConf := &retry.StateChangeConfOf[*awstypes.Table, awstypes.ResourceState]{
+		Pending: enum.EnumSlice(awstypes.ResourceStateQueued, awstypes.ResourceStateInProgress),
+		Target:  enum.EnumSlice(awstypes.ResourceStateSuccess, awstypes.ResourceStateStopped),
 		Refresh: statusTableView(conn, catalogID, dbName, name),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	output, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Table); ok {
+	if err != nil {
 		if v := output.Status.Error; v != nil {
 			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
 		}
