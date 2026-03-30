@@ -127,5 +127,3 @@ resource "aws_s3_object" "input" {
   key     = "input/placeholder.csv"
   content = "feature1,label\n1.0,0\n"
 }
-
-

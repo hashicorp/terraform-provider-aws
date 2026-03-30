@@ -133,8 +133,6 @@ resource "aws_s3_object" "input" {
   content = "feature1,label\n1.0,0\n"
 }
 
-
-
 variable "rName" {
   description = "Name for resource"
   type        = string
