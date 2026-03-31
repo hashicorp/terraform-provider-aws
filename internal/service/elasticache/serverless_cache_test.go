@@ -10,8 +10,11 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -441,8 +444,6 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	descriptionOld := "Memcached Serverless Cluster"
-	descriptionNew := "Memcached Serverless Cluster updated"
 	resourceName := "aws_elasticache_serverless_cache.test"
 	var v awstypes.ServerlessCache
 
@@ -453,21 +454,29 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 1, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 1, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1),
+									"minimum": knownvalue.Null(),
+									"unit":    knownvalue.StringExact("GB"),
+								}),
+							}),
+							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1000),
+									"minimum": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -475,26 +484,29 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 2, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 2, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(2),
+									"minimum": knownvalue.Null(),
+									"unit":    knownvalue.StringExact("GB"),
+								}),
+							}),
+							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1000),
+									"minimum": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -502,21 +514,14 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionNew, 2, 1000),
+				// Remove cache_usage_limits
+				Config: testAccServerlessCacheConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -524,21 +529,30 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionNew, 2, 1010),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 2, 1010),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(2),
+									"minimum": knownvalue.Null(),
+									"unit":    knownvalue.StringExact("GB"),
+								}),
+							}),
+							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1010),
+									"minimum": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -753,121 +767,6 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheServerlessCache_cacheUsageLimitsRemovedValkey(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	description := "CacheUsage Serverless Cluster"
-	resourceName := "aws_elasticache_serverless_cache.test"
-	var v awstypes.ServerlessCache
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimitsWithEngine(rName, "valkey", "7", description, 1, 1000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
-					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimitsRemovedWithEngine(rName, "valkey", "7", description),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckNoResourceAttr(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
-					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheServerlessCache_cacheUsageLimitsRemovedRedis(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	description := "CacheUsage Serverless Cluster"
-	resourceName := "aws_elasticache_serverless_cache.test"
-	var v awstypes.ServerlessCache
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimitsWithEngine(rName, "redis", "7", description, 1, 1000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimitsRemovedWithEngine(rName, "redis", "7", description),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckNoResourceAttr(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "7"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
 			},
 		},
 	})
@@ -1261,54 +1160,23 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName, desc)
 }
 
-func testAccServerlessCacheConfig_cacheUsageLimits(rName, desc string, d1, d2 int) string {
+func testAccServerlessCacheConfig_cacheUsageLimits(rName string, d1, d2 int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
   engine      = "memcached"
   name        = %[1]q
-  description = %[2]q
+
   cache_usage_limits {
     data_storage {
+      maximum = %[2]d
+      unit    = "GB"
+    }
+    ecpu_per_second {
       maximum = %[3]d
-      unit    = "GB"
-    }
-    ecpu_per_second {
-      maximum = %[4]d
     }
   }
 }
-`, rName, desc, d1, d2)
-}
-
-func testAccServerlessCacheConfig_cacheUsageLimitsWithEngine(rName, engine, majorEngineVersion, desc string, d1, d2 int) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_serverless_cache" "test" {
-  name        = %[1]q
-  engine = %[2]q
-  major_engine_version = %[3]q
-  description = %[4]q
-  cache_usage_limits {
-    data_storage {
-      maximum = %[5]d
-      unit    = "GB"
-    }
-    ecpu_per_second {
-      maximum = %[6]d
-    }
-  }
-}
-`, rName, engine, majorEngineVersion, desc, d1, d2)
-}
-
-func testAccServerlessCacheConfig_cacheUsageLimitsRemovedWithEngine(rName, engine, majorEngineVersion, desc string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_serverless_cache" "test" {
-  name        = %[1]q
-  engine = %[2]q
-  major_engine_version = %[3]q
-  description = %[4]q
-}
-`, rName, engine, majorEngineVersion, desc)
+`, rName, d1, d2)
 }
 
 func testAccServerlessCacheConfig_tags(rName, tags string) string {
