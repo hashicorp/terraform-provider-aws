@@ -151,7 +151,7 @@ EOF
 }
 ```
 
-### Protected Multi-Dialect View
+### Protected View
 
 ```terraform
 resource "aws_glue_catalog_table" "example" {
@@ -164,17 +164,10 @@ resource "aws_glue_catalog_table" "example" {
     is_protected = true
 
     representations {
-      dialect            = "ATHENA"
-      dialect_version    = "3"
-      view_original_text = "SELECT * FROM catalog_database.base_table"
-      view_expanded_text = "SELECT * FROM catalog_database.base_table"
-    }
-
-    representations {
-      dialect            = "REDSHIFT"
-      dialect_version    = "10000"
-      view_original_text = "SELECT * FROM catalog_database.base_table"
-      view_expanded_text = "SELECT * FROM catalog_database.base_table"
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = "SELECT * FROM catalog_database.base_table"
+      validation_connection = aws_glue_connection.example.name
     }
   }
 }
