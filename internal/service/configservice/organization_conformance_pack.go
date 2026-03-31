@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -25,7 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -279,11 +282,11 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 }
 
 func findOrganizationConformancePackByName(ctx context.Context, conn *configservice.Client, name string) (*types.OrganizationConformancePack, error) {
-	input := &configservice.DescribeOrganizationConformancePacksInput{
+	input := configservice.DescribeOrganizationConformancePacksInput{
 		OrganizationConformancePackNames: []string{name},
 	}
 
-	return findOrganizationConformancePack(ctx, conn, input)
+	return findOrganizationConformancePack(ctx, conn, &input)
 }
 
 func findOrganizationConformancePack(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConformancePacksInput) (*types.OrganizationConformancePack, error) {
@@ -297,40 +300,52 @@ func findOrganizationConformancePack(ctx context.Context, conn *configservice.Cl
 }
 
 func findOrganizationConformancePacks(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConformancePacksInput) ([]types.OrganizationConformancePack, error) {
-	var output []types.OrganizationConformancePack
+	output, err := tfslices.CollectWithError(listOrganizationConformancePacks(ctx, conn, input))
 
-	pages := configservice.NewDescribeOrganizationConformancePacksPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.OrganizationConformancePacks...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
+func listOrganizationConformancePacks(ctx context.Context, conn *configservice.Client, input *configservice.DescribeOrganizationConformancePacksInput, optFns ...func(*configservice.Options)) iter.Seq2[types.OrganizationConformancePack, error] {
+	return func(yield func(types.OrganizationConformancePack, error) bool) {
+		pages := configservice.NewDescribeOrganizationConformancePacksPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[types.OrganizationConformancePack](), fmt.Errorf("listing ConfigService Organization Conformance Packs: %w", err))
+				return
+			}
+
+			for _, v := range page.OrganizationConformancePacks {
+				if !yield(v, nil) {
+					return
+				}
+			}
+		}
+	}
+}
+
 func findOrganizationConformancePackStatusByName(ctx context.Context, conn *configservice.Client, name string) (*types.OrganizationConformancePackStatus, error) {
-	input := &configservice.DescribeOrganizationConformancePackStatusesInput{
+	input := configservice.DescribeOrganizationConformancePackStatusesInput{
 		OrganizationConformancePackNames: []string{name},
 	}
 
-	output, err := findOrganizationConformancePackStatus(ctx, conn, input)
+	output, err := findOrganizationConformancePackStatus(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -384,14 +399,14 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 }
 
 func findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx context.Context, conn *configservice.Client, name string, status types.OrganizationResourceDetailedStatus) ([]types.OrganizationConformancePackDetailedStatus, error) {
-	input := &configservice.GetOrganizationConformancePackDetailedStatusInput{
+	input := configservice.GetOrganizationConformancePackDetailedStatusInput{
 		Filters: &types.OrganizationResourceDetailedStatusFilters{
 			Status: status,
 		},
 		OrganizationConformancePackName: aws.String(name),
 	}
 
-	return findOrganizationConformancePackDetailedStatuses(ctx, conn, input)
+	return findOrganizationConformancePackDetailedStatuses(ctx, conn, &input)
 }
 
 func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *configservice.Client, input *configservice.GetOrganizationConformancePackDetailedStatusInput) ([]types.OrganizationConformancePackDetailedStatus, error) {
@@ -445,13 +460,13 @@ func statusOrganizationConformancePack(conn *configservice.Client, name string) 
 		// statuses: if no accounts are still in progress, the
 		// deployment has finished.
 		if status == types.OrganizationResourceStatusCreateInProgress {
-			if v, detailedErr := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusCreateInProgress); detailedErr == nil && len(v) == 0 {
+			if v, err := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusCreateInProgress); err == nil && len(v) == 0 {
 				status = types.OrganizationResourceStatusCreateSuccessful
 			}
 		}
 
 		if status == types.OrganizationResourceStatusUpdateInProgress {
-			if v, detailedErr := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusUpdateInProgress); detailedErr == nil && len(v) == 0 {
+			if v, err := findOrganizationConformancePackDetailedStatusesByTwoPartKey(ctx, conn, name, types.OrganizationResourceDetailedStatusUpdateInProgress); err == nil && len(v) == 0 {
 				status = types.OrganizationResourceStatusUpdateSuccessful
 			}
 		}
