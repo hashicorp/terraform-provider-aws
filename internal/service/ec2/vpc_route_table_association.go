@@ -141,7 +141,6 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 		RouteTableId:  aws.String(d.Get("route_table_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Updating Route Table Association: %v", input)
 	output, err := conn.ReplaceRouteTableAssociation(ctx, input)
 
 	// This whole thing with the resource ID being changed on update seems unsustainable.
@@ -190,7 +189,7 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 	// Otherwise, we need to parse the import ID and find the association ID based on the route table and target IDs.
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
+		return nil, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
 	}
 
 	targetID := parts[0]
