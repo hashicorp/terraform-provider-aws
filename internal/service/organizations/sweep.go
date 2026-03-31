@@ -25,16 +25,10 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_organizations_account", sweepAccounts,
-		"aws_organizations_delegated_administrator",
-	)
-
+	awsv2.Register("aws_organizations_account", sweepAccounts, "aws_organizations_delegated_administrator")
+	awsv2.Register("aws_organizations_aws_service_access", sweepAWSServiceAccesses)
 	awsv2.Register("aws_organizations_delegated_administrator", sweepDelegatedAdministrators)
-
-	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
-		"aws_organizations_account")
-
-	awsv2.Register("aws_organizations_service_access", sweepServiceAccesses)
+	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits, "aws_organizations_account")
 }
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -244,7 +238,7 @@ func sweepListOrganizationalUnits(ctx context.Context, client *conns.AWSClient, 
 	return sweepResources, nil
 }
 
-func sweepServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepAWSServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	if skip, err := sweepPreCheck(ctx, client); err != nil {
 		return nil, err
 	} else if skip {
@@ -263,7 +257,7 @@ func sweepServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep
 		}
 
 		for _, service := range page.EnabledServicePrincipals {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newServiceAccessResource, client,
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAWSServiceAccessResource, client,
 				sweepfw.NewAttribute("service_principal", aws.ToString(service.ServicePrincipal))),
 			)
 		}

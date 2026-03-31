@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @FrameworkResource("aws_organizations_service_access", name="Service Access")
+// @FrameworkResource("aws_organizations_aws_service_access", name="AWS Service Access")
 // @IdentityAttribute("service_principal")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.EnabledServicePrincipal")
@@ -32,8 +32,8 @@ import (
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
 // @Testing(importStateIdAttribute="service_principal")
-func newServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &serviceAccessResource{}
+func newAWSServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &awsServiceAccessResource{}
 
 	return r, nil
 }
@@ -42,12 +42,12 @@ const (
 	ResNameServiceAccess = "Service Access"
 )
 
-type serviceAccessResource struct {
-	framework.ResourceWithModel[serviceAccessResourceModel]
+type awsServiceAccessResource struct {
+	framework.ResourceWithModel[awsServiceAccessResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *serviceAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *awsServiceAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"service_principal": schema.StringAttribute{
@@ -64,10 +64,10 @@ func (r *serviceAccessResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r *serviceAccessResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *awsServiceAccessResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().OrganizationsClient(ctx)
 
-	var plan serviceAccessResourceModel
+	var plan awsServiceAccessResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -85,7 +85,7 @@ func (r *serviceAccessResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	enabledServicePrincipal, err := findServiceAccessByServicePrincipal(ctx, conn, plan.ServicePrincipal.ValueString())
+	enabledServicePrincipal, err := findAWSServiceAccessByServicePrincipal(ctx, conn, plan.ServicePrincipal.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServicePrincipal.ValueString())
 		return
@@ -99,16 +99,16 @@ func (r *serviceAccessResource) Create(ctx context.Context, req resource.CreateR
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *serviceAccessResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *awsServiceAccessResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OrganizationsClient(ctx)
 
-	var state serviceAccessResourceModel
+	var state awsServiceAccessResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findServiceAccessByServicePrincipal(ctx, conn, state.ServicePrincipal.ValueString())
+	out, err := findAWSServiceAccessByServicePrincipal(ctx, conn, state.ServicePrincipal.ValueString())
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -129,10 +129,10 @@ func (r *serviceAccessResource) Read(ctx context.Context, req resource.ReadReque
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *serviceAccessResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OrganizationsClient(ctx)
 
-	var state serviceAccessResourceModel
+	var state awsServiceAccessResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -149,7 +149,7 @@ func (r *serviceAccessResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func findServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) {
+func findAWSServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) {
 	var enabledServices []awstypes.EnabledServicePrincipal
 
 	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, nil)
@@ -169,7 +169,7 @@ func findServiceAccessByServicePrincipal(ctx context.Context, conn *organization
 	return tfresource.AssertSingleValueResult(enabledServices)
 }
 
-type serviceAccessResourceModel struct {
+type awsServiceAccessResourceModel struct {
 	ServicePrincipal types.String      `tfsdk:"service_principal"`
 	DateEnabled      timetypes.RFC3339 `tfsdk:"date_enabled"`
 }

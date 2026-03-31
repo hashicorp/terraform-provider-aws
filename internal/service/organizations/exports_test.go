@@ -6,6 +6,7 @@ package organizations
 // Exports for use in tests only.
 var (
 	ResourceAccount                = resourceAccount
+	ResourceAWSServiceAccess       = newAWSServiceAccessResource
 	ResourceDelegatedAdministrator = resourceDelegatedAdministrator
 	ResourceOrganization           = resourceOrganization
 	ResourceOrganizationalUnit     = resourceOrganizationalUnit
@@ -13,13 +14,12 @@ var (
 	ResourcePolicyAttachment       = resourcePolicyAttachment
 	ResourceResourcePolicy         = resourceResourcePolicy
 	ResourceTag                    = resourceTag
-	ResourceServiceAccess          = newServiceAccessResource
 
-	FindAccountByID                     = findAccountByID
-	FindOrganizationalUnitByID          = findOrganizationalUnitByID
-	FindPolicyAttachmentByTwoPartKey    = findPolicyAttachmentByTwoPartKey
-	FindPolicyByID                      = findPolicyByID
-	FindResourcePolicy                  = findResourcePolicy
-	FindTag                             = findTag
-	FindServiceAccessByServicePrincipal = findServiceAccessByServicePrincipal
+	FindAccountByID                        = findAccountByID
+	FindAWSServiceAccessByServicePrincipal = findAWSServiceAccessByServicePrincipal
+	FindOrganizationalUnitByID             = findOrganizationalUnitByID
+	FindPolicyAttachmentByTwoPartKey       = findPolicyAttachmentByTwoPartKey
+	FindPolicyByID                         = findPolicyByID
+	FindResourcePolicy                     = findResourcePolicy
+	FindTag                                = findTag
 )

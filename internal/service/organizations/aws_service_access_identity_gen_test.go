@@ -21,21 +21,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsServiceAccess_identitySerial(t *testing.T) {
+func testAccOrganizationsAWSServiceAccess_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccOrganizationsServiceAccess_Identity_basic,
+		acctest.CtBasic: testAccOrganizationsAWSServiceAccess_Identity_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsServiceAccess_Identity_basic(t *testing.T) {
+func testAccOrganizationsAWSServiceAccess_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EnabledServicePrincipal
-	resourceName := "aws_organizations_service_access.test"
+	resourceName := "aws_organizations_aws_service_access.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -46,15 +46,15 @@ func testAccOrganizationsServiceAccess_Identity_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy:             testAccCheckServiceAccessDestroy(ctx, t),
+		CheckDestroy:             testAccCheckAWSServiceAccessDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ServiceAccess/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AWSServiceAccess/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceAccessExists(ctx, t, resourceName, &v),
+					testAccCheckAWSServiceAccessExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -67,7 +67,7 @@ func testAccOrganizationsServiceAccess_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory:                      config.StaticDirectory("testdata/ServiceAccess/basic/"),
+				ConfigDirectory:                      config.StaticDirectory("testdata/AWSServiceAccess/basic/"),
 				ConfigVariables:                      config.Variables{},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_principal"),
@@ -79,7 +79,7 @@ func testAccOrganizationsServiceAccess_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory:   config.StaticDirectory("testdata/ServiceAccess/basic/"),
+				ConfigDirectory:   config.StaticDirectory("testdata/AWSServiceAccess/basic/"),
 				ConfigVariables:   config.Variables{},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -94,7 +94,7 @@ func testAccOrganizationsServiceAccess_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ServiceAccess/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AWSServiceAccess/basic/"),
 				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
