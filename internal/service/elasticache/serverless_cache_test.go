@@ -484,6 +484,11 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				},
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 2, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
