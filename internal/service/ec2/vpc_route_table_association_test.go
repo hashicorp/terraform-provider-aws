@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -35,6 +36,8 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^rtbassoc-[a-f0-9]+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
@@ -102,8 +105,10 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^rtbassoc-[a-f0-9]+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
 				),
 			},
 			{
