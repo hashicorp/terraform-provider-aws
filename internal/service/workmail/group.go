@@ -46,7 +46,7 @@ func newGroupResource(_ context.Context) (resource.ResourceWithConfigure, error)
 
 const (
 	groupPropagationTimeout     = 2 * time.Minute
-	groupDeleteTransitionTimout = 2 * time.Minute
+	groupDeleteTransitionTimeout = 2 * time.Minute
 )
 
 type groupResource struct {
@@ -249,13 +249,13 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 			return
 		}
 
-		if _, err := waitGroupDisabled(ctx, conn, state.OrganizationId.ValueString(), state.GroupId.ValueString(), groupDeleteTransitionTimout); err != nil {
+		if _, err := waitGroupDisabled(ctx, conn, state.OrganizationId.ValueString(), state.GroupId.ValueString(), groupDeleteTransitionTimeout); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.GroupId.String())
 			return
 		}
 	}
 
-	_, err = tfresource.RetryWhenIsA[any, *awstypes.EntityStateException](ctx, groupDeleteTransitionTimout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.EntityStateException](ctx, groupDeleteTransitionTimeout, func(ctx context.Context) (any, error) {
 		input := workmail.DeleteGroupInput{
 			GroupId:        state.GroupId.ValueStringPointer(),
 			OrganizationId: state.OrganizationId.ValueStringPointer(),
@@ -269,8 +269,9 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	if _, err := waitGroupDeleted(ctx, conn, state.OrganizationId.ValueString(), state.GroupId.ValueString(), groupDeleteTransitionTimout); err != nil {
+	if _, err := waitGroupDeleted(ctx, conn, state.OrganizationId.ValueString(), state.GroupId.ValueString(), groupDeleteTransitionTimeout); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.GroupId.String())
+		return
 	}
 }
 
@@ -298,7 +299,7 @@ func registerGroup(ctx context.Context, conn *workmail.Client, data groupResourc
 }
 
 func deregisterGroup(ctx context.Context, conn *workmail.Client, data groupResourceModel) error {
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.EntityStateException](ctx, groupDeleteTransitionTimout, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.EntityStateException](ctx, groupDeleteTransitionTimeout, func(ctx context.Context) (any, error) {
 		input := workmail.DeregisterFromWorkMailInput{
 			EntityId:       data.GroupId.ValueStringPointer(),
 			OrganizationId: data.OrganizationId.ValueStringPointer(),
