@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -802,6 +803,24 @@ func TestAccGlueCatalogTable_icebergTableInput(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogTable_viewDefinitionFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCatalogTableConfig_viewDefinitionFailure(rName),
+				ExpectError: regexache.MustCompile(`unexpected state 'FAILED'`),
 			},
 		},
 	})
@@ -1766,6 +1785,40 @@ EOF
         }
       }
     }
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinitionFailure(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    is_protected = true
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = "SELECT 1"
+      validation_connection = aws_glue_connection.test_athena.name
+    }
+  }
+}
+
+resource "aws_glue_connection" "test_athena" {
+  name            = "%[1]s-a"
+  connection_type = "VIEW_VALIDATION_ATHENA"
+
+  connection_properties = {
+    WORKGROUP_NAME = "primary"
   }
 }
 `, rName)
