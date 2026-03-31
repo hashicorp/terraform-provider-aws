@@ -463,9 +463,9 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"data_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"maximum": knownvalue.Int64Exact(1),
-									"minimum": knownvalue.Null(),
-									names.AttrUnit:    knownvalue.StringExact("GB"),
+									"maximum":      knownvalue.Int64Exact(1),
+									"minimum":      knownvalue.Null(),
+									names.AttrUnit: knownvalue.StringExact("GB"),
 								}),
 							}),
 							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
@@ -493,9 +493,9 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"data_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"maximum": knownvalue.Int64Exact(2),
-									"minimum": knownvalue.Null(),
-									names.AttrUnit:    knownvalue.StringExact("GB"),
+									"maximum":      knownvalue.Int64Exact(2),
+									"minimum":      knownvalue.Null(),
+									names.AttrUnit: knownvalue.StringExact("GB"),
 								}),
 							}),
 							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
@@ -539,9 +539,9 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"data_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"maximum": knownvalue.Int64Exact(2),
-									"minimum": knownvalue.Null(),
-									names.AttrUnit:    knownvalue.StringExact("GB"),
+									"maximum":      knownvalue.Int64Exact(2),
+									"minimum":      knownvalue.Null(),
+									names.AttrUnit: knownvalue.StringExact("GB"),
 								}),
 							}),
 							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{

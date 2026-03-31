@@ -416,8 +416,8 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 					Minimum: aws.Int32(0),
 				},
 			}
-
 		}
+
 		// If no engine changes are made, unset related fields to prevent the following error:
 		// This API supports only cross-engine upgrades to Valkey engine currently.
 		if new.Engine.Equal(old.Engine) && new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
