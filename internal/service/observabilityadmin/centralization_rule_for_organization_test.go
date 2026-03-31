@@ -778,7 +778,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
-        encrypted_log_group_strategy    = "SKIP"
+        encrypted_log_group_strategy   = "SKIP"
         data_source_selection_criteria = %[3]q
       }
     }
