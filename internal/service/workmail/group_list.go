@@ -95,7 +95,7 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 						return
 					}
 
-					result.Diagnostics.Append(l.flatten(ctx, out, &data)...)
+					result.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 					if result.Diagnostics.HasError() {
 						return
 					}

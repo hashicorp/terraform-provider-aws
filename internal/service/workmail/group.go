@@ -14,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -45,11 +45,8 @@ func newGroupResource(_ context.Context) (resource.ResourceWithConfigure, error)
 }
 
 const (
-	ResNameGroup                = "Group"
 	groupPropagationTimeout     = 2 * time.Minute
 	groupDeleteTransitionTimout = 2 * time.Minute
-	groupStateEnabled           = string(awstypes.EntityStateEnabled)
-	groupStateDisabled          = string(awstypes.EntityStateDisabled)
 )
 
 type groupResource struct {
@@ -152,7 +149,7 @@ func (r *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, created, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, created, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -180,7 +177,7 @@ func (r *groupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -202,8 +199,14 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	if !new.HiddenFromGlobalAddressList.Equal(old.HiddenFromGlobalAddressList) {
-		if err := updateGroup(ctx, conn, new); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.GroupId.String())
+		var updateInput workmail.UpdateGroupInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, new, &updateInput))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if _, err := conn.UpdateGroup(ctx, &updateInput); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.GroupId.ValueString())
 			return
 		}
 	}
@@ -214,7 +217,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &new))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -271,21 +274,6 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-func (r *groupResource) flatten(ctx context.Context, out *workmail.DescribeGroupOutput, data *groupResourceModel) (diags diag.Diagnostics) {
-	diags.Append(flex.Flatten(ctx, out, data)...)
-	return diags
-}
-
-func updateGroup(ctx context.Context, conn *workmail.Client, data groupResourceModel) error {
-	var input workmail.UpdateGroupInput
-	if diags := flex.Expand(ctx, data, &input); diags.HasError() {
-		return fmt.Errorf("expanding workmail group update input: %s", diags.Errors()[0].Detail())
-	}
-	_, err := conn.UpdateGroup(ctx, &input)
-
-	return err
-}
-
 func registerGroup(ctx context.Context, conn *workmail.Client, data groupResourceModel) error {
 	err := tfresource.Retry(ctx, groupPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		input := workmail.RegisterToWorkMailInput{
@@ -329,8 +317,8 @@ func deregisterGroup(ctx context.Context, conn *workmail.Client, data groupResou
 
 func waitGroupEnabled(ctx context.Context, conn *workmail.Client, organizationID, groupID string, timeout time.Duration) (*workmail.DescribeGroupOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{groupStateDisabled},
-		Target:                    []string{groupStateEnabled},
+		Pending:                   enum.Slice(awstypes.EntityStateDisabled),
+		Target:                    enum.Slice(awstypes.EntityStateEnabled),
 		Refresh:                   statusGroup(conn, organizationID, groupID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -347,8 +335,8 @@ func waitGroupEnabled(ctx context.Context, conn *workmail.Client, organizationID
 
 func waitGroupDisabled(ctx context.Context, conn *workmail.Client, organizationID, groupID string, timeout time.Duration) (*workmail.DescribeGroupOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{groupStateEnabled},
-		Target:                    []string{groupStateDisabled},
+		Pending:                   enum.Slice(awstypes.EntityStateEnabled),
+		Target:                    enum.Slice(awstypes.EntityStateDisabled),
 		Refresh:                   statusGroup(conn, organizationID, groupID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -364,7 +352,7 @@ func waitGroupDisabled(ctx context.Context, conn *workmail.Client, organizationI
 
 func waitGroupDeleted(ctx context.Context, conn *workmail.Client, organizationID, groupID string, timeout time.Duration) (*workmail.DescribeGroupOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{groupStateDisabled, groupStateEnabled},
+		Pending: enum.Slice(awstypes.EntityStateDisabled, awstypes.EntityStateEnabled),
 		Target:  []string{},
 		Refresh: statusGroup(conn, organizationID, groupID),
 		Timeout: timeout,
