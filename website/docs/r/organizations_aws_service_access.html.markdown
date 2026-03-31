@@ -14,6 +14,8 @@ Manages trusted access between an AWS service and AWS Organizations.
 
 ~> **Note:** This resource requires the Organizations management account.
 
+~> **NOTE:** Terraform provides both this standalone AWS service access resource and exclusive service access defined in-line in the [`aws_organizations_organization` resource](/docs/providers/aws/r/organizations_organization.html) via the `aws_service_access_principals` argument. At this time, you cannot use the service access in conjunction with this resource otherwise it will cause a perpetual difference in plan output. You can optionally use the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` in the `aws_organizations_organization` resource to manage additional service access via this resource.
+
 ## Example Usage
 
 ```terraform
