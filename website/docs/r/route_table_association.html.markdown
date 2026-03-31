@@ -14,16 +14,16 @@ internet gateway or virtual private gateway.
 ## Example Usage
 
 ```terraform
-resource "aws_route_table_association" "a" {
-  subnet_id      = aws_subnet.foo.id
-  route_table_id = aws_route_table.bar.id
+resource "aws_route_table_association" "example" {
+  subnet_id      = aws_subnet.example.id
+  route_table_id = aws_route_table.example.id
 }
 ```
 
 ```terraform
-resource "aws_route_table_association" "b" {
-  gateway_id     = aws_internet_gateway.foo.id
-  route_table_id = aws_route_table.bar.id
+resource "aws_route_table_association" "example" {
+  gateway_id     = aws_internet_gateway.example.id
+  route_table_id = aws_route_table.example.id
 }
 ```
 
@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the association
+* `id` - ID of the association
 
 ## Timeouts
 
@@ -88,7 +88,7 @@ With EC2 Subnets:
 
 ```terraform
 import {
-  to = aws_route_table_association.assoc
+  to = aws_route_table_association.example
   id = "subnet-6777656e646f6c796e/rtb-656c65616e6f72"
 }
 ```
@@ -97,7 +97,7 @@ With EC2 Internet Gateways:
 
 ```terraform
 import {
-  to = aws_route_table_association.assoc
+  to = aws_route_table_association.example
   id = "igw-01b3a60780f8d034a/rtb-656c65616e6f72"
 }
 ```
@@ -107,11 +107,11 @@ import {
 With EC2 Subnets:
 
 ```console
-% terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
+% terraform import aws_route_table_association.example subnet-6777656e646f6c796e/rtb-656c65616e6f72
 ```
 
 With EC2 Internet Gateways:
 
 ```console
-% terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
+% terraform import aws_route_table_association.example igw-01b3a60780f8d034a/rtb-656c65616e6f72
 ```
