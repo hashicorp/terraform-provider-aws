@@ -793,11 +793,10 @@ data "aws_caller_identity" "management" {
 
 data "aws_partition" "current" {}
 
-resource "aws_organizations_organization" "test" {
+resource "aws_organizations_aws_service_access" "test" {
   provider = awsalternate
 
-  aws_service_access_principals = ["config-multiaccountsetup.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
+  service_principal = "config-multiaccountsetup.${data.aws_partition.current.dns_suffix}"
 }
 
 resource "aws_organizations_delegated_administrator" "test" {
@@ -806,16 +805,17 @@ resource "aws_organizations_delegated_administrator" "test" {
   account_id        = data.aws_caller_identity.member.account_id
   service_principal = "config-multiaccountsetup.${data.aws_partition.current.dns_suffix}"
 
-  depends_on = [aws_organizations_organization.test]
+  depends_on = [aws_organizations_aws_service_access.test]
 }
 
-resource "aws_config_configuration_recorder" "test" {
-  depends_on = [aws_iam_role_policy_attachment.test, aws_organizations_delegated_administrator.test]
+# Create a configuration recorder in each account.
+resource "aws_config_configuration_recorder" "member" {
+  depends_on = [aws_iam_role_policy_attachment.member, aws_organizations_delegated_administrator.test]
   name       = %[1]q
-  role_arn   = aws_iam_role.test.arn
+  role_arn   = aws_iam_role.member.arn
 }
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "member" {
   name               = %[1]q
   assume_role_policy = <<POLICY
 {
@@ -834,9 +834,45 @@ resource "aws_iam_role" "test" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "test" {
+resource "aws_iam_role_policy_attachment" "member" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
-  role       = aws_iam_role.test.name
+  role       = aws_iam_role.member.name
+}
+
+resource "aws_config_configuration_recorder" "management" {
+  provider = awsalternate
+
+  depends_on = [aws_iam_role_policy_attachment.management]
+  name       = %[1]q
+  role_arn   = aws_iam_role.management.arn
+}
+
+resource "aws_iam_role" "management" {
+  provider = awsalternate
+
+  name               = %[1]q
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "config.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "management" {
+  provider = awsalternate
+
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
+  role       = aws_iam_role.management.name
 }
 `, rName)
 }
@@ -856,7 +892,7 @@ func testAccOrganizationConformancePackConfig_delegatedAdministrator(rName strin
 		testAccOrganizationConformancePackConfig_baseDelegatedAdministrator(rName),
 		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+  depends_on    = [aws_config_configuration_recorder.member, aws_config_configuration_recorder.management]
   name          = %[1]q
   template_body = <<EOT
 Resources:
