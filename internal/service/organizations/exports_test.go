@@ -6,7 +6,7 @@ package organizations
 // Exports for use in tests only.
 var (
 	ResourceAccount                = resourceAccount
-	ResourceAWSServiceAccess       = newAWSServiceAccessResource
+	ResourceAWSServiceAccess       = newAWSServiceAccessResource // nosemgrep:ci.aws-in-var-name
 	ResourceDelegatedAdministrator = resourceDelegatedAdministrator
 	ResourceOrganization           = resourceOrganization
 	ResourceOrganizationalUnit     = resourceOrganizationalUnit
@@ -16,7 +16,7 @@ var (
 	ResourceTag                    = resourceTag
 
 	FindAccountByID                        = findAccountByID
-	FindAWSServiceAccessByServicePrincipal = findAWSServiceAccessByServicePrincipal
+	FindAWSServiceAccessByServicePrincipal = findAWSServiceAccessByServicePrincipal // nosemgrep:ci.aws-in-var-name
 	FindOrganizationalUnitByID             = findOrganizationalUnitByID
 	FindPolicyAttachmentByTwoPartKey       = findPolicyAttachmentByTwoPartKey
 	FindPolicyByID                         = findPolicyByID
