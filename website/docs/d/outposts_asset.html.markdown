@@ -39,5 +39,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `asset_type` - Type of the asset.
 * `host_id` - Host ID of the Dedicated Hosts on the asset, if a Dedicated Host is provisioned.
+* `instance_families` - Instance families supported by the asset.
 * `rack_elevation` - Position of an asset in a rack measured in rack units.
 * `rack_id` - Rack ID of the asset.
