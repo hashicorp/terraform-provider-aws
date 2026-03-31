@@ -603,6 +603,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
+	const defaultDeleteTimeout = 60 * time.Minute
+	timeout := d.Timeout(schema.TimeoutDelete)
+	if timeout == 0 {
+		timeout = defaultDeleteTimeout
+	}
+
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
+		_, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), timeout)
+		if err != nil {
+			return diag.Errorf("waiting for parent multi-region cluster availability: %s", err)
+		}
+	}
+
 	input := memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Get(names.AttrName).(string)),
 	}
@@ -613,6 +626,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v := d.Get("final_snapshot_name"); v != nil && len(v.(string)) > 0 {
 		input.FinalSnapshotName = aws.String(v.(string))
+	}
+
+	if _, err := waitClusterAvailable(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) update: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Get(names.AttrName).(string))
@@ -628,6 +645,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	if _, err := waitClusterDeleted(ctx, conn, d.Get(names.AttrName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) delete: %s", d.Get(names.AttrName).(string), err)
+	}
+
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
+		_, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), timeout)
+		if err != nil {
+			return diag.Errorf("waiting for parent multi-region cluster availability: %s", err)
+		}
 	}
 
 	return diags
@@ -750,12 +774,12 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name strin
 
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      []string{clusterStatusDeleting},
-		Target:       []string{},
-		Refresh:      statusCluster(conn, name),
-		Timeout:      timeout,
-		Delay:        5 * time.Minute,
-		PollInterval: 10 * time.Second,
+		Pending:    []string{clusterStatusDeleting, clusterStatusUpdating, clusterStatusAvailable},
+		Target:     []string{},
+		Refresh:    statusCluster(conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
