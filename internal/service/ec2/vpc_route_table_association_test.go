@@ -10,8 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -61,6 +64,8 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	resourceNameSubnet := "aws_subnet.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	idExpectChange := statecheck.CompareValue(compare.ValuesDiffer())
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -74,6 +79,9 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnetChange(rName),
@@ -82,6 +90,9 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 		},
 	})
@@ -130,6 +141,8 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	resourceNameGateway := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	idExpectChange := statecheck.CompareValue(compare.ValuesDiffer())
+
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -143,6 +156,9 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gatewayChange(rName),
@@ -151,6 +167,9 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 		},
 	})
