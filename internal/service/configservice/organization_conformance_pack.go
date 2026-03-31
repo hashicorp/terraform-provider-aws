@@ -242,7 +242,7 @@ func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.Re
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.PutOrganizationConformancePack(ctx, &input)
 	})
 
