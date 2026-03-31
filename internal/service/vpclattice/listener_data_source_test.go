@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -71,7 +70,7 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 	targetGroup1ResourceName := "aws_vpclattice_target_group.test1"
 	dataSourceName := "data.aws_vpclattice_listener.test_multi_target"

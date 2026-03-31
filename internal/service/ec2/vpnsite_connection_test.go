@@ -13,7 +13,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -748,7 +747,7 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, acctest.RandStringFromCharSet(t, 65, acctest.CharSetAlpha), "169.254.254.0/30"),
 				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{

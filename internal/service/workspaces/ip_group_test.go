@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +24,7 @@ func testAccIPGroup_basic(t *testing.T) {
 	var v types.WorkspacesIpGroup
 	ipGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ipGroupNewName := acctest.RandomWithPrefix(t, "tf-acc-test-upd")
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", acctest.RandString(t, 20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -117,7 +116,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspacesIpGroup
 	ipGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", acctest.RandString(t, 20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	acctest.Test(ctx, t, resource.TestCase{

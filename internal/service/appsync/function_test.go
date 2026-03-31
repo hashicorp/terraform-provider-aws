@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,8 +21,8 @@ import (
 func testAccFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
-	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
-	rName3 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(t, 8))
+	rName3 := fmt.Sprintf("tfexample%s", acctest.RandString(t, 8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
@@ -66,7 +65,7 @@ func testAccFunction_basic(t *testing.T) {
 func testAccFunction_code(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
-	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(t, 8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
@@ -140,7 +139,7 @@ func testAccFunction_syncConfig(t *testing.T) {
 func testAccFunction_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
-	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(t, 8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
@@ -176,7 +175,7 @@ func testAccFunction_description(t *testing.T) {
 func testAccFunction_responseMappingTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
-	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(t, 8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
@@ -204,7 +203,7 @@ func testAccFunction_responseMappingTemplate(t *testing.T) {
 func testAccFunction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
-	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
+	rName2 := fmt.Sprintf("tfexample%s", acctest.RandString(t, 8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 

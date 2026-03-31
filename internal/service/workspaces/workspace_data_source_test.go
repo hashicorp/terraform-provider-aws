@@ -9,7 +9,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,7 +16,7 @@ import (
 
 func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	domain := acctest.RandomDomainName()
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
@@ -52,7 +51,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 
 func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	domain := acctest.RandomDomainName()
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"

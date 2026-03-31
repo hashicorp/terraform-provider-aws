@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +24,7 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
-	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
+	environmentName := acctest.RandStringFromCharSet(t, 10, acctest.CharSetAlpha)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
@@ -58,7 +57,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
-	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
+	environmentName := acctest.RandStringFromCharSet(t, 10, acctest.CharSetAlpha)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
@@ -84,7 +83,7 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
-	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
+	environmentName := acctest.RandStringFromCharSet(t, 10, acctest.CharSetAlpha)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },

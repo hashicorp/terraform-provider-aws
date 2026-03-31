@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +25,7 @@ import (
 func TestAccDAXCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_dax_cluster.test"
 
@@ -84,7 +83,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 func TestAccDAXCluster_resize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	resourceName := "aws_dax_cluster.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -129,7 +128,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	resourceName := "aws_dax_cluster.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -175,7 +174,7 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	resourceName := "aws_dax_cluster.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -218,7 +217,7 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	resourceName := "aws_dax_cluster.test"
 	clusterEndpointEncryptionType := "NONE"
 
@@ -268,7 +267,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	resourceName := "aws_dax_cluster.test"
 	clusterEndpointEncryptionType := "TLS"
 
@@ -311,7 +310,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 func TestAccDAXCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
-	rString := sdkacctest.RandString(10)
+	rString := acctest.RandString(t, 10)
 	resourceName := "aws_dax_cluster.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

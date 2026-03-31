@@ -98,7 +98,7 @@ func TestAccElasticsearchVPCEndpoint_basic(t *testing.T) {
 
 	var v awstypes.VpcEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -136,7 +136,7 @@ func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 
 	var v awstypes.VpcEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -165,7 +165,7 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 
 	var v awstypes.VpcEndpoint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := testAccRandomDomainName()
+	domainName := testAccRandomDomainName(t)
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

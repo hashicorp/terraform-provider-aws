@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,7 +19,7 @@ import (
 
 func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	url := "accounts.testle.com/" + rString
 	resourceName := "aws_iam_openid_connect_provider.test"
 
@@ -184,7 +183,7 @@ func TestAccIAMOpenIDConnectProvider_Thumbprints_withoutToWith(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -207,7 +206,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -248,7 +247,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 
 func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
+	rString := acctest.RandString(t, 5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

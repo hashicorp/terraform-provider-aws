@@ -118,7 +118,7 @@ func (l *routeListResource) List(ctx context.Context, request list.ListRequest, 
 
 			result.DisplayName = destination
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting result", map[string]any{
 					names.AttrID: destination,

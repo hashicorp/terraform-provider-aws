@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,9 +21,9 @@ import (
 func TestAccQuickSightUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
-	rName1 := "tfacctest" + sdkacctest.RandString(10)
+	rName1 := "tfacctest" + acctest.RandString(t, 10)
 	resourceName1 := "aws_quicksight_user." + rName1
-	rName2 := "tfacctest" + sdkacctest.RandString(10)
+	rName2 := "tfacctest" + acctest.RandString(t, 10)
 	resourceName2 := "aws_quicksight_user." + rName2
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -58,7 +57,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user." + rName
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -94,7 +93,7 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
 	namespace := acctest.SkipIfEnvVarNotSet(t, "QUICKSIGHT_NAMESPACE")
 	var user awstypes.User
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user." + rName
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -117,7 +116,7 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 func TestAccQuickSightUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
-	rName := "tfacctest" + sdkacctest.RandString(10)
+	rName := "tfacctest" + acctest.RandString(t, 10)
 	resourceName := "aws_quicksight_user." + rName
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

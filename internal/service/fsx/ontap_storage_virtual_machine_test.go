@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -252,8 +251,8 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectoryCreate(t *testing.T) {
 	var storageVirtualMachine awstypes.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	netBiosName := "tftest-" + sdkacctest.RandString(7)
-	domainNetbiosName := "tftest" + sdkacctest.RandString(4)
+	netBiosName := "tftest-" + acctest.RandString(t, 7)
+	domainNetbiosName := "tftest" + acctest.RandString(t, 4)
 	domainName := domainNetbiosName + ".local"
 	domainPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -295,8 +294,8 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectoryJoin(t *testing.T) {
 	var storageVirtualMachine1, storageVirtualMachine2 awstypes.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	netBiosName := "tftest-" + sdkacctest.RandString(7)
-	domainNetbiosName := "tftest" + sdkacctest.RandString(4)
+	netBiosName := "tftest-" + acctest.RandString(t, 7)
+	domainNetbiosName := "tftest" + acctest.RandString(t, 4)
 	domainName := domainNetbiosName + ".local"
 	domainPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

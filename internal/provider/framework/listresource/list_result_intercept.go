@@ -340,6 +340,7 @@ type InterceptorParamsSDK struct {
 	C               *conns.AWSClient
 	IncludeResource bool
 	ResourceData    *schema.ResourceData
+	Result          *list.ListResult
 	When            when
 }
 

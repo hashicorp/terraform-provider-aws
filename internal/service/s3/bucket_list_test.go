@@ -40,13 +40,13 @@ func TestAccS3Bucket_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Bucket/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -64,9 +64,8 @@ func TestAccS3Bucket_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Bucket/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -100,13 +99,13 @@ func TestAccS3Bucket_List_includeResource(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Bucket/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -123,9 +122,8 @@ func TestAccS3Bucket_List_includeResource(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Bucket/list_include_resource/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -137,35 +135,37 @@ func TestAccS3Bucket_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_s3_bucket.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_s3_bucket.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("acceleration_status"), knownvalue.StringExact("")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("acl"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNNoAccountIDExact("s3", rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_domain_name"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_region"), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucketPrefix), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_region"), knownvalue.Null()), // `bucket_region` is redundant
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("bucket_regional_domain_name"), knownvalue.StringExact(testAccBucketRegionalDomainName(rName+"-0", acctest.Region()))),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("cors_rule"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrForceDestroy), knownvalue.Null()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("grant"), knownvalue.SetSizeExact(1)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrHostedZoneID), knownvalue.StringExact(errs.Must(tfs3.HostedZoneIDForRegion(acctest.Region())))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("lifecycle_rule"), knownvalue.ListSizeExact(0)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("logging"), knownvalue.ListSizeExact(0)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("object_lock_configuration"), knownvalue.ListSizeExact(0)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("object_lock_enabled"), knownvalue.Bool(false)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("object_lock_enabled"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("replication_configuration"), knownvalue.ListSizeExact(0)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("request_payer"), knownvalue.StringExact("BucketOwner")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("server_side_encryption_configuration"), knownvalue.ListSizeExact(1)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("versioning"), knownvalue.ListSizeExact(1)),
+
+						// Deprecated attributes
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("acceleration_status"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("acl"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("cors_rule"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("grant"), knownvalue.SetSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("lifecycle_rule"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("logging"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("object_lock_configuration"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("replication_configuration"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("request_payer"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("server_side_encryption_configuration"), knownvalue.ListSizeExact(0)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("versioning"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("website"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("website_domain"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("website_endpoint"), knownvalue.Null()),
@@ -193,13 +193,13 @@ func TestAccS3Bucket_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Bucket/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -216,17 +216,16 @@ func TestAccS3Bucket_List_regionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Bucket/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_policy.test", identity1.Checks()),
-					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_policy.test", identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket.test", identity2.Checks()),
 				},
 			},
 		},

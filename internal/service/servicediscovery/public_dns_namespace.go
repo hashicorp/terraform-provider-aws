@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -67,7 +67,7 @@ func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
-		CreatorRequestId: aws.String(sdkid.UniqueId()),
+		CreatorRequestId: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -132,7 +132,7 @@ func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 			Namespace: &awstypes.PublicDnsNamespaceChange{
 				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
-			UpdaterRequestId: aws.String(sdkid.UniqueId()),
+			UpdaterRequestId: aws.String(create.UniqueId(ctx)),
 		}
 
 		output, err := conn.UpdatePublicDnsNamespace(ctx, input)

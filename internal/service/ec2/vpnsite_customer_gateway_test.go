@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -226,7 +225,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	acmSubordinateCAResourceName := "aws_acmpca_certificate_authority.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.RandomDomainName()
-	subDomain := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), rootDomain)
+	subDomain := fmt.Sprintf("%s.%s", acctest.RandString(t, 8), rootDomain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

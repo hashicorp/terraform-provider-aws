@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
@@ -67,7 +66,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
@@ -140,7 +139,7 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	aliasName := "live"
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
@@ -174,7 +173,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	latestResourceName := "aws_lambda_function_url.latest"
 	liveResourceName := "aws_lambda_function_url.live"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	aliasName := "live"
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
@@ -226,7 +225,7 @@ func TestAccLambdaFunctionURL_invokeMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)

@@ -31,8 +31,9 @@ The implementation type can be identified by inspecting the tags in the resource
 - `internal/service/<service-name>/<resource-name>_list.go` - List Resource implementation
 - `internal/service/<service-name>/<resource-name>_list_test.go` - List Resource acceptance tests
 - `website/docs/list-resources/<service-name>_<resource-name>.html.markdown` - List Resource documentation
-- `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/main.tf` - Basic List Resource acceptance test configuration
-- `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/query.tfquery.hcl` - Query for using list resource
+- `internal/service/<service-name>/testdata/<Resource-Name>/[list_basic|list_includeResource|list_regionOverride]` - List acceptance test configuration directories. Each contains:
+    - `main.tf` - Resource acceptance test configuration
+    - `query.tfquery.hcl` - Query for using list resource
 
 ### SDK resources
 
@@ -176,8 +177,13 @@ Run the acceptance tests for the new list resource to ensure everything is funct
 Replace `<service-name>` and `<resource-name>` with the appropriate service and resource names.
 
 ```sh
-  make testacc PKG=<service-name> TESTARGS='-run=TestAcc<service-name><resource-name>_List_'
+make testacc PKG=<service-name> TESTARGS='-run=TestAcc<service-name><resource-name>_List_'
 ```
+
+### Create Documentation
+
+`skaff` will create a stub documentation file.
+Ensure that it is accurate and documents any additional attributes on the `list` block.
 
 ## Troubleshooting
 

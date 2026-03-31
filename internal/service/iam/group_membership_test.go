@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +23,7 @@ func TestAccIAMGroupMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group iam.GetGroupOutput
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	groupName := fmt.Sprintf("tf-acc-group-gm-basic-%s", rString)
 	userName := fmt.Sprintf("tf-acc-user-gm-basic-%s", rString)
 	userName2 := fmt.Sprintf("tf-acc-user-gm-basic-two-%s", rString)
@@ -68,7 +67,7 @@ func TestAccIAMGroupMembership_paginatedUserList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group iam.GetGroupOutput
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	groupName := fmt.Sprintf("tf-acc-group-gm-pul-%s", rString)
 	membershipName := fmt.Sprintf("tf-acc-membership-gm-pul-%s", rString)
 	userNamePrefix := fmt.Sprintf("tf-acc-user-gm-pul-%s-", rString)

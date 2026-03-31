@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkflowmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,7 +27,7 @@ func testAccScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
@@ -36,12 +35,12 @@ func testAccScope_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScopeConfig_basic(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName),
+					testAccCheckScopeExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -70,7 +69,7 @@ func testAccScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
@@ -78,12 +77,12 @@ func testAccScope_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScopeConfig_basic(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName),
+					testAccCheckScopeExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkflowmonitor.ResourceScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -104,7 +103,7 @@ func testAccScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
@@ -112,12 +111,12 @@ func testAccScope_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScopeDestroy(ctx),
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScopeConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName),
+					testAccCheckScopeExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -140,7 +139,7 @@ func testAccScope_tags(t *testing.T) {
 			{
 				Config: testAccScopeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName),
+					testAccCheckScopeExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -157,7 +156,7 @@ func testAccScope_tags(t *testing.T) {
 			{
 				Config: testAccScopeConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName),
+					testAccCheckScopeExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -174,14 +173,14 @@ func testAccScope_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckScopeExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckScopeExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFlowMonitorClient(ctx)
 
 		_, err := tfnetworkflowmonitor.FindScopeByID(ctx, conn, rs.Primary.Attributes["scope_id"])
 
@@ -189,9 +188,9 @@ func testAccCheckScopeExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckScopeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckScopeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFlowMonitorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkflowmonitor_scope" {

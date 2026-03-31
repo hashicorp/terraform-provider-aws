@@ -70,6 +70,7 @@ func testAccDataLake_basic(t *testing.T) {
 	})
 }
 
+// TODO: Generate Resource Identity tests
 func testAccDataLake_identitySerial(t *testing.T) {
 	t.Helper()
 

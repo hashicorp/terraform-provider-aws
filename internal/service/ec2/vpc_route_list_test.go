@@ -62,16 +62,16 @@ func TestAccVPCRoute_List_basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
-						"route_table_id":              routeTableID.Value(),
-						"destination_cidr_block":      destination1.Value(),
+						"route_table_id":              routeTableID.ValueCheck(),
+						"destination_cidr_block":      destination1.ValueCheck(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
-						"route_table_id":              routeTableID.Value(),
-						"destination_cidr_block":      destination2.Value(),
+						"route_table_id":              routeTableID.ValueCheck(),
+						"destination_cidr_block":      destination2.ValueCheck(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
@@ -121,9 +121,9 @@ func TestAccVPCRoute_List_ipv6Destination(t *testing.T) {
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
-						"route_table_id":              routeTableID.Value(),
+						"route_table_id":              routeTableID.ValueCheck(),
 						"destination_cidr_block":      knownvalue.Null(),
-						"destination_ipv6_cidr_block": destinationIPv6.Value(),
+						"destination_ipv6_cidr_block": destinationIPv6.ValueCheck(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 				},
@@ -172,10 +172,10 @@ func TestAccVPCRoute_List_prefixListDestination(t *testing.T) {
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
-						"route_table_id":              routeTableID.Value(),
+						"route_table_id":              routeTableID.ValueCheck(),
 						"destination_cidr_block":      knownvalue.Null(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
-						"destination_prefix_list_id":  prefixListID.Value(),
+						"destination_prefix_list_id":  prefixListID.ValueCheck(),
 					}),
 				},
 			},
@@ -201,13 +201,13 @@ func TestAccVPCRoute_List_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckRouteDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckRouteDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Route/list_region_override"),
+				ConfigDirectory: config.StaticDirectory("testdata/Route/list_region_override"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -219,9 +219,8 @@ func TestAccVPCRoute_List_regionOverride(t *testing.T) {
 			},
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Route/list_region_override"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Route/list_region_override"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -229,16 +228,16 @@ func TestAccVPCRoute_List_regionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.AlternateRegion()),
-						"route_table_id":              routeTableID.Value(),
-						"destination_cidr_block":      destination1.Value(),
+						"route_table_id":              routeTableID.ValueCheck(),
+						"destination_cidr_block":      destination1.ValueCheck(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					querycheck.ExpectIdentity("aws_route.test", map[string]knownvalue.Check{
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.AlternateRegion()),
-						"route_table_id":              routeTableID.Value(),
-						"destination_cidr_block":      destination2.Value(),
+						"route_table_id":              routeTableID.ValueCheck(),
+						"destination_cidr_block":      destination2.ValueCheck(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),

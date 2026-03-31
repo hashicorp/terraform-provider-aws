@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Alias
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	resourceName := "aws_gamelift_alias.test"
 
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)
@@ -138,7 +137,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 
 	var conf awstypes.Alias
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)
 	description := fmt.Sprintf("tf test description %s", rString)
@@ -199,7 +198,7 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Alias
 
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	resourceName := "aws_gamelift_alias.test"
 
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)

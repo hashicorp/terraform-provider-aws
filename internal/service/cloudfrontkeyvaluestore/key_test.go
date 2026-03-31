@@ -39,6 +39,7 @@ func TestAccCloudFrontKeyValueStoreKey_basic(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, t, resourceName),
+					testAccCheckKeyHasValue(ctx, t, resourceName, value),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -113,6 +114,7 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, t, resourceName),
+					testAccCheckKeyHasValue(ctx, t, resourceName, value1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -129,12 +131,46 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, t, resourceName),
+					testAccCheckKeyHasValue(ctx, t, resourceName, value2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontKeyValueStoreKey_specialCharacters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	// Test value with special characters that would be affected by JSON encoding
+	value := `special "quoted" value with 'quotes' and {braces}`
+	resourceName := "aws_cloudfrontkeyvaluestore_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_basic(rName, value),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, resourceName),
+					testAccCheckKeyHasValue(ctx, t, resourceName, value),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -205,6 +241,33 @@ func testAccCheckKeyExists(ctx context.Context, t *testing.T, n string) resource
 		_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes[names.AttrKey])
 
 		return err
+	}
+}
+
+func testAccCheckKeyHasValue(ctx context.Context, t *testing.T, n string, expectedValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontKeyValueStoreClient(ctx)
+
+		output, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes[names.AttrKey])
+		if err != nil {
+			return err
+		}
+
+		if output.Value == nil {
+			return fmt.Errorf("CloudFront KeyValueStore Key value is nil")
+		}
+
+		actualValue := *output.Value
+		if actualValue != expectedValue {
+			return fmt.Errorf("CloudFront KeyValueStore Key value = %q, expected %q", actualValue, expectedValue)
+		}
+
+		return nil
 	}
 }
 

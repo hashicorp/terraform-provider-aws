@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
-	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
+	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
@@ -57,8 +56,8 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
-	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
-	sqlInjectionMatchSetNewName := fmt.Sprintf("sqlInjectionMatchSetNewName-%s", sdkacctest.RandString(5))
+	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(t, 5))
+	sqlInjectionMatchSetNewName := fmt.Sprintf("sqlInjectionMatchSetNewName-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
@@ -99,7 +98,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
-	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
+	sqlInjectionMatchSet := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
@@ -123,7 +122,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeTuples(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
-	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
+	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
@@ -176,7 +175,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipset awstypes.SqlInjectionMatchSet
 	resourceName := "aws_wafregional_sql_injection_match_set.sql_injection_match_set"
-	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", sdkacctest.RandString(5))
+	setName := fmt.Sprintf("sqlInjectionMatchSet-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },

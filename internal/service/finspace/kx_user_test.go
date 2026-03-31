@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,7 +28,7 @@ func TestAccFinSpaceKxUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var kxuser finspace.GetKxUserOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := sdkacctest.RandString(acctest.RandIntRange(t, 1, 50))
+	userName := acctest.RandString(t, acctest.RandIntRange(t, 1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -65,7 +64,7 @@ func TestAccFinSpaceKxUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var kxuser finspace.GetKxUserOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := sdkacctest.RandString(acctest.RandIntRange(t, 1, 50))
+	userName := acctest.RandString(t, acctest.RandIntRange(t, 1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -97,7 +96,7 @@ func TestAccFinSpaceKxUser_updateRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var kxuser finspace.GetKxUserOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := sdkacctest.RandString(acctest.RandIntRange(t, 1, 50))
+	userName := acctest.RandString(t, acctest.RandIntRange(t, 1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -133,7 +132,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 
 	var kxuser finspace.GetKxUserOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	userName := sdkacctest.RandString(acctest.RandIntRange(t, 1, 50))
+	userName := acctest.RandString(t, acctest.RandIntRange(t, 1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

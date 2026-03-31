@@ -103,6 +103,14 @@ func TestNormalizeTestCaseName(t *testing.T) {
 			testName: "with,comma",
 			expected: "withcomma",
 		},
+		"slice of": {
+			testName: "[]struct",
+			expected: "slice_struct",
+		},
+		"slice of pointer to": {
+			testName: "[]*struct",
+			expected: "slice_pointer_struct",
+		},
 	}
 
 	for testName, testCase := range testCases {

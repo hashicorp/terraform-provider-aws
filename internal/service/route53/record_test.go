@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -816,7 +815,7 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 	var v awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	locationName := sdkacctest.RandString(16)
+	locationName := acctest.RandString(t, 16)
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
 

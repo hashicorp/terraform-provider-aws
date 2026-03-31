@@ -1,0 +1,170 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found XML wrapper collapse target",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.fieldname": "Parrots",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "flex.Parrots"
+  },
+  {
+    "@level": "trace",
+    "@message": "Building generic XML wrapper collapse struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds",
+    "target_type": "flex.Parrots"
+  },
+  {
+    "@level": "trace",
+    "@message": "Identified main source field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds",
+    "main_source_field": ""
+  },
+  {
+    "@level": "trace",
+    "@message": "Processing additional target field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds",
+    "target_field": "Flying",
+    "target_type": "*bool"
+  },
+  {
+    "@level": "debug",
+    "@message": "No source field found for target field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds",
+    "target_field": "Flying"
+  },
+  {
+    "@level": "debug",
+    "@message": "No source fields found for XML wrapper collapse target - leaving as nil/zero value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Parrot",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.birdModel",
+    "autoflex.target.fieldname": "Parrots",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Birds"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Parrot",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·74]",
+    "autoflex.target.path": "Parrots",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Parrot",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel·74]",
+    "autoflex.target.path": "Parrots",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots",
+    "xmlWrapper": false,
+    "xmlWrapperField": ""
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Flying",
+    "autoflex.source.path": "Parrot[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel",
+    "autoflex.target.fieldname": "Flying",
+    "autoflex.target.path": "Parrots",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Parrot[0].Flying",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.BoolValue",
+    "autoflex.target.path": "Parrots.Flying",
+    "autoflex.target.type": "*bool"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: Found xmlwrapper tag",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "Parrot[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel",
+    "autoflex.target.path": "Parrots",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots",
+    "xmlWrapperField": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "Parrot[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.parrotModel",
+    "autoflex.target.fieldname": "Items",
+    "autoflex.target.path": "Parrots",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.Parrots"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Parrot[0].Items",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.path": "Parrots.Items",
+    "autoflex.target.type": "[]string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Parrot[0].Items",
+    "autoflex.source.size": 1,
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.path": "Parrots.Items",
+    "autoflex.target.type": "[]string"
+  }
+]

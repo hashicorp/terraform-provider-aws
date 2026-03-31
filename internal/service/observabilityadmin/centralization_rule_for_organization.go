@@ -134,6 +134,23 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 														},
 													},
 												},
+												"log_group_name_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"log_group_name_pattern": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 512),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`(?:[\._\-/#A-Za-z0-9]+|\$\{[A-Za-z]+(?:\.[A-Za-z]+){1,2}\})+`), ""),
+																},
+															},
+														},
+													},
+												},
 												"logs_encryption_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[logsEncryptionConfigurationModel](ctx),
 													Validators: []validator.List{
@@ -455,6 +472,7 @@ type centralizationRuleSourceModel struct {
 
 type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
+	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
 }
 
@@ -466,6 +484,10 @@ type sourceLogsConfigurationModel struct {
 type logsBackupConfigurationModel struct {
 	KMSKeyARN fwtypes.ARN  `tfsdk:"kms_key_arn"`
 	Region    types.String `tfsdk:"region"`
+}
+
+type logGroupNameConfigurationModel struct {
+	LogGroupNamePattern types.String `tfsdk:"log_group_name_pattern"`
 }
 
 type logsEncryptionConfigurationModel struct {

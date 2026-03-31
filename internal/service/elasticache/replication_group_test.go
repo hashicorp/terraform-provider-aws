@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -620,7 +619,7 @@ func TestAccElastiCacheReplicationGroup_authToRBACMigration(t *testing.T) {
 	var rg awstypes.ReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
-	token1 := sdkacctest.RandString(16)
+	token1 := acctest.RandString(t, 16)
 	userGroup := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	userId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -767,8 +766,8 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 	var rg awstypes.ReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
-	token1 := sdkacctest.RandString(16)
-	token2 := sdkacctest.RandString(16)
+	token1 := acctest.RandString(t, 16)
+	token2 := acctest.RandString(t, 16)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1912,7 +1911,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryptionWithAuthToken(t *testin
 	var rg awstypes.ReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
-	authToken := sdkacctest.RandString(16)
+	authToken := acctest.RandString(t, 16)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -104,7 +103,7 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
-	description := sdkacctest.RandString(100)
+	description := acctest.RandString(t, 100)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -242,7 +241,7 @@ func testAccVerifiedAccessGroup_policy(t *testing.T, semaphore tfsync.Semaphore)
 	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	description := sdkacctest.RandString(100)
+	description := acctest.RandString(t, 100)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -278,7 +277,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	description := sdkacctest.RandString(100)
+	description := acctest.RandString(t, 100)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
 	policyDocUpdate := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"POST\"\n};"
 
@@ -328,7 +327,7 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	description := sdkacctest.RandString(100)
+	description := acctest.RandString(t, 100)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

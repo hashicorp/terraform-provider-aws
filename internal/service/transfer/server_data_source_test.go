@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,7 +41,7 @@ func testAccServerDataSource_basic(t *testing.T) {
 
 func testAccServerDataSource_Service_managed(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(5)
+	rName := acctest.RandString(t, 5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
@@ -72,7 +71,7 @@ func testAccServerDataSource_Service_managed(t *testing.T) {
 
 func testAccServerDataSource_apigateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(5)
+	rName := acctest.RandString(t, 5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 

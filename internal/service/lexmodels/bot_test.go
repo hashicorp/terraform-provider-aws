@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -33,7 +32,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -104,7 +103,7 @@ func testAccBot_createVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	acctest.Test(ctx, t, resource.TestCase{
@@ -153,7 +152,7 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -216,7 +215,7 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -281,7 +280,7 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -331,7 +330,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -381,7 +380,7 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -431,7 +430,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -482,7 +481,7 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -532,7 +531,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -588,7 +587,7 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 	intentResourceName := "aws_lex_intent.test"
 	intentResourceName2 := "aws_lex_intent.test_2"
 
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -640,7 +639,7 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -690,7 +689,7 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -740,7 +739,7 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

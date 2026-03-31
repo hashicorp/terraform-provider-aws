@@ -1,0 +1,3 @@
+```release-note:bug
+list-resource/aws_iam_role_policy_attachment: Prevent infinite loop when IAM Role deleted during list
+```

@@ -250,6 +250,7 @@ Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Experience Customization
 User Notifications
 User Notifications Contacts
 VPC (Virtual Private Cloud)

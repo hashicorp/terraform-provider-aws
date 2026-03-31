@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAuthorization
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -57,7 +56,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAuthorization
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -106,7 +105,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAuthorization
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -133,7 +132,7 @@ func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAuthorization
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

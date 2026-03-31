@@ -1,0 +1,12 @@
+```release-note:bug
+resource/aws_msk_cluster: Properly handle removal of the `client_authentication.sasl` block
+```
+```release-note:bug
+resource/aws_msk_cluster: Properly handle removal of the `client_authentication.tls` block
+```
+```release-note:bug
+resource/aws_msk_cluster: Suppress persistent differences in unset `client_authentication.sasl` blocks
+```
+```release-note:bug
+resource/aws_msk_cluster: Suppress persistent differences in unset `client_authentication.tls` blocks
+```

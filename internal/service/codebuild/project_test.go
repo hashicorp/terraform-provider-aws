@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -67,7 +66,7 @@ func TestProject_nameValidation(t *testing.T) {
 		{Value: "test", ErrCount: 0},
 		{Value: "1_test", ErrCount: 0},
 		{Value: "test**1", ErrCount: 1},
-		{Value: sdkacctest.RandString(256), ErrCount: 1},
+		{Value: acctest.RandString(t, 256), ErrCount: 1},
 	}
 
 	for _, tc := range cases {
