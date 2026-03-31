@@ -58,9 +58,9 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-to = aws_route_table_association.example
+  to = aws_route_table_association.example
   identity = {
-      id = "rtbassoc-1234567890abcdef1"
+    id = "rtbassoc-1234567890abcdef1"
   }
 }
 
