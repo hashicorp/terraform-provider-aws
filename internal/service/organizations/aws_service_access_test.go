@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) {
+func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var serviceaccess awstypes.EnabledServicePrincipal
 	servicePrincipal := "tagpolicies.tag.amazonaws.com"
@@ -36,7 +36,7 @@ func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAWSServiceAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAccessConfig_basic(servicePrincipal),
+				Config: testAccAWSServiceAccessConfig_basic(servicePrincipal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSServiceAccessExists(ctx, t, resourceName, &serviceaccess),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
@@ -54,7 +54,7 @@ func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) {
+func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var serviceaccess awstypes.EnabledServicePrincipal
 	servicePrincipal := "tagpolicies.tag.amazonaws.com"
@@ -70,7 +70,7 @@ func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAWSServiceAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAccessConfig_basic(servicePrincipal),
+				Config: testAccAWSServiceAccessConfig_basic(servicePrincipal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSServiceAccessExists(ctx, t, resourceName, &serviceaccess),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tforganizations.ResourceAWSServiceAccess, resourceName),
@@ -86,7 +86,7 @@ func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSServiceAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckAWSServiceAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc { // nosemgrep:ci.aws-in-func-name
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
@@ -112,7 +112,7 @@ func testAccCheckAWSServiceAccessDestroy(ctx context.Context, t *testing.T) reso
 	}
 }
 
-func testAccCheckAWSServiceAccessExists(ctx context.Context, t *testing.T, name string, serviceaccess *awstypes.EnabledServicePrincipal) resource.TestCheckFunc {
+func testAccCheckAWSServiceAccessExists(ctx context.Context, t *testing.T, name string, serviceaccess *awstypes.EnabledServicePrincipal) resource.TestCheckFunc { // nosemgrep:ci.aws-in-func-name
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -136,7 +136,7 @@ func testAccCheckAWSServiceAccessExists(ctx context.Context, t *testing.T, name 
 	}
 }
 
-func testAccServiceAccessConfig_basic(servicePrincipal string) string {
+func testAccAWSServiceAccessConfig_basic(servicePrincipal string) string { // nosemgrep:ci.aws-in-func-name
 	return fmt.Sprintf(`
 resource "aws_organizations_aws_service_access" "test" {
   service_principal = %[1]q

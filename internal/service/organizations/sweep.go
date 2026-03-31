@@ -238,7 +238,7 @@ func sweepListOrganizationalUnits(ctx context.Context, client *conns.AWSClient, 
 	return sweepResources, nil
 }
 
-func sweepAWSServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepAWSServiceAccesses(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) { // nosemgrep:ci.aws-in-func-name
 	if skip, err := sweepPreCheck(ctx, client); err != nil {
 		return nil, err
 	} else if skip {

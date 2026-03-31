@@ -32,7 +32,7 @@ import (
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
 // @Testing(importStateIdAttribute="service_principal")
-func newAWSServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newAWSServiceAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) { // nosemgrep:ci.aws-in-func-name
 	r := &awsServiceAccessResource{}
 
 	return r, nil
@@ -149,7 +149,7 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-func findAWSServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) {
+func findAWSServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) { // nosemgrep:ci.aws-in-func-name
 	var enabledServices []awstypes.EnabledServicePrincipal
 
 	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, nil)
