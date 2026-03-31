@@ -16,7 +16,7 @@ import (
 )
 
 // @FrameworkListResource("aws_organizations_aws_service_access")
-func newAWSServiceAccessResourceAsListResource() list.ListResourceWithConfigure {
+func newAWSServiceAccessResourceAsListResource() list.ListResourceWithConfigure { // nosemgrep:ci.aws-in-func-name
 	return &awsServiceAccessListResource{}
 }
 
