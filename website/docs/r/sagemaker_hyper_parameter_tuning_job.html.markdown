@@ -424,3 +424,18 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "example" {
 
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Hyper Parameter Tuning Jobs using `hyper_parameter_tuning_job_name`. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_hyper_parameter_tuning_job.example
+  id = "example-hyper-parameter-tuning-job"
+}
+```
+
+Using `terraform import`, import SageMaker AI Hyper Parameter Tuning Jobs using `hyper_parameter_tuning_job_name`. For example:
+
+```console
+% terraform import aws_sagemaker_hyper_parameter_tuning_job.example example-hyper-parameter-tuning-job
+```

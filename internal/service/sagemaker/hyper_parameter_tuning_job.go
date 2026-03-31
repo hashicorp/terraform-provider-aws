@@ -350,6 +350,10 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
 			"training_job_definition":  hyperParameterTrainingJobDefinitionBlock(ctx, false),
 			"training_job_definitions": hyperParameterTrainingJobDefinitionBlock(ctx, true),
 			"warm_start_config": schema.ListNestedBlock{
@@ -389,10 +393,6 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-			}),
 		},
 	}
 }
@@ -782,6 +782,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						},
 					}},
 				},
+				"hyper_parameter_ranges": parameterRangesBlock(ctx),
 				"hyper_parameter_tuning_resource_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningResourceConfigModel](ctx),
 					Validators: []validator.List{
@@ -886,7 +887,6 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						},
 					},
 				},
-				"hyper_parameter_ranges": parameterRangesBlock(ctx),
 				"input_data_config": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[inputDataConfigModel](ctx),
 					Validators: []validator.List{
@@ -1988,8 +1988,8 @@ type hyperParameterTrainingJobDefinitionModel struct {
 	EnableManagedSpotTraining             types.Bool                                                                  `tfsdk:"enable_managed_spot_training"`
 	EnableNetworkIsolation                types.Bool                                                                  `tfsdk:"enable_network_isolation"`
 	Environment                           fwtypes.MapOfString                                                         `tfsdk:"environment"`
-	HyperParameterTuningResourceConfig    fwtypes.ListNestedObjectValueOf[hyperParameterTuningResourceConfigModel]    `tfsdk:"hyper_parameter_tuning_resource_config"`
 	HyperParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                       `tfsdk:"hyper_parameter_ranges"`
+	HyperParameterTuningResourceConfig    fwtypes.ListNestedObjectValueOf[hyperParameterTuningResourceConfigModel]    `tfsdk:"hyper_parameter_tuning_resource_config"`
 	InputDataConfig                       fwtypes.ListNestedObjectValueOf[inputDataConfigModel]                       `tfsdk:"input_data_config"`
 	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[hyperParameterTuningOutputDataConfigModel]  `tfsdk:"output_data_config"`
 	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingResourceConfigModel]                `tfsdk:"resource_config"`

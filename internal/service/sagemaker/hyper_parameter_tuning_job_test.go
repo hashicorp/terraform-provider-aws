@@ -1913,8 +1913,7 @@ func TestAccSageMakerHyperParameterTuningJob_warmStartConfig(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var parentJob sagemaker.DescribeHyperParameterTuningJobOutput
-	var childJob sagemaker.DescribeHyperParameterTuningJobOutput
+	var parentJob, childJob sagemaker.DescribeHyperParameterTuningJobOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	parentResourceName := "aws_sagemaker_hyper_parameter_tuning_job.parent"
 	childResourceName := "aws_sagemaker_hyper_parameter_tuning_job.child"
