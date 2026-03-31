@@ -210,14 +210,12 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 
 	for _, association := range routeTable.Associations {
 		if aws.ToString(association.SubnetId) == targetID {
-			d.Set(names.AttrSubnetID, targetID)
 			associationID = aws.ToString(association.RouteTableAssociationId)
 
 			break
 		}
 
 		if aws.ToString(association.GatewayId) == targetID {
-			d.Set("gateway_id", targetID)
 			associationID = aws.ToString(association.RouteTableAssociationId)
 
 			break
@@ -229,7 +227,6 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(associationID)
-	d.Set("route_table_id", routeTableID)
 
 	return []*schema.ResourceData{d}, nil
 }
