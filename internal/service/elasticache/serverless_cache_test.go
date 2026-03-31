@@ -465,7 +465,7 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"maximum": knownvalue.Int64Exact(1),
 									"minimum": knownvalue.Null(),
-									"unit":    knownvalue.StringExact("GB"),
+									names.AttrUnit:    knownvalue.StringExact("GB"),
 								}),
 							}),
 							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
@@ -495,7 +495,7 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"maximum": knownvalue.Int64Exact(2),
 									"minimum": knownvalue.Null(),
-									"unit":    knownvalue.StringExact("GB"),
+									names.AttrUnit:    knownvalue.StringExact("GB"),
 								}),
 							}),
 							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
@@ -541,7 +541,7 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"maximum": knownvalue.Int64Exact(2),
 									"minimum": knownvalue.Null(),
-									"unit":    knownvalue.StringExact("GB"),
+									names.AttrUnit:    knownvalue.StringExact("GB"),
 								}),
 							}),
 							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
@@ -1163,8 +1163,8 @@ resource "aws_elasticache_serverless_cache" "test" {
 func testAccServerlessCacheConfig_cacheUsageLimits(rName string, d1, d2 int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine      = "memcached"
-  name        = %[1]q
+  engine = "memcached"
+  name   = %[1]q
 
   cache_usage_limits {
     data_storage {
