@@ -1,13 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_workmail_organization" "test" {
-  region = var.region
-
-  organization_alias = var.rName
-  delete_directory   = true
-}
-
 resource "aws_workmail_user" "test" {
   region = var.region
 
@@ -18,6 +11,14 @@ resource "aws_workmail_user" "test" {
   city            = "bangalore"
   office          = "hashicorp"
 }
+
+resource "aws_workmail_organization" "test" {
+  region = var.region
+
+  organization_alias = var.rName
+  delete_directory   = true
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string

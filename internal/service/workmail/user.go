@@ -14,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -45,11 +45,8 @@ func newUserResource(_ context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 const (
-	ResNameUser                = "User"
 	userPropagationTimeout     = 2 * time.Minute
 	userDeleteTransitionTimout = 2 * time.Minute
-	userStateEnabled           = string(awstypes.EntityStateEnabled)
-	userStateDisabled          = string(awstypes.EntityStateDisabled)
 )
 
 type userResource struct {
@@ -224,26 +221,32 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	created, err := waitUserEnabled(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString(), userPropagationTimeout)
+	describeOut, err := waitUserEnabled(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString(), userPropagationTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
 		return
 	}
 
 	if hasPostCreateUpdate(plan) {
-		if err := updateUser(ctx, conn, plan); err != nil {
+		var updateInput workmail.UpdateUserInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &updateInput))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if _, err := conn.UpdateUser(ctx, &updateInput); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
 			return
 		}
 
-		created, err = findUserByTwoPartKey(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString())
+		describeOut, err = findUserByTwoPartKey(ctx, conn, plan.OrganizationId.ValueString(), plan.UserId.ValueString())
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserId.String())
 			return
 		}
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, created, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, describeOut, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -271,7 +274,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -309,7 +312,13 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		!new.Street.Equal(old.Street) ||
 		!new.Telephone.Equal(old.Telephone) ||
 		!new.ZipCode.Equal(old.ZipCode) {
-		if err := updateUser(ctx, conn, new); err != nil {
+		var updateInput workmail.UpdateUserInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, new, &updateInput))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if _, err := conn.UpdateUser(ctx, &updateInput); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.UserId.String())
 			return
 		}
@@ -335,7 +344,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &new))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -392,21 +401,6 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *userResource) flatten(ctx context.Context, out *workmail.DescribeUserOutput, data *userResourceModel) (diags diag.Diagnostics) {
-	diags.Append(flex.Flatten(ctx, out, data)...)
-	return diags
-}
-
-func updateUser(ctx context.Context, conn *workmail.Client, data userResourceModel) error {
-	var input workmail.UpdateUserInput
-	if diags := flex.Expand(ctx, data, &input); diags.HasError() {
-		return fmt.Errorf("expanding workmail user update input: %s", diags.Errors()[0].Detail())
-	}
-	_, err := conn.UpdateUser(ctx, &input)
-
-	return err
-}
-
 func registerUser(ctx context.Context, conn *workmail.Client, data userResourceModel) error {
 	err := tfresource.Retry(ctx, userPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		input := workmail.RegisterToWorkMailInput{
@@ -449,22 +443,30 @@ func deregisterUser(ctx context.Context, conn *workmail.Client, data userResourc
 }
 
 func hasPostCreateUpdate(data userResourceModel) bool {
-	return isStringSet(data.City) ||
-		isStringSet(data.Company) ||
-		isStringSet(data.Country) ||
-		isStringSet(data.Department) ||
-		isStringSet(data.Initials) ||
-		isStringSet(data.JobTitle) ||
-		isStringSet(data.Office) ||
-		isStringSet(data.Street) ||
-		isStringSet(data.Telephone) ||
-		isStringSet(data.ZipCode)
+	updateAttrs := []types.String{
+		data.City,
+		data.Company,
+		data.Country,
+		data.Department,
+		data.Initials,
+		data.JobTitle,
+		data.Office,
+		data.Street,
+		data.Telephone,
+		data.ZipCode,
+	}
+	for _, attr := range updateAttrs {
+		if !attr.IsNull() && !attr.IsUnknown() {
+			return true
+		}
+	}
+	return false
 }
 
 func waitUserEnabled(ctx context.Context, conn *workmail.Client, organizationID, userID string, timeout time.Duration) (*workmail.DescribeUserOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{userStateDisabled},
-		Target:                    []string{userStateEnabled},
+		Pending:                   enum.Slice(awstypes.EntityStateDisabled),
+		Target:                    enum.Slice(awstypes.EntityStateEnabled),
 		Refresh:                   statusUser(conn, organizationID, userID),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -481,8 +483,8 @@ func waitUserEnabled(ctx context.Context, conn *workmail.Client, organizationID,
 
 func waitUserDisabled(ctx context.Context, conn *workmail.Client, organizationID, userID string, timeout time.Duration) (*workmail.DescribeUserOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{userStateEnabled},
-		Target:                    []string{userStateDisabled},
+		Pending:                   enum.Slice(awstypes.EntityStateEnabled),
+		Target:                    enum.Slice(awstypes.EntityStateDisabled),
 		Refresh:                   statusUser(conn, organizationID, userID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -498,7 +500,7 @@ func waitUserDisabled(ctx context.Context, conn *workmail.Client, organizationID
 
 func waitUserDeleted(ctx context.Context, conn *workmail.Client, organizationID, userID string, timeout time.Duration) (*workmail.DescribeUserOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{userStateDisabled, userStateEnabled},
+		Pending: enum.Slice(awstypes.EntityStateDisabled, awstypes.EntityStateDisabled),
 		Target:  []string{},
 		Refresh: statusUser(conn, organizationID, userID),
 		Timeout: timeout,
@@ -551,10 +553,6 @@ func findUserByTwoPartKey(ctx context.Context, conn *workmail.Client, organizati
 	}
 
 	return out, nil
-}
-
-func isStringSet(value types.String) bool {
-	return !value.IsNull() && !value.IsUnknown()
 }
 
 var (
