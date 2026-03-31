@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -93,7 +94,7 @@ func (r *awsServiceAccessResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, enabledServicePrincipal, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, enabledServicePrincipal, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -150,6 +151,12 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, servicePrincipal)
 		return
 	}
+}
+
+func (r *awsServiceAccessResource) flatten(ctx context.Context, enabledServicePrincipal *awstypes.EnabledServicePrincipal, data *awsServiceAccessResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, enabledServicePrincipal, data)...)
+	return diags
 }
 
 func findAWSServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) { // nosemgrep:ci.aws-in-func-name

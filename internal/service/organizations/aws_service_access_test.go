@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+func testAccAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var serviceaccess awstypes.EnabledServicePrincipal
 	resourceName := "aws_organizations_aws_service_access.test"
@@ -62,7 +62,7 @@ func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.
 	})
 }
 
-func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+func testAccAWSServiceAccess_disappears(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var serviceaccess awstypes.EnabledServicePrincipal
 	resourceName := "aws_organizations_aws_service_access.test"

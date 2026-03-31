@@ -117,9 +117,11 @@ func TestAccOrganizations_serial(t *testing.T) {
 			acctest.CtBasic: testAccResourceTagsDataSource_basic,
 		},
 		"AWSServiceAccess": {
-			acctest.CtBasic:      testAccOrganizationsAWSServiceAccess_basic,
-			acctest.CtDisappears: testAccOrganizationsAWSServiceAccess_disappears,
-			"Identity":           testAccOrganizationsAWSServiceAccess_identitySerial,
+			acctest.CtBasic:       testAccAWSServiceAccess_basic,
+			acctest.CtDisappears:  testAccAWSServiceAccess_disappears,
+			"Identity":            testAccOrganizationsAWSServiceAccess_identitySerial,
+			"ListBasic":           testAccAWSServiceAccess_List_basic,
+			"ListIncludeResource": testAccAWSServiceAccess_List_includeResource,
 		},
 	}
 

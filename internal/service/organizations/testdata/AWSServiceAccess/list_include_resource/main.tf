@@ -4,25 +4,15 @@
 resource "aws_organizations_aws_service_access" "test" {
   count = var.resource_count
 
-  name = "${var.rName}-${count.index}"
-
-  tags = var.resource_tags
+  service_principal = local.service_principals[count.index]
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
+locals {
+  service_principals = ["tagpolicies.tag.amazonaws.com", "config.amazonaws.com", "ds.amazonaws.com"]
 }
 
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
-  nullable    = false
-}
-
-variable "resource_tags" {
-  description = "Tags to set on resource"
-  type        = map(string)
   nullable    = false
 }

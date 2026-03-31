@@ -4,13 +4,11 @@
 resource "aws_organizations_aws_service_access" "test" {
   count = var.resource_count
 
-  name = "${var.rName}-${count.index}"
+  service_principal = local.service_principals[count.index]
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
+locals {
+  service_principals = ["tagpolicies.tag.amazonaws.com", "config.amazonaws.com", "ds.amazonaws.com"]
 }
 
 variable "resource_count" {
