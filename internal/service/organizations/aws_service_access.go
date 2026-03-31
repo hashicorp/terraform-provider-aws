@@ -6,7 +6,6 @@ package organizations
 import (
 	"context"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -15,11 +14,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -38,10 +40,6 @@ func newAWSServiceAccessResource(_ context.Context) (resource.ResourceWithConfig
 	return r, nil
 }
 
-const (
-	ResNameServiceAccess = "Service Access"
-)
-
 type awsServiceAccessResource struct {
 	framework.ResourceWithModel[awsServiceAccessResourceModel]
 	framework.WithImportByIdentity
@@ -50,15 +48,18 @@ type awsServiceAccessResource struct {
 func (r *awsServiceAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"service_principal": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"date_enabled": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+			},
+			"service_principal": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					fwvalidators.ServicePrincipal(),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
@@ -73,25 +74,26 @@ func (r *awsServiceAccessResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	servicePrincipal := fwflex.StringValueFromFramework(ctx, plan.ServicePrincipal)
 	var input organizations.EnableAWSServiceAccessInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.EnableAWSServiceAccess(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServicePrincipal.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, servicePrincipal)
 		return
 	}
 
-	enabledServicePrincipal, err := findAWSServiceAccessByServicePrincipal(ctx, conn, plan.ServicePrincipal.ValueString())
+	enabledServicePrincipal, err := findAWSServiceAccessByServicePrincipal(ctx, conn, servicePrincipal)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServicePrincipal.ValueString())
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, enabledServicePrincipal, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, enabledServicePrincipal, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -108,7 +110,8 @@ func (r *awsServiceAccessResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findAWSServiceAccessByServicePrincipal(ctx, conn, state.ServicePrincipal.ValueString())
+	servicePrincipal := fwflex.StringValueFromFramework(ctx, state.ServicePrincipal)
+	out, err := findAWSServiceAccessByServicePrincipal(ctx, conn, servicePrincipal)
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -117,11 +120,11 @@ func (r *awsServiceAccessResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ServicePrincipal.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, servicePrincipal)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -138,38 +141,31 @@ func (r *awsServiceAccessResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
+	servicePrincipal := fwflex.StringValueFromFramework(ctx, state.ServicePrincipal)
 	input := organizations.DisableAWSServiceAccessInput{
-		ServicePrincipal: state.ServicePrincipal.ValueStringPointer(),
+		ServicePrincipal: aws.String(servicePrincipal),
 	}
-
 	_, err := conn.DisableAWSServiceAccess(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ServicePrincipal.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, servicePrincipal)
 		return
 	}
 }
 
 func findAWSServiceAccessByServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) (*awstypes.EnabledServicePrincipal, error) { // nosemgrep:ci.aws-in-func-name
-	var enabledServices []awstypes.EnabledServicePrincipal
+	var input organizations.ListAWSServiceAccessForOrganizationInput
+	output, err := findEnabledServicePrincipals(ctx, conn, &input)
 
-	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, nil)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, sp := range page.EnabledServicePrincipals {
-			if aws.ToString(sp.ServicePrincipal) == servicePrincipal {
-				enabledServices = append(enabledServices, sp)
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(enabledServices)
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.EnabledServicePrincipal) bool {
+		return aws.ToString(v.ServicePrincipal) == servicePrincipal
+	}))
 }
 
 type awsServiceAccessResourceModel struct {
-	ServicePrincipal types.String      `tfsdk:"service_principal"`
 	DateEnabled      timetypes.RFC3339 `tfsdk:"date_enabled"`
+	ServicePrincipal types.String      `tfsdk:"service_principal"`
 }

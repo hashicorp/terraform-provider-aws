@@ -5,16 +5,18 @@ package organizations_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,7 +25,6 @@ import (
 func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var serviceaccess awstypes.EnabledServicePrincipal
-	servicePrincipal := "tagpolicies.tag.amazonaws.com"
 	resourceName := "aws_organizations_aws_service_access.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -36,12 +37,19 @@ func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.
 		CheckDestroy:             testAccCheckAWSServiceAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceAccessConfig_basic(servicePrincipal),
+				ConfigDirectory: config.StaticDirectory("testdata/AWSServiceAccess/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSServiceAccessExists(ctx, t, resourceName, &serviceaccess),
-					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
-					resource.TestCheckResourceAttrSet(resourceName, "date_enabled"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("date_enabled"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -57,7 +65,6 @@ func testAccOrganizationsAWSServiceAccess_basic(t *testing.T) { // nosemgrep:ci.
 func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	ctx := acctest.Context(t)
 	var serviceaccess awstypes.EnabledServicePrincipal
-	servicePrincipal := "tagpolicies.tag.amazonaws.com"
 	resourceName := "aws_organizations_aws_service_access.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -70,13 +77,17 @@ func testAccOrganizationsAWSServiceAccess_disappears(t *testing.T) { // nosemgre
 		CheckDestroy:             testAccCheckAWSServiceAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceAccessConfig_basic(servicePrincipal),
+				ConfigDirectory: config.StaticDirectory("testdata/AWSServiceAccess/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSServiceAccessExists(ctx, t, resourceName, &serviceaccess),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tforganizations.ResourceAWSServiceAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -95,51 +106,40 @@ func testAccCheckAWSServiceAccessDestroy(ctx context.Context, t *testing.T) reso
 				continue
 			}
 
-			servicePrincipal := rs.Primary.Attributes["service_principal"]
-			_, err := tforganizations.FindAWSServiceAccessByServicePrincipal(ctx, conn, servicePrincipal)
+			_, err := tforganizations.FindAWSServiceAccessByServicePrincipal(ctx, conn, rs.Primary.Attributes["service_principal"])
+
 			if retry.NotFound(err) {
-				return nil
+				continue
 			}
 
 			if err != nil {
-				return create.Error(names.Organizations, create.ErrActionCheckingDestroyed, tforganizations.ResNameServiceAccess, servicePrincipal, err)
+				return err
 			}
 
-			return create.Error(names.Organizations, create.ErrActionCheckingDestroyed, tforganizations.ResNameServiceAccess, servicePrincipal, errors.New("not destroyed"))
+			return fmt.Errorf("Organizations AWS Service Access %s still exists", rs.Primary.Attributes["service_principal"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAWSServiceAccessExists(ctx context.Context, t *testing.T, name string, serviceaccess *awstypes.EnabledServicePrincipal) resource.TestCheckFunc { // nosemgrep:ci.aws-in-func-name
+func testAccCheckAWSServiceAccessExists(ctx context.Context, t *testing.T, n string, v *awstypes.EnabledServicePrincipal) resource.TestCheckFunc { // nosemgrep:ci.aws-in-func-name
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameServiceAccess, name, errors.New("not found"))
-		}
-
-		servicePrincipal := rs.Primary.Attributes["service_principal"]
-		if servicePrincipal == "" {
-			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameServiceAccess, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
-		resp, err := tforganizations.FindAWSServiceAccessByServicePrincipal(ctx, conn, servicePrincipal)
+
+		output, err := tforganizations.FindAWSServiceAccessByServicePrincipal(ctx, conn, rs.Primary.Attributes["service_principal"])
+
 		if err != nil {
-			return create.Error(names.Organizations, create.ErrActionCheckingExistence, tforganizations.ResNameServiceAccess, servicePrincipal, err)
+			return err
 		}
 
-		*serviceaccess = *resp
+		*v = *output
 
 		return nil
 	}
-}
-
-func testAccAWSServiceAccessConfig_basic(servicePrincipal string) string { // nosemgrep:ci.aws-in-func-name
-	return fmt.Sprintf(`
-resource "aws_organizations_aws_service_access" "test" {
-  service_principal = %[1]q
-}
-`, servicePrincipal)
 }
