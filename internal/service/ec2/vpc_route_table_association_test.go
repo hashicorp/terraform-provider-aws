@@ -33,7 +33,7 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
@@ -66,7 +66,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
@@ -74,7 +74,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnetChange(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
@@ -100,7 +100,7 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
@@ -133,7 +133,7 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
@@ -141,7 +141,7 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gatewayChange(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
@@ -165,7 +165,7 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTableAssociation(), resourceName),
 				),
@@ -188,7 +188,7 @@ func TestAccVPCRouteTableAssociation_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_regionOverride(rName, acctest.AlternateRegion()),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 				),
 			},
