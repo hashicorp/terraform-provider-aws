@@ -109,6 +109,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 		},
 		{
+			Factory:  newGroupResourceAsListResource,
+			TypeName: "aws_workmail_group",
+			Name:     "Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute("group_id", true),
+			}),
+		},
+		{
 			Factory:  newOrganizationResourceAsListResource,
 			TypeName: "aws_workmail_organization",
 			Name:     "Organization",
