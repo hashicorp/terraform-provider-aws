@@ -126,11 +126,19 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route Table Association (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceRouteTableAssociationFlatten(association, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceRouteTableAssociationFlatten(association *awstypes.RouteTableAssociation, d *schema.ResourceData) error {
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)
 	d.Set(names.AttrSubnetID, association.SubnetId)
 
-	return diags
+	return nil
 }
 
 func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

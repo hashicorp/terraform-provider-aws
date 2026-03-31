@@ -2015,6 +2015,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
 		{
+			Factory:  newRouteTableAssociationResourceAsListResource,
+			TypeName: "aws_route_table_association",
+			Name:     "Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID,
+				inttypes.WithMutableIdentity(),
+			),
+		},
+		{
 			Factory:  newSecurityGroupResourceAsListResource,
 			TypeName: "aws_security_group",
 			Name:     "Security Group",
