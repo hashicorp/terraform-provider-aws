@@ -740,6 +740,20 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_dataSourceSelect
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("data_source_selection_criteria"),
+						knownvalue.StringExact("*")),
+					statecheck.ExpectKnownValue(resourceName,
+						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
+							AtMapKey(names.AttrSource).AtSliceIndex(0).
+							AtMapKey("source_logs_configuration").AtSliceIndex(0).
+							AtMapKey("log_group_selection_criteria"),
+						knownvalue.StringExact("*")),
+				},
 			},
 		},
 	})
