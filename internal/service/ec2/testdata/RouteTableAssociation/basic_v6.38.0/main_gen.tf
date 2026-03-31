@@ -30,11 +30,6 @@ resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 terraform {
   required_providers {
     aws = {
