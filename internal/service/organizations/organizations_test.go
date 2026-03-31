@@ -116,6 +116,13 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"ResourceTags": {
 			acctest.CtBasic: testAccResourceTagsDataSource_basic,
 		},
+		"AWSServiceAccess": {
+			acctest.CtBasic:       testAccAWSServiceAccess_basic,
+			acctest.CtDisappears:  testAccAWSServiceAccess_disappears,
+			"Identity":            testAccOrganizationsAWSServiceAccess_identitySerial,
+			"ListBasic":           testAccAWSServiceAccess_List_basic,
+			"ListIncludeResource": testAccAWSServiceAccess_List_includeResource,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

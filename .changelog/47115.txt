@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_uxc_account_customizations
+```
+
+```release-note:new-data-source
+aws_uxc_services
+```

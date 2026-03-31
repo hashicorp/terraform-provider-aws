@@ -283,7 +283,7 @@ For Terraform Plugin SDK V2 based resources, ensure that the `Update` operation 
 
 === "Terraform Plugin SDK V2"
     ```go
-    func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+    func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
       var diags diag.Diagnostics
       // Tags only.
       return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
@@ -311,7 +311,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     input := eks.CreateClusterInput{
       /* ... other configuration ... */
@@ -325,7 +325,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     input := eks.CreateClusterInput{
       /* ...other configuration... */
@@ -343,7 +343,7 @@ implement the logic to convert the configuration tags into the service API call 
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     /* ... creation steps ... */
 
@@ -362,7 +362,7 @@ This example shows using `TagSpecifications`:
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+    tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]any)))
 
     input := ec2.CreateFleetInput{
         /* ... other configuration ... */

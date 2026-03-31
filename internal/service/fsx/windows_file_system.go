@@ -18,10 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -325,7 +325,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	inputCFS := fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileSystemType:     awstypes.FileSystemTypeWindows,
 		StorageCapacity:    aws.Int32(int32(d.Get("storage_capacity").(int))),
 		SubnetIds:          flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
@@ -337,7 +337,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		},
 	}
 	inputCFSFB := fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		SubnetIds:          flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
 		Tags:               getTagsIn(ctx),
 		WindowsConfiguration: &awstypes.CreateFileSystemWindowsConfiguration{
@@ -537,7 +537,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		o, n := d.GetChange("throughput_capacity")
 		if o, n := o.(int), n.(int); n > o {
 			input := fsx.UpdateFileSystemInput{
-				ClientRequestToken: aws.String(sdkid.UniqueId()),
+				ClientRequestToken: aws.String(create.UniqueId(ctx)),
 				FileSystemId:       aws.String(d.Id()),
 				WindowsConfiguration: &awstypes.UpdateFileSystemWindowsConfiguration{
 					ThroughputCapacity: aws.Int32(int32(n)),
@@ -569,7 +569,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		names.AttrTagsAll,
 	) {
 		input := fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(sdkid.UniqueId()),
+			ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 			FileSystemId:         aws.String(d.Id()),
 			WindowsConfiguration: &awstypes.UpdateFileSystemWindowsConfiguration{},
 		}
@@ -630,7 +630,7 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := fsx.DeleteFileSystemInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		FileSystemId:       aws.String(d.Id()),
 		WindowsConfiguration: &awstypes.DeleteFileSystemWindowsConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),

@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -1159,7 +1158,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	input := ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
-		ClientToken:                       aws.String(sdkid.UniqueId()),
+		ClientToken:                       aws.String(create.UniqueId(ctx)),
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
@@ -1754,7 +1753,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]any)[0].(map[string]any))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := ec2.ModifyInstanceCreditSpecificationInput{
-				ClientToken:                  aws.String(sdkid.UniqueId()),
+				ClientToken:                  aws.String(create.UniqueId(ctx)),
 				InstanceCreditSpecifications: []awstypes.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 
