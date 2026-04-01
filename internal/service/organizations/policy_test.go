@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -962,6 +963,97 @@ resource "aws_organizations_policy" "test" {
 }
 
 `, strconv.Quote(content), rName)
+}
+
+func testAccPolicy_contentEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_contentEquivalent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccPolicyConfig_contentEquivalentReordered(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccPolicyConfig_contentEquivalent(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  name = %[1]q
+  content = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Deny"
+      Action   = ["sts:AssumeRole"]
+      Resource = "*"
+      Condition = {
+        "ForAnyValue:StringLike" = {
+          "aws:ResourceOrgPaths" = [
+            "o-example/r-root/ou-root-aaa/*",
+            "o-example/r-root/ou-root-bbb/*",
+            "o-example/r-root/ou-root-ccc/*",
+          ]
+        }
+      }
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_contentEquivalentReordered(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  name = %[1]q
+  content = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Deny"
+      Resource = "*"
+      Action   = ["sts:AssumeRole"]
+      Condition = {
+        "ForAnyValue:StringLike" = {
+          "aws:ResourceOrgPaths" = [
+            "o-example/r-root/ou-root-ccc/*",
+            "o-example/r-root/ou-root-aaa/*",
+            "o-example/r-root/ou-root-bbb/*",
+          ]
+        }
+      }
+    }]
+  })
+}
+`, rName)
 }
 
 const testAccPolicyConfig_managed = `
