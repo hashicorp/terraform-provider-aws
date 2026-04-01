@@ -33,20 +33,20 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.12
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.14
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.54.4
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.23
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.12
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.4
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.14
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.11
 	github.com/aws/aws-sdk-go-v2/service/batch v1.63.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.7
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.21
@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.12
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.9
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.55.3
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.21
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.13
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.12
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.296.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.56.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.13
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.74.1
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.14
 	github.com/aws/aws-sdk-go-v2/service/eks v1.81.2
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.13
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.20
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.22
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.7
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.3
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.4
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.15
 	github.com/aws/aws-sdk-go-v2/service/glue v1.139.1
@@ -156,7 +156,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.24
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.8
 	github.com/aws/aws-sdk-go-v2/service/kms v1.50.4
-	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.5
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.6
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.5
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.14
@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.15
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.9.3
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.61.1
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.6
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.14
@@ -231,7 +231,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.237.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.238.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.12
@@ -296,7 +296,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-set/v3 v3.0.1
 	github.com/hashicorp/go-uuid v1.0.3
-	github.com/hashicorp/go-version v1.8.0
+	github.com/hashicorp/go-version v1.9.0
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-json v0.27.2
 	github.com/hashicorp/terraform-plugin-framework v1.19.0

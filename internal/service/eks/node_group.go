@@ -36,6 +36,7 @@ import (
 
 // @SDKResource("aws_eks_node_group", name="Node Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,
