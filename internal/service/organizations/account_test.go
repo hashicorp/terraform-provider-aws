@@ -45,7 +45,7 @@ func testAccAccount_basic(t *testing.T) {
 	resourceName := "aws_organizations_account.test"
 	rInt := acctest.RandInt(t)
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
-	email := fmt.Sprintf("tf-acctest+%d-%s", rInt, orgsEmailDomain)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
@@ -63,7 +63,7 @@ func testAccAccount_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
-					resource.TestCheckTypeSet(resourceName, "paths"),
+					resource.TestCheckResourceAttrSet(resourceName, "paths.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -99,7 +99,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
-					resource.TestCheckTypeSet(resourceName, "paths"),
+					resource.TestCheckResourceAttrSet(resourceName, "paths.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -172,7 +172,7 @@ func testAccAccount_AccountUpdate(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
-					resource.TestCheckTypeSet(resourceName, "paths"),
+					resource.TestCheckResourceAttrSet(resourceName, "paths.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -280,7 +280,7 @@ func testAccOrganizationsAccount_Identity_basic(t *testing.T) {
 	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	rInt := acctest.RandInt(t)
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
-	email := fmt.Sprintf("tf-acctest+%d-%s", rInt, orgsEmailDomain)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

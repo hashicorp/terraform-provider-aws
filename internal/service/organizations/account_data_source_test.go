@@ -40,7 +40,7 @@ func testAccAccountDataSource_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "paths"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "paths.0"),
 				),
 			},
 		},
