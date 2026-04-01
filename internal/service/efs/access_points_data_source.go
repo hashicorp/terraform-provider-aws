@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -49,11 +48,10 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fileSystemID := d.Get(names.AttrFileSystemID).(string)
-	input := &efs.DescribeAccessPointsInput{
+	input := efs.DescribeAccessPointsInput{
 		FileSystemId: aws.String(fileSystemID),
 	}
-
-	output, err := findAccessPointDescriptions(ctx, conn, input)
+	output, err := findAccessPoints(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Access Points: %s", err)
@@ -71,22 +69,4 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrIDs, accessPointIDs)
 
 	return diags
-}
-
-func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
-	var output []awstypes.AccessPointDescription
-
-	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.AccessPoints...)
-	}
-
-	return output, nil
 }

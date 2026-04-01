@@ -7,11 +7,12 @@ package efs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -139,7 +140,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
-	input := &efs.CreateAccessPointInput{
+	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsID),
 		Tags:         getTagsIn(ctx),
 	}
@@ -152,7 +153,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.RootDirectory = expandAccessPointRootDirectory(v.([]any))
 	}
 
-	output, err := conn.CreateAccessPoint(ctx, input)
+	output, err := conn.CreateAccessPoint(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS Access Point for File System (%s): %s", fsID, err)
@@ -169,7 +170,8 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EFSClient(ctx)
 
 	ap, err := findAccessPointByID(ctx, conn, d.Id())
 
@@ -185,14 +187,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.ToString(ap.FileSystemId)
-	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  "file-system/" + fsID,
-		Service:   "elasticfilesystem",
-	}.String()
-	d.Set("file_system_arn", fsARN)
+	d.Set("file_system_arn", fileSystemARN(ctx, c, fsID))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
@@ -220,9 +215,10 @@ func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS Access Point: %s", d.Id())
-	_, err := conn.DeleteAccessPoint(ctx, &efs.DeleteAccessPointInput{
+	input := efs.DeleteAccessPointInput{
 		AccessPointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAccessPoint(ctx, &input)
 
 	if errs.IsA[*awstypes.AccessPointNotFound](err) {
 		return diags
@@ -239,8 +235,8 @@ func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[*awstypes.AccessPointDescription]) (*awstypes.AccessPointDescription, error) {
-	output, err := findAccessPoints(ctx, conn, input, filter)
+func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) (*awstypes.AccessPointDescription, error) {
+	output, err := findAccessPoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -249,39 +245,28 @@ func findAccessPoint(ctx context.Context, conn *efs.Client, input *efs.DescribeA
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, filter tfslices.Predicate[*awstypes.AccessPointDescription]) ([]awstypes.AccessPointDescription, error) {
-	var output []awstypes.AccessPointDescription
+func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
+	output, err := tfslices.CollectAndConcatWithError(listAccessPointPages(ctx, conn, input))
 
-	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.AccessPointNotFound](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsA[*awstypes.AccessPointNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.AccessPoints {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
 func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.AccessPointDescription, error) {
-	input := &efs.DescribeAccessPointsInput{
+	input := efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(id),
 	}
 
-	output, err := findAccessPoint(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AccessPointDescription]())
+	output, err := findAccessPoint(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -296,7 +281,24 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	return output, nil
 }
 
-func statusAccessPointLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+func listAccessPointPages(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput, optFns ...func(*efs.Options)) iter.Seq2[[]awstypes.AccessPointDescription, error] {
+	return func(yield func([]awstypes.AccessPointDescription, error) bool) {
+		pages := efs.NewDescribeAccessPointsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing EFS Access Point: %w", err))
+				return
+			}
+
+			if !yield(page.AccessPoints, nil) {
+				return
+			}
+		}
+	}
+}
+
+func statusAccessPoint(conn *efs.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 
@@ -319,7 +321,7 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh: statusAccessPointLifeCycleState(conn, id),
+		Refresh: statusAccessPoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -340,7 +342,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusAccessPointLifeCycleState(conn, id),
+		Refresh: statusAccessPoint(conn, id),
 		Timeout: accessPointDeletedTimeout,
 	}
 
@@ -444,4 +446,8 @@ func flattenAccessPointRootDirectoryCreationInfo(apiObject *awstypes.CreationInf
 	}
 
 	return []any{tfMap}
+}
+
+func fileSystemARN(ctx context.Context, c *conns.AWSClient, fsID string) string {
+	return c.RegionalARN(ctx, "elasticfilesystem", "file-system/"+fsID)
 }
