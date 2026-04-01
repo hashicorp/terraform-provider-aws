@@ -187,12 +187,12 @@ func testAccVPCSecurityGroupEgressRuleConfig_ipv6Base(rName string) string {
 func testAccVPCSecurityGroupEgressRuleConfig_cidrIPv6(rName string) string {
 	return acctest.ConfigCompose(testAccVPCSecurityGroupEgressRuleConfig_ipv6Base(rName), `
 resource "aws_vpc_security_group_egress_rule" "test" {
-	security_group_id = aws_security_group.test.id
+  security_group_id = aws_security_group.test.id
 
-	cidr_ipv6   = "::/0"
-	from_port   = 0
-	ip_protocol = "-1"
-	to_port     = 0
+  cidr_ipv6   = "::/0"
+  from_port   = 0
+  ip_protocol = "-1"
+  to_port     = 0
 }
 `)
 }

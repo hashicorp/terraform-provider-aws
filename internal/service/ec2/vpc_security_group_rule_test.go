@@ -1843,13 +1843,13 @@ func testAccVPCSecurityGroupRuleConfig_ipv6Base(rName string) string {
 func testAccVPCSecurityGroupRuleConfig_egressIPv6(rName string) string {
 	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_ipv6Base(rName), `
 resource "aws_security_group_rule" "test" {
-	type             = "egress"
-	protocol         = "-1"
-	from_port        = 0
-	to_port          = 0
-	ipv6_cidr_blocks = ["::/0"]
+  type             = "egress"
+  protocol         = "-1"
+  from_port        = 0
+  to_port          = 0
+  ipv6_cidr_blocks = ["::/0"]
 
-	security_group_id = aws_security_group.test.id
+  security_group_id = aws_security_group.test.id
 }
 `)
 }

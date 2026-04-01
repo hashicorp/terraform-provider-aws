@@ -4260,21 +4260,21 @@ resource "aws_security_group" "test" {
 func testAccVPCSecurityGroupConfig_ipv6VPCOnly(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block                       = "10.1.0.0/16"
-	assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-	name   = %[1]q
-	vpc_id = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }
@@ -4282,28 +4282,28 @@ resource "aws_security_group" "test" {
 func testAccVPCSecurityGroupConfig_ipv6EgressOnly(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block                       = "10.1.0.0/16"
-	assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-	name   = %[1]q
-	vpc_id = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
-	egress {
-		from_port        = 0
-		to_port          = 0
-		protocol         = "-1"
-		ipv6_cidr_blocks = ["::/0"]
-	}
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    ipv6_cidr_blocks = ["::/0"]
+  }
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }
