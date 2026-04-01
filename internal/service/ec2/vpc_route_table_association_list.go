@@ -79,7 +79,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			routeTableDisplayName = routeTableID
 		}
 
-		subnetNames := make(map[string]string)
+		targetNames := make(map[string]string, len(routeTable.Associations))
 		subnetIDs := make([]string, 0, len(routeTable.Associations))
 		for _, item := range routeTable.Associations {
 			if item.SubnetId != nil {
@@ -99,7 +99,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			for _, subnet := range subnets {
 				tags := keyValueTags(ctx, subnet.Tags)
 				if v, ok := tags["Name"]; ok {
-					subnetNames[aws.ToString(subnet.SubnetId)] = v.ValueString()
+					targetNames[aws.ToString(subnet.SubnetId)] = v.ValueString()
 				}
 			}
 		}
@@ -117,7 +117,6 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				gatewayIDs = append(gatewayIDs, aws.ToString(item.GatewayId))
 			}
 		}
-		gatewayNames := make(map[string]string)
 		if internetGatewayID != "" {
 			internetGateway, err := findInternetGatewayByID(ctx, conn, internetGatewayID)
 			if err != nil {
@@ -127,7 +126,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			}
 			tags := keyValueTags(ctx, internetGateway.Tags)
 			if v, ok := tags["Name"]; ok {
-				gatewayNames[internetGatewayID] = v.ValueString()
+				targetNames[internetGatewayID] = v.ValueString()
 			}
 		}
 		if len(gatewayIDs) > 0 {
@@ -143,7 +142,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			for _, gateway := range gateways {
 				tags := keyValueTags(ctx, gateway.Tags)
 				if v, ok := tags["Name"]; ok {
-					gatewayNames[aws.ToString(gateway.VpnGatewayId)] = v.ValueString()
+					targetNames[aws.ToString(gateway.VpnGatewayId)] = v.ValueString()
 				}
 			}
 		}
@@ -173,12 +172,12 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			var targetDisplayName string
 			if item.SubnetId != nil {
 				targetDisplayName = aws.ToString(item.SubnetId)
-				if subnetName, ok := subnetNames[aws.ToString(item.SubnetId)]; ok {
+				if subnetName, ok := targetNames[aws.ToString(item.SubnetId)]; ok {
 					targetDisplayName = subnetName
 				}
 			} else if item.GatewayId != nil {
 				targetDisplayName = aws.ToString(item.GatewayId)
-				if gatewayName, ok := gatewayNames[aws.ToString(item.GatewayId)]; ok {
+				if gatewayName, ok := targetNames[aws.ToString(item.GatewayId)]; ok {
 					targetDisplayName = gatewayName
 				}
 			} else {
