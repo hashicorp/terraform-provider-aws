@@ -79,7 +79,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			routeTableDisplayName = routeTableID
 		}
 
-		var subnets map[string]*awstypes.Subnet
+		subnetNames := make(map[string]string)
 		subnetIDs := make([]string, 0, len(routeTable.Associations))
 		for _, item := range routeTable.Associations {
 			if item.SubnetId != nil {
@@ -87,11 +87,20 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			}
 		}
 		if len(subnetIDs) > 0 {
-			subnets, err = batchFindSubnets(ctx, conn, subnetIDs)
+			input := ec2.DescribeSubnetsInput{
+				SubnetIds: subnetIDs,
+			}
+			subnets, err := findSubnets(ctx, conn, &input)
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
+			}
+			for _, subnet := range subnets {
+				tags := keyValueTags(ctx, subnet.Tags)
+				if v, ok := tags["Name"]; ok {
+					subnetNames[aws.ToString(subnet.SubnetId)] = v.ValueString()
+				}
 			}
 		}
 
@@ -164,11 +173,8 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			var targetDisplayName string
 			if item.SubnetId != nil {
 				targetDisplayName = aws.ToString(item.SubnetId)
-				if subnet, ok := subnets[aws.ToString(item.SubnetId)]; ok {
-					subnetTags := keyValueTags(ctx, subnet.Tags)
-					if v, ok := subnetTags["Name"]; ok {
-						targetDisplayName = v.ValueString()
-					}
+				if subnetName, ok := subnetNames[aws.ToString(item.SubnetId)]; ok {
+					targetDisplayName = subnetName
 				}
 			} else if item.GatewayId != nil {
 				targetDisplayName = aws.ToString(item.GatewayId)
