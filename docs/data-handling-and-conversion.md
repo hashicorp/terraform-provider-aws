@@ -1877,9 +1877,9 @@ This helps prevent an immediate plan difference after resource import unless the
 
 ### Terrafom Plugin SDK V2 Access To Config, Plan, State
 
-When using the Terraform Plugin SDK V2 the [recommendation](#recommended-implementations) is to use methods on the (`ResourceData`)[https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData] structure to access [root attributes](#root-attributes-versus-block-attributes). In certain scenarios access to the Terraform config, plan or state my be required. Use the [`GetRawConfig`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawConfig), [`GetRawPlan`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawPlan) and [`GetRawState`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawState) methods, which return [`cty` values](https://pkg.go.dev/github.com/hashicorp/go-cty/cty#Value).
+When using the Terraform Plugin SDK V2 the [recommendation](#recommended-implementations) is to use methods on the (`ResourceData`)[https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData] structure to access [root attributes](#root-attributes-versus-block-attributes). In certain scenarios access to the Terraform config, plan or state may be required; use the [`GetRawConfig`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawConfig), [`GetRawPlan`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawPlan) and [`GetRawState`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawState) methods, which return [`cty` values](https://pkg.go.dev/github.com/hashicorp/go-cty/cty#Value).
 
-The `GetFramework` function can be used to convert a `cty` object into a Terraform Plugin Framework model. For example,
+The `GetFramework` function can be used to convert a `cty` object value into a Terraform Plugin Framework model. For example,
 
 ```go
 import (
