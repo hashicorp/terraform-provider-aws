@@ -45,7 +45,7 @@ func newGroupResource(_ context.Context) (resource.ResourceWithConfigure, error)
 }
 
 const (
-	groupPropagationTimeout     = 2 * time.Minute
+	groupPropagationTimeout      = 2 * time.Minute
 	groupDeleteTransitionTimeout = 2 * time.Minute
 )
 
