@@ -20,9 +20,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -114,7 +114,7 @@ func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.ToString(changeSet.StackId))
 
-	requestToken := sdkid.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	executeRequest := cloudformation.ExecuteChangeSetInput{
 		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
@@ -231,7 +231,7 @@ func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) change set created", d.Id())
 
-	requestToken := sdkid.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	executeRequest := cloudformation.ExecuteChangeSetInput{
 		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
@@ -256,7 +256,7 @@ func resourceCloudFormationStackDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	cfConn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	requestToken := sdkid.UniqueId()
+	requestToken := create.UniqueId(ctx)
 	input := &cloudformation.DeleteStackInput{
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),

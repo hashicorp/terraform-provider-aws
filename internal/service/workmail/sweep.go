@@ -19,6 +19,8 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_workmail_organization", sweepOrganizations)
+	awsv2.Register("aws_workmail_group", sweepGroups)
+	awsv2.Register("aws_workmail_user", sweepUsers)
 }
 
 func sweepOrganizations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -37,6 +39,82 @@ func sweepOrganizations(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newOrganizationResource, client,
 				sweepfw.NewAttribute("organization_id", aws.ToString(v.OrganizationId))),
 			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.WorkMailClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := workmail.NewListOrganizationsPaginator(conn, &workmail.ListOrganizationsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, organization := range page.OrganizationSummaries {
+			organizationID := aws.ToString(organization.OrganizationId)
+
+			input := workmail.ListGroupsInput{
+				OrganizationId: aws.String(organizationID),
+			}
+
+			groupPages := workmail.NewListGroupsPaginator(conn, &input)
+			for groupPages.HasMorePages() {
+				page, err := groupPages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, group := range page.Groups {
+					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newGroupResource, client,
+						sweepfw.NewAttribute("organization_id", organizationID),
+						sweepfw.NewAttribute("group_id", aws.ToString(group.Id))),
+					)
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepUsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.WorkMailClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := workmail.NewListOrganizationsPaginator(conn, &workmail.ListOrganizationsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, organization := range page.OrganizationSummaries {
+			organizationID := aws.ToString(organization.OrganizationId)
+
+			input := workmail.ListUsersInput{
+				OrganizationId: aws.String(organizationID),
+			}
+
+			userPages := workmail.NewListUsersPaginator(conn, &input)
+			for userPages.HasMorePages() {
+				page, err := userPages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, user := range page.Users {
+					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newUserResource, client,
+						sweepfw.NewAttribute("organization_id", organizationID),
+						sweepfw.NewAttribute("user_id", aws.ToString(user.Id))),
+					)
+				}
+			}
 		}
 	}
 

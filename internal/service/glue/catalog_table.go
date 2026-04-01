@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -670,6 +671,15 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", id, err)
 	}
 
+	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
+		const (
+			timeout = 3 * time.Minute
+		)
+		if _, err := waitTableViewSucceeded(ctx, conn, catalogID, dbName, name, timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view create: %s", id, err)
+		}
+	}
+
 	d.SetId(id)
 
 	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
@@ -798,6 +808,15 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
+	if input.TableInput != nil && aws.ToString(input.TableInput.TableType) == "VIRTUAL_VIEW" {
+		const (
+			timeout = 3 * time.Minute
+		)
+		if _, err := waitTableViewSucceeded(ctx, conn, catalogID, dbName, name, timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glue Catalog Table (%s) view update: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
 }
 
@@ -876,6 +895,46 @@ func findTable(ctx context.Context, conn *glue.Client, input *glue.GetTableInput
 	}
 
 	return output.Table, nil
+}
+
+func statusTableView(conn *glue.Client, catalogID, dbName, name string) retry.StateRefreshFuncOf[*awstypes.Table, awstypes.ResourceState] {
+	return func(ctx context.Context) (*awstypes.Table, awstypes.ResourceState, error) {
+		output, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// https://docs.aws.amazon.com/lake-formation/latest/dg/views-api-usage-async-states.html.
+		if output.Status == nil {
+			return output, awstypes.ResourceStateSuccess, nil
+		}
+
+		return output, output.Status.State, nil
+	}
+}
+
+func waitTableViewSucceeded(ctx context.Context, conn *glue.Client, catalogID, dbName, name string, timeout time.Duration) (*awstypes.Table, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConfOf[*awstypes.Table, awstypes.ResourceState]{
+		Pending: enum.EnumSlice(awstypes.ResourceStateQueued, awstypes.ResourceStateInProgress),
+		Target:  enum.EnumSlice(awstypes.ResourceStateSuccess, awstypes.ResourceStateStopped),
+		Refresh: statusTableView(conn, catalogID, dbName, name),
+		Timeout: timeout,
+	}
+
+	output, err := stateConf.WaitForStateContext(ctx)
+
+	if output != nil && output.Status != nil {
+		if v := output.Status.Error; v != nil {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage)))
+		}
+	}
+
+	return output, err
 }
 
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {

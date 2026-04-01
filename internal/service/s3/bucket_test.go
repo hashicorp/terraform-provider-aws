@@ -35,6 +35,7 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -3256,7 +3257,7 @@ func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, t *testing.T
   }
 }`, n)
 
-		requestToken := sdkid.UniqueId()
+		requestToken := create.UniqueId(ctx)
 		input := &cloudformation.CreateStackInput{
 			ClientRequestToken: aws.String(requestToken),
 			StackName:          aws.String(stackName),

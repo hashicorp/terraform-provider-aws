@@ -34,6 +34,12 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newBackupsDataSource,
+			TypeName: "aws_dynamodb_backups",
+			Name:     "Backups",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newTablesDataSource,
 			TypeName: "aws_dynamodb_tables",
 			Name:     "Tables",

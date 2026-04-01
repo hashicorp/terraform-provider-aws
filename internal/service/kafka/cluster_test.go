@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,6 +51,9 @@ var (
 	clusterBoostrapBrokersTLSRegexp           = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortTLS))
 
 	clusterZookeeperConnectStringRegexp = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortZookeeper))
+
+	checkClusterARN                = tfknownvalue.RegionalARNRegexp("kafka", regexache.MustCompile(`cluster/.+$`))
+	checkClusterARNAlternateRegion = tfknownvalue.RegionalARNAlternateRegionRegexp("kafka", regexache.MustCompile(`cluster/.+$`))
 )
 
 func TestClusterUUIDFromARN(t *testing.T) {
@@ -127,7 +131,6 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
@@ -179,6 +182,14 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string_tls"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkClusterARN),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -211,6 +222,14 @@ func TestAccKafkaCluster_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -232,9 +251,17 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -248,18 +275,34 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})

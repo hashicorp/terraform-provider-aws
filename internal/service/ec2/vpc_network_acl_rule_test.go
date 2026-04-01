@@ -841,3 +841,25 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 		return strings.Join([]string{naclID, ruleNumber, protocol, egress}, tfec2.NetworkACLRuleImportIDSeparator), nil
 	}
 }
+
+// testAccNetworkACLRuleImportStateIdentityFunc is used in resource identity testing
+func testAccNetworkACLRuleImportStateIdentityFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		naclID := rs.Primary.Attributes["network_acl_id"]
+		ruleNumber := rs.Primary.Attributes["rule_number"]
+		protocol := rs.Primary.Attributes[names.AttrProtocol]
+
+		if protocolNumber, err := strconv.ParseInt(protocol, 10, 64); err == nil {
+			protocol = tfec2.IanaProtocolIToA[int(protocolNumber)]
+		}
+
+		egress := rs.Primary.Attributes["egress"]
+
+		return strings.Join([]string{naclID, ruleNumber, protocol, egress}, tfec2.NetworkACLRuleImportIDSeparator), nil
+	}
+}

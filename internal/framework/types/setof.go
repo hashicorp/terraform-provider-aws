@@ -34,6 +34,9 @@ var (
 	// SetOfStringType is a custom type used for defining a Set of strings.
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}, nil}
 
+	// SetOfInt64Type is a custom type used for defining a Set of int64s.
+	SetOfInt64Type = setTypeOf[basetypes.Int64Value]{basetypes.SetType{ElemType: basetypes.Int64Type{}}, nil}
+
 	// SetOfARNType is a custom type used for defining a Set of ARNs.
 	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}, nil}
 )
@@ -113,6 +116,7 @@ type SetValueOf[T attr.Value] struct {
 
 type (
 	SetOfString                         = SetValueOf[basetypes.StringValue]
+	SetOfInt64                          = SetValueOf[basetypes.Int64Value]
 	SetOfARN                            = SetValueOf[ARN]
 	SetOfStringEnum[T enum.Valueser[T]] = SetValueOf[StringEnum[T]]
 )

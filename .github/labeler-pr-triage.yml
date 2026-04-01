@@ -2296,6 +2296,12 @@ service/translate:
           - any-glob-to-any-file:
               - 'internal/service/translate/**/*'
               - 'website/**/translate_*'
+service/uxc:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/uxc/**/*'
+              - 'website/**/uxc_*'
 service/verifiedaccess:
   - any:
       - changed-files:

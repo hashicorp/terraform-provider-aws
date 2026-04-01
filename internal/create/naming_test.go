@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 func strPtr(str string) *string {
@@ -32,7 +31,7 @@ func TestName(t *testing.T) {
 	}{
 		{
 			testName:       "no configured name or prefix",
-			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
 		},
 		{
 			testName:       "configured name only",
@@ -42,7 +41,7 @@ func TestName(t *testing.T) {
 		{
 			testName:         "configured prefix only",
 			configuredPrefix: "pfx-",
-			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
 		},
 		{
 			testName:         "configured name and prefix",
@@ -77,7 +76,7 @@ func TestNameWithSuffix(t *testing.T) {
 	}{
 		{
 			testName:       "no configured name or prefix, no suffix",
-			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
 		},
 		{
 			testName:       "configured name only, no suffix",
@@ -87,7 +86,7 @@ func TestNameWithSuffix(t *testing.T) {
 		{
 			testName:         "configured prefix only, no suffix",
 			configuredPrefix: "pfx-",
-			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
 		},
 		{
 			testName:         "configured name and prefix, no suffix",
@@ -97,7 +96,7 @@ func TestNameWithSuffix(t *testing.T) {
 		},
 		{
 			testName:       "no configured name or prefix, with suffix",
-			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}-sfx$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^terraform-[[:xdigit:]]{%d}-sfx$", UniqueIDSuffixLength)),
 			suffix:         "-sfx",
 		},
 		{
@@ -109,7 +108,7 @@ func TestNameWithSuffix(t *testing.T) {
 		{
 			testName:         "configured prefix only, with suffix",
 			configuredPrefix: "pfx-",
-			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}-sfx$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}-sfx$", UniqueIDSuffixLength)),
 			suffix:           "-sfx",
 		},
 		{
@@ -146,7 +145,7 @@ func TestNameWithDefaultPrefix(t *testing.T) {
 	}{
 		{
 			testName:       "no configured name or prefix",
-			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^def-[[:xdigit:]]{%d}$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp: regexache.MustCompile(fmt.Sprintf("^def-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
 		},
 		{
 			testName:       "configured name only",
@@ -156,7 +155,7 @@ func TestNameWithDefaultPrefix(t *testing.T) {
 		{
 			testName:         "configured prefix only",
 			configuredPrefix: "pfx-",
-			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", sdkid.UniqueIDSuffixLength)),
+			expectedRegexp:   regexache.MustCompile(fmt.Sprintf("^pfx-[[:xdigit:]]{%d}$", UniqueIDSuffixLength)),
 		},
 		{
 			testName:         "configured name and prefix",
