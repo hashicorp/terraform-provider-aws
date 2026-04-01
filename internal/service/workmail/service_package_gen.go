@@ -53,6 +53,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newGroupResource,
+			TypeName: "aws_workmail_group",
+			Name:     "Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute("group_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      groupImportID{},
+			},
+		},
+		{
 			Factory:  newOrganizationResource,
 			TypeName: "aws_workmail_organization",
 			Name:     "Organization",
@@ -92,6 +106,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("organization_id", true),
 				inttypes.StringIdentityAttribute(names.AttrDomainName, true),
+			}),
+		},
+		{
+			Factory:  newGroupResourceAsListResource,
+			TypeName: "aws_workmail_group",
+			Name:     "Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("organization_id", true),
+				inttypes.StringIdentityAttribute("group_id", true),
 			}),
 		},
 		{
