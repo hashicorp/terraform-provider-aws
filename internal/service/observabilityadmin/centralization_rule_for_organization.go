@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -212,15 +213,34 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"data_source_selection_criteria": schema.StringAttribute{
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("*"),
+													Validators: []validator.String{
+														stringvalidator.LengthAtLeast(1),
+														stringvalidator.LengthAtMost(2000),
+														stringvalidator.AtLeastOneOf(
+															path.MatchRelative().AtParent().AtName("data_source_selection_criteria"),
+															path.MatchRelative().AtParent().AtName("log_group_selection_criteria"),
+														),
+													},
+												},
 												"encrypted_log_group_strategy": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.EncryptedLogGroupStrategy](),
 													Required:   true,
 												},
 												"log_group_selection_criteria": schema.StringAttribute{
-													Required: true,
+													Optional: true,
+													Computed: true,
+													Default:  stringdefault.StaticString("*"),
 													Validators: []validator.String{
 														stringvalidator.LengthAtLeast(1),
 														stringvalidator.LengthAtMost(2000),
+														stringvalidator.AtLeastOneOf(
+															path.MatchRelative().AtParent().AtName("data_source_selection_criteria"),
+															path.MatchRelative().AtParent().AtName("log_group_selection_criteria"),
+														),
 													},
 												},
 											},
@@ -477,8 +497,9 @@ type destinationLogsConfigurationModel struct {
 }
 
 type sourceLogsConfigurationModel struct {
-	EncryptedLogGroupStrategy fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
-	LogGroupSelectionCriteria types.String                                           `tfsdk:"log_group_selection_criteria"`
+	DataSourceSelectionCriteria types.String                                           `tfsdk:"data_source_selection_criteria"`
+	EncryptedLogGroupStrategy   fwtypes.StringEnum[awstypes.EncryptedLogGroupStrategy] `tfsdk:"encrypted_log_group_strategy"`
+	LogGroupSelectionCriteria   types.String                                           `tfsdk:"log_group_selection_criteria"`
 }
 
 type logsBackupConfigurationModel struct {
