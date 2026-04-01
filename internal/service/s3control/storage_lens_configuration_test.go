@@ -343,12 +343,7 @@ func testAccCheckStorageLensConfigurationDestroy(ctx context.Context, t *testing
 				continue
 			}
 
-			accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
+			_, err := tfs3control.FindStorageLensConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["config_id"])
 
 			if retry.NotFound(err) {
 				continue
@@ -372,14 +367,9 @@ func testAccCheckStorageLensConfigurationExists(ctx context.Context, t *testing.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
-		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
+		_, err := tfs3control.FindStorageLensConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["config_id"])
 
 		return err
 	}

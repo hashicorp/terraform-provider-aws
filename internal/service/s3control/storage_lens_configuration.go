@@ -429,8 +429,8 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 		accountID = v.(string)
 	}
 	configID := d.Get("config_id").(string)
-	id := StorageLensConfigurationCreateResourceID(accountID, configID)
-	input := &s3control.PutStorageLensConfigurationInput{
+	id := storageLensConfigurationCreateResourceID(accountID, configID)
+	input := s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 		Tags:      storageLensTags(keyValueTagsFromS3Tags(ctx, getS3TagsIn(ctx))),
@@ -441,7 +441,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 		input.StorageLensConfiguration.Id = aws.String(configID)
 	}
 
-	_, err := conn.PutStorageLensConfiguration(ctx, input)
+	_, err := conn.PutStorageLensConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Storage Lens Configuration (%s): %s", id, err)
@@ -456,12 +456,12 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
+	accountID, configID, err := storageLensConfigurationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := findStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
+	output, err := findStorageLensConfigurationByTwoPartKey(ctx, conn, accountID, configID)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Storage Lens Configuration (%s) not found, removing from state", d.Id())
@@ -495,13 +495,13 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
+	accountID, configID, err := storageLensConfigurationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &s3control.PutStorageLensConfigurationInput{
+		input := s3control.PutStorageLensConfigurationInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 		}
@@ -511,7 +511,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 			input.StorageLensConfiguration.Id = aws.String(configID)
 		}
 
-		_, err := conn.PutStorageLensConfiguration(ctx, input)
+		_, err := conn.PutStorageLensConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating S3 Storage Lens Configuration (%s): %s", d.Id(), err)
@@ -533,16 +533,17 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
+	accountID, configID, err := storageLensConfigurationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Storage Lens Configuration: %s", d.Id())
-	_, err = conn.DeleteStorageLensConfiguration(ctx, &s3control.DeleteStorageLensConfigurationInput{
+	input := s3control.DeleteStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
-	})
+	}
+	_, err = conn.DeleteStorageLensConfiguration(ctx, &input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
 		return diags
@@ -557,14 +558,14 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 
 const storageLensConfigurationResourceIDSeparator = ":"
 
-func StorageLensConfigurationCreateResourceID(accountID, configID string) string {
+func storageLensConfigurationCreateResourceID(accountID, configID string) string {
 	parts := []string{accountID, configID}
 	id := strings.Join(parts, storageLensConfigurationResourceIDSeparator)
 
 	return id
 }
 
-func StorageLensConfigurationParseResourceID(id string) (string, string, error) {
+func storageLensConfigurationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, storageLensConfigurationResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
@@ -574,12 +575,16 @@ func StorageLensConfigurationParseResourceID(id string) (string, string, error) 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]sconfig-id", id, storageLensConfigurationResourceIDSeparator)
 }
 
-func findStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, conn *s3control.Client, accountID, configID string) (*types.StorageLensConfiguration, error) {
-	input := &s3control.GetStorageLensConfigurationInput{
+func findStorageLensConfigurationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, configID string) (*types.StorageLensConfiguration, error) {
+	input := s3control.GetStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	}
 
+	return findStorageLensConfiguration(ctx, conn, &input)
+}
+
+func findStorageLensConfiguration(ctx context.Context, conn *s3control.Client, input *s3control.GetStorageLensConfigurationInput) (*types.StorageLensConfiguration, error) {
 	output, err := conn.GetStorageLensConfiguration(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
@@ -624,13 +629,13 @@ func keyValueTagsFromStorageLensTags(ctx context.Context, tags []types.StorageLe
 	return tftags.New(ctx, m)
 }
 
-func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Client, accountID, configID string) (tftags.KeyValueTags, error) {
-	input := &s3control.GetStorageLensConfigurationTaggingInput{
+func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Client, accountID, configID string, optFns ...func(*s3control.Options)) (tftags.KeyValueTags, error) {
+	input := s3control.GetStorageLensConfigurationTaggingInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	}
 
-	output, err := conn.GetStorageLensConfigurationTagging(ctx, input)
+	output, err := conn.GetStorageLensConfigurationTagging(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -639,12 +644,12 @@ func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Clien
 	return keyValueTagsFromStorageLensTags(ctx, output.Tags), nil
 }
 
-func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap, newTagsMap any) error {
+func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap, newTagsMap any, optFns ...func(*s3control.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID)
+	allTags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("listing tags: %w", err)
@@ -653,24 +658,24 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Cli
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
 	if len(newTags)+len(ignoredTags) > 0 {
-		input := &s3control.PutStorageLensConfigurationTaggingInput{
+		input := s3control.PutStorageLensConfigurationTaggingInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 			Tags:      storageLensTags(newTags.Merge(ignoredTags)),
 		}
 
-		_, err := conn.PutStorageLensConfigurationTagging(ctx, input)
+		_, err := conn.PutStorageLensConfigurationTagging(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("setting tags: %w", err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
-		input := &s3control.DeleteStorageLensConfigurationTaggingInput{
+		input := s3control.DeleteStorageLensConfigurationTaggingInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 		}
 
-		_, err := conn.DeleteStorageLensConfigurationTagging(ctx, input)
+		_, err := conn.DeleteStorageLensConfigurationTagging(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("deleting tags: %w", err)
