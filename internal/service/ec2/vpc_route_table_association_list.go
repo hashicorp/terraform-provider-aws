@@ -92,11 +92,13 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			}
 
 			// TODO: Name tag display values
-			// TODO: Gateway display values
-			subnetDisplayName := aws.ToString(item.SubnetId)
+			targetDisplayName := aws.ToString(item.SubnetId)
+			if targetDisplayName == "" {
+				targetDisplayName = aws.ToString(item.GatewayId)
+			}
 			routeTableDisplayName := aws.ToString(item.RouteTableId)
 
-			result.DisplayName = fmt.Sprintf("%s / %s (%s)", subnetDisplayName, routeTableDisplayName, aws.ToString(item.RouteTableAssociationId))
+			result.DisplayName = fmt.Sprintf("%s / %s (%s)", targetDisplayName, routeTableDisplayName, aws.ToString(item.RouteTableAssociationId))
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
