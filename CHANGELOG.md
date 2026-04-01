@@ -29,6 +29,7 @@ ENHANCEMENTS:
 * resource/aws_network_acl_rule: Add Resource Identity support ([#47090](https://github.com/hashicorp/terraform-provider-aws/issues/47090))
 * resource/aws_observabilityadmin_centralization_rule_for_organization: Add `source.source_logs_configuration.data_source_selection_criteria` argument. Change `source.source_logs_configuration.log_group_selection_criteria` to Optional ([#47154](https://github.com/hashicorp/terraform-provider-aws/issues/47154))
 * resource/aws_prometheus_scraper: Add `source.vpc` argument. Change `source.eks` to Optional ([#47155](https://github.com/hashicorp/terraform-provider-aws/issues/47155))
+* resource/aws_s3_bucket_metric: Support bucket metrics for directory buckets ([#47184](https://github.com/hashicorp/terraform-provider-aws/issues/47184))
 * resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.account_level.advanced_performance_metrics` and `storage_lens_configuration.account_level.bucket_level.advanced_performance_metrics` arguments ([#46865](https://github.com/hashicorp/terraform-provider-aws/issues/46865))
 
 BUG FIXES:
