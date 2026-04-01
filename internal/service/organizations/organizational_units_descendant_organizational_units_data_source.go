@@ -41,6 +41,10 @@ func dataSourceOrganizationalUnitDescendantOrganizationalUnits() *schema.Resourc
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"path": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

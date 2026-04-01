@@ -61,6 +61,11 @@ func resourceOrganizationalUnit() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"paths": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
@@ -78,6 +83,10 @@ func resourceOrganizationalUnit() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
+			},
+			"path": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -143,6 +152,7 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, ou.Arn)
 	d.Set(names.AttrName, ou.Name)
 	d.Set("parent_id", parentAccountID)
+	d.Set("path", ou.Path)
 
 	return diags
 }
@@ -228,6 +238,7 @@ func flattenOrganizationalUnitAccounts(apiObjects []awstypes.Account) []any {
 			names.AttrEmail: aws.ToString(apiObject.Email),
 			names.AttrID:    aws.ToString(apiObject.Id),
 			names.AttrName:  aws.ToString(apiObject.Name),
+			"paths":         apiObject.Paths,
 		})
 	}
 

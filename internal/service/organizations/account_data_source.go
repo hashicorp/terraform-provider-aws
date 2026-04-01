@@ -54,6 +54,11 @@ func dataSourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"paths": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -87,6 +92,7 @@ func dataSourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.ToTime(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, account.Name)
+	d.Set("paths", account.Paths)
 	d.Set("parent_id", parentAccountID)
 	d.Set(names.AttrState, account.State)
 

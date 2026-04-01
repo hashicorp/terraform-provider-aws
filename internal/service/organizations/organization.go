@@ -626,6 +626,7 @@ func flattenAccounts(apiObjects []awstypes.Account) []any {
 			"joined_method":    apiObject.JoinedMethod,
 			"joined_timestamp": aws.ToTime(apiObject.JoinedTimestamp).Format(time.RFC3339),
 			names.AttrName:     aws.ToString(apiObject.Name),
+			"paths":            apiObject.Paths,
 			names.AttrStatus:   apiObject.Status,
 			names.AttrState:    apiObject.State,
 		})
