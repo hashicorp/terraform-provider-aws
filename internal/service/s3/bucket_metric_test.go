@@ -607,7 +607,7 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	})
 }
 
-unc TestAccS3BucketMetric_directoryBucket(t *testing.T) {
+func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf types.MetricsConfiguration
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -757,8 +757,6 @@ func TestAccS3BucketMetric_directoryBucket_filterTagsNotSupported(t *testing.T) 
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketMetricConfig_directoryBucket(rName, metricName),
-				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 				Config:      testAccBucketMetricConfig_directoryBucketFilterTags(rName, metricName),
 				ExpectError: regexache.MustCompile(`MalformedXML`),
 			},
