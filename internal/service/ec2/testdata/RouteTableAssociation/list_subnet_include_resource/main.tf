@@ -28,10 +28,20 @@ resource "aws_subnet" "test" {
 
   vpc_id     = aws_vpc.test.id
   cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = "${var.rName}-${count.index}"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "resource_count" {

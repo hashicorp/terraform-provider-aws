@@ -86,6 +86,7 @@ func TestAccVPCRouteTableAssociation_List_Subnet_includeResource(t *testing.T) {
 	resourceName1 := "aws_route_table_association.test[0]"
 
 	identity1 := tfstatecheck.Identity()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -102,6 +103,7 @@ func TestAccVPCRouteTableAssociation_List_Subnet_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/list_subnet_include_resource/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -116,11 +118,12 @@ func TestAccVPCRouteTableAssociation_List_Subnet_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/list_subnet_include_resource/"),
 				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_route_table_association.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_route_table_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^subnet-[a-f0-9]+ / rtb-[a-f0-9]+ \(rtbassoc-[a-f0-9]+\)$`))),
+					querycheck.ExpectResourceDisplayName("aws_route_table_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+"-0"+` / rtb-[a-f0-9]+ \(rtbassoc-[a-f0-9]+\)$`))),
 					querycheck.ExpectResourceKnownValues("aws_route_table_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("gateway_id"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^rtbassoc-[a-f0-9]+$`))),
