@@ -1420,6 +1420,24 @@ func findSubnet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnet
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func batchFindSubnets(ctx context.Context, conn *ec2.Client, ids []string) (map[string]*awstypes.Subnet, error) {
+	input := ec2.DescribeSubnetsInput{
+		SubnetIds: ids,
+	}
+
+	output, err := findSubnets(ctx, conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]*awstypes.Subnet, len(output))
+	for i, v := range output {
+		results[aws.ToString(v.SubnetId)] = &output[i]
+	}
+
+	return results, nil
+}
+
 func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
 	var output []awstypes.Subnet
 

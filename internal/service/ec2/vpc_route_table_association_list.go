@@ -77,6 +77,22 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			routeTableDisplayName = routeTableID
 		}
 
+		var subnets map[string]*awstypes.Subnet
+		subnetIDs := make([]string, 0, len(routeTable.Associations))
+		for _, item := range routeTable.Associations {
+			if item.SubnetId != nil {
+				subnetIDs = append(subnetIDs, aws.ToString(item.SubnetId))
+			}
+		}
+		if len(subnetIDs) > 0 {
+			subnets, err = batchFindSubnets(ctx, conn, subnetIDs)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+		}
+
 		for _, item := range routeTable.Associations {
 			if item.AssociationState.State == awstypes.RouteTableAssociationStateCodeDisassociated || item.AssociationState.State == awstypes.RouteTableAssociationStateCodeDisassociating {
 				continue
@@ -99,10 +115,19 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				}
 			}
 
-			// TODO: Name tag display values
-			targetDisplayName := aws.ToString(item.SubnetId)
-			if targetDisplayName == "" {
+			var targetDisplayName string
+			if item.SubnetId != nil {
+				targetDisplayName = aws.ToString(item.SubnetId)
+				if subnet, ok := subnets[aws.ToString(item.SubnetId)]; ok {
+					subnetTags := keyValueTags(ctx, subnet.Tags)
+					if v, ok := subnetTags["Name"]; ok {
+						targetDisplayName = v.ValueString()
+					}
+				}
+			} else if item.GatewayId != nil {
 				targetDisplayName = aws.ToString(item.GatewayId)
+			} else {
+				targetDisplayName = "<unknown target type>"
 			}
 
 			result.DisplayName = fmt.Sprintf("%s / %s (%s)", targetDisplayName, routeTableDisplayName, aws.ToString(item.RouteTableAssociationId))
