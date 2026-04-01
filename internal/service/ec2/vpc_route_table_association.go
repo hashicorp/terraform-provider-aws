@@ -33,7 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.RouteTableAssociation")
 // @Testing(importStateIdFunc=testAccRouteTabAssocImportStateIdFunc)
 // @Testing(generator=false)
-// @Testing(preIdentityVersion="v6.38.0")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
