@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_eks_node_group", name="Node Group")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupRead,
@@ -208,9 +210,7 @@ func dataSourceNodeGroup() *schema.Resource {
 
 func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := d.Get("node_group_name").(string)
@@ -262,9 +262,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
 
-	if err := d.Set(names.AttrTags, keyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, nodeGroup.Tags)
 
 	return diags
 }

@@ -175,6 +175,34 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCRouteTableAssociation_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_route_table_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteTableAssociationConfig_regionOverride(rName, acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+				),
+			},
+			{
+				Config:            testAccVPCRouteTableAssociationConfig_regionOverride(rName, acctest.AlternateRegion()),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteTabAssocImportStateIdFunc),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRouteTableAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -373,4 +401,53 @@ resource "aws_route_table_association" "test" {
   gateway_id     = aws_internet_gateway.test.id
 }
 `, rName))
+}
+
+func testAccVPCRouteTableAssociationConfig_regionOverride(rName, region string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  region     = %[2]q
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  region            = %[2]q
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  region = %[2]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  region         = %[2]q
+  route_table_id = aws_route_table.test.id
+  subnet_id      = aws_subnet.test.id
+}
+
+data "aws_availability_zones" "available" {
+  region = %[2]q
+  state  = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, rName, region)
 }

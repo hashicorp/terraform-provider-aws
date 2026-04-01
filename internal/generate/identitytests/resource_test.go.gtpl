@@ -282,6 +282,9 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -357,6 +360,9 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportCommandWithIDBody" . -}}
 				},
@@ -373,6 +379,9 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportBlockWithIDBody" . -}}
 					{{ template "PlannableImportPlanChecks" . }}
@@ -393,6 +402,9 @@ func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportBlockWithResourceIdentityBody" . -}}
 					{{ template "PlannableImportPlanChecks" . }}
@@ -426,6 +438,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.Region()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .IDAttrFormat "" -}}
@@ -493,6 +508,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.Region()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportCommandWithIDBodyCrossRegion" . -}}
 				},
@@ -510,6 +528,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.Region()),
 							{{ end -}}
+							{{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{- template "ImportCommandWithIDBody" . -}}
 					},
@@ -531,6 +552,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.Region()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{- template "ImportBlockWithIDBodyCrossRegion" . -}}
 					{{ template "PlannableImportCrossRegionPlanChecks" . }}
@@ -552,6 +576,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.Region()),
 							{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 						},
 						{{- template "ImportBlockWithIDBody" . -}}
 						{{ template "PlannableImportCrossRegionPlanChecks" . }}
@@ -574,6 +601,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.Region()),
 							{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 						},
 						{{- template "ImportBlockWithResourceIdentityBody" . -}}
 						{{ template "PlannableImportCrossRegionPlanChecks" . }}
@@ -605,6 +635,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -626,6 +659,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -696,6 +732,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -749,6 +788,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -819,6 +861,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -839,6 +884,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -894,6 +942,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					ConfigPlanChecks: resource.ConfigPlanChecks{
 						PreApply: []plancheck.PlanCheck{
@@ -964,6 +1015,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -985,6 +1039,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 						{{ if .AlternateRegionTfVars -}}
 							"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 						{{ end -}}
+                        {{ range .RequiredEnvVarValues -}}
+                            "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                        {{ end -}}
 					},
 					{{ if .HasExistsFunc -}}
 					Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1017,6 +1074,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1042,6 +1102,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
@@ -1116,6 +1179,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1141,6 +1207,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
@@ -1177,6 +1246,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1200,6 +1272,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1265,6 +1340,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: []plancheck.PlanCheck{
@@ -1338,6 +1416,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 						{{ if .HasExistsFunc -}}
 						Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1363,6 +1444,9 @@ func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 							{{ if .AlternateRegionTfVars -}}
 								"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 							{{ end -}}
+                            {{ range .RequiredEnvVarValues -}}
+                                "{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                            {{ end -}}
 						},
 					},
 				},
@@ -1392,6 +1476,9 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1417,6 +1504,9 @@ func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1491,6 +1581,9 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				{{ if .HasExistsFunc -}}
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1516,6 +1609,9 @@ func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 					{{ if .AlternateRegionTfVars -}}
 						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
 					{{ end -}}
+					{{ range .RequiredEnvVarValues -}}
+                    	"{{ . }}": config.StringVariable(acctest.SkipIfEnvVarNotSet(t, "{{ . }}")),
+                    {{ end -}}
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

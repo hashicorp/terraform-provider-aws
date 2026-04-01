@@ -1,0 +1,19 @@
+```release-note:bug
+data-source/aws_eks_access_entry: Fixed tags not being returned
+```
+
+```release-note:note
+data-source/aws_eks_access_entry: The `tags_all` attribute is deprecated and will be removed in a future major version
+```
+
+```release-note:enhancement
+resource/aws_eks_cluster: Add resource identity support
+```
+
+```release-note:bug
+resource/aws_eks_cluster: Set `bootstrap_self_managed_addons` to `true` when importing
+```
+
+```release-note:new-list-resource
+aws_eks_cluster
+```

@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -101,7 +101,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.CreateServiceActionInput{
-		IdempotencyToken: aws.String(sdkid.UniqueId()),
+		IdempotencyToken: aws.String(create.UniqueId(ctx)),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Definition:       expandServiceActionDefinition(d.Get("definition").([]any)[0].(map[string]any)),
 		DefinitionType:   awstypes.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),
