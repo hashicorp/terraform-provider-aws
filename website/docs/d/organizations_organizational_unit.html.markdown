@@ -39,4 +39,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the organizational unit
 
-* `path` - Path in organization where OU exists.
+* `path` - Path in organization where the organizational unit exists
