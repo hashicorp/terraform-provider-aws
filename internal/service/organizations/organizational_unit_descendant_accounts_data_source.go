@@ -55,7 +55,7 @@ func dataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 								Computed: true,
 							},
 							"paths": {
-								Type:     schema.TypeSet,
+								Type:     schema.TypeList,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
