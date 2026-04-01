@@ -1875,6 +1875,27 @@ If a virtual attribute has a default value that does not match the [Zero Value M
 
 This helps prevent an immediate plan difference after resource import unless the configuration has a non-default value.
 
+### Terrafom Plugin SDK V2 Access To Config, Plan, State
+
+When using the Terraform Plugin SDK V2 the [recommendation](#recommended-implementations) is to use methods on the (`ResourceData`)[https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData] structure to access [root attributes](#root-attributes-versus-block-attributes). In certain scenarios access to the Terraform config, plan or state my be required. Use the [`GetRawConfig`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawConfig), [`GetRawPlan`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawPlan) and [`GetRawState`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetRawState) methods, which return [`cty` values](https://pkg.go.dev/github.com/hashicorp/go-cty/cty#Value).
+
+The `GetFramework` function can be used to convert a `cty` object into a Terraform Plugin Framework model. For example,
+
+```go
+import (
+    tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
+    ...
+)
+
+type scheduleModel struct {
+	RefreshType types.String `tfsdk:"refresh_type"`
+    ...
+}
+
+var data scheduleModel
+err := tfcty.GetFramework(ctx, d.GetRawConfig(), &data)
+```
+
 ## Glossary
 
 Below is a listing of relevant terms and descriptions for data handling and conversion in the Terraform AWS Provider to establish common conventions throughout this documentation.
