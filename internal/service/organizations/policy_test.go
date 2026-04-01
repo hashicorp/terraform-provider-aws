@@ -1002,6 +1002,12 @@ func testAccPolicy_contentEquivalent(t *testing.T) {
 					},
 				},
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
 		},
 	})
 }

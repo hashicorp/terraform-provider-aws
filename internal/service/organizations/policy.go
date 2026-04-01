@@ -60,7 +60,10 @@ func resourcePolicy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
+					json, err := structure.NormalizeJsonString(v)
+					if err != nil {
+						return v.(string)
+					}
 					return json
 				},
 			},
@@ -139,11 +142,11 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	policySummary := policy.PolicySummary
 	d.Set(names.AttrARN, policySummary.Arn)
-	if policyToSet, err := verify.PolicyToSet(d.Get(names.AttrContent).(string), aws.ToString(policy.Content)); err != nil {
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrContent).(string), aws.ToString(policy.Content))
+	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	} else {
-		d.Set(names.AttrContent, policyToSet)
 	}
+	d.Set(names.AttrContent, policyToSet)
 	d.Set(names.AttrDescription, policySummary.Description)
 	d.Set(names.AttrName, policySummary.Name)
 	d.Set(names.AttrType, policySummary.Type)
