@@ -46,6 +46,10 @@ type tfMapOfMapOfString struct {
 	Field1 fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"field1"`
 }
 
+type tfMapOfMapOfStringOmitEmpty struct {
+	Field1 fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"field1" autoflex:",omitempty"`
+}
+
 type awsMapOfString struct {
 	FieldInner map[string]string
 }
@@ -453,6 +457,68 @@ func TestFlattenMaps(t *testing.T) {
 			},
 			Target: &tfMapOfMapOfString{},
 			WantTarget: &tfMapOfMapOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+}
+
+func TestFlattenMapOfMapOfStringOmitEmpty(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		// A nil outer map with omitempty should produce null.
+		"nil outer map omitempty": {
+			Source: &awsMapOfMapOfString{
+				Field1: nil,
+			},
+			Target: &tfMapOfMapOfStringOmitEmpty{},
+			WantTarget: &tfMapOfMapOfStringOmitEmpty{
+				Field1: fwtypes.NewMapValueOfNull[fwtypes.MapValueOf[types.String]](ctx),
+			},
+		},
+		// An empty outer map with omitempty should produce null.
+		"empty outer map omitempty": {
+			Source: &awsMapOfMapOfString{
+				Field1: map[string]map[string]string{},
+			},
+			Target: &tfMapOfMapOfStringOmitEmpty{},
+			WantTarget: &tfMapOfMapOfStringOmitEmpty{
+				Field1: fwtypes.NewMapValueOfNull[fwtypes.MapValueOf[types.String]](ctx),
+			},
+		},
+		// An outer map with a key whose inner map is empty (e.g. {"CARBON_EMISSIONS": {}})
+		// must NOT be collapsed to null — it is a valid non-null configuration.
+		"outer map with empty inner map omitempty": {
+			Source: &awsMapOfMapOfString{
+				Field1: map[string]map[string]string{
+					"CARBON_EMISSIONS": {},
+				},
+			},
+			Target: &tfMapOfMapOfStringOmitEmpty{},
+			WantTarget: &tfMapOfMapOfStringOmitEmpty{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"CARBON_EMISSIONS": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{}),
+				}),
+			},
+		},
+		// An outer map with a key that has a non-empty inner map should be flattened normally.
+		"outer map with non-empty inner map omitempty": {
+			Source: &awsMapOfMapOfString{
+				Field1: map[string]map[string]string{
+					"x": {"y": "z"},
+				},
+			},
+			Target: &tfMapOfMapOfStringOmitEmpty{},
+			WantTarget: &tfMapOfMapOfStringOmitEmpty{
 				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
 					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 						"y": types.StringValue("z"),

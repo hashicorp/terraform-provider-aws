@@ -1005,24 +1005,17 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 						logAttrKeySourceSize: len(from),
 					})
 
-					// Check for omitempty: if all inner maps are empty, return null
-					if fieldOpts.omitempty {
-						allEmpty := true
-						for _, innerMap := range from {
-							if len(innerMap) > 0 {
-								allEmpty = false
-								break
-							}
+					// Check for omitempty: if outer map is empty, return null.
+					// Note: an outer map with keys but empty inner maps (e.g. {"CARBON_EMISSIONS": {}})
+					// is a valid non-null value and must not be collapsed to null.
+					if fieldOpts.omitempty && len(from) == 0 {
+						tflog.SubsystemTrace(ctx, subsystemName, "Outer map empty with omitempty, returning null")
+						to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
+						diags.Append(d...)
+						if !diags.HasError() {
+							vTo.Set(reflect.ValueOf(to))
 						}
-						if allEmpty {
-							tflog.SubsystemTrace(ctx, subsystemName, "All inner maps empty with omitempty, returning null")
-							to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
-							diags.Append(d...)
-							if !diags.HasError() {
-								vTo.Set(reflect.ValueOf(to))
-							}
-							return diags
-						}
+						return diags
 					}
 
 					elements := make(map[string]attr.Value, len(from))
