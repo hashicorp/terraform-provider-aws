@@ -43,6 +43,10 @@ func dataSourceOrganizationalUnitDescendantOrganizationalUnits() *schema.Resourc
 								Computed: true,
 							},
 						},
+						"path": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 				"parent_id": {

@@ -38,3 +38,5 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the organizational unit
 
 * `id` - ID of the organizational unit
+
+* `path` - Path in organization where OU exists.
