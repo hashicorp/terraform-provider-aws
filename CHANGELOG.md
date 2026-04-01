@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_eks_cluster: Add resource identity support ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 * resource/aws_eks_cluster: Support `tier-8xl` as a valid value for `control_plane_scaling_config.tier` ([#46976](https://github.com/hashicorp/terraform-provider-aws/issues/46976))
 * resource/aws_network_acl_rule: Add Resource Identity support ([#47090](https://github.com/hashicorp/terraform-provider-aws/issues/47090))
+* resource/aws_observabilityadmin_centralization_rule_for_organization: Add `source.source_logs_configuration.data_source_selection_criteria` argument. Change `source.source_logs_configuration.log_group_selection_criteria` to Optional ([#47154](https://github.com/hashicorp/terraform-provider-aws/issues/47154))
 
 BUG FIXES:
 
