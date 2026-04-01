@@ -57,7 +57,7 @@ func TestAccACMCertificateDataSource_byDomainNoMatch(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificateDataSource_byDomainNoMatch_mostRecent(t *testing.T) {
+func TestAccACMCertificateDataSource_byDomainNoMatchMostRecent(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048) // ListCertificates: Default filtering returns only RSA_2048 certificates.
 	domain := acctest.RandomDomain().String()
@@ -69,8 +69,8 @@ func TestAccACMCertificateDataSource_byDomainNoMatch_mostRecent(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateDataSourceConfig_byDomainNoMatch_mostRecent(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
-				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
+				Config:      testAccCertificateDataSourceConfig_byDomainNoMatchMostRecent(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				ExpectError: regexache.MustCompile(`reading ACM Certificates: no matching ACM Certificate found`),
 			},
 		},
 	})
@@ -356,7 +356,7 @@ data "aws_acm_certificate" "test" {
 `, domain, certificate, key)
 }
 
-func testAccCertificateDataSourceConfig_byDomainNoMatch_mostRecent(domain, certificate, key string) string {
+func testAccCertificateDataSourceConfig_byDomainNoMatchMostRecent(domain, certificate, key string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"

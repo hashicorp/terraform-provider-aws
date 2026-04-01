@@ -122,9 +122,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}
 
-	const (
-		timeout = 1 * time.Minute
-	)
 	var certificateSummaries []awstypes.CertificateSummary
 	var err error
 	if d.Get("most_recent").(bool) {
@@ -134,9 +131,11 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if len(certificateSummaries) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: no matching ACM Certificate found")
 		}
 	} else {
+		const timeout = 1 * time.Minute
+
 		certificateSummaries, err = tfresource.RetryWhenNotFound(ctx, timeout,
 			func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
 				output, err := findCertificates(ctx, conn, &input, f)
