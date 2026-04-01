@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
@@ -18,7 +17,7 @@ func Name(ctx context.Context, name string, namePrefix string) string {
 
 // hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
 func hasResourceUniqueIDPlusAdditionalSuffix(s string, additionalSuffix string) bool {
-	re := regexache.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", sdkid.UniqueIDSuffixLength, additionalSuffix))
+	re := regexache.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", UniqueIDSuffixLength, additionalSuffix))
 	return re.MatchString(s)
 }
 
@@ -39,7 +38,7 @@ func NamePrefixFromNameWithSuffix(name, nameSuffix string) *string {
 		return nil
 	}
 
-	namePrefixIndex := len(name) - sdkid.UniqueIDSuffixLength - len(nameSuffix)
+	namePrefixIndex := len(name) - UniqueIDSuffixLength - len(nameSuffix)
 
 	if namePrefixIndex <= 0 {
 		return nil
@@ -96,7 +95,7 @@ func WithSuffix(suffix string) NameGeneratorOptionsFunc {
 
 // NewNameGenerator returns a new name generator from the specified varidaic list of functional options.
 func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
-	g := &nameGenerator{defaultPrefix: sdkid.UniqueIdPrefix}
+	g := &nameGenerator{defaultPrefix: UniqueIdPrefix}
 
 	for _, optFn := range optFns {
 		optFn(g)
