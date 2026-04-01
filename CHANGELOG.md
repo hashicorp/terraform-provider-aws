@@ -13,8 +13,10 @@ FEATURES:
 * **New List Resource:** `aws_eks_cluster` ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 * **New List Resource:** `aws_organizations_aws_service_access` ([#46993](https://github.com/hashicorp/terraform-provider-aws/issues/46993))
 * **New List Resource:** `aws_sagemaker_training_job` ([#46892](https://github.com/hashicorp/terraform-provider-aws/issues/46892))
-* **New Resource:** `aws_organizations_aws_service_access` ([#46993](https://github.com/hashicorp/terraform-provider-aws/issues/46993))
+* **New List Resource:** `aws_workmail_user` ([#47131](https://github.com/hashicorp/terraform-provider-aws/issues/47131))
 * **New Resource:** `aws_sagemaker_training_job` ([#46892](https://github.com/hashicorp/terraform-provider-aws/issues/46892))
+* **New Resource:** `aws_workmail_user` ([#47131](https://github.com/hashicorp/terraform-provider-aws/issues/47131))
+* **New Resource:** `aws_organizations_aws_service_access` ([#46993](https://github.com/hashicorp/terraform-provider-aws/issues/46993))
 * **New Resource:** `aws_uxc_account_customizations` ([#47115](https://github.com/hashicorp/terraform-provider-aws/issues/47115))
 
 ENHANCEMENTS:
