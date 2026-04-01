@@ -58,7 +58,7 @@ The sections below contain examples for both plugin libraries, but Terraform Plu
 
 ## Data Conversions in the Terraform AWS Provider
 
-To expand on the data handling that occurs specifically within the Terraform AWS Provider resource implementations, the above resource creation items become the below in practice given our current usage of the Terraform Plugin SDK:
+To expand on the data handling that occurs specifically within the Terraform AWS Provider resource implementations, the above resource creation items become the below in practice:
 
 === "Terraform Plugin Framework (Preferred)"
     - The `Create` method of a resource is invoked with `resource.CreateRequest` containing the planned new state data (`req.Plan`) and an AWS API client (stored in the `Meta()` method of the resource struct).
@@ -88,10 +88,10 @@ To further understand the necessary data conversions used throughout the Terrafo
     | AWS API Model | AWS Go SDK V2 | Terraform Plugin Framework | Terraform Language/State |
     |---------------|---------------|----------------------------|--------------------------|
     | `boolean` | `bool` | `types.Bool` | `bool` |
-    | `float` | `*float64` | `types.Float64` | `number` |
-    | `integer` | `*int64` | `types.Int64` | `number` |
-    | `list` | `[]*T` | `types.List` <br/>`types.Set` | `list(any)`<br/>`set(any)` |
-    | `map` | `map[T1]*T2` | `types.Map` | `map(any)` |
+    | `float` | `*float64` <br/>`*float32` | `types.Float64` <br/>`types.Float32` | `number` |
+    | `integer` | `*int64` <br/>`*int32` | `types.Int64` <br/>`types.Int32` | `number` |
+    | `list` | `[]T` | `types.List` <br/>`types.Set` | `list(any)`<br/>`set(any)` |
+    | `map` | `map[string]T` | `types.Map` | `map(any)` |
     | `string` | `*string` | `types.String` | `string` |
     | `structure` | `struct` | `types.List` with `MaxItems: 1` | `list(object(any))` |
     | `timestamp` | `*time.Time` | `types.String` (typically RFC3339 formatted) | `string` |
@@ -107,10 +107,10 @@ To further understand the necessary data conversions used throughout the Terrafo
     | AWS API Model | AWS Go SDK | Terraform Plugin SDK | Terraform Language/State |
     |---------------|------------|----------------------|--------------------------|
     | `boolean` | `*bool` | `TypeBool` (`bool`) | `bool` |
-    | `float` | `*float64` | `TypeFloat` (`float64`) | `number` |
-    | `integer` | `*int64` | `TypeInt` (`int`) | `number` |
-    | `list` | `[]*T` | `TypeList` (`[]any` of `T`)<br/>`TypeSet` (`*schema.Set` of `T`) | `list(any)`<br/>`set(any)` |
-    | `map` | `map[T1]*T2` | `TypeMap` (`map[string]any`) | `map(any)` |
+    | `float` | `*float64` <br/>`*float32` | `TypeFloat` (`float64`) | `number` |
+    | `integer` | `*int64` <br/>`*int32` | `TypeInt` (`int`) | `number` |
+    | `list` | `[]T` | `TypeList` (`[]any` of `T`)<br/>`TypeSet` (`*schema.Set` of `T`) | `list(any)`<br/>`set(any)` |
+    | `map` | `map[string]T` | `TypeMap` (`map[string]any`) | `map(any)` |
     | `string` | `*string` | `TypeString` (`string`) | `string` |
     | `structure` | `struct` | `TypeList` (`[]any` of `map[string]any`) with `MaxItems: 1` | `list(object(any))` |
     | `timestamp` | `*time.Time` | `TypeString` (typically RFC3339 formatted) | `string` |
@@ -119,10 +119,10 @@ To further understand the necessary data conversions used throughout the Terrafo
 
     You may notice there are type encoding differences between the AWS Go SDK and Terraform Plugin SDK:
 
-    - AWS Go SDK types are all Go pointer types, while Terraform Plugin SDK types are not.
+    - AWS Go SDK types are mostly Go pointer types, while Terraform Plugin SDK types are not.
     - AWS Go SDK structures are the Go `struct` type, while there is no semantically equivalent Terraform Plugin SDK type. Instead they are represented as a slice of interfaces with an underlying map of interfaces.
     - AWS Go SDK types are all Go concrete types, while the Terraform Plugin SDK types for collections and maps are interfaces.
-    - AWS Go SDK whole numeric type is always 64-bit, while the Terraform Plugin SDK type is implementation-specific.
+    - AWS Go SDK whole numeric type is always 32 or 64-bit, while the Terraform Plugin SDK type is implementation-specific.
 
     Conceptually, the first and second items above are the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more detail about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
 
@@ -1927,8 +1927,8 @@ Terraform Plugin Framework Schemas use the following terminology to describe dat
 - **Schema**: Represents an Attribute or Block. Has a Type and Behavior(s).
 - **Types**: [Full Documentation](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/types).
     - **Bool**: Boolean value.
-    - **Float64**: Fractional numeric value.
-    - **Int64**: Whole numeric value.
+    - **Float64** or **Float32**: Fractional numeric value.
+    - **Int64** or **Int32**: Whole numeric value.
     - **List**: An ordered collection of values or Blocks.
     - **Map**: Grouping of key Type to value Type.
     - **Set**: Unordered collection of values or Blocks.
