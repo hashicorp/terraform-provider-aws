@@ -492,7 +492,7 @@ resource "aws_s3control_storage_lens_configuration" "test" {
       }
 
       storage_lens_table_destination {
-		enabled = false
+        enabled = false
       }
     }
 
@@ -548,8 +548,9 @@ resource "aws_s3control_storage_lens_configuration" "test" {
       }
 
       storage_lens_table_destination {
-		enabled = true
-		encryption {
+        enabled = true
+
+        encryption {
           sse_s3 {}
         }
       }
