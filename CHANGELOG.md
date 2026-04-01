@@ -19,17 +19,21 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_outposts_asset: Add `instance_families` attribute ([#47153](https://github.com/hashicorp/terraform-provider-aws/issues/47153))
 * resource/aws_eks_cluster: Add resource identity support ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 * resource/aws_eks_cluster: Support `tier-8xl` as a valid value for `control_plane_scaling_config.tier` ([#46976](https://github.com/hashicorp/terraform-provider-aws/issues/46976))
 * resource/aws_network_acl_rule: Add Resource Identity support ([#47090](https://github.com/hashicorp/terraform-provider-aws/issues/47090))
 * resource/aws_observabilityadmin_centralization_rule_for_organization: Add `source.source_logs_configuration.data_source_selection_criteria` argument. Change `source.source_logs_configuration.log_group_selection_criteria` to Optional ([#47154](https://github.com/hashicorp/terraform-provider-aws/issues/47154))
+* resource/aws_prometheus_scraper: Add `source.vpc` argument. Change `source.eks` to Optional ([#47155](https://github.com/hashicorp/terraform-provider-aws/issues/47155))
 
 BUG FIXES:
 
 * data-source/aws_eks_access_entry: Fixed tags not being returned ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
 * data-source/aws_service_principal: Fix service principal names for EC2 and S3 in the `aws-cn` partition ([#47141](https://github.com/hashicorp/terraform-provider-aws/issues/47141))
+* resource/aws_config_organization_conformance_pack: Fix creation timeout when using a delegated administrator account ([#47072](https://github.com/hashicorp/terraform-provider-aws/issues/47072))
 * resource/aws_dynamodb_table: Fix `Error: waiting for creation AWS DynamoDB Table (xxxxx): couldn't find resource` in highly active accounts by restoring `5s` delay before polling for table status. This fixes a regression introduced in [v6.28.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6280-january-7-2026). ([#47143](https://github.com/hashicorp/terraform-provider-aws/issues/47143))
 * resource/aws_eks_cluster: Set `bootstrap_self_managed_addons` to `true` when importing ([#47133](https://github.com/hashicorp/terraform-provider-aws/issues/47133))
+* resource/aws_elasticache_serverless_cache: Fix `InvalidParameterCombination` error when `cache_usage_limits` is removed ([#46134](https://github.com/hashicorp/terraform-provider-aws/issues/46134))
 * resource/aws_glue_catalog_table: Detect and report failed view creation ([#47101](https://github.com/hashicorp/terraform-provider-aws/issues/47101))
 
 ## 6.38.0 (March 25, 2026)
