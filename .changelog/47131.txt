@@ -5,3 +5,11 @@ aws_workmail_user
 ```release-note:new-list-resource
 aws_workmail_user
 ```
+
+```release-note:new-resource
+aws_workmail_group
+```
+
+```release-note:new-list-resource
+aws_workmail_group
+```
