@@ -200,6 +200,12 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 	case securityGroupRuleTypeEgress:
+		if len(ipPermission.Ipv6Ranges) > 0 {
+			if err := revokeSecurityGroupDefaultIPv6EgressRule(ctx, conn, securityGroupID); err != nil {
+				return sdkdiag.AppendErrorf(diags, "revoking default IPv6 egress rule for Security Group (%s): %s", securityGroupID, err)
+			}
+		}
+
 		input := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
 			IpPermissions: []awstypes.IpPermission{ipPermission},

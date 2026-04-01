@@ -286,13 +286,13 @@ var (
 	InstanceMigrateState                                        = instanceMigrateState
 	InstanceStateUpgradeV1                                      = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                    = internetGatewayAttachmentParseResourceID
+	IPPermissionsContainIPv6Ranges                              = ipPermissionsContainIPv6Ranges
 	KeyPairMigrateState                                         = keyPairMigrateState
 	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
 	ManagedPrefixListEntryCreateResourceID                      = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
 	NetworkACLRuleImportIDSeparator                             = networkACLRuleImportIDSeparator
-	IanaProtocolIToA                                            = ianaProtocolIToA
 	NewAttributeFilterList                                      = newAttributeFilterList
 	NewCustomFilterList                                         = newCustomFilterList
 	NewTagFilterList                                            = newTagFilterList

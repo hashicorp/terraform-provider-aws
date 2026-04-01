@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -870,6 +871,58 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		if !reflect.DeepEqual(out, c.expected) {
 			t.Fatalf("Error matching output and expected: %#v vs %#v", out, c.expected)
 		}
+	}
+}
+
+func TestIPPermissionsContainIPv6Ranges(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		permissions []awstypes.IpPermission
+		expected    bool
+	}{
+		{
+			name: "nil permissions",
+		},
+		{
+			name: "ipv4 only",
+			permissions: []awstypes.IpPermission{
+				{
+					IpRanges: []awstypes.IpRange{
+						{CidrIp: aws.String("0.0.0.0/0")},
+					},
+				},
+			},
+		},
+		{
+			name: "contains ipv6",
+			permissions: []awstypes.IpPermission{
+				{
+					IpRanges: []awstypes.IpRange{
+						{CidrIp: aws.String("0.0.0.0/0")},
+					},
+				},
+				{
+					Ipv6Ranges: []awstypes.Ipv6Range{
+						{CidrIpv6: aws.String("::/0")},
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfec2.IPPermissionsContainIPv6Ranges(tc.permissions); got != tc.expected {
+				t.Fatalf("expected %t, got %t", tc.expected, got)
+			}
+		})
 	}
 }
 
@@ -2368,6 +2421,44 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroup_ipv6DefaultEgressRuleOutOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.SecurityGroup
+	resourceName := "aws_security_group.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupConfig_ipv6VPCOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, t, resourceName, &group),
+					testAccCheckSecurityGroupEnsureDefaultIPv6Egress(ctx, t, &group),
+				),
+			},
+			{
+				Config: testAccVPCSecurityGroupConfig_ipv6EgressOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "0",
+						"from_port":          "0",
+						"ipv6_cidr_blocks.#": "1",
+						"ipv6_cidr_blocks.0": "::/0",
+						names.AttrProtocol:   "-1",
+						"to_port":            "0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.SecurityGroup
@@ -2752,6 +2843,42 @@ func testAddRuleCycle(ctx context.Context, t *testing.T, primary, secondary *aws
 		if err != nil {
 			return fmt.Errorf("Error authorizing secondary security group %s rules: %w", aws.ToString(secondary.GroupId), err)
 		}
+		return nil
+	}
+}
+
+func testAccCheckSecurityGroupEnsureDefaultIPv6Egress(ctx context.Context, t *testing.T, group *awstypes.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if group.GroupId == nil {
+			return fmt.Errorf("Security Group ID not set")
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+		groupID := aws.ToString(group.GroupId)
+
+		permission := awstypes.IpPermission{
+			FromPort:   aws.Int32(0),
+			IpProtocol: aws.String("-1"),
+			Ipv6Ranges: []awstypes.Ipv6Range{{CidrIpv6: aws.String("::/0")}},
+			ToPort:     aws.Int32(0),
+		}
+
+		_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
+			GroupId:       aws.String(groupID),
+			IpPermissions: []awstypes.IpPermission{permission},
+		})
+		if err != nil && !tfawserr.ErrCodeEquals(err, "InvalidPermission.NotFound") {
+			return fmt.Errorf("revoking default IPv6 egress rule from Security Group (%s): %w", groupID, err)
+		}
+
+		_, err = conn.AuthorizeSecurityGroupEgress(ctx, &ec2.AuthorizeSecurityGroupEgressInput{
+			GroupId:       aws.String(groupID),
+			IpPermissions: []awstypes.IpPermission{permission},
+		})
+		if err != nil && !tfawserr.ErrCodeEquals(err, "InvalidPermission.Duplicate") {
+			return fmt.Errorf("authorizing default IPv6 egress rule to Security Group (%s): %w", groupID, err)
+		}
+
 		return nil
 	}
 }
@@ -4126,6 +4253,57 @@ resource "aws_security_group" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupConfig_ipv6VPCOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+	cidr_block                       = "10.1.0.0/16"
+	assign_generated_ipv6_cidr_block = true
+
+	tags = {
+		Name = %[1]q
+	}
+}
+
+resource "aws_security_group" "test" {
+	name   = %[1]q
+	vpc_id = aws_vpc.test.id
+
+	tags = {
+		Name = %[1]q
+	}
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupConfig_ipv6EgressOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+	cidr_block                       = "10.1.0.0/16"
+	assign_generated_ipv6_cidr_block = true
+
+	tags = {
+		Name = %[1]q
+	}
+}
+
+resource "aws_security_group" "test" {
+	name   = %[1]q
+	vpc_id = aws_vpc.test.id
+
+	egress {
+		from_port        = 0
+		to_port          = 0
+		protocol         = "-1"
+		ipv6_cidr_blocks = ["::/0"]
+	}
+
+	tags = {
+		Name = %[1]q
+	}
 }
 `, rName)
 }
