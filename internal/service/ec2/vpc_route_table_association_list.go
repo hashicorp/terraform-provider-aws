@@ -6,8 +6,10 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -93,6 +96,47 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			}
 		}
 
+		// There can be at most one Internet Gateway for a Route Table,
+		// because a VPC can have at most one, and a Route Table is associated with a single VPC.
+		var internetGatewayID string
+		gatewayIDs := make([]string, 0, len(routeTable.Associations))
+		for _, item := range routeTable.Associations {
+			if gatewayID := aws.ToString(item.GatewayId); gatewayID != "" {
+				if strings.HasPrefix(gatewayID, "igw-") {
+					internetGatewayID = gatewayID
+					continue
+				}
+				gatewayIDs = append(gatewayIDs, aws.ToString(item.GatewayId))
+			}
+		}
+		var gatewayTags map[string]tags.KeyValueTags
+		if internetGatewayID != "" || len(gatewayIDs) > 0 {
+			gatewayTags = make(map[string]tags.KeyValueTags)
+		}
+		if internetGatewayID != "" {
+			internetGateway, err := findInternetGatewayByID(ctx, conn, internetGatewayID)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("finding Internet Gateway (%s): %w", internetGatewayID, err))
+				yield(result)
+				return
+			}
+			gatewayTags[internetGatewayID] = keyValueTags(ctx, internetGateway.Tags)
+		}
+		if len(gatewayIDs) > 0 {
+			input := ec2.DescribeVpnGatewaysInput{
+				VpnGatewayIds: gatewayIDs,
+			}
+			gateways, err := findVPNGateways(ctx, conn, &input)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("finding VPN Gateways: %w", err))
+				yield(result)
+				return
+			}
+			for _, gateway := range gateways {
+				gatewayTags[aws.ToString(gateway.VpnGatewayId)] = keyValueTags(ctx, gateway.Tags)
+			}
+		}
+
 		for _, item := range routeTable.Associations {
 			if item.AssociationState.State == awstypes.RouteTableAssociationStateCodeDisassociated || item.AssociationState.State == awstypes.RouteTableAssociationStateCodeDisassociating {
 				continue
@@ -126,6 +170,11 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				}
 			} else if item.GatewayId != nil {
 				targetDisplayName = aws.ToString(item.GatewayId)
+				if tags, ok := gatewayTags[aws.ToString(item.GatewayId)]; ok {
+					if v, ok := tags["Name"]; ok {
+						targetDisplayName = v.ValueString()
+					}
+				}
 			} else {
 				targetDisplayName = "<unknown target type>"
 			}
