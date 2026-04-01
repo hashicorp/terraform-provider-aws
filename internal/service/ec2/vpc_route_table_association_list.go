@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -109,10 +108,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				gatewayIDs = append(gatewayIDs, aws.ToString(item.GatewayId))
 			}
 		}
-		var gatewayTags map[string]tags.KeyValueTags
-		if internetGatewayID != "" || len(gatewayIDs) > 0 {
-			gatewayTags = make(map[string]tags.KeyValueTags)
-		}
+		gatewayNames := make(map[string]string)
 		if internetGatewayID != "" {
 			internetGateway, err := findInternetGatewayByID(ctx, conn, internetGatewayID)
 			if err != nil {
@@ -120,7 +116,10 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				yield(result)
 				return
 			}
-			gatewayTags[internetGatewayID] = keyValueTags(ctx, internetGateway.Tags)
+			tags := keyValueTags(ctx, internetGateway.Tags)
+			if v, ok := tags["Name"]; ok {
+				gatewayNames[internetGatewayID] = v.ValueString()
+			}
 		}
 		if len(gatewayIDs) > 0 {
 			input := ec2.DescribeVpnGatewaysInput{
@@ -133,7 +132,10 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				return
 			}
 			for _, gateway := range gateways {
-				gatewayTags[aws.ToString(gateway.VpnGatewayId)] = keyValueTags(ctx, gateway.Tags)
+				tags := keyValueTags(ctx, gateway.Tags)
+				if v, ok := tags["Name"]; ok {
+					gatewayNames[aws.ToString(gateway.VpnGatewayId)] = v.ValueString()
+				}
 			}
 		}
 
@@ -170,10 +172,8 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 				}
 			} else if item.GatewayId != nil {
 				targetDisplayName = aws.ToString(item.GatewayId)
-				if tags, ok := gatewayTags[aws.ToString(item.GatewayId)]; ok {
-					if v, ok := tags["Name"]; ok {
-						targetDisplayName = v.ValueString()
-					}
+				if gatewayName, ok := gatewayNames[aws.ToString(item.GatewayId)]; ok {
+					targetDisplayName = gatewayName
 				}
 			} else {
 				targetDisplayName = "<unknown target type>"
