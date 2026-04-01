@@ -125,7 +125,10 @@ func TestAccS3BucketACL_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_s3_bucket_acl.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("access_control_policy"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("acl"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					}),
 				},
 			},

@@ -23,6 +23,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newOfferingsDataSource,
+			TypeName: "aws_savingsplans_offerings",
+			Name:     "Offerings",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newSavingsPlanDataSource,
 			TypeName: "aws_savingsplans_savings_plan",
 			Name:     "Savings Plan",

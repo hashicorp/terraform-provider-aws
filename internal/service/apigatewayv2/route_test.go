@@ -58,6 +58,34 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayV2Route_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_apigatewayv2_route.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteConfig_regionOverride(rName, acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+				),
+			},
+			{
+				Config:            testAccRouteConfig_regionOverride(rName, acctest.AlternateRegion()),
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteImportStateIdFunc),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayV2Route_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiId string
@@ -587,6 +615,23 @@ resource "aws_apigatewayv2_route" "test" {
   route_key = "$default"
 }
 `)
+}
+
+func testAccRouteConfig_regionOverride(rName, region string) string {
+	return fmt.Sprintf(`
+resource "aws_apigatewayv2_api" "test" {
+  region                     = %[2]q
+  name                       = %[1]q
+  protocol_type              = "WEBSOCKET"
+  route_selection_expression = "$request.body.action"
+}
+
+resource "aws_apigatewayv2_route" "test" {
+  region    = %[2]q
+  api_id    = aws_apigatewayv2_api.test.id
+  route_key = "$default"
+}
+`, rName, region)
 }
 
 func testAccRouteConfig_authorizer(rName string) string {

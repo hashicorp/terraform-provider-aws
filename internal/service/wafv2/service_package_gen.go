@@ -7,6 +7,8 @@ package wafv2
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,12 +42,41 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceWebACLRule,
+			TypeName: "aws_wafv2_web_acl_rule",
+			Name:     "Web ACL Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("web_acl_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      webACLRuleImportID{},
+			},
+		},
+		{
 			Factory:  newResourceWebACLRuleGroupAssociation,
 			TypeName: "aws_wafv2_web_acl_rule_group_association",
 			Name:     "Web ACL Rule Group Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newResourceWebACLRuleAsListResource,
+			TypeName: "aws_wafv2_web_acl_rule",
+			Name:     "Web ACL Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("web_acl_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

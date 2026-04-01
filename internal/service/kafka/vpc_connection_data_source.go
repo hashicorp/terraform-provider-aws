@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_msk_vpc_connection", name="VPC Connection")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCConnectionRead,

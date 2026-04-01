@@ -366,6 +366,49 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontKeyValueStoreKeysExclusive_specialCharacters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	value1 := `special "quoted" value with 'quotes' and {braces}`
+	value2 := `another [bracketed] value with \backslashes\ and:colons`
+
+	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeysExclusiveConfig_basic([]string{key1, key2}, []string{value1, value2}, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
+					// Verify values in Terraform state
+					testCheckMultipleKeyValuePairs([]string{key1, key2}, []string{value1, value2}, resourceName),
+					// Verify actual values in AWS (not JSON-encoded)
+					testAccCheckKeysExclusiveHasValues(ctx, t, resourceName, map[string]string{
+						key1: value1,
+						key2: value2,
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "key_value_store_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key_value_store_arn",
+			},
+		},
+	})
+}
+
 func testAccCheckKeysExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFrontKeyValueStoreClient(ctx)
@@ -409,6 +452,43 @@ func testAccCheckKeysExclusiveExists(ctx context.Context, t *testing.T, n string
 		kvPairCount := rs.Primary.Attributes["resource_key_value_pair.#"]
 		if kvPairCount != strconv.Itoa(len(out)) {
 			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKeysExclusive, rs.Primary.Attributes["key_value_store_arn"], errors.New("unexpected resource_key_value_pair count"))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckKeysExclusiveHasValues(ctx context.Context, t *testing.T, n string, expectedValues map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontKeyValueStoreClient(ctx)
+
+		_, keyPairs, err := tfcloudfrontkeyvaluestore.FindResourceKeyValuePairsForKeyValueStore(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
+		if err != nil {
+			return err
+		}
+
+		// Build actual values map from AWS
+		actualValues := make(map[string]string)
+		for _, pair := range keyPairs {
+			if pair.Key != nil && pair.Value != nil {
+				actualValues[*pair.Key] = *pair.Value
+			}
+		}
+
+		// Verify each expected value matches actual value in AWS
+		for expectedKey, expectedValue := range expectedValues {
+			actualValue, ok := actualValues[expectedKey]
+			if !ok {
+				return fmt.Errorf("CloudFront KeyValueStore missing key %q", expectedKey)
+			}
+			if actualValue != expectedValue {
+				return fmt.Errorf("CloudFront KeyValueStore key %q value = %q, expected %q", expectedKey, actualValue, expectedValue)
+			}
 		}
 
 		return nil

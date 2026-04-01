@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -218,41 +220,7 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					},
 				},
 			},
-			"authorizer_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"custom_jwt_authorizer": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"allowed_audience": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-									},
-									"allowed_clients": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-									},
-									"allowed_scopes": schema.SetAttribute{
-										CustomType: fwtypes.SetOfStringType,
-										Optional:   true,
-									},
-									"discovery_url": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"authorizer_configuration": authorizerConfigurationSchema(ctx),
 			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -325,6 +293,118 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
+// Note that this function and the models used within it are also used in gateway.go.
+func authorizerConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[authorizerConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"custom_jwt_authorizer": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"allowed_audience": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+							},
+							"allowed_clients": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+							},
+							"allowed_scopes": schema.SetAttribute{
+								CustomType: fwtypes.SetOfStringType,
+								Optional:   true,
+							},
+							"discovery_url": schema.StringAttribute{
+								Required: true,
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"custom_claim": schema.SetNestedBlock{
+								CustomType: fwtypes.NewSetNestedObjectTypeOf[customJWTAuthorizerCustomClaimModel](ctx),
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"inbound_token_claim_name": schema.StringAttribute{
+											Required: true,
+											Validators: []validator.String{
+												stringvalidator.LengthBetween(1, 255),
+												stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-:]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+											},
+										},
+										"inbound_token_claim_value_type": schema.StringAttribute{
+											CustomType: fwtypes.StringEnumType[awstypes.InboundTokenClaimValueType](),
+											Required:   true,
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"authorizing_claim_match_value": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerAuthorizingClaimMatchValueModel](ctx),
+											Validators: []validator.List{
+												listvalidator.IsRequired(),
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													"claim_match_operator": schema.StringAttribute{
+														CustomType: fwtypes.StringEnumType[awstypes.ClaimMatchOperatorType](),
+														Required:   true,
+													},
+												},
+												Blocks: map[string]schema.Block{
+													"claim_match_value": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerClaimMatchValueModel](ctx),
+														Validators: []validator.List{
+															listvalidator.IsRequired(),
+															listvalidator.SizeAtMost(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Validators: []validator.Object{
+																objectvalidator.ExactlyOneOf(
+																	path.MatchRelative().AtName("match_value_string"),
+																	path.MatchRelative().AtName("match_value_string_list"),
+																),
+															},
+															Attributes: map[string]schema.Attribute{
+																"match_value_string": schema.StringAttribute{
+																	Optional: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																	},
+																},
+																"match_value_string_list": schema.SetAttribute{
+																	Optional:    true,
+																	ElementType: types.StringType,
+																	Validators: []validator.Set{
+																		setvalidator.ValueStringsAre(
+																			stringvalidator.LengthBetween(1, 255),
+																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), "must contain only letters, numbers, and the characters _ . -"),
+																		),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *agentRuntimeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data agentRuntimeResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
@@ -341,7 +421,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	var (
@@ -446,7 +526,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateAgentRuntime(ctx, &input)
 		if err != nil {
@@ -798,10 +878,64 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 }
 
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience fwtypes.SetOfString `tfsdk:"allowed_audience"`
-	AllowedClients  fwtypes.SetOfString `tfsdk:"allowed_clients"`
-	AllowedScopes   fwtypes.SetOfString `tfsdk:"allowed_scopes"`
-	DiscoveryURL    types.String        `tfsdk:"discovery_url"`
+	AllowedAudience fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	CustomClaim     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	DiscoveryURL    types.String                                                        `tfsdk:"discovery_url"`
+}
+
+type customJWTAuthorizerCustomClaimModel struct {
+	InboundTokenClaimName      types.String                                                                        `tfsdk:"inbound_token_claim_name"`
+	InboundTokenClaimValueType fwtypes.StringEnum[awstypes.InboundTokenClaimValueType]                             `tfsdk:"inbound_token_claim_value_type"`
+	AuthorizingClaimMatchValue fwtypes.ListNestedObjectValueOf[customJWTAuthorizerAuthorizingClaimMatchValueModel] `tfsdk:"authorizing_claim_match_value"`
+}
+
+type customJWTAuthorizerAuthorizingClaimMatchValueModel struct {
+	ClaimMatchOperator fwtypes.StringEnum[awstypes.ClaimMatchOperatorType]                      `tfsdk:"claim_match_operator"`
+	ClaimMatchValue    fwtypes.ListNestedObjectValueOf[customJWTAuthorizerClaimMatchValueModel] `tfsdk:"claim_match_value"`
+}
+
+type customJWTAuthorizerClaimMatchValueModel struct {
+	MatchValueString     types.String        `tfsdk:"match_value_string"`
+	MatchValueStringList fwtypes.SetOfString `tfsdk:"match_value_string_list"`
+}
+
+var (
+	_ fwflex.Expander  = customJWTAuthorizerClaimMatchValueModel{}
+	_ fwflex.Flattener = &customJWTAuthorizerClaimMatchValueModel{}
+)
+
+func (m *customJWTAuthorizerClaimMatchValueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.ClaimMatchValueTypeMemberMatchValueString:
+		m.MatchValueString = types.StringValue(t.Value)
+	case awstypes.ClaimMatchValueTypeMemberMatchValueStringList:
+		m.MatchValueStringList = fwflex.FlattenFrameworkStringValueSetOfString(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("claim match value flatten: %T", v),
+		)
+	}
+	return diags
+}
+
+func (m customJWTAuthorizerClaimMatchValueModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.MatchValueString.IsNull():
+		var r awstypes.ClaimMatchValueTypeMemberMatchValueString
+		r.Value = fwflex.StringValueFromFramework(ctx, m.MatchValueString)
+		return &r, diags
+	case !m.MatchValueStringList.IsNull():
+		var r awstypes.ClaimMatchValueTypeMemberMatchValueStringList
+		r.Value = fwflex.ExpandFrameworkStringValueSet(ctx, m.MatchValueStringList)
+		return &r, diags
+	}
+	return nil, diags
 }
 
 type lifecycleConfigurationModel struct {

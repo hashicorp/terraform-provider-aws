@@ -18,10 +18,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -136,7 +136,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	name := d.Get(names.AttrName).(string)
 	input := route53.CreateHostedZoneInput{
-		CallerReference: aws.String(sdkid.UniqueId()),
+		CallerReference: aws.String(create.UniqueId(ctx)),
 		Name:            aws.String(name),
 		HostedZoneConfig: &awstypes.HostedZoneConfig{
 			Comment: aws.String(d.Get(names.AttrComment).(string)),

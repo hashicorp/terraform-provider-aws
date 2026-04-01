@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -107,7 +107,7 @@ func (r *serviceNetworkResourceAssociationResource) Create(ctx context.Context, 
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.ResourceConfigurationIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationID)
 	input.ServiceNetworkIdentifier = fwflex.StringFromFramework(ctx, data.ServiceNetworkID)
 	input.Tags = getTagsIn(ctx)

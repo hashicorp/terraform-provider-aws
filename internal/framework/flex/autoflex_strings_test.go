@@ -94,7 +94,7 @@ func TestExpandString(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -117,7 +117,7 @@ func TestExpandStringEnum(t *testing.T) {
 			WantTarget: &enum,
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 type tfSingleStringFieldOmitEmpty struct {
@@ -244,7 +244,7 @@ func TestFlattenString(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
 		})
 	}
 }
@@ -316,5 +316,5 @@ func TestFlattenTopLevelStringPtr(t *testing.T) {
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }

@@ -148,10 +148,14 @@ The following arguments are optional:
 
 ### Definition
 
+The `definition` block supports the following arguments:
+
 * `connection` - (Optional) A list of connection definitions in the flow. See [Connection](#connection) for more information.
 * `node` - (Optional) A list of node definitions in the flow. See [Node](#node) for more information.
 
 ### Connection
+
+The `connection` block supports the following arguments:
 
 * `name` - (Required) A name for the connection that you can reference.
 * `source` - (Required) The node that the connection starts at.
@@ -160,6 +164,8 @@ The following arguments are optional:
 * `configuration` - (Required) Configuration of the connection. See [Connection Configuration](#connection-configuration) for more information.
 
 ### Connection Configuration
+
+The connection `configuration` block supports the following arguments:
 
 * `data` - (Optional) The configuration of a connection originating from a node that isn’t a Condition node. See [Data Connection Configuration](#data-connection-configuration) for more information.
 * `conditional` - (Optional) The configuration of a connection originating from a Condition node. See [Conditional Connection Configuration](#conditional-connection-configuration) for more information.
@@ -171,17 +177,23 @@ The following arguments are optional:
 
 #### Conditional Connection Configuration
 
+The `conditional` block supports the following arguments:
+
 * `condition` - (Required) The condition that triggers this connection. For more information about how to write conditions, see the Condition node type in the [Node types](https://docs.aws.amazon.com/bedrock/latest/userguide/node-types.html) topic in the Amazon Bedrock User Guide.
 
 ### Node
 
+The `node` block supports the following arguments:
+
 * `name` - (Required) A name for the node.
-* `type` - (Required) The type of node. This value must match the name of the key that you provide in the configuration. Valid values: `Agent`, `Collector`, `Condition`, `Input`, `Iterator`, `KnowledgeBase`, `LambdaFunction`, `Lex`, `Output`, `Prompt`, `Retrieval`, `Storage`
+* `type` - (Required) Type of node. This value must match the name of the key you provide in `configuration`. Valid values: `Agent`, `Collector`, `Condition`, `InlineCode`, `Input`, `Iterator`, `KnowledgeBase`, `LambdaFunction`, `Lex`, `Output`, `Prompt`, `Retrieval`, `Storage`
 * `configuration` - (Required) Contains configurations for the node. See [Node Configuration](#node-configuration) for more information.
 * `input` - (Optional) A list of objects containing information about an input into the node. See [Node Input](#node-input) for more information.
 * `output` - (Optional) A list of objects containing information about an output from the node. See [Node Output](#node-output) for more information.
 
 ### Node Input
+
+The `input` block supports the following arguments:
 
 * `name` - (Required) A name for the input that you can reference.
 * `type` - (Required) The data type of the input. If the input doesn’t match this type at runtime, a validation error will be thrown.
@@ -190,21 +202,25 @@ The following arguments are optional:
 
 ### Node Output
 
+The `output` block supports the following arguments:
+
 * `name` - (Required) A name for the output that you can reference.
 * `type` - (Required) The data type of the output. If the output doesn’t match this type at runtime, a validation error will be thrown.
 
 ### Node Configuration
 
+The `configuration` block supports the following arguments:
+
 * `agent` - (Optional) Contains configurations for an agent node in your flow. Invokes an alias of an agent and returns the response. See [Agent Node Configuration](#agent-node-configuration) for more information.
 * `collector` - (Optional) Contains configurations for a collector node in your flow. Collects an iteration of inputs and consolidates them into an array of outputs. This object has no fields.
 * `condition` - (Optional) Contains configurations for a Condition node in your flow. Defines conditions that lead to different branches of the flow. See [Condition Node Configuration](#condition-node-configuration) for more information.
 * `inline_code` - (Optional) Contains configurations for an inline code node in your flow. See [Inline Code Node Configuration](#inline-code-node-configuration) for more information.
-* `input` - (Optional) Contains configurations for an input flow node in your flow. The node `inputs` can’t be specified for this node. This object has no fields.
-* `iterator` - (Optional) Contains configurations for an iterator node in your flow. Takes an input that is an array and iteratively sends each item of the array as an output to the following node. The size of the array is also returned in the output. The output flow node at the end of the flow iteration will return a response for each member of the array. To return only one response, you can include a collector node downstream from the iterator node. This object has no fields.
+* `input` - (Optional) Contains configurations for an input flow node in your flow. The node `inputs` can’t be specified for this node. This block has no fields.
+* `iterator` - (Optional) Contains configurations for an iterator node in your flow. Takes an input that is an array and iteratively sends each item of the array as an output to the following node. The size of the array is also returned in the output. The output flow node at the end of the flow iteration will return a response for each member of the array. To return only one response, you can include a collector node downstream from the iterator node. This block has no fields.
 * `knowledge_base` - (Optional) Contains configurations for a knowledge base node in your flow. Queries a knowledge base and returns the retrieved results or generated response. See [Knowledge Base Node Configuration](#knowledge-base-node-configuration) for more information.
 * `lambda_function` - (Optional) Contains configurations for a Lambda function node in your flow. Invokes a Lambda function. See [Lambda Function Node Configuration](#lambda-function-node-configuration) for more information.
 * `lex` - (Optional) Contains configurations for a Lex node in your flow. Invokes an Amazon Lex bot to identify the intent of the input and return the intent as the output. See [Lex Node Configuration](#lex-node-configuration) for more information.
-* `output` - (Optional) Contains configurations for an output flow node in your flow. The node `outputs` can’t be specified for this node. This object has no fields.
+* `output` - (Optional) Contains configurations for an output flow node in your flow. The node `outputs` can’t be specified for this node. This block has no fields.
 * `prompt` - (Optional) Contains configurations for a prompt node in your flow. Runs a prompt and generates the model response as the output. You can use a prompt from Prompt management or you can configure one in this node. See [Prompt Node Configuration](#prompt-node-configuration) for more information.
 * `retrieval` - (Optional) Contains configurations for a Retrieval node in your flow. Retrieves data from an Amazon S3 location and returns it as the output. See [Retrieval Node Configuration](#retrieval-node-configuration) for more information.
 * `storage` - (Optional) Contains configurations for a Storage node in your flow. Stores an input in an Amazon S3 location. See [Storage Node Configuration](#storage-node-configuration) for more information.
@@ -215,6 +231,8 @@ The following arguments are optional:
 
 ### Condition Node Configuration
 
+The `condition` block supports the following arguments:
+
 * `condition` - (Optional) A list of conditions. See [Condition Config](#condition-config) for more information.
 
 #### Condition Config
@@ -224,47 +242,73 @@ The following arguments are optional:
 
 ### Inline Code Node Configuration
 
+The `inline_code` block supports the following arguments:
+
 * `code` - (Required) The code that's executed in your inline code node.
 * `language` - (Required) The programming language used by your inline code node.
 
 ### Knowledge Base Node Configuration
 
+The `knowledge_base` block supports the following arguments:
+
 * `knowledge_base_id` - (Required) The unique identifier of the knowledge base to query.
 * `model_id` - (Required) The unique identifier of the model or inference profile to use to generate a response from the query results. Omit this field if you want to return the retrieved results as an array.
-* `guardrail_configuration` - (Required) Contains configurations for a guardrail to apply during query and response generation for the knowledge base in this configuration. See [Guardrail Configuration](#guardrail-configuration) for more information.
+* `guardrail_configuration` - (Optional) Configures a guardrail for knowledge base query and response generation. See [Guardrail Configuration](#guardrail-configuration) for more information.
+* `inference_configuration` - (Optional) Configures model inference for knowledge base query and response generation. See [Inference Configuration](#inference-configuration) for more information.
 
 #### Guardrail Configuration
+
+The `guardrail_configuration` block supports the following arguments:
 
 * `guardrail_identifier` - (Required) The unique identifier of the guardrail.
 * `guardrail_version` - (Required) The version of the guardrail.
 
 ### Lambda Function Node Configuration
 
+The `lambda_function` block supports the following arguments:
+
 * `lambda_arn` - (Required) The Amazon Resource Name (ARN) of the Lambda function to invoke.
 
 ### Lex Node Configuration
+
+The `lex` block supports the following arguments:
 
 * `bot_alias_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Lex bot alias to invoke.
 * `locale_id` - (Required) The Region to invoke the Amazon Lex bot in
 
 ### Prompt Node Configuration
 
-* `resource` - (Optional) Contains configurations for a prompt from Prompt management. See [Prompt Resource Configuration](#prompt-resource-configuration) for more information.
+The `prompt` block supports the following arguments:
+
+* `guardrail_configuration` - (Optional) Configures a guardrail for prompt generation. See [Guardrail Configuration](#guardrail-configuration) for more information.
+* `source_configuration` - (Required) Configures the prompt source, either inline or from Prompt management. See [Source Configuration](#source-configuration) for more information.
+
+#### Source Configuration
+
+The `source_configuration` block supports the following arguments:
+
 * `inline` - (Optional) Contains configurations for a prompt that is defined inline. See [Prompt Inline Configuration](#prompt-inline-configuration) for more information.
+* `resource` - (Optional) Contains configurations for a prompt from Prompt management. See [Prompt Resource Configuration](#prompt-resource-configuration) for more information.
 
 #### Prompt Resource Configuration
+
+The `resource` block supports the following arguments:
 
 * `prompt_arn` - (Required) The Amazon Resource Name (ARN) of the prompt from Prompt management.
 
 #### Prompt Inline Configuration
 
+The `inline` block supports the following arguments:
+
 * `additional_model_request_fields` - (Optional) Additional fields to be included in the model request for the Prompt node.
-* `inference_configuration` - (Optional) Contains inference configurations for the prompt. See [Prompt Inference Configuration](#prompt-inference-configuration) for more information.
+* `inference_configuration` - (Optional) Contains inference configurations for the prompt. See [Inference Configuration](#inference-configuration) for more information.
 * `model_id` - (Required) The unique identifier of the model or [inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) to run inference with.
 * `template_type` - (Required) The type of prompt template. Valid values: `TEXT`, `CHAT`.
 * `template_configuration` - (Required) Contains a prompt and variables in the prompt that can be replaced with values at runtime. See [Prompt Template Configuration](#prompt-template-configuration) for more information.
 
-#### Prompt Inference Configuration
+#### Inference Configuration
+
+The `inference_configuration` block supports the following arguments:
 
 * `text` - (Optional) Contains inference configurations for a text prompt. See [Text Inference Configuration](#text-inference-configuration) for more information.
 
@@ -277,10 +321,14 @@ The following arguments are optional:
 
 #### Prompt Template Configuration
 
-* `text` - (Optional) Contains configurations for the text in a message for a prompt. See [Text Template Configuration](#text-template-configuration)
+The `template_configuration` block supports the following arguments:
+
+* `text` - (Optional) Contains configurations for the text in a message for a prompt. See [Text Template Configuration](#text-template-configuration) for more information.
 * `chat` - (Optional) Contains configurations to use the prompt in a conversational format. See [Chat Template Configuration](#chat-template-configuration) for more information.
 
 #### Text Template Configuration
+
+The `text` block supports the following arguments:
 
 * `text` - (Required) The message for the prompt.
 * `input_variable` - (Optional) A list of variables in the prompt template. See [Input Variable](#input-variable) for more information.
@@ -295,40 +343,56 @@ The following arguments are optional:
 
 #### Message
 
+The `message` block supports the following arguments:
+
 * `role` - (Required) The role that the message belongs to.
-* `content` - (Required) Contains the content for the message you pass to, or receive from a model. See [Message Content] for more information.
+* `content` - (Required) Contains the content for the message you pass to, or receive from a model. See [Message Content](#message-content) for more information.
 
 #### Message Content
+
+The `content` block supports the following arguments:
 
 * `cache_point` - (Optional) Creates a cache checkpoint within a message. See [Cache Point](#cache-point) for more information.
 * `text` - (Optional) The text in the message.
 
 #### System
 
+The `system` block supports the following arguments:
+
 * `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
 * `text` - (Optional) The text in the system prompt.
 
 #### Tool Configuration
+
+The `tool_configuration` block supports the following arguments:
 
 * `tool_choice` - (Optional) Defines which tools the model should request when invoked. See [Tool Choice](#tool-choice) for more information.
 * `tool` - (Optional) A list of tools to pass to a model. See [Tool](#tool) for more information.
 
 #### Tool Choice
 
-* `any` - (Optional) Defines tools, at least one of which must be requested by the model. No text is generated but the results of tool use are sent back to the model to help generate a response. This object has no fields.
-* `auto` - (Optional) Defines tools. The model automatically decides whether to call a tool or to generate text instead. This object has no fields.
+The `tool_choice` block supports the following arguments:
+
+* `any` - (Optional) Defines tools, at least one of which must be requested by the model. No text is generated but the results of tool use are sent back to the model to help generate a response. This block has no fields.
+* `auto` - (Optional) Defines tools. The model automatically decides whether to call a tool or to generate text instead. This block has no fields.
 * `tool` - (Optional) Defines a specific tool that the model must request. No text is generated but the results of tool use are sent back to the model to help generate a response. See [Named Tool](#named-tool) for more information.
 
 #### Named Tool
+
+The `tool` block supports the following arguments:
 
 * `name` - (Required) The name of the tool.
 
 #### Tool
 
+The `tool` block supports the following arguments:
+
 * `cache_point` - (Optional) Creates a cache checkpoint within a tool designation. See [Cache Point](#cache-point) for more information.
 * `tool_spec` - (Optional) The specification for the tool. See [Tool Specification](#tool-specification) for more information.
 
 #### Tool Specification
+
+The `tool_spec` block supports the following arguments:
 
 * `name` - (Required) The name of the tool.
 * `description` - (Optional) The description of the tool.
@@ -336,37 +400,55 @@ The following arguments are optional:
 
 #### Tool Input Schema
 
+The `input_schema` block supports the following arguments:
+
 * `json` - (Optional) A JSON object defining the input schema for the tool.
 
 #### Input Variable
+
+The `input_variable` block supports the following arguments:
 
 * `name` - (Required) The name of the variable.
 
 #### Cache Point
 
+The `cache_point` block supports the following arguments:
+
 * `type` - (Required) Indicates that the CachePointBlock is of the default type. Valid values: `default`.
 
 ### Retrieval Node Configuration
+
+The `retrieval` block supports the following arguments:
 
 * `service_configuration` - (Required) Contains configurations for the service to use for retrieving data to return as the output from the node. See [Retrieval Service Configuration](#retrieval-service-configuration) for more information.
 
 #### Retrieval Service Configuration
 
+The `service_configuration` block supports the following arguments:
+
 * `s3` - (Optional) Contains configurations for the Amazon S3 location from which to retrieve data to return as the output from the node. See [Retrieval S3 Service Configuration](#retrieval-s3-service-configuration) for more information.
 
 #### Retrieval S3 Service Configuration
+
+The `s3` block supports the following arguments:
 
 * `bucket_name` - (Required) The name of the Amazon S3 bucket from which to retrieve data.
 
 ### Storage Node Configuration
 
+The `storage` block supports the following arguments:
+
 * `service_configuration` - (Required) Contains configurations for a Storage node in your flow. Stores an input in an Amazon S3 location. See [Storage Service Configuration](#storage-service-configuration) for more information.
 
 #### Storage Service Configuration
 
+The `service_configuration` block supports the following arguments:
+
 * `s3` - (Optional) Contains configurations for the service to use for storing the input into the node. See [Storage S3 Service Configuration](#storage-s3-service-configuration) for more information.
 
 #### Storage S3 Service Configuration
+
+The `s3` block supports the following arguments:
 
 * `bucket_name` - (Required) The name of the Amazon S3 bucket in which to store the input into the node.
 

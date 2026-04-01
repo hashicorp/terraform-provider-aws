@@ -151,6 +151,28 @@ EOF
 }
 ```
 
+### Protected View
+
+```terraform
+resource "aws_glue_catalog_table" "example" {
+  name          = "multidialect_view"
+  database_name = "catalog_database"
+
+  table_type = "VIRTUAL_VIEW"
+
+  view_definition {
+    is_protected = true
+
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      view_original_text    = "SELECT * FROM catalog_database.base_table"
+      validation_connection = aws_glue_connection.example.name
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:

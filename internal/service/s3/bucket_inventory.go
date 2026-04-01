@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -225,7 +226,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") || tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
 		err = errDirectoryBucket(err)
 	}
 

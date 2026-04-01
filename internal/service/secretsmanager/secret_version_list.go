@@ -101,7 +101,7 @@ func (l *secretVersionListResource) List(ctx context.Context, request list.ListR
 
 				result.DisplayName = versionID
 
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 				if result.Diagnostics.HasError() {
 					yield(result)
 					return
