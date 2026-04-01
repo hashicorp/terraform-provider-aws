@@ -69,6 +69,14 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			return
 		}
 
+		var routeTableDisplayName string
+		routeTableTags := keyValueTags(ctx, routeTable.Tags)
+		if v, ok := routeTableTags["Name"]; ok {
+			routeTableDisplayName = v.ValueString()
+		} else {
+			routeTableDisplayName = routeTableID
+		}
+
 		for _, item := range routeTable.Associations {
 			if item.AssociationState.State == awstypes.RouteTableAssociationStateCodeDisassociated || item.AssociationState.State == awstypes.RouteTableAssociationStateCodeDisassociating {
 				continue
@@ -96,7 +104,6 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			if targetDisplayName == "" {
 				targetDisplayName = aws.ToString(item.GatewayId)
 			}
-			routeTableDisplayName := aws.ToString(item.RouteTableId)
 
 			result.DisplayName = fmt.Sprintf("%s / %s (%s)", targetDisplayName, routeTableDisplayName, aws.ToString(item.RouteTableAssociationId))
 
