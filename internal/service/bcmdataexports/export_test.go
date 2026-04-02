@@ -15,8 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbcmdataexports "github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
@@ -44,7 +48,7 @@ func TestAccBCMDataExportsExport_CUR_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExportDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExportConfig_basic(rName),
+				Config: testAccExportConfig_CUR_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, t, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
@@ -52,7 +56,6 @@ func TestAccBCMDataExportsExport_CUR_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.overwrite", "OVERWRITE_REPORT"),
@@ -61,11 +64,18 @@ func TestAccBCMDataExportsExport_CUR_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.output_type", "CUSTOM"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.0.frequency", "SYNCHRONOUS"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.INCLUDE_RESOURCES", acctest.CtFalseCaps),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY", acctest.CtFalseCaps),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.INCLUDE_SPLIT_COST_ALLOCATION_DATA", acctest.CtFalseCaps),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("export").AtSliceIndex(0).AtMapKey("data_query").AtSliceIndex(0).AtMapKey("table_configurations"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"COST_AND_USAGE_REPORT": knownvalue.MapExact(map[string]knownvalue.Check{
+							"TIME_GRANULARITY":                      knownvalue.StringExact("HOURLY"),
+							"INCLUDE_RESOURCES":                     knownvalue.StringExact("FALSE"),
+							"INCLUDE_SPLIT_COST_ALLOCATION_DATA":    knownvalue.StringExact("FALSE"),
+							"INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY": knownvalue.StringExact("FALSE"),
+							"BILLING_VIEW_ARN":                      tfknownvalue.GlobalARNExact("billing", "billingview/primary"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -96,15 +106,19 @@ func TestAccBCMDataExportsExport_CarbonEmissions_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExportDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExportConfig_carbonEmissions(rName),
+				Config: testAccExportConfig_CarbonEmissions_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, t, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT usage_account_id FROM CARBON_EMISSIONS"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("export").AtSliceIndex(0).AtMapKey("data_query").AtSliceIndex(0).AtMapKey("table_configurations"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"CARBON_EMISSIONS": knownvalue.MapExact(map[string]knownvalue.Check{}),
+					})),
+				},
 			},
 		},
 	})
@@ -357,7 +371,7 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckExportDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExportConfig_basic(rName),
+				Config: testAccExportConfig_CUR_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, t, resourceName, &export),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbcmdataexports.ResourceExport, resourceName),
@@ -491,7 +505,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccExportConfig_basic(rName string) string {
+func testAccExportConfig_CUR_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
@@ -503,15 +517,6 @@ resource "aws_bcmdataexports_export" "test" {
     name = %[1]q
     data_query {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
-      table_configurations = {
-        "COST_AND_USAGE_REPORT" = {
-          "TIME_GRANULARITY"                      = "HOURLY",
-          "INCLUDE_RESOURCES"                     = "FALSE",
-          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
-          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
-          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
-        }
-      }
     }
     destination_configurations {
       s3_destination {
@@ -668,7 +673,7 @@ resource "aws_bcmdataexports_export" "test" {
 `, rName, query))
 }
 
-func testAccExportConfig_carbonEmissions(rName string) string {
+func testAccExportConfig_CarbonEmissions_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
