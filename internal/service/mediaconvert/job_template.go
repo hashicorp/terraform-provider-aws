@@ -5,13 +5,12 @@ package mediaconvert
 
 import (
 	"context"
+	"encoding/json"
 	"log"
-	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert/types"
-	smithyjson "github.com/aws/smithy-go/encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -27,12 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeJobTemplateSettings github.com/aws/aws-sdk-go-v2/service/mediaconvert.awsRestjson1_serializeDocumentJobTemplateSettings
-func serializeJobTemplateSettings(v *types.JobTemplateSettings, value smithyjson.Value) error
 
 // @SDKResource("aws_media_convert_job_template", name="Job Template")
 // @Tags(identifierAttribute="arn")
@@ -116,7 +109,10 @@ func resourceJobTemplate() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
+					json, err := structure.NormalizeJsonString(v)
+					if err != nil {
+						return v.(string)
+					}
 					return json
 				},
 			},
@@ -335,11 +331,11 @@ func expandJobTemplateSettings(s string) (*types.JobTemplateSettings, error) {
 }
 
 func flattenJobTemplateSettings(settings *types.JobTemplateSettings) (string, error) {
-	jsonEncoder := smithyjson.NewEncoder()
-	if err := serializeJobTemplateSettings(settings, jsonEncoder.Value); err != nil {
+	b, err := json.Marshal(settings)
+	if err != nil {
 		return "", err
 	}
-	return jsonEncoder.String(), nil
+	return string(b), nil
 }
 
 func expandJobTemplateAccelerationSettings(tfMap map[string]any) *types.AccelerationSettings {

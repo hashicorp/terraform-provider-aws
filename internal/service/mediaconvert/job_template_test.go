@@ -64,7 +64,7 @@ func TestAccMediaConvertJobTemplate_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmediaconvert.ResourceJobTemplate(), resourceName),
 				),
@@ -88,7 +88,7 @@ func TestAccMediaConvertJobTemplate_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -101,7 +101,7 @@ func TestAccMediaConvertJobTemplate_tags(t *testing.T) {
 			},
 			{
 				Config: testAccJobTemplateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -110,7 +110,7 @@ func TestAccMediaConvertJobTemplate_tags(t *testing.T) {
 			},
 			{
 				Config: testAccJobTemplateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -136,14 +136,19 @@ func TestAccMediaConvertJobTemplate_description(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_description(rName, description1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccJobTemplateConfig_description(rName, description2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
@@ -166,7 +171,7 @@ func TestAccMediaConvertJobTemplate_accelerationSettings(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobTemplateConfig_accelerationSettings(rName, string(types.AccelerationModeDisabled)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_settings.0.mode", string(types.AccelerationModeDisabled)),
@@ -179,7 +184,7 @@ func TestAccMediaConvertJobTemplate_accelerationSettings(t *testing.T) {
 			},
 			{
 				Config: testAccJobTemplateConfig_accelerationSettings(rName, string(types.AccelerationModeEnabled)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, t, resourceName, &jobTemplate),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_settings.0.mode", string(types.AccelerationModeEnabled)),
