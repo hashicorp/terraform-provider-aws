@@ -137,6 +137,12 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"network_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.NetworkType](),
+									},
 									"vpc_connectivity": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -575,12 +581,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	var vpcConnectivity *types.VpcConnectivity
+	var networkType types.NetworkType
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]any)[0].(map[string]any))
 		// "BadRequestException: When creating a cluster, all vpcConnectivity auth schemes must be disabled (‘enabled’ : false). You can enable auth schemes after the cluster is created"
 		if input.BrokerNodeGroupInfo != nil && input.BrokerNodeGroupInfo.ConnectivityInfo != nil {
 			vpcConnectivity = input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity
 			input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
+
+			networkType = input.BrokerNodeGroupInfo.ConnectivityInfo.NetworkType
+			input.BrokerNodeGroupInfo.ConnectivityInfo.NetworkType = types.NetworkTypeIpv4
 		}
 	}
 
@@ -624,10 +634,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(output.ClusterArn))
 
-	cluster, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) create: %s", d.Id(), err)
+	}
+
+	if err := refreshClusterVersion(ctx, d, meta); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if vpcConnectivity != nil {
@@ -636,9 +650,34 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			ConnectivityInfo: &types.ConnectivityInfo{
 				VpcConnectivity: vpcConnectivity,
 			},
-			CurrentVersion: cluster.CurrentVersion,
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if networkType != "" && networkType != types.NetworkTypeIpv4 {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn: aws.String(d.Id()),
+			ConnectivityInfo: &types.ConnectivityInfo{
+				NetworkType: networkType,
+			},
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
 		output, err := conn.UpdateConnectivity(ctx, &input)
 
 		if err != nil {
@@ -688,15 +727,77 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	if d.HasChange("broker_node_group_info.0.connectivity_info") {
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.vpc_connectivity") {
 		input := kafka.UpdateConnectivityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.ConnectivityInfo = expandConnectivityInfo(v.([]any)[0].(map[string]any))
+		var connectivityInfo types.ConnectivityInfo
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0,vpc_connectivity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			connectivityInfo.VpcConnectivity = expandVPCConnectivity(v.([]any)[0].(map[string]any))
 		}
+		input.ConnectivityInfo = &connectivityInfo
+
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.public_access") {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		var connectivityInfo types.ConnectivityInfo
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.public_access"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			connectivityInfo.PublicAccess = expandPublicAccess(v.([]any)[0].(map[string]any))
+		}
+		input.ConnectivityInfo = &connectivityInfo
+
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.network_type") {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		var connectivityInfo types.ConnectivityInfo
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.network_type"); ok && v != "" {
+			connectivityInfo.NetworkType = types.NetworkType(v.(string))
+		}
+		input.ConnectivityInfo = &connectivityInfo
 
 		output, err := conn.UpdateConnectivity(ctx, &input)
 
@@ -1400,6 +1501,10 @@ func expandConnectivityInfo(tfMap map[string]any) *types.ConnectivityInfo {
 
 	apiObject := &types.ConnectivityInfo{}
 
+	if v, ok := tfMap["network_type"].(string); ok && v != "" {
+		apiObject.NetworkType = types.NetworkType(v)
+	}
+
 	if v, ok := tfMap["public_access"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]any))
 	}
@@ -1856,6 +1961,10 @@ func flattenConnectivityInfo(apiObject *types.ConnectivityInfo) map[string]any {
 	}
 
 	tfMap := map[string]any{}
+
+	if v := apiObject.NetworkType; v != "" {
+		tfMap["network_type"] = v
+	}
 
 	if v := apiObject.PublicAccess; v != nil {
 		tfMap["public_access"] = []any{flattenPublicAccess(v)}
