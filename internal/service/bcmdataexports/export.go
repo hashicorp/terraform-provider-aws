@@ -120,6 +120,8 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				"table_configurations": schema.MapAttribute{
+					// TODO: Because `Computed` can only be speciied at the top level, default values for specific tables must be specified if any values are specified.
+					// This should be resolved when we can use `schema.MapNestedAttribute` with protov6.
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
 					Computed:   true,
