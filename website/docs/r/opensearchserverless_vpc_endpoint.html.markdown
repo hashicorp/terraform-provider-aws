@@ -51,19 +51,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Vpc Endpoint using the `id`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_opensearchserverless_vpc_endpoint.example
-  id = "vpce-8012925589"
+  identity = {
+    id = "vpce-8012925589"
+  }
 }
-```
 
-Using `terraform import`, import OpenSearchServerless Vpc Endpoint using the `id`. For example:
-
-```console
-% terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589
+resource "aws_opensearchserverless_vpc_endpoint" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
 
 ### Identity Schema
@@ -77,13 +77,17 @@ Using `terraform import`, import OpenSearchServerless Vpc Endpoint using the `id
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.12.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Vpc Endpoint using the `identity` argument. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Vpc Endpoint using the `id`. For example:
 
 ```terraform
 import {
   to = aws_opensearchserverless_vpc_endpoint.example
-  identity = {
-    id = "vpce-8012925589"
-  }
+  id = "vpce-8012925589"
 }
+```
+
+Using `terraform import`, import OpenSearchServerless Vpc Endpoint using the `id`. For example:
+
+```console
+% terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589
 ```
