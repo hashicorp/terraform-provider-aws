@@ -500,7 +500,7 @@ type exportData struct {
 
 type dataQueryData struct {
 	QueryStatement      types.String             `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations" autoflex:",omitempty"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {
