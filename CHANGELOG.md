@@ -1,5 +1,9 @@
 ## 6.40.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.data_export.storage_lens_table_destination` argument ([#47152](https://github.com/hashicorp/terraform-provider-aws/issues/47152))
+
 ## 6.39.0 (April 1, 2026)
 
 NOTES:
