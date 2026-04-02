@@ -616,7 +616,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 		_, err := waitMultiRegionClusterAvailable(ctx, conn, multiRegionClusterName, timeout)
 		if err != nil {
-			return diag.Errorf("waiting for parent multi-region cluster availability: %s", err)
+			return sdkdiag.AppendErrorf(diags, "waiting for parent multi-region cluster availability: %s", err)
 		}
 	}
 
@@ -654,7 +654,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
 		_, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), timeout)
 		if err != nil {
-			return diag.Errorf("waiting for parent multi-region cluster availability: %s", err)
+			return sdkdiag.AppendErrorf(diags, "waiting for parent multi-region cluster availability: %s", err)
 		}
 	}
 

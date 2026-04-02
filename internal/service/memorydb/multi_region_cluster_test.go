@@ -488,7 +488,7 @@ func testAccCheckMultiRegionClusterRegionalClusterExists(ctx context.Context, t 
 		out, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, parentName)
 
 		if err != nil {
-			return fmt.Errorf("No multi-region cluster found: %s", err)
+			return fmt.Errorf("No multi-region cluster found: %w", err)
 		}
 
 		for _, c := range out.Clusters {
