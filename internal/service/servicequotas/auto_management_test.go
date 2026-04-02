@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccServiceQuotasAutoManagement_basic(t *testing.T) {
+func testAccAutoManagement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_auto_management.test"
 
@@ -73,7 +73,7 @@ func TestAccServiceQuotasAutoManagement_basic(t *testing.T) {
 	})
 }
 
-func TestAccServiceQuotasAutoManagement_disappears(t *testing.T) {
+func testAccAutoManagement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_auto_management.test"
 
@@ -107,7 +107,7 @@ func TestAccServiceQuotasAutoManagement_disappears(t *testing.T) {
 	})
 }
 
-func TestAccServiceQuotasAutoManagement_updateExclusionList(t *testing.T) {
+func testAccAutoManagement_updateExclusionList(t *testing.T) {
 	ctx := acctest.Context(t)
 	quotaCode := "L-F7858A77"
 	quotaCodeUpdated := "L-F98FE922"
@@ -173,7 +173,7 @@ func TestAccServiceQuotasAutoManagement_updateExclusionList(t *testing.T) {
 	})
 }
 
-func TestAccServiceQuotasAutoManagement_updateNotificationARN(t *testing.T) {
+func testAccAutoManagement_updateNotificationARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	notificationResourceName1 := "aws_notifications_notification_configuration.test_1"
 	notificationResourceName2 := "aws_notifications_notification_configuration.test_2"
