@@ -32,17 +32,16 @@ import (
 
 // @SDKResource("aws_glue_job", name="Job")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue/types;types.Job")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobCreate,
 		ReadWithoutTimeout:   resourceJobRead,
 		UpdateWithoutTimeout: resourceJobUpdate,
 		DeleteWithoutTimeout: resourceJobDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
+		
 		CustomizeDiff: resourceJobCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
