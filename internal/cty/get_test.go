@@ -76,6 +76,38 @@ func TestGetFrameworkPrimitives(t *testing.T) {
 			target:  (*A)(nil),
 			wantErr: true,
 		},
+		"source null object, struct pointer target, one string field": {
+			source: cty.NullVal(cty.Object(map[string]cty.Type{
+				"string1": cty.String,
+			})),
+			target:  &A{},
+			wantErr: true,
+		},
+		"source unknown object, struct pointer target, one string field": {
+			source: cty.UnknownVal(cty.Object(map[string]cty.Type{
+				"string1": cty.String,
+			})),
+			target:  &A{},
+			wantErr: true,
+		},
+		"source object, struct pointer target, one null string field": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string1": cty.NullVal(cty.String),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String1: types.StringNull(),
+			},
+		},
+		"source object, struct pointer target, one unknown string field": {
+			source: cty.ObjectVal(map[string]cty.Value{
+				"string1": cty.UnknownVal(cty.String),
+			}),
+			target: &A{},
+			wantTarget: &A{
+				String1: types.StringUnknown(),
+			},
+		},
 		"source object, struct pointer target, one string field": {
 			source: cty.ObjectVal(map[string]cty.Value{
 				"string1": cty.StringVal("Alice"),

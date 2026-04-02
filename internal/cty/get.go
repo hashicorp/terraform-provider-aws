@@ -16,6 +16,12 @@ import (
 // GetFramework populates the struct passed as `target` with the entire cty object passed as `source`.
 // The target's fields must be Plugin Framework types.
 func GetFramework(ctx context.Context, source cty.Value, target any) error {
+	if !source.IsKnown() {
+		return fmt.Errorf("source must not be unknown")
+	}
+	if source.IsNull() {
+		return fmt.Errorf("source must not be nul")
+	}
 	if typ := source.Type(); !typ.IsObjectType() {
 		return fmt.Errorf("source must be an object, got %s", typ.FriendlyName())
 	}
