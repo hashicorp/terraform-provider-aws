@@ -231,19 +231,6 @@ func (r *securityPolicyResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-//func (r *securityPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-//	parts := strings.Split(request.ID, resourceIDSeparator)
-//	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-//		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", request.ID, resourceIDSeparator)
-//		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-//
-//		return
-//	}
-//
-//	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
-//	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[1])...)
-//}
-
 type securityPolicyResourceModel struct {
 	framework.WithRegionModel
 	Description   types.String                                    `tfsdk:"description"`
