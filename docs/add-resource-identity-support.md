@@ -70,14 +70,14 @@ Follow these steps:
 
         ```terraform
         import {
-        to = <resource-name>.example
-        identity = {
-            "arn" = <example-arn-value>
-        }
+          to = <resource-name>.example
+          identity = {
+              "arn" = <example-arn-value>
+          }
         }
 
         resource "<resource-name>" "example" {
-        ### Configuration omitted for brevity ###
+          ### Configuration omitted for brevity ###
         }
         ```
 
@@ -95,14 +95,14 @@ Follow these steps:
 
         ```terraform
         import {
-        to = <resource-name>.example
-        identity = {
-            <required key/value pairs here>
-        }
+          to = <resource-name>.example
+          identity = {
+              <required key/value pairs here>
+          }
         }
 
         resource "<resource-name>" "example" {
-        ### Configuration omitted for brevity ###
+          ### Configuration omitted for brevity ###
         }
         ```
 
