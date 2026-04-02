@@ -11,7 +11,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -32,7 +31,7 @@ func testAccAppBundle_basic(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -40,12 +39,12 @@ func testAccAppBundle_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -72,7 +71,7 @@ func testAccAppBundle_disappears(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -80,12 +79,12 @@ func testAccAppBundle_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceAppBundle, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,10 +101,10 @@ func testAccAppBundle_disappears(t *testing.T) {
 func testAccAppBundle_cmk(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appbundle awstypes.AppBundle
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -113,12 +112,12 @@ func testAccAppBundle_cmk(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_cmk(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -143,14 +142,14 @@ func testAccAppBundle_upgradeFromV5(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -161,7 +160,7 @@ func testAccAppBundle_upgradeFromV5(t *testing.T) {
 				},
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -176,7 +175,7 @@ func testAccAppBundle_upgradeFromV5(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -199,14 +198,14 @@ func testAccAppBundle_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -222,7 +221,7 @@ func testAccAppBundle_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 				},
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -237,7 +236,7 @@ func testAccAppBundle_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -260,14 +259,14 @@ func testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -283,7 +282,7 @@ func testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse(t *testing.T) {
 				},
 				Config: testAccAppBundleConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -301,7 +300,7 @@ func testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAppBundleConfig_tags1(acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -327,14 +326,14 @@ func testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -350,7 +349,7 @@ func testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse(t *testing.T) {
 				},
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -365,7 +364,7 @@ func testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAppBundleConfig_region(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -388,14 +387,14 @@ func testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
-		CheckDestroy: testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy: testAccCheckAppBundleDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -411,7 +410,7 @@ func testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
 				},
 				Config: testAccAppBundleConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -426,7 +425,7 @@ func testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAppBundleConfig_region(endpoints.EuWest1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.EuWest1RegionID),
+					testAccCheckAppBundleExistsInRegion(ctx, t, resourceName, &appbundle, endpoints.EuWest1RegionID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -449,7 +448,7 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -457,12 +456,12 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_region("null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -485,7 +484,7 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 			{
 				Config: testAccAppBundleConfig_region(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -504,7 +503,7 @@ func testAccAppBundle_regionCreateNull(t *testing.T) {
 			{
 				Config: testAccAppBundleConfig_region(endpoints.ApNortheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.ApNortheast1RegionID),
+					testAccCheckAppBundleExistsInRegion(ctx, t, resourceName, &appbundle, endpoints.ApNortheast1RegionID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -534,7 +533,7 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -542,12 +541,12 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppBundleConfig_region(endpoints.EuWest1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExistsInRegion(ctx, resourceName, &appbundle, endpoints.EuWest1RegionID),
+					testAccCheckAppBundleExistsInRegion(ctx, t, resourceName, &appbundle, endpoints.EuWest1RegionID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -571,7 +570,7 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 			{
 				Config: testAccAppBundleConfig_region(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					testAccCheckAppBundleExists(ctx, t, resourceName, &appbundle),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -595,9 +594,9 @@ func testAccAppBundle_regionCreateNonNull(t *testing.T) {
 	})
 }
 
-func testAccCheckAppBundleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAppBundleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appfabric_app_bundle" {
@@ -626,14 +625,14 @@ func testAccCheckAppBundleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAppBundleExists(ctx context.Context, n string, v *awstypes.AppBundle) resource.TestCheckFunc {
+func testAccCheckAppBundleExists(ctx context.Context, t *testing.T, n string, v *awstypes.AppBundle) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		output, err := tfappfabric.FindAppBundleByID(ctx, conn, rs.Primary.ID)
 
@@ -647,10 +646,10 @@ func testAccCheckAppBundleExists(ctx context.Context, n string, v *awstypes.AppB
 	}
 }
 
-func testAccCheckAppBundleExistsInRegion(ctx context.Context, n string, v *awstypes.AppBundle, region string) resource.TestCheckFunc {
+func testAccCheckAppBundleExistsInRegion(ctx context.Context, t *testing.T, n string, v *awstypes.AppBundle, region string) resource.TestCheckFunc {
 	// Push region into Context.
 	ctx = conns.NewResourceContext(ctx, "AppFabric", "App Bundle", "aws_appfabric_app_bundle", region)
-	return testAccCheckAppBundleExists(ctx, n, v)
+	return testAccCheckAppBundleExists(ctx, t, n, v)
 }
 
 func testAccAppBundleRegionImportStateIDFunc(n, region string) resource.ImportStateIdFunc {

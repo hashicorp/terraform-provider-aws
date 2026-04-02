@@ -31,7 +31,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.ExportDescription")
 // @Testing(checkDestroyNoop=true)
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTableExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableExportCreate,
@@ -269,7 +268,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func expandIncrementalExportSpecification(d any) *awstypes.IncrementalExportSpecification {
-	if d.([]any) == nil || len(d.([]any)) == 0 {
+	if len(d.([]any)) == 0 {
 		return nil
 	}
 

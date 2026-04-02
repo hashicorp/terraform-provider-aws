@@ -7,14 +7,14 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,13 +28,13 @@ import (
 
 // @SDKResource("aws_s3_bucket_server_side_encryption_configuration", name="Bucket Server Side Encryption Configuration")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="rule.0.bucket_key_enabled")
 // @Testing(plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
@@ -52,8 +52,8 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			names.AttrRule: {
 				Type:     schema.TypeSet,
@@ -73,7 +73,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 									"sse_algorithm": {
 										Type:             schema.TypeString,
 										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
+										ValidateDiagFunc: enum.Validate[awstypes.ServerSideEncryption](),
 									},
 								},
 							},
@@ -83,7 +83,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+								ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
 							},
 						},
 						"bucket_key_enabled": {
@@ -93,6 +93,24 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 					},
 				},
 			},
+		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.Id() == "" {
+				return nil
+			}
+			if d.HasChange(names.AttrExpectedBucketOwner) {
+				o, n := d.GetChange(names.AttrExpectedBucketOwner)
+				os, ns := o.(string), n.(string)
+				if os == ns {
+					return nil
+				}
+				if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+					return nil
+				}
+				return d.ForceNew(names.AttrExpectedBucketOwner)
+			}
+			return nil
 		},
 	}
 }
@@ -106,9 +124,9 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketEncryptionInput{
+	input := s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
-		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
+		ServerSideEncryptionConfiguration: &awstypes.ServerSideEncryptionConfiguration{
 			Rules: expandServerSideEncryptionRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
@@ -117,7 +135,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketEncryption(ctx, input)
+		return conn.PutBucketEncryption(ctx, &input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
 	if err != nil {
@@ -165,7 +183,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set(names.AttrRule, flattenServerSideEncryptionRules(sse.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -184,9 +202,9 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketEncryptionInput{
+	input := s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
-		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
+		ServerSideEncryptionConfiguration: &awstypes.ServerSideEncryptionConfiguration{
 			Rules: expandServerSideEncryptionRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
@@ -195,7 +213,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketEncryption(ctx, input)
+		return conn.PutBucketEncryption(ctx, &input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
 	if err != nil {
@@ -218,14 +236,14 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.DeleteBucketEncryptionInput{
+	input := s3.DeleteBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.DeleteBucketEncryption(ctx, input)
+	_, err = conn.DeleteBucketEncryption(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeServerSideEncryptionConfigurationNotFound) {
 		return diags
@@ -240,20 +258,19 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	return diags
 }
 
-func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client, bucketName, expectedBucketOwner string) (*types.ServerSideEncryptionConfiguration, error) {
-	input := &s3.GetBucketEncryptionInput{
+func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client, bucketName, expectedBucketOwner string) (*awstypes.ServerSideEncryptionConfiguration, error) {
+	input := s3.GetBucketEncryptionInput{
 		Bucket: aws.String(bucketName),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketEncryption(ctx, input)
+	output, err := conn.GetBucketEncryption(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeServerSideEncryptionConfigurationNotFound) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -268,7 +285,7 @@ func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client,
 	return output.ServerSideEncryptionConfiguration, nil
 }
 
-func expandServerSideEncryptionByDefault(l []any) *types.ServerSideEncryptionByDefault {
+func expandServerSideEncryptionByDefault(l []any) *awstypes.ServerSideEncryptionByDefault {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -278,21 +295,21 @@ func expandServerSideEncryptionByDefault(l []any) *types.ServerSideEncryptionByD
 		return nil
 	}
 
-	sse := &types.ServerSideEncryptionByDefault{}
+	sse := &awstypes.ServerSideEncryptionByDefault{}
 
 	if v, ok := tfMap["kms_master_key_id"].(string); ok && v != "" {
 		sse.KMSMasterKeyID = aws.String(v)
 	}
 
 	if v, ok := tfMap["sse_algorithm"].(string); ok && v != "" {
-		sse.SSEAlgorithm = types.ServerSideEncryption(v)
+		sse.SSEAlgorithm = awstypes.ServerSideEncryption(v)
 	}
 
 	return sse
 }
 
-func expandServerSideEncryptionRules(l []any) []types.ServerSideEncryptionRule {
-	var rules []types.ServerSideEncryptionRule
+func expandServerSideEncryptionRules(l []any) []awstypes.ServerSideEncryptionRule {
+	var rules []awstypes.ServerSideEncryptionRule
 
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -300,7 +317,7 @@ func expandServerSideEncryptionRules(l []any) []types.ServerSideEncryptionRule {
 			continue
 		}
 
-		rule := types.ServerSideEncryptionRule{}
+		rule := awstypes.ServerSideEncryptionRule{}
 
 		if v, ok := tfMap["apply_server_side_encryption_by_default"].([]any); ok && len(v) > 0 && v[0] != nil {
 			rule.ApplyServerSideEncryptionByDefault = expandServerSideEncryptionByDefault(v)
@@ -320,7 +337,7 @@ func expandServerSideEncryptionRules(l []any) []types.ServerSideEncryptionRule {
 	return rules
 }
 
-func flattenServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []any {
+func flattenServerSideEncryptionRules(rules []awstypes.ServerSideEncryptionRule) []any {
 	var results []any
 
 	for _, rule := range rules {
@@ -346,7 +363,7 @@ func flattenServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []
 	return results
 }
 
-func flattenServerSideEncryptionByDefault(sse *types.ServerSideEncryptionByDefault) []any {
+func flattenServerSideEncryptionByDefault(sse *awstypes.ServerSideEncryptionByDefault) []any {
 	if sse == nil {
 		return nil
 	}
@@ -362,22 +379,22 @@ func flattenServerSideEncryptionByDefault(sse *types.ServerSideEncryptionByDefau
 	return []any{m}
 }
 
-func expandBlockedEncryptionTypes(l []any) *types.BlockedEncryptionTypes {
+func expandBlockedEncryptionTypes(l []any) *awstypes.BlockedEncryptionTypes {
 	if len(l) == 0 {
 		return nil
 	}
 
-	var encryptionTypes []types.EncryptionType
+	var encryptionTypes []awstypes.EncryptionType
 	for _, v := range l {
-		encryptionTypes = append(encryptionTypes, types.EncryptionType(v.(string)))
+		encryptionTypes = append(encryptionTypes, awstypes.EncryptionType(v.(string)))
 	}
 
-	return &types.BlockedEncryptionTypes{
+	return &awstypes.BlockedEncryptionTypes{
 		EncryptionType: encryptionTypes,
 	}
 }
 
-func flattenBlockedEncryptionTypes(bet *types.BlockedEncryptionTypes) []any {
+func flattenBlockedEncryptionTypes(bet *awstypes.BlockedEncryptionTypes) []any {
 	if bet == nil || len(bet.EncryptionType) == 0 {
 		return nil
 	}
@@ -388,4 +405,11 @@ func flattenBlockedEncryptionTypes(bet *types.BlockedEncryptionTypes) []any {
 	}
 
 	return result
+}
+
+func resourceBucketServerSideEncryptionConfigurationFlatten(_ context.Context, sse *awstypes.ServerSideEncryptionConfiguration, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrRule, flattenServerSideEncryptionRules(sse.Rules)); err != nil {
+		return fmt.Errorf("setting rule: %w", err)
+	}
+	return nil
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,8 +22,8 @@ import (
 func TestAccKeyspacesTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,8 +77,8 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 func TestAccKeyspacesTable_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -103,8 +102,8 @@ func TestAccKeyspacesTable_disappears(t *testing.T) {
 func TestAccKeyspacesTable_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -150,8 +149,8 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 func TestAccKeyspacesTable_clientSideTimestamps(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -180,8 +179,8 @@ func TestAccKeyspacesTable_clientSideTimestamps(t *testing.T) {
 func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -274,8 +273,8 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 func TestAccKeyspacesTable_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
@@ -348,8 +347,8 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 func TestAccKeyspacesTable_addColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -415,8 +414,8 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 func TestAccKeyspacesTable_delColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 keyspaces.GetTableOutput
-	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
-	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName1 := "tf_acc_test_" + acctest.RandString(t, 20)
+	rName2 := "tf_acc_test_" + acctest.RandString(t, 20)
 	resourceName := "aws_keyspaces_table.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,22 +28,22 @@ import (
 func TestAccCloudFrontConnectionFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionfunction cloudfront.DescribeConnectionFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionFunctionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -75,22 +73,22 @@ func TestAccCloudFrontConnectionFunction_basic(t *testing.T) {
 func TestAccCloudFrontConnectionFunction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionfunction cloudfront.DescribeConnectionFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionFunctionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceConnectionFunction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -110,22 +108,22 @@ func TestAccCloudFrontConnectionFunction_disappears(t *testing.T) {
 func TestAccCloudFrontConnectionFunction_publishOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionfunction cloudfront.DescribeConnectionFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionFunctionConfig_publish(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -153,22 +151,22 @@ func TestAccCloudFrontConnectionFunction_publishOnCreate(t *testing.T) {
 func TestAccCloudFrontConnectionFunction_publishOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionfunction cloudfront.DescribeConnectionFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionFunctionConfig_publish(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -184,7 +182,7 @@ func TestAccCloudFrontConnectionFunction_publishOnUpdate(t *testing.T) {
 			{
 				Config: testAccConnectionFunctionConfig_publish(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -204,22 +202,22 @@ func TestAccCloudFrontConnectionFunction_publishOnUpdate(t *testing.T) {
 func TestAccCloudFrontConnectionFunction_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionfunction1, connectionfunction2 cloudfront.DescribeConnectionFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionFunctionConfig_updateInitial(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction1),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -238,7 +236,7 @@ func TestAccCloudFrontConnectionFunction_update(t *testing.T) {
 			{
 				Config: testAccConnectionFunctionConfig_updateComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction2),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction2),
 					testAccCheckConnectionFunctionEtagChanged(&connectionfunction1, &connectionfunction2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -254,22 +252,22 @@ func TestAccCloudFrontConnectionFunction_update(t *testing.T) {
 func TestAccCloudFrontConnectionFunction_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectionfunction cloudfront.DescribeConnectionFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_connection_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionFunctionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -293,7 +291,7 @@ func TestAccCloudFrontConnectionFunction_tags(t *testing.T) {
 			{
 				Config: testAccConnectionFunctionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -310,7 +308,7 @@ func TestAccCloudFrontConnectionFunction_tags(t *testing.T) {
 			{
 				Config: testAccConnectionFunctionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionFunctionExists(ctx, resourceName, &connectionfunction),
+					testAccCheckConnectionFunctionExists(ctx, t, resourceName, &connectionfunction),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -327,9 +325,9 @@ func TestAccCloudFrontConnectionFunction_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionFunctionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_connection_function" {
@@ -352,14 +350,14 @@ func testAccCheckConnectionFunctionDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckConnectionFunctionExists(ctx context.Context, n string, v *cloudfront.DescribeConnectionFunctionOutput) resource.TestCheckFunc {
+func testAccCheckConnectionFunctionExists(ctx context.Context, t *testing.T, n string, v *cloudfront.DescribeConnectionFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindConnectionFunctionByTwoPartKey(ctx, conn, rs.Primary.ID, awstypes.FunctionStageDevelopment)
 

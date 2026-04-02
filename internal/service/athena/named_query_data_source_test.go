@@ -6,7 +6,6 @@ package athena_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +37,7 @@ func TestAccAthenaNamedQueryDataSource_basic(t *testing.T) {
 }
 
 func testAccNamedQueryDataSourceConfig_basic(t *testing.T) string {
-	return acctest.ConfigCompose(testAccNamedQueryConfig_basic(acctest.RandInt(t), sdkacctest.RandString(5)), `
+	return acctest.ConfigCompose(testAccNamedQueryConfig_basic(acctest.RandInt(t), acctest.RandString(t, 5)), `
 data "aws_athena_named_query" "test" {
   name = aws_athena_named_query.test.name
 }

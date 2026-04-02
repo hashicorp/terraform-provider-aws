@@ -14,11 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,20 +26,20 @@ import (
 func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ipRegex := regexache.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 	dnsNameRegex := regexache.MustCompile(`^a[0-9a-f]{16}\.awsglobalaccelerator\.com$`)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtFalse),
@@ -74,19 +72,19 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 func TestAccGlobalAcceleratorAccelerator_ipAddressType_dualStack(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dualStackDNSNameRegex := regexache.MustCompile(`^a[0-9a-f]{16}\.dualstack\.awsglobalaccelerator\.com$`)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_ipAddressTypeDualStack(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "dual_stack_dns_name", dualStackDNSNameRegex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "DUAL_STACK"),
@@ -110,20 +108,20 @@ func TestAccGlobalAcceleratorAccelerator_ipAddressType_dualStack(t *testing.T) {
 func TestAccGlobalAcceleratorAccelerator_byoip(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	requestedAddr := os.Getenv("GLOBALACCELERATOR_BYOIP_IPV4_ADDRESS")
 	matches := 0
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccCheckBYOIPExists(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_byoip(rName, requestedAddr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
@@ -159,18 +157,18 @@ func TestAccGlobalAcceleratorAccelerator_byoip(t *testing.T) {
 func TestAccGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -182,19 +180,19 @@ func TestAccGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	newName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	newName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -207,7 +205,7 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_enabled(newName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, newName),
 				),
@@ -215,7 +213,7 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -232,18 +230,18 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_attributes(rName, false, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
@@ -258,7 +256,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_attributes(rName, true, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
@@ -268,7 +266,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_attributes(rName, true, "flow-logs-updated/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
@@ -278,7 +276,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_attributes(rName, false, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
@@ -292,18 +290,18 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_accelerator.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -317,7 +315,7 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -326,7 +324,7 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 			{
 				Config: testAccAcceleratorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAcceleratorExists(ctx, resourceName),
+					testAccCheckAcceleratorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -336,7 +334,7 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
 
@@ -360,7 +358,7 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 
 	parsedAddr := net.ParseIP(requestedAddr)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.ListByoipCidrsInput{}
 	cidrs := make([]awstypes.ByoipCidr, 0)
@@ -399,14 +397,14 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckAcceleratorExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAcceleratorExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		_, err := tfglobalaccelerator.FindAcceleratorByARN(ctx, conn, rs.Primary.ID)
 
@@ -414,9 +412,9 @@ func testAccCheckAcceleratorExists(ctx context.Context, n string) resource.TestC
 	}
 }
 
-func testAccCheckAcceleratorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAcceleratorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_accelerator" {

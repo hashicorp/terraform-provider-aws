@@ -22,7 +22,6 @@ import (
 
 // @SDKDataSource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
@@ -243,6 +242,10 @@ func dataSourceEndpoint() *schema.Resource {
 						},
 						"nesting_level": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"use_update_lookup": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},

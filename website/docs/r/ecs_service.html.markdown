@@ -178,6 +178,52 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Service Connect with Access Logs
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name            = "example"
+  cluster         = aws_ecs_cluster.example.id
+  task_definition = aws_ecs_task_definition.example.arn
+  desired_count   = 1
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.example.arn
+
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.example.name
+        "awslogs-region"        = data.aws_region.current.name
+        "awslogs-stream-prefix" = "service-connect"
+      }
+    }
+
+    access_log_configuration {
+      format                   = "TEXT"
+      include_query_parameters = "ENABLED"
+    }
+
+    service {
+      port_name      = "http"
+      discovery_name = "example"
+
+      client_alias {
+        dns_name = "example"
+        port     = 8080
+      }
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "example" {
+  name = "/ecs/example/service-connect"
+}
+
+data "aws_region" "current" {}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -374,10 +420,22 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `service_connect_configuration` supports the following:
 
+* `access_log_configuration` - (Optional) Configuration for Service Connect access logs. [See below](#access_log_configuration).
 * `enabled` - (Required) Whether to use Service Connect with this service.
 * `log_configuration` - (Optional) Log configuration for the container. [See below](#log_configuration).
 * `namespace` - (Optional) Namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
 * `service` - (Optional) List of Service Connect service objects. [See below](#service).
+
+### access_log_configuration
+
+`access_log_configuration` supports the following:
+
+* `format` - (Required) The format for Service Connect access log output. Valid values: `TEXT`, `JSON`. See [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect-envoy-access-logs.html) for format details.
+* `include_query_parameters` - (Optional) Specifies whether to include query parameters in Service Connect access logs. Valid values: `ENABLED`, `DISABLED`. Default: `DISABLED`. Query parameters may contain sensitive information.
+
+~> **NOTE:** Access logs are delivered to the destination log group specified in the `log_configuration` block. You must configure `log_configuration` to enable access logs.
+
+~> **SECURITY WARNING:** When `include_query_parameters` is set to `ENABLED`, query parameters (which may contain sensitive data such as request IDs, tokens, or session identifiers) will be included in access logs.
 
 ### log_configuration
 
@@ -477,6 +535,34 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `20m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecs_service.example
+  identity = {
+    cluster = "example-cluster"
+    name    = "example-service"
+  }
+}
+
+resource "aws_ecs_service" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `cluster` (String) The name of the cluster.
+* `name` (String) The name of the service.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS services using the `name` together with ecs cluster `name`. For example:
 

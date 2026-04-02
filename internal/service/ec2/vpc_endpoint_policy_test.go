@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -20,18 +19,18 @@ func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 	var endpoint awstypes.VpcEndpoint
 
 	resourceName := "aws_vpc_endpoint_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 				),
 			},
 			{
@@ -42,7 +41,7 @@ func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 				),
 			},
 		},
@@ -53,18 +52,18 @@ func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,18 +76,18 @@ func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
 				),
 				ExpectNonEmptyPlan: true,

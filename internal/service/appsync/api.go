@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -43,7 +42,6 @@ import (
 // @Tags(identifierAttribute="api_arn")
 // @Testing(importStateIdAttribute="api_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiResource{}
 
@@ -411,7 +409,7 @@ func findAPI(ctx context.Context, conn *appsync.Client, input *appsync.GetApiInp
 	output, err := conn.GetApi(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
 	}

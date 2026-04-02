@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -202,7 +201,7 @@ func findDBClusterRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbClus
 	}
 
 	if status := aws.ToString(output.Status); status == clusterRoleStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: status,
 		}
 	}
@@ -210,8 +209,8 @@ func findDBClusterRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbClus
 	return output, nil
 }
 
-func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBClusterRole(conn *rds.Client, dbClusterID, roleARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
 		if retry.NotFound(err) {
@@ -227,10 +226,10 @@ func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, rol
 }
 
 func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string, timeout time.Duration) (*types.DBClusterRole, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterRoleStatusPending},
 		Target:     []string{clusterRoleStatusActive},
-		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Refresh:    statusDBClusterRole(conn, dbClusterID, roleARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -246,10 +245,10 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.Client, 
 }
 
 func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string, timeout time.Duration) (*types.DBClusterRole, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterRoleStatusActive, clusterRoleStatusPending},
 		Target:     []string{},
-		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Refresh:    statusDBClusterRole(conn, dbClusterID, roleARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

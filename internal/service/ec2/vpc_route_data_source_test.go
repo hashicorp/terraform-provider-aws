@@ -9,7 +9,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,9 +24,9 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 	datasource1Name := "data.aws_route.by_destination_cidr_block"
 	datasource2Name := "data.aws_route.by_instance_id"
 	datasource3Name := "data.aws_route.by_peering_connection_id"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,9 +61,9 @@ func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
 
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -85,9 +84,9 @@ func TestAccVPCRouteDataSource_ipv6DestinationCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,9 +106,9 @@ func TestAccVPCRouteDataSource_localGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.by_local_gateway_id"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -130,9 +129,9 @@ func TestAccVPCRouteDataSource_carrierGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWavelengthZoneAvailable(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -153,9 +152,9 @@ func TestAccVPCRouteDataSource_destinationPrefixListID(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -178,9 +177,9 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 	var vpce awstypes.VpcEndpoint
 	rtResourceName := "aws_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -188,9 +187,9 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 			{
 				Config: testAccVPCRouteDataSourceConfig_gatewayEndpointNo(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
-					testAccCheckVPCEndpointExists(ctx, vpceResourceName, &vpce),
-					testAccCheckRouteTableWaitForVPCEndpointRoute(ctx, &routeTable, &vpce),
+					testAccCheckRouteTableExists(ctx, t, rtResourceName, &routeTable),
+					testAccCheckVPCEndpointExists(ctx, t, vpceResourceName, &vpce),
+					testAccCheckRouteTableWaitForVPCEndpointRoute(ctx, t, &routeTable, &vpce),
 				),
 			},
 			{

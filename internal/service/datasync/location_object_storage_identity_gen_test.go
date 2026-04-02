@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncLocationObjectStorage_Identity_Basic(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationObjectStorageOutput
@@ -39,7 +39,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -50,7 +50,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_Basic(t *testing.T) {
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					testAccCheckLocationObjectStorageExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -116,7 +116,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_location_object_storage.test"
@@ -246,7 +246,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_RegionOverride(t *testing.T) 
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationObjectStorageOutput
@@ -263,7 +263,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckLocationObjectStorageDestroy(ctx),
+		CheckDestroy: testAccCheckLocationObjectStorageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -273,7 +273,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					testAccCheckLocationObjectStorageExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -288,7 +288,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					testAccCheckLocationObjectStorageExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -332,7 +332,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationObjectStorageOutput
@@ -349,7 +349,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_NoRefresh_No
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckLocationObjectStorageDestroy(ctx),
+		CheckDestroy: testAccCheckLocationObjectStorageDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -364,7 +364,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_NoRefresh_No
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					testAccCheckLocationObjectStorageExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -380,7 +380,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource_NoRefresh_No
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					testAccCheckLocationObjectStorageExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

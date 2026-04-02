@@ -26,25 +26,25 @@ func testAccAPIGatewayStage_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAPIGatewayStage_tags,
-		"null":                                      testAccAPIGatewayStage_tags_null,
-		"EmptyMap":                                  testAccAPIGatewayStage_tags_EmptyMap,
-		"AddOnUpdate":                               testAccAPIGatewayStage_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccAPIGatewayStage_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccAPIGatewayStage_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccAPIGatewayStage_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccAPIGatewayStage_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccAPIGatewayStage_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccAPIGatewayStage_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccAPIGatewayStage_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccAPIGatewayStage_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccAPIGatewayStage_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccAPIGatewayStage_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccAPIGatewayStage_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccAPIGatewayStage_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccAPIGatewayStage_Tags_null,
+		"EmptyMap":                                  testAccAPIGatewayStage_Tags_emptyMap,
+		"AddOnUpdate":                               testAccAPIGatewayStage_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccAPIGatewayStage_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccAPIGatewayStage_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccAPIGatewayStage_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccAPIGatewayStage_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccAPIGatewayStage_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccAPIGatewayStage_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccAPIGatewayStage_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccAPIGatewayStage_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccAPIGatewayStage_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccAPIGatewayStage_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccAPIGatewayStage_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccAPIGatewayStage_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccAPIGatewayStage_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccAPIGatewayStage_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccAPIGatewayStage_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccAPIGatewayStage_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -240,7 +240,7 @@ func testAccAPIGatewayStage_tags(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_null(t *testing.T) {
+func testAccAPIGatewayStage_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -312,7 +312,7 @@ func testAccAPIGatewayStage_tags_null(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_EmptyMap(t *testing.T) {
+func testAccAPIGatewayStage_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -380,7 +380,7 @@ func testAccAPIGatewayStage_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_AddOnUpdate(t *testing.T) {
+func testAccAPIGatewayStage_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -466,7 +466,7 @@ func testAccAPIGatewayStage_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccAPIGatewayStage_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -561,7 +561,7 @@ func testAccAPIGatewayStage_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccAPIGatewayStage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -704,7 +704,7 @@ func testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccAPIGatewayStage_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -798,7 +798,7 @@ func testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -987,7 +987,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1154,7 +1154,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1337,7 +1337,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1432,7 +1432,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1526,7 +1526,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1596,7 +1596,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1658,7 +1658,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) 
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1725,7 +1725,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_nullOverlappingResourceTag(t *testi
 	})
 }
 
-func testAccAPIGatewayStage_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccAPIGatewayStage_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1792,7 +1792,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_nullNonOverlappingResourceTag(t *te
 	})
 }
 
-func testAccAPIGatewayStage_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccAPIGatewayStage_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1852,7 +1852,7 @@ func testAccAPIGatewayStage_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccAPIGatewayStage_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -1954,7 +1954,7 @@ func testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccAPIGatewayStage_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -2046,7 +2046,7 @@ func testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccAPIGatewayStage_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput
@@ -2212,7 +2212,7 @@ func testAccAPIGatewayStage_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func testAccAPIGatewayStage_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccAPIGatewayStage_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v apigateway.GetStageOutput

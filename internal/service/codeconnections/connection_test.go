@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codeconnections/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodeconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,20 +22,20 @@ func TestAccCodeConnectionsConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Connection
 	resourceName := "aws_codeconnections_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &v),
+					testAccCheckConnectionExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeconnections", regexache.MustCompile("connection/.+")),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeBitbucket)),
@@ -58,20 +56,20 @@ func TestAccCodeConnectionsConnection_hostARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Connection
 	resourceName := "aws_codeconnections_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_hostARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &v),
+					testAccCheckConnectionExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeconnections", regexache.MustCompile("connection/.+")),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("connection/.+")),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "host_arn", "codeconnections", regexache.MustCompile("host/.+")),
@@ -93,20 +91,20 @@ func TestAccCodeConnectionsConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Connection
 	resourceName := "aws_codeconnections_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectionExists(ctx, resourceName, &v),
+					testAccCheckConnectionExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeconnections.ResourceConnection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -115,14 +113,14 @@ func TestAccCodeConnectionsConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionExists(ctx context.Context, n string, v *types.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, t *testing.T, n string, v *types.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeConnectionsClient(ctx)
 
 		output, err := tfcodeconnections.FindConnectionByARN(ctx, conn, rs.Primary.ID)
 
@@ -136,9 +134,9 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *types.Connec
 	}
 }
 
-func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeConnectionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codeconnections_connection" {

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectorProfiles types.ConnectorProfile
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "appflow", "connectorprofile/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
@@ -57,26 +55,26 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectorProfiles types.ConnectorProfile
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 	testPrefix := "test-prefix"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 				),
 			},
 			{
 				Config: testAccConnectorProfileConfig_update(rName, testPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.redshift.0.bucket_prefix", testPrefix),
 				),
 			},
@@ -87,19 +85,19 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connectorProfiles types.ConnectorProfile
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &connectorProfiles),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappflow.ResourceConnectorProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,9 +106,9 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectorProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFlowClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appflow_connector_profile" {
@@ -134,14 +132,14 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.ConnectorProfile) resource.TestCheckFunc {
+func testAccCheckConnectorProfileExists(ctx context.Context, t *testing.T, n string, v *types.ConnectorProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFlowClient(ctx)
 
 		output, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

@@ -9,11 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,22 +19,22 @@ import (
 
 func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	updatedGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	poolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	updatedGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	updatedGroupNameUTF8 := strings.Repeat("あ", 128)
 	resourceName := "aws_cognito_user_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 				),
 			},
@@ -48,14 +46,14 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_basic(poolName, updatedGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
 				),
 			},
 			{
 				Config: testAccUserGroupConfig_basic(poolName, updatedGroupNameUTF8),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupNameUTF8),
 				),
 			},
@@ -65,20 +63,20 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 
 func TestAccCognitoIDPUserGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	poolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -89,21 +87,21 @@ func TestAccCognitoIDPUserGroup_disappears(t *testing.T) {
 
 func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 	ctx := acctest.Context(t)
-	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	updatedGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	poolName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	updatedGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_complex(poolName, groupName, "This is the user group description", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "1"),
@@ -118,7 +116,7 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_complex(poolName, updatedGroupName, "This is the updated user group description", 42),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the updated user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "42"),
@@ -131,19 +129,19 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 
 func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
@@ -155,7 +153,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 			{
 				Config: testAccUserGroupConfig_roleARNUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserGroupExists(ctx, resourceName),
+					testAccCheckUserGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
@@ -163,14 +161,14 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 	})
 }
 
-func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckUserGroupExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CognitoIDPClient(ctx)
 
 		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
@@ -178,9 +176,9 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 	}
 }
 
-func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_group" {

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,10 +19,10 @@ import (
 func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_shared_directory_accepter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -36,7 +34,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			{
 				Config: testAccSharedDirectoryAccepterConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSharedDirectoryAccepterExists(ctx, resourceName),
+					testAccCheckSharedDirectoryAccepterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "method", string(awstypes.ShareMethodHandshake)),
 					resource.TestCheckResourceAttr(resourceName, "notes", "There were hints and allegations"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
@@ -56,14 +54,14 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSharedDirectoryAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryAccepterExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		_, err := tfds.FindSharedDirectoryByTwoPartKey(ctx, conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 

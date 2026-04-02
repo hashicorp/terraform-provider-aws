@@ -55,7 +55,7 @@ func TestAccServiceCatalogProductDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProductDataSource_tags_NullMap(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_servicecatalog_product.test"
@@ -83,7 +83,7 @@ func TestAccServiceCatalogProductDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProductDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_servicecatalog_product.test"
@@ -111,7 +111,7 @@ func TestAccServiceCatalogProductDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProductDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_servicecatalog_product.test"
@@ -147,7 +147,7 @@ func TestAccServiceCatalogProductDataSource_tags_DefaultTags_nonOverlapping(t *t
 	})
 }
 
-func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_servicecatalog_product.test"
@@ -189,7 +189,7 @@ func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 	})
 }
 
-func TestAccServiceCatalogProductDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccServiceCatalogProductDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_servicecatalog_product.test"

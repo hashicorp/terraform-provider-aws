@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
+func TestAccDataSyncAgent_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeAgentOutput
@@ -38,7 +38,7 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentExists(ctx, resourceName, &v),
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -118,7 +118,7 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncAgent_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_agent.test"
@@ -253,7 +253,7 @@ func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncAgent_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeAgentOutput
@@ -269,7 +269,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckAgentDestroy(ctx),
+		CheckDestroy: testAccCheckAgentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -278,7 +278,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentExists(ctx, resourceName, &v),
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -292,7 +292,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentExists(ctx, resourceName, &v),
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -335,7 +335,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncAgent_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDataSyncAgent_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeAgentOutput
@@ -351,7 +351,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckAgentDestroy(ctx),
+		CheckDestroy: testAccCheckAgentDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -365,7 +365,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentExists(ctx, resourceName, &v),
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -380,7 +380,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentExists(ctx, resourceName, &v),
+					testAccCheckAgentExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

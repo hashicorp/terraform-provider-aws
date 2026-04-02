@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -156,8 +155,8 @@ func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice
 	return output, nil
 }
 
-func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDirectoryShareStatus(conn *directoryservice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -173,10 +172,10 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Clie
 }
 
 func waitSharedDirectoryAccepted(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ShareStatusPendingAcceptance, awstypes.ShareStatusSharing),
 		Target:                    enum.Slice(awstypes.ShareStatusShared),
-		Refresh:                   statusDirectoryShareStatus(ctx, conn, id),
+		Refresh:                   statusDirectoryShareStatus(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

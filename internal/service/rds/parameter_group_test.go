@@ -15,11 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -287,18 +285,18 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -325,7 +323,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_addParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -355,10 +353,10 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
-					testAccCheckParameterNotUserDefined(ctx, resourceName, "collation_connection"),
-					testAccCheckParameterNotUserDefined(ctx, resourceName, "collation_server"),
+					testAccCheckParameterNotUserDefined(ctx, t, resourceName, "collation_connection"),
+					testAccCheckParameterNotUserDefined(ctx, t, resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
@@ -382,18 +380,18 @@ func TestAccRDSParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -406,18 +404,18 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -430,7 +428,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -439,7 +437,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -450,13 +448,13 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 
 func TestAccRDSParameterGroup_caseWithMixedParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_caseWithMixedParameters(rName),
@@ -470,18 +468,18 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_exceedDefaultLimit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -660,7 +658,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_updateExceedDefaultLimit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -840,16 +838,16 @@ func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -867,16 +865,16 @@ func TestAccRDSParameterGroup_generatedName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, "aws_db_parameter_group.test", &v),
+					testAccCheckParameterGroupExists(ctx, t, "aws_db_parameter_group.test", &v),
 				),
 			},
 		},
@@ -887,18 +885,18 @@ func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_applyMethod(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -928,18 +926,18 @@ func TestAccRDSParameterGroup_only(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_only(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -958,18 +956,18 @@ func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_includeDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "postgres9.4"),
 				),
@@ -988,18 +986,18 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_updateParametersInitial(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -1025,7 +1023,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_updateParametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
@@ -1049,19 +1047,19 @@ func TestAccRDSParameterGroup_updateParameters2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	fam := "mysql5.7"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_updateParameters(rName, fam, "pending-reboot", "default_password_lifetime", "0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, fam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, fam),
@@ -1075,7 +1073,7 @@ func TestAccRDSParameterGroup_updateParameters2(t *testing.T) {
 			{
 				Config: testAccParameterGroupConfig_updateParameters(rName, fam, "immediate", "default_password_lifetime", "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, fam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, fam),
@@ -1094,18 +1092,18 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_upperCase(rName, "Max_connections"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
@@ -1132,18 +1130,18 @@ func TestAccRDSParameterGroup_skipDestroy(t *testing.T) {
 	var v types.DBParameterGroup
 	ctx := acctest.Context(t)
 	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupNoDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupNoDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
@@ -1151,9 +1149,9 @@ func TestAccRDSParameterGroup_skipDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckParameterGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1177,9 +1175,9 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckParameterGroupNoDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckParameterGroupNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_parameter_group" {
@@ -1209,14 +1207,14 @@ func testAccCheckParameterGroupAttributes(v *types.DBParameterGroup, name, fam s
 	}
 }
 
-func testAccCheckParameterGroupExists(ctx context.Context, n string, v *types.DBParameterGroup) resource.TestCheckFunc {
+func testAccCheckParameterGroupExists(ctx context.Context, t *testing.T, n string, v *types.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBParameterGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -1230,14 +1228,14 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *types.DB
 	}
 }
 
-func testAccCheckParameterNotUserDefined(ctx context.Context, rName, paramName string) resource.TestCheckFunc {
+func testAccCheckParameterNotUserDefined(ctx context.Context, t *testing.T, rName, paramName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", rName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		input := &rds.DescribeDBParametersInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),

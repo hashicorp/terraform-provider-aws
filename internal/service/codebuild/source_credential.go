@@ -29,7 +29,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.SourceCredentialsInfo")
 // @Testing(importIgnore="token;user_name", plannableImportAction="Replace")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSourceCredentialCreate,

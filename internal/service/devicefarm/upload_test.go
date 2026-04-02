@@ -11,11 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,11 +22,11 @@ import (
 func TestAccDeviceFarmUpload_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Upload
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, "tf-acc-test-updated")
 	resourceName := "aws_devicefarm_upload.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -38,12 +36,12 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUploadDestroy(ctx),
+		CheckDestroy:             testAccCheckUploadDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &proj),
+					testAccCheckUploadExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
@@ -60,7 +58,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 			{
 				Config: testAccUploadConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &proj),
+					testAccCheckUploadExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
@@ -75,10 +73,10 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Upload
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_upload.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -88,12 +86,12 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUploadDestroy(ctx),
+		CheckDestroy:             testAccCheckUploadDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &proj),
+					testAccCheckUploadExists(ctx, t, resourceName, &proj),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 				),
@@ -106,10 +104,10 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Upload
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_upload.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -119,12 +117,12 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUploadDestroy(ctx),
+		CheckDestroy:             testAccCheckUploadDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &proj),
+					testAccCheckUploadExists(ctx, t, resourceName, &proj),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceUpload(), resourceName),
 				),
@@ -134,14 +132,14 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckUploadExists(ctx context.Context, n string, v *awstypes.Upload) resource.TestCheckFunc {
+func testAccCheckUploadExists(ctx context.Context, t *testing.T, n string, v *awstypes.Upload) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DeviceFarmClient(ctx)
 		resp, err := tfdevicefarm.FindUploadByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -156,9 +154,9 @@ func testAccCheckUploadExists(ctx context.Context, n string, v *awstypes.Upload)
 	}
 }
 
-func testAccCheckUploadDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUploadDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DeviceFarmClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_upload" {

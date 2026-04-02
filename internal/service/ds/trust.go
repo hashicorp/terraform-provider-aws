@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -324,7 +323,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 		if err != nil {
 			// Outputting a NotFoundError does not include the original error.
 			// Retrieve it to give the user an actionalble error message.
-			if nfe, ok := errs.As[*sdkretry.NotFoundError](err); ok {
+			if nfe, ok := errs.As[*retry.NotFoundError](err); ok {
 				if nfe.LastError != nil {
 					err = nfe.LastError
 				}
@@ -433,9 +432,8 @@ func findTrusts(ctx context.Context, conn *directoryservice.Client, input *direc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -472,8 +470,8 @@ func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, direc
 	})
 }
 
-func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrust(conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
 		if retry.NotFound(err) {
@@ -489,10 +487,10 @@ func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID
 }
 
 func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TrustStateCreating),
 		Target:  enum.Slice(awstypes.TrustStateCreated),
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -515,7 +513,7 @@ func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, direct
 }
 
 func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreating,
 			awstypes.TrustStateCreated,
@@ -526,7 +524,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 			awstypes.TrustStateVerified,
 			awstypes.TrustStateVerifyFailed,
 		),
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -549,7 +547,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateUpdating,
 			awstypes.TrustStateUpdated,
@@ -559,7 +557,7 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 			awstypes.TrustStateVerified,
 			awstypes.TrustStateVerifyFailed,
 		),
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 
@@ -582,14 +580,14 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 }
 
 func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreated,
 			awstypes.TrustStateDeleting,
 			awstypes.TrustStateDeleted,
 		),
 		Target:  []string{},
-		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Refresh: statusTrust(conn, directoryID, trustID),
 		Timeout: timeout,
 	}
 

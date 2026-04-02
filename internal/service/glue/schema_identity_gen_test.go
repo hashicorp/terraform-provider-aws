@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGlueSchema_Identity_Basic(t *testing.T) {
+func TestAccGlueSchema_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v glue.GetSchemaOutput
@@ -35,7 +35,7 @@ func TestAccGlueSchema_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccGlueSchema_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &v),
+					testAccCheckSchemaExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -108,7 +108,7 @@ func TestAccGlueSchema_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccGlueSchema_Identity_RegionOverride(t *testing.T) {
+func TestAccGlueSchema_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_glue_schema.test"
@@ -229,7 +229,7 @@ func TestAccGlueSchema_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccGlueSchema_Identity_ExistingResource(t *testing.T) {
+func TestAccGlueSchema_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v glue.GetSchemaOutput
@@ -242,7 +242,7 @@ func TestAccGlueSchema_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy: testAccCheckSchemaDestroy(ctx),
+		CheckDestroy: testAccCheckSchemaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -251,7 +251,7 @@ func TestAccGlueSchema_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &v),
+					testAccCheckSchemaExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -285,7 +285,7 @@ func TestAccGlueSchema_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccGlueSchema_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccGlueSchema_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v glue.GetSchemaOutput
@@ -298,7 +298,7 @@ func TestAccGlueSchema_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.GlueServiceID),
-		CheckDestroy: testAccCheckSchemaDestroy(ctx),
+		CheckDestroy: testAccCheckSchemaDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -312,7 +312,7 @@ func TestAccGlueSchema_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchemaExists(ctx, resourceName, &v),
+					testAccCheckSchemaExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,7 +20,7 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 	resourceName := "aws_guardduty_member_detector_feature.test"
 	accountID := testAccMemberAccountFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -34,7 +33,7 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 			{
 				Config: testAccMemberDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED", accountID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccMemberDetectorFeatureExists(ctx, resourceName),
+					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
@@ -45,7 +44,7 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 			{
 				Config: testAccMemberDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "DISABLED", accountID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccMemberDetectorFeatureExists(ctx, resourceName),
+					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
@@ -62,7 +61,7 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 	resourceName := "aws_guardduty_member_detector_feature.test"
 	accountID := testAccMemberAccountFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -75,7 +74,7 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 			{
 				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, "DISABLED", "ENABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMemberDetectorFeatureExists(ctx, resourceName),
+					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
@@ -99,7 +98,7 @@ func testAccMemberDetectorFeature_multiple(t *testing.T) {
 	resource3Name := "aws_guardduty_member_detector_feature.test3"
 	accountID := testAccMemberAccountFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -112,9 +111,9 @@ func testAccMemberDetectorFeature_multiple(t *testing.T) {
 			{
 				Config: testAccMemberDetectorFeatureConfig_multiple(accountID, "ENABLED", "DISABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMemberDetectorFeatureExists(ctx, resource1Name),
-					testAccMemberDetectorFeatureExists(ctx, resource2Name),
-					testAccMemberDetectorFeatureExists(ctx, resource3Name),
+					testAccMemberDetectorFeatureExists(ctx, t, resource1Name),
+					testAccMemberDetectorFeatureExists(ctx, t, resource2Name),
+					testAccMemberDetectorFeatureExists(ctx, t, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
@@ -135,14 +134,14 @@ func testAccMemberDetectorFeature_multiple(t *testing.T) {
 	})
 }
 
-func testAccMemberDetectorFeatureExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccMemberDetectorFeatureExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		_, err := tfguardduty.FindMemberDetectorFeatureByThreePartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 

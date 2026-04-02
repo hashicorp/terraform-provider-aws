@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -191,7 +190,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 	ctx := acctest.Context(t)
 	var branch types.Branch
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	environmentName := sdkacctest.RandStringFromCharSet(9, sdkacctest.CharSetAlpha)
+	environmentName := acctest.RandStringFromCharSet(t, 9, acctest.CharSetAlpha)
 	resourceName := "aws_amplify_branch.test"
 	backendEnvironment1ResourceName := "aws_amplify_backend_environment.test1"
 	backendEnvironment2ResourceName := "aws_amplify_backend_environment.test2"

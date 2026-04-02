@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,19 +23,19 @@ import (
 
 func testAccLabelingJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_labeling_job.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx),
+		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLabelingJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLabelingJobExists(ctx, resourceName),
+					testAccCheckLabelingJobExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -63,19 +61,19 @@ func testAccLabelingJob_basic(t *testing.T) {
 
 func testAccLabelingJob_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_labeling_job.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx),
+		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLabelingJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLabelingJobExists(ctx, resourceName),
+					testAccCheckLabelingJobExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceLabelingJob, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,19 +92,19 @@ func testAccLabelingJob_disappears(t *testing.T) {
 
 func testAccLabelingJob_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_labeling_job.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx),
+		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLabelingJobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLabelingJobExists(ctx, resourceName),
+					testAccCheckLabelingJobExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -130,9 +128,9 @@ func testAccLabelingJob_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLabelingJobDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLabelingJobDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_labeling_job" {
@@ -155,14 +153,14 @@ func testAccCheckLabelingJobDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckLabelingJobExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckLabelingJobExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		_, err := tfsagemaker.FindLabelingJobByName(ctx, conn, rs.Primary.Attributes["labeling_job_name"])
 

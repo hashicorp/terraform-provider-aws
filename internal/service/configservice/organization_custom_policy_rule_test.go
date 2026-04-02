@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
@@ -24,10 +22,10 @@ import (
 func testAccOrganizationCustomPolicyRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule types.OrganizationConfigRule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ConfigServiceEndpointID)
@@ -35,12 +33,12 @@ func testAccOrganizationCustomPolicyRule_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomPolicyRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &rule),
+					testAccCheckOrganizationCustomPolicyRuleExists(ctx, t, resourceName, &rule),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
@@ -67,10 +65,10 @@ func testAccOrganizationCustomPolicyRule_basic(t *testing.T) {
 func testAccOrganizationCustomPolicyRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organizationcustompolicy types.OrganizationConfigRule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ConfigServiceEndpointID)
@@ -78,12 +76,12 @@ func testAccOrganizationCustomPolicyRule_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomPolicyRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &organizationcustompolicy),
+					testAccCheckOrganizationCustomPolicyRuleExists(ctx, t, resourceName, &organizationcustompolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceOrganizationCustomPolicyRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,10 +93,10 @@ func testAccOrganizationCustomPolicyRule_disappears(t *testing.T) {
 func testAccOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organizationcustompolicy types.OrganizationConfigRule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ConfigServiceEndpointID)
@@ -106,13 +104,13 @@ func testAccOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx, t),
 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationCustomPolicyRuleConfig_policy_text(rName, "let var = 5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &organizationcustompolicy),
+					testAccCheckOrganizationCustomPolicyRuleExists(ctx, t, resourceName, &organizationcustompolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_text", "let var = 5")),
 			},
 			{
@@ -123,16 +121,16 @@ func testAccOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 			{
 				Config: testAccOrganizationCustomPolicyRuleConfig_policy_text(rName, "let var = 6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &organizationcustompolicy),
+					testAccCheckOrganizationCustomPolicyRuleExists(ctx, t, resourceName, &organizationcustompolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_text", "let var = 6")),
 			},
 		},
 	})
 }
 
-func testAccCheckOrganizationCustomPolicyRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationCustomPolicyRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_organization_custom_policy_rule" {
@@ -156,14 +154,14 @@ func testAccCheckOrganizationCustomPolicyRuleDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckOrganizationCustomPolicyRuleExists(ctx context.Context, n string, v *types.OrganizationConfigRule) resource.TestCheckFunc {
+func testAccCheckOrganizationCustomPolicyRuleExists(ctx context.Context, t *testing.T, n string, v *types.OrganizationConfigRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		output, err := tfconfig.FindOrganizationCustomPolicyRuleByName(ctx, conn, rs.Primary.ID)
 

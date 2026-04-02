@@ -19,6 +19,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_arcregionswitch_route53_health_checks", name="Route53 Health Checks")
+// @Region(overrideDeprecated=true)
 func newRoute53HealthChecksDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &route53HealthChecksDataSource{}, nil
 }

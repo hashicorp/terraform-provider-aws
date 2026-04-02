@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codeconnections/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodeconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,20 +22,20 @@ func TestAccCodeConnectionsHost_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("host/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -58,20 +56,20 @@ func TestAccCodeConnectionsHost_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeconnections.ResourceHost, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,20 +82,20 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		CheckDestroy:             testAccCheckHostDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_vpcNoCertificate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("host/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -118,7 +116,7 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 			{
 				Config: testAccHostConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(ctx, resourceName, &v),
+					testAccCheckHostExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("host/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -135,14 +133,14 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 	})
 }
 
-func testAccCheckHostExists(ctx context.Context, n string, v *types.Host) resource.TestCheckFunc {
+func testAccCheckHostExists(ctx context.Context, t *testing.T, n string, v *types.Host) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeConnectionsClient(ctx)
 
 		output, err := tfcodeconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
@@ -156,9 +154,9 @@ func testAccCheckHostExists(ctx context.Context, n string, v *types.Host) resour
 	}
 }
 
-func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHostDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeConnectionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codeconnections_host" {

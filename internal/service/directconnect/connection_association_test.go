@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,18 +19,18 @@ import (
 func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dx_connection_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(ctx, resourceName),
+					testAccCheckConnectionAssociationExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -42,18 +40,18 @@ func TestAccDirectConnectConnectionAssociation_basic(t *testing.T) {
 func TestAccDirectConnectConnectionAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dx_connection_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(ctx, resourceName),
+					testAccCheckConnectionAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceConnectionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -65,18 +63,18 @@ func TestAccDirectConnectConnectionAssociation_disappears(t *testing.T) {
 func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dx_connection_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_lagOn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(ctx, resourceName),
+					testAccCheckConnectionAssociationExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -87,28 +85,28 @@ func TestAccDirectConnectConnectionAssociation_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_dx_connection_association.test1"
 	resourceName2 := "aws_dx_connection_association.test2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectionAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionAssociationExists(ctx, resourceName1),
-					testAccCheckConnectionAssociationExists(ctx, resourceName2),
+					testAccCheckConnectionAssociationExists(ctx, t, resourceName1),
+					testAccCheckConnectionAssociationExists(ctx, t, resourceName2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectionAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection_association" {
@@ -132,14 +130,14 @@ func testAccCheckConnectionAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckConnectionAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckConnectionAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		return tfdirectconnect.FindConnectionLAGAssociation(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 	}

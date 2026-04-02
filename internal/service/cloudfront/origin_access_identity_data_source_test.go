@@ -18,16 +18,16 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_origin_access_identity.test"
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
+					testAccCheckOriginAccessIdentityExists(ctx, t, resourceName, &origin),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrComment, resourceName, names.AttrComment),

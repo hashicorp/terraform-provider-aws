@@ -12,11 +12,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
@@ -26,7 +24,7 @@ import (
 func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentcollaborator awstypes.AgentCollaborator
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	aliasResourceName := "aws_bedrockagent_agent_alias.test"
 	superResourceName := "aws_bedrockagent_agent.test_super"
@@ -35,19 +33,19 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
 	description := "basic claude"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName, &agentcollaborator),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_id", superResourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction),
@@ -67,7 +65,7 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentcollaborator awstypes.AgentCollaborator
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	aliasResourceName := "aws_bedrockagent_agent_alias.test"
 	aliasUpdateResourceName := "aws_bedrockagent_agent_alias.test_update"
@@ -77,19 +75,19 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
 	description := "basic claude"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName, &agentcollaborator),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction),
 					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryToCollaborator)),
@@ -104,7 +102,7 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 			{
 				Config: testAccAgentCollaboratorConfig_update(rName, model, description, instruction2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName, &agentcollaborator),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction2),
 					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryDisabled)),
@@ -118,25 +116,25 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentcollaborator awstypes.AgentCollaborator
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	instruction := "tell the other agent what to do"
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
 	description := "basic claude"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName, &agentcollaborator),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfbedrockagent.ResourceAgentCollaborator, resourceName, agentCollaboratorDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
@@ -152,7 +150,7 @@ func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 func TestAccBedrockAgentAgentCollaborator_multiCollaborator(t *testing.T) {
 	ctx := acctest.Context(t)
 	var c1, c2, c3 awstypes.AgentCollaborator
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	resourceName2 := "aws_bedrockagent_agent_collaborator.test2"
 	resourceName3 := "aws_bedrockagent_agent_collaborator.test3"
@@ -165,21 +163,21 @@ func TestAccBedrockAgentAgentCollaborator_multiCollaborator(t *testing.T) {
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
 	description := "basic claude"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentCollaboratorConfig_multiCollaborator(rName, model, description, instruction),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentCollaboratorExists(ctx, resourceName, &c1),
-					testAccCheckAgentCollaboratorExists(ctx, resourceName2, &c2),
-					testAccCheckAgentCollaboratorExists(ctx, resourceName3, &c3),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName, &c1),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName2, &c2),
+					testAccCheckAgentCollaboratorExists(ctx, t, resourceName3, &c3),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_id", superResourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName+"-1"),
 					resource.TestCheckResourceAttr(resourceName2, "collaborator_name", rName+"-2"),
@@ -200,9 +198,9 @@ func TestAccBedrockAgentAgentCollaborator_multiCollaborator(t *testing.T) {
 	})
 }
 
-func testAccCheckAgentCollaboratorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentCollaboratorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_agent_collaborator" {
@@ -226,14 +224,14 @@ func testAccCheckAgentCollaboratorDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckAgentCollaboratorExists(ctx context.Context, n string, v *awstypes.AgentCollaborator) resource.TestCheckFunc {
+func testAccCheckAgentCollaboratorExists(ctx context.Context, t *testing.T, n string, v *awstypes.AgentCollaborator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindAgentCollaboratorByThreePartKey(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["collaborator_id"])
 

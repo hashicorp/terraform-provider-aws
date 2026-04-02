@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -160,9 +159,8 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	output, err := conn.DescribeStreamConsumer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -177,8 +175,8 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	return output.ConsumerDescription, nil
 }
 
-func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStreamConsumer(conn *kinesis.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamConsumerByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -197,10 +195,10 @@ func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Client, arn st
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConsumerStatusCreating),
 		Target:  enum.Slice(types.ConsumerStatusActive),
-		Refresh: statusStreamConsumer(ctx, conn, arn),
+		Refresh: statusStreamConsumer(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -217,10 +215,10 @@ func waitStreamConsumerDeleted(ctx context.Context, conn *kinesis.Client, arn st
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConsumerStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStreamConsumer(ctx, conn, arn),
+		Refresh: statusStreamConsumer(conn, arn),
 		Timeout: timeout,
 	}
 

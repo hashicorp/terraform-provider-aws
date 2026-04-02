@@ -381,9 +381,24 @@ Takes the subnet count as a parameter.
 
 Creates the requested number of `aws_subnet` resources with the name `test`.
 
+#### `acctest.ConfigAvailableAZsNoOptIn`
+
+Defines an `aws_availability_zones` data source named `available` which lists availability zones in the current region which are available and not opt-in.
+
+Does not exclude any availability zones.
+To exclue availability zones, use `acctest.ConfigAvailableAZsNoOptInExclude` or `acctest.ConfigAvailableAZsNoOptInDefaultExclude`.
+
+#### `acctest.ConfigAvailableAZsNoOptInExclude`
+
+Defines an `aws_availability_zones` data source named `available` which lists availability zones in the current region which are available and not opt-in.
+
+Declare the set of exluded availability zones in a local value named `exclude_zone_ids`.
+
 #### `acctest.ConfigAvailableAZsNoOptInDefaultExclude`
 
 Defines an `aws_availability_zones` data source named `available` which lists availability zones in the current region which are available and not opt-in.
+
+Uses a default set of excluded availability zones: `usw2-az4` and `usgw1-az2`.
 
 #### `acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI`
 

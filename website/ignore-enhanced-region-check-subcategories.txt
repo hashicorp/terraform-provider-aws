@@ -1,4 +1,5 @@
 
+ARC (Application Recovery Controller) Region Switch
 Account Management
 BCM Data Exports
 Billing
@@ -21,6 +22,7 @@ Route 53 Recovery Readiness
 STS (Security Token)
 Savings Plans
 Shield
+User Experience Customization
 User Notifications
 User Notifications Contacts
 WAF Classic

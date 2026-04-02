@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +18,19 @@ import (
 
 func TestAccKafkaSingleSCRAMSecretAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_single_scram_secret_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSingleSCRAMSecretAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resourceName),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -46,23 +44,23 @@ func TestAccKafkaSingleSCRAMSecretAssociation_basic(t *testing.T) {
 
 func TestAccKafkaSingleSCRAMSecretAssociation_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resource1Name := "aws_msk_single_scram_secret_association.test1"
 	resource2Name := "aws_msk_single_scram_secret_association.test2"
 	resource3Name := "aws_msk_single_scram_secret_association.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSingleSCRAMSecretAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resource1Name),
-					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resource2Name),
-					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resource3Name),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, t, resource1Name),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, t, resource2Name),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, t, resource3Name),
 				),
 			},
 		},
@@ -71,19 +69,19 @@ func TestAccKafkaSingleSCRAMSecretAssociation_multiple(t *testing.T) {
 
 func TestAccKafkaSingleSCRAMSecretAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_single_scram_secret_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSingleSCRAMSecretAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resourceName),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkafka.ResourceSingleSCRAMSecretAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,14 +90,14 @@ func TestAccKafkaSingleSCRAMSecretAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSingleSCRAMSecretAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSingleSCRAMSecretAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_single_scram_secret_association" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 			err := tfkafka.FindSingleSCRAMSecretAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_arn"], rs.Primary.Attributes["secret_arn"])
 
@@ -118,14 +116,14 @@ func testAccCheckSingleSCRAMSecretAssociationDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckSingleSCRAMSecretAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSingleSCRAMSecretAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		return tfkafka.FindSingleSCRAMSecretAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_arn"], rs.Primary.Attributes["secret_arn"])
 	}

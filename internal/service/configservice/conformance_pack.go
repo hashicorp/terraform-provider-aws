@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -237,9 +236,8 @@ func findConformancePacks(ctx context.Context, conn *configservice.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -279,9 +277,8 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -295,8 +292,8 @@ func findConformancePackStatuses(ctx context.Context, conn *configservice.Client
 	return output, nil
 }
 
-func statusConformancePack(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConformancePack(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConformancePackStatusByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -312,10 +309,10 @@ func statusConformancePack(ctx context.Context, conn *configservice.Client, name
 }
 
 func waitConformancePackCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.ConformancePackStatusDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConformancePackStateCreateInProgress),
 		Target:  enum.Slice(types.ConformancePackStateCreateComplete),
-		Refresh: statusConformancePack(ctx, conn, name),
+		Refresh: statusConformancePack(conn, name),
 		Timeout: timeout,
 	}
 
@@ -331,10 +328,10 @@ func waitConformancePackCreated(ctx context.Context, conn *configservice.Client,
 }
 
 func waitConformancePackDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.ConformancePackStatusDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConformancePackStateDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusConformancePack(ctx, conn, name),
+		Refresh: statusConformancePack(conn, name),
 		Timeout: timeout,
 	}
 

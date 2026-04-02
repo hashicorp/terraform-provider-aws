@@ -19,8 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -35,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_eks_pod_identity_association", name="Pod Identity Association")
 // @Tags(identifierAttribute="association_arn")
+// @Testing(tagsTest=false)
 func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &podIdentityAssociationResource{}
 
@@ -133,7 +133,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, request res
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
@@ -214,7 +214,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 		}
 
 		// Set values for unknowns.
-		input.ClientRequestToken = aws.String(sdkid.UniqueId())
+		input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, &input)
@@ -289,9 +289,8 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 	output, err := conn.DescribePodIdentityAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -32,7 +32,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.AggregationAuthorization")
 // @Testing(generator=false)
 // @Testing(serialize=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAggregateAuthorizationCreate,

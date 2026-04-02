@@ -23,19 +23,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsResourcePolicy_IdentitySerial(t *testing.T) {
+func testAccOrganizationsResourcePolicy_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsResourcePolicy_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsResourcePolicy_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsResourcePolicy_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsResourcePolicy_Identity_basic,
+		"ExistingResource":          testAccOrganizationsResourcePolicy_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsResourcePolicy_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsResourcePolicy_Identity_Basic(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -52,7 +52,7 @@ func testAccOrganizationsResourcePolicy_Identity_Basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -60,7 +60,7 @@ func testAccOrganizationsResourcePolicy_Identity_Basic(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -116,7 +116,7 @@ func testAccOrganizationsResourcePolicy_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsResourcePolicy_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -133,7 +133,7 @@ func testAccOrganizationsResourcePolicy_Identity_ExistingResource(t *testing.T) 
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -141,7 +141,7 @@ func testAccOrganizationsResourcePolicy_Identity_ExistingResource(t *testing.T) 
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic_v6.4.0/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -174,7 +174,7 @@ func testAccOrganizationsResourcePolicy_Identity_ExistingResource(t *testing.T) 
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsResourcePolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsResourcePolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ResourcePolicy
@@ -191,7 +191,7 @@ func testAccOrganizationsResourcePolicy_Identity_ExistingResource_NoRefresh_NoCh
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -204,7 +204,7 @@ func testAccOrganizationsResourcePolicy_Identity_ExistingResource_NoRefresh_NoCh
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic_v6.4.0/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

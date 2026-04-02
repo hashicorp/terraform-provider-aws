@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,18 +23,18 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.CustomRoutingEndpointGroup
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}/endpoint-group/[a-z0-9]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "443"),
@@ -61,18 +59,18 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_disappears(t *testing.T)
 	ctx := acctest.Context(t)
 	var v awstypes.CustomRoutingEndpointGroup
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCustomRoutingEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,18 +83,18 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointConfiguration(t 
 	ctx := acctest.Context(t)
 	var v awstypes.CustomRoutingEndpointGroup
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingEndpointGroupConfig_endpointConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}/endpoint-group/[a-z0-9]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "8080"),
@@ -121,18 +119,18 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointGroupRegion(t *t
 	ctx := acctest.Context(t)
 	var v awstypes.CustomRoutingEndpointGroup
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingEndpointGroupConfig_endpointGroupRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}/endpoint-group/[a-z0-9]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "443"),
@@ -152,14 +150,14 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointGroupRegion(t *t
 	})
 }
 
-func testAccCheckCustomRoutingEndpointGroupExists(ctx context.Context, n string, v *awstypes.CustomRoutingEndpointGroup) resource.TestCheckFunc {
+func testAccCheckCustomRoutingEndpointGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.CustomRoutingEndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		output, err := tfglobalaccelerator.FindCustomRoutingEndpointGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -173,9 +171,9 @@ func testAccCheckCustomRoutingEndpointGroupExists(ctx context.Context, n string,
 	}
 }
 
-func testAccCheckCustomRoutingEndpointGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomRoutingEndpointGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_custom_routing_endpoint_group" {

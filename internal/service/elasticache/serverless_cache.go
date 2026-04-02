@@ -8,6 +8,7 @@ package elasticache
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -94,16 +96,20 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIf(
 						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-							// In-place updates are only supported for redis -> valkey
+							// In-place update support for redis -> valkey
 							if req.StateValue.Equal(types.StringValue(engineRedis)) && req.PlanValue.Equal(types.StringValue(engineValkey)) {
+								return
+							}
+							// In-place updates support for valkey -> redis
+							if req.StateValue.Equal(types.StringValue(engineValkey)) && req.PlanValue.Equal(types.StringValue(engineRedis)) {
 								return
 							}
 
 							// Any other change will force a replacement
 							resp.RequiresReplace = true
 						},
-						"Engine modifications other than redis to valkey require a replacement",
-						"Engine modifications other than redis to valkey require a replacement",
+						"Engine modifications other than redis to valkey or valkey to redis require a replacement",
+						"Engine modifications other than redis to valkey or valkey to redis require a replacement",
 					),
 				},
 			},
@@ -122,7 +128,36 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+							var engineVal types.String
+							resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrEngine), &engineVal)...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+
+							stateFloatVal, err := strconv.ParseFloat(req.StateValue.ValueString(), 64)
+							if err != nil {
+								resp.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								return
+							}
+
+							planFloatVal, err := strconv.ParseFloat(req.PlanValue.ValueString(), 64)
+							if err != nil {
+								resp.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								return
+							}
+
+							if stateFloatVal < planFloatVal && engineVal.Equal(types.StringValue(engineValkey)) {
+								return
+							}
+
+							// Any other change will force a replacement
+							resp.RequiresReplace = true
+						},
+						"major_engine_version downgrade is not supported for valkey",
+						"major_engine_version downgrade is not supported for valkey",
+					),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -367,6 +402,22 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			return
 		}
 
+		if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) && new.CacheUsageLimits.IsNull() {
+			// Removing CacheUsageLimits.
+			// https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Scaling.html#Pre-Scaling.console
+			input.CacheUsageLimits = &awstypes.CacheUsageLimits{
+				DataStorage: &awstypes.DataStorage{
+					Maximum: aws.Int32(0),
+					Minimum: aws.Int32(0),
+					Unit:    awstypes.DataStorageUnitGb,
+				},
+				ECPUPerSecond: &awstypes.ECPUPerSecond{
+					Maximum: aws.Int32(0),
+					Minimum: aws.Int32(0),
+				},
+			}
+		}
+
 		// If no engine changes are made, unset related fields to prevent the following error:
 		// This API supports only cross-engine upgrades to Valkey engine currently.
 		if new.Engine.Equal(old.Engine) && new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
@@ -379,6 +430,10 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		// InvalidParameterCombination: No modifications were requested
 		if !new.Engine.Equal(old.Engine) && input.MajorEngineVersion == nil {
 			input.MajorEngineVersion = old.MajorEngineVersion.ValueStringPointer()
+		}
+
+		if !new.UserGroupID.Equal(old.UserGroupID) && new.UserGroupID.IsNull() {
+			input.RemoveUserGroup = aws.Bool(true)
 		}
 
 		if _, err := conn.ModifyServerlessCache(ctx, &input); err != nil {

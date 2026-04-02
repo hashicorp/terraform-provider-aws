@@ -11,11 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,11 +22,11 @@ import (
 func TestAccDeviceFarmProject_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Project
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, "tf-acc-test-updated")
 	resourceName := "aws_devicefarm_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -38,12 +36,12 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`project:.+`)),
@@ -57,7 +55,7 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 			{
 				Config: testAccProjectConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`project:.+`)),
 				),
@@ -69,10 +67,10 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 func TestAccDeviceFarmProject_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Project
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -82,12 +80,12 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_defaultJobTimeout(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "10"),
 				),
@@ -100,7 +98,7 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 			{
 				Config: testAccProjectConfig_defaultJobTimeout(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "20"),
 				),
@@ -112,10 +110,10 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 func TestAccDeviceFarmProject_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Project
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -125,12 +123,12 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -143,7 +141,7 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 			{
 				Config: testAccProjectConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -152,7 +150,7 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 			{
 				Config: testAccProjectConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -164,10 +162,10 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 func TestAccDeviceFarmProject_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj awstypes.Project
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
@@ -177,12 +175,12 @@ func TestAccDeviceFarmProject_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &proj),
+					testAccCheckProjectExists(ctx, t, resourceName, &proj),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), resourceName),
 				),
@@ -192,14 +190,14 @@ func TestAccDeviceFarmProject_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProjectExists(ctx context.Context, n string, v *awstypes.Project) resource.TestCheckFunc {
+func testAccCheckProjectExists(ctx context.Context, t *testing.T, n string, v *awstypes.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DeviceFarmClient(ctx)
 		resp, err := tfdevicefarm.FindProjectByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -214,9 +212,9 @@ func testAccCheckProjectExists(ctx context.Context, n string, v *awstypes.Projec
 	}
 }
 
-func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProjectDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DeviceFarmClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_project" {

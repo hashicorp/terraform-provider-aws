@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,21 +19,21 @@ import (
 
 func TestAccIoTRoleAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	alias := sdkacctest.RandomWithPrefix("RoleAlias-")
-	alias2 := sdkacctest.RandomWithPrefix("RoleAlias2-")
+	alias := acctest.RandomWithPrefix(t, "RoleAlias-")
+	alias2 := acctest.RandomWithPrefix(t, "RoleAlias2-")
 	resourceName := "aws_iot_role_alias.ra"
 	resourceName2 := "aws_iot_role_alias.ra2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleAliasConfig_basic(alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName),
+					testAccCheckRoleAliasExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(resourceName, "credential_duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -45,15 +43,15 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 			{
 				Config: testAccRoleAliasConfig_update1(alias, alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName),
-					testAccCheckRoleAliasExists(ctx, resourceName2),
+					testAccCheckRoleAliasExists(ctx, t, resourceName),
+					testAccCheckRoleAliasExists(ctx, t, resourceName2),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(resourceName, "credential_duration", "43200"),
 				),
 			},
 			{
 				Config: testAccRoleAliasConfig_update2(alias, alias2),
-				Check:  resource.ComposeTestCheckFunc(testAccCheckRoleAliasExists(ctx, resourceName2)),
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoleAliasExists(ctx, t, resourceName2)),
 			},
 			{
 				Config:      testAccRoleAliasConfig_update3(alias, alias2),
@@ -62,13 +60,13 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 			{
 				Config: testAccRoleAliasConfig_update4(alias, alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName2),
+					testAccCheckRoleAliasExists(ctx, t, resourceName2),
 				),
 			},
 			{
 				Config: testAccRoleAliasConfig_update5(alias, alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName2),
+					testAccCheckRoleAliasExists(ctx, t, resourceName2),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName2, names.AttrRoleARN, "iam", regexache.MustCompile("role/"+alias+"/bogus")),
 				),
 			},
@@ -83,19 +81,19 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 
 func TestAccIoTRoleAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	alias := sdkacctest.RandomWithPrefix("RoleAlias-")
+	alias := acctest.RandomWithPrefix(t, "RoleAlias-")
 	resourceName := "aws_iot_role_alias.ra"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleAliasConfig_basic(alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName),
+					testAccCheckRoleAliasExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceRoleAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -106,19 +104,19 @@ func TestAccIoTRoleAlias_disappears(t *testing.T) {
 
 func TestAccIoTRoleAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_role_alias.tags"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName),
+					testAccCheckRoleAliasExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -131,7 +129,7 @@ func TestAccIoTRoleAlias_tags(t *testing.T) {
 			{
 				Config: testAccRoleAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName),
+					testAccCheckRoleAliasExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -140,7 +138,7 @@ func TestAccIoTRoleAlias_tags(t *testing.T) {
 			{
 				Config: testAccRoleAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, resourceName),
+					testAccCheckRoleAliasExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -149,9 +147,9 @@ func TestAccIoTRoleAlias_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRoleAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRoleAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_role_alias" {
 				continue
@@ -174,14 +172,14 @@ func testAccCheckRoleAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRoleAliasExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckRoleAliasExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		_, err := tfiot.FindRoleAliasByID(ctx, conn, rs.Primary.ID)
 

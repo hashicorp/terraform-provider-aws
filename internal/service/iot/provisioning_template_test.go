@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +20,20 @@ import (
 
 func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 1),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 1),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "provisioningtemplate/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -59,19 +57,19 @@ func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 
 func TestAccIoTProvisioningTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceProvisioningTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,22 +80,22 @@ func TestAccIoTProvisioningTemplate_disappears(t *testing.T) {
 
 func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 1),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 1),
 				),
 			},
 			{
@@ -108,20 +106,20 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 			{
 				Config: testAccProvisioningTemplateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 1),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 1),
 				),
 			},
 			{
 				Config: testAccProvisioningTemplateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 1),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 1),
 				),
 			},
 		},
@@ -130,20 +128,20 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 
 func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 1),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 1),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "provisioningtemplate/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -162,8 +160,8 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 			{
 				Config: testAccProvisioningTemplateConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 2),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 2),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "provisioningtemplate/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "For testing"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -181,20 +179,20 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/38629.
 func TestAccIoTProvisioningTemplate_jitp(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_jitp(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisioningTemplateExists(ctx, resourceName),
-					testAccCheckProvisioningTemplateNumVersions(ctx, rName, 1),
+					testAccCheckProvisioningTemplateExists(ctx, t, resourceName),
+					testAccCheckProvisioningTemplateNumVersions(ctx, t, rName, 1),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "provisioningtemplate/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -215,14 +213,14 @@ func TestAccIoTProvisioningTemplate_jitp(t *testing.T) {
 	})
 }
 
-func testAccCheckProvisioningTemplateExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckProvisioningTemplateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		_, err := tfiot.FindProvisioningTemplateByName(ctx, conn, rs.Primary.ID)
 
@@ -230,9 +228,9 @@ func testAccCheckProvisioningTemplateExists(ctx context.Context, n string) resou
 	}
 }
 
-func testAccCheckProvisioningTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProvisioningTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_provisioning_template" {
@@ -256,9 +254,9 @@ func testAccCheckProvisioningTemplateDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckProvisioningTemplateNumVersions(ctx context.Context, name string, want int) resource.TestCheckFunc {
+func testAccCheckProvisioningTemplateNumVersions(ctx context.Context, t *testing.T, name string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
 
 		var got int
 		out, err := conn.ListProvisioningTemplateVersions(ctx, &iot.ListProvisioningTemplateVersionsInput{TemplateName: aws.String(name)})

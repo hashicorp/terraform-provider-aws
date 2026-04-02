@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -170,8 +169,8 @@ func TestAccElastiCacheGlobalReplicationGroup_description(t *testing.T) {
 	var globalReplicationGroup awstypes.GlobalReplicationGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	primaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	description1 := sdkacctest.RandString(10)
-	description2 := sdkacctest.RandString(10)
+	description1 := acctest.RandString(t, 10)
+	description2 := acctest.RandString(t, 10)
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1540,7 +1539,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnCreate_ValkeyUpgrade(t 
 	resourceName := "aws_elasticache_global_replication_group.test"
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1588,7 +1587,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineOnUpdate_ValkeyUpgrade(t 
 	resourceName := "aws_elasticache_global_replication_group.test"
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1663,7 +1662,7 @@ func TestAccElastiCacheGlobalReplicationGroup_InheritValkeyEngine_SecondaryRepli
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 	secondaryReplicationGroupResourceName := "aws_elasticache_replication_group.secondary"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)

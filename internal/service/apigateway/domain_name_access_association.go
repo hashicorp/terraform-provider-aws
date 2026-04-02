@@ -37,8 +37,6 @@ import (
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(destroyTakesT=true)
-// @Testing(existsTakesT=true)
 func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainNameAccessAssociationResource{}
 

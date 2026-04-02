@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccIVSPlaybackKeyPair_IdentitySerial(t *testing.T) {
+func testAccIVSPlaybackKeyPair_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccIVSPlaybackKeyPair_Identity_Basic,
-		"ExistingResource":          testAccIVSPlaybackKeyPair_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccIVSPlaybackKeyPair_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccIVSPlaybackKeyPair_Identity_RegionOverride,
+		acctest.CtBasic:             testAccIVSPlaybackKeyPair_Identity_basic,
+		"ExistingResource":          testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccIVSPlaybackKeyPair_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccIVSPlaybackKeyPair_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccIVSPlaybackKeyPair_Identity_Basic(t *testing.T) {
+func testAccIVSPlaybackKeyPair_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PlaybackKeyPair
@@ -49,7 +49,7 @@ func testAccIVSPlaybackKeyPair_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
-		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -59,7 +59,7 @@ func testAccIVSPlaybackKeyPair_Identity_Basic(t *testing.T) {
 					"rTlsEcdsaPublicKeyPem": config.StringVariable(rTlsEcdsaPublicKeyPem),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v),
+					testAccCheckPlaybackKeyPairExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -129,7 +129,7 @@ func testAccIVSPlaybackKeyPair_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccIVSPlaybackKeyPair_Identity_RegionOverride(t *testing.T) {
+func testAccIVSPlaybackKeyPair_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ivs_playback_key_pair.test"
@@ -263,7 +263,7 @@ func testAccIVSPlaybackKeyPair_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
+func testAccIVSPlaybackKeyPair_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PlaybackKeyPair
@@ -277,7 +277,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IVSServiceID),
-		CheckDestroy: testAccCheckPlaybackKeyPairDestroy(ctx),
+		CheckDestroy: testAccCheckPlaybackKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -286,7 +286,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 					"rTlsEcdsaPublicKeyPem": config.StringVariable(rTlsEcdsaPublicKeyPem),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v),
+					testAccCheckPlaybackKeyPairExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -320,7 +320,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func testAccIVSPlaybackKeyPair_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccIVSPlaybackKeyPair_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PlaybackKeyPair
@@ -334,7 +334,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IVSServiceID),
-		CheckDestroy: testAccCheckPlaybackKeyPairDestroy(ctx),
+		CheckDestroy: testAccCheckPlaybackKeyPairDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -348,7 +348,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					"rTlsEcdsaPublicKeyPem": config.StringVariable(rTlsEcdsaPublicKeyPem),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v),
+					testAccCheckPlaybackKeyPairExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

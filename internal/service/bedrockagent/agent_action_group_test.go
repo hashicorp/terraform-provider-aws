@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,20 +25,20 @@ import (
 
 func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "action_group_state", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_id", "aws_bedrockagent_agent.test", "agent_id"),
@@ -70,14 +68,14 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 
 func TestAccBedrockAgentAgentActionGroup_upgradeToPrepareAgent(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockAgentServiceID),
-		CheckDestroy: testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -96,7 +94,7 @@ func TestAccBedrockAgentAgentActionGroup_upgradeToPrepareAgent(t *testing.T) {
 					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("prepare_agent")),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -112,7 +110,7 @@ func TestAccBedrockAgentAgentActionGroup_upgradeToPrepareAgent(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("prepare_agent"), knownvalue.Bool(true)),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
@@ -121,20 +119,20 @@ func TestAccBedrockAgentAgentActionGroup_upgradeToPrepareAgent(t *testing.T) {
 
 func TestAccBedrockAgentAgentActionGroup_parentActionGroupSignature(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_parentActionGroupSignature(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "action_group_state", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_id", "aws_bedrockagent_agent.test", "agent_id"),
@@ -155,20 +153,20 @@ func TestAccBedrockAgentAgentActionGroup_parentActionGroupSignature(t *testing.T
 
 func TestAccBedrockAgentAgentActionGroup_APISchema_s3(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_APISchema_s3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "api_schema.#", "1"),
@@ -190,20 +188,20 @@ func TestAccBedrockAgentAgentActionGroup_APISchema_s3(t *testing.T) {
 
 func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_APISchema_s3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "api_schema.#", "1"),
@@ -222,7 +220,7 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 			{
 				Config: testAccAgentActionGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Basic Agent Action"),
 					resource.TestCheckResourceAttr(resourceName, "api_schema.#", "1"),
@@ -242,20 +240,20 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 
 func TestAccBedrockAgentAgentActionGroup_FunctionSchema_memberFunctions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_FunctionSchema_memberFunctions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.#", "1"),
@@ -284,20 +282,20 @@ func TestAccBedrockAgentAgentActionGroup_FunctionSchema_memberFunctions(t *testi
 
 func TestAccBedrockAgentAgentActionGroup_ActionGroupExecutor_customControl(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v awstypes.AgentActionGroup
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_ActionGroupExecutor_customControl(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "action_group_executor.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_group_executor.0.custom_control", "RETURN_CONTROL"),
@@ -314,9 +312,9 @@ func TestAccBedrockAgentAgentActionGroup_ActionGroupExecutor_customControl(t *te
 	})
 }
 
-func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentActionGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_agent_action_group" {
@@ -339,14 +337,14 @@ func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheck
 		return nil
 	}
 }
-func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *awstypes.AgentActionGroup) resource.TestCheckFunc {
+func testAccCheckAgentActionGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.AgentActionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindAgentActionGroupByThreePartKey(ctx, conn, rs.Primary.Attributes["action_group_id"], rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"])
 

@@ -399,7 +399,7 @@ go-build: ## [CI] Provider Checks / go-build
 
 go-misspell: ## [CI] Provider Checks / misspell
 	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto -i "littel,ceasar" internal/
+	@misspell -error -source auto -i "littel,ceasar,ect" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
@@ -519,7 +519,7 @@ quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -619,12 +619,25 @@ semgrep-all: semgrep-test semgrep-validate ## Run semgrep on all files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Code Quality Scan
 	@echo "make: Semgrep Checks / Code Quality Scan..."
@@ -635,12 +648,25 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.anon-struct-args' \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.contextcancelable' \
+		--config 'r/dgryski.semgrep-go.ctx-time' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.ioutil' \
+		--config 'r/dgryski.semgrep-go.mail-address' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddcompare' \
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
-		--config 'r/dgryski.semgrep-go.oserrors'
+		--config 'r/dgryski.semgrep-go.oserrors' \
+		--config 'r/dgryski.semgrep-go.parseint-downcast' \
+		--config 'r/dgryski.semgrep-go.readeof' \
+		--config 'r/dgryski.semgrep-go.readfull' \
+		--config 'r/dgryski.semgrep-go.sprinterr' \
+		--config 'r/dgryski.semgrep-go.unixnano' \
+		--config 'r/dgryski.semgrep-go.writestring' \
+		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
 semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
@@ -740,14 +766,6 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
-
-semgrep-vcr: ## Enable VCR support with Semgrep --autofix
-	@echo "make: Enable VCR support with Semgrep --autofix"
-	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
-	@echo "this target may need to be run twice."
-	@semgrep $(SEMGREP_ARGS) --autofix \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config internal/vcr/.semgrep-vcr.yml
 
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
@@ -891,6 +909,9 @@ test-shard: prereq-go ## Run unit tests for a specific shard (CI only: SHARD=0 T
 		-vet=off \
 		-buildvcs=false
 
+test-naming: ## Check test naming conventions
+	@.ci/scripts/check-test-naming.sh
+
 testacc: prereq-go fmt-check ## Run acceptance tests
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
@@ -923,6 +944,12 @@ testacc-lint-fix-core: ## Fix acceptance test linter findings in core directorie
 	@find . -name '*_test.go' -type f ! -path './internal/service/*' ! -path './.git/*' ! -path './vendor/*' ! -path './tools/*' \
 		| sort -u \
 		| xargs -I {} terrafmt fmt --fmtcompat {}
+
+terraform-fmt: ## Format all .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files
+	@echo "make: Formatting .tf, .tfvars, .tftest.hcl, and .tfquery.hcl files..."
+	@find . -name "*.tfquery.hcl" -type f -exec sh -c 'mv "$$1" "$${1%.tfquery.hcl}.BEGIANT.tf"' _ {} \;
+	@terraform fmt -recursive .
+	@find . -name "*.BEGIANT.tf" -type f -exec sh -c 'mv "$$1" "$${1%.BEGIANT.tf}.tfquery.hcl"' _ {} \;
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
@@ -1011,12 +1038,6 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
-
-vcr-enable: ## Enable VCR testing
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) semgrep-vcr || true
-	$(MAKE) fmt
-	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -1225,7 +1246,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep-vcr \
 	skaff \
 	skaff-check-compile \
 	smoke \
@@ -1248,13 +1268,13 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc-tflint \
 	testacc-tflint-dir \
 	testacc-tflint-embedded \
+	terraform-fmt \
 	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
 	tools \
 	ts \
 	update \
-	vcr-enable \
 	website \
 	website-link-check \
 	website-link-check-ghrc \

@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -67,7 +66,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
 
 	return append(diags, resourceGroupPolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -189,9 +188,8 @@ func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

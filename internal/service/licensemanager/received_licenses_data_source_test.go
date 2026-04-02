@@ -18,7 +18,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_licensemanager_received_licenses.test"
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -37,7 +37,7 @@ func TestAccLicenseManagerReceivedLicensesDataSource_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_licensemanager_received_licenses.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

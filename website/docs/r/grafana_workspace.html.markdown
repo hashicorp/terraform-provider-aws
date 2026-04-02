@@ -81,6 +81,7 @@ The following arguments are optional:
 * `data_sources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `ATHENA`, `CLOUDWATCH`, `PROMETHEUS`, `REDSHIFT`, `SITEWISE`, `TIMESTREAM`, `TWINMAKER`, XRAY`
 * `description` - (Optional) The workspace description.
 * `grafana_version` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `8.4`, `9.4` and `10.4`. If not specified, defaults to the latest version.
+* `kms_key_id` - (Optional) The ARN of the AWS KMS key for encrypting workspace data.
 * `name` - (Optional) The Grafana workspace name.
 * `network_access_control` - (Optional) Configuration for network access to your workspace.See [Network Access Control](#network-access-control) below.
 * `notification_destinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `SNS`.

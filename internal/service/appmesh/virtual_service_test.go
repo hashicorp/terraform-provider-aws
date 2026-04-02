@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,21 +21,21 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vs awstypes.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", acctest.RandInt(t))
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, t, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
@@ -54,7 +52,7 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 			{
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, t, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
@@ -78,21 +76,21 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vs awstypes.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vrName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vrName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", acctest.RandInt(t))
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, t, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
@@ -108,7 +106,7 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 			{
 				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, t, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
@@ -126,21 +124,21 @@ func testAccVirtualService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vs awstypes.VirtualServiceData
 	resourceName := "aws_appmesh_virtual_service.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
+	meshName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vnName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", acctest.RandInt(t))
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
+					testAccCheckVirtualServiceExists(ctx, t, resourceName, &vs),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -149,9 +147,9 @@ func testAccVirtualService_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVirtualServiceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVirtualServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppMeshClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_virtual_service" {
@@ -175,9 +173,9 @@ func testAccCheckVirtualServiceDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckVirtualServiceExists(ctx context.Context, n string, v *awstypes.VirtualServiceData) resource.TestCheckFunc {
+func testAccCheckVirtualServiceExists(ctx context.Context, t *testing.T, n string, v *awstypes.VirtualServiceData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppMeshClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

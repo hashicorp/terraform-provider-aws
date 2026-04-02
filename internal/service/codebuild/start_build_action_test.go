@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,19 +21,19 @@ func TestAccCodeBuildStartBuildAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckProjectDestroy(ctx),
+		CheckDestroy: testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStartBuildActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildStarted(ctx, rName),
+					testAccCheckBuildStarted(ctx, t, rName),
 				),
 			},
 		},
@@ -45,28 +44,28 @@ func TestAccCodeBuildStartBuildAction_withEnvironmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckProjectDestroy(ctx),
+		CheckDestroy: testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStartBuildActionConfig_withEnvironmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildStarted(ctx, rName),
+					testAccCheckBuildStarted(ctx, t, rName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckBuildStarted(ctx context.Context, projectName string) resource.TestCheckFunc {
+func testAccCheckBuildStarted(ctx context.Context, t *testing.T, projectName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeBuildClient(ctx)
 
 		// List builds for the project
 		input := &codebuild.ListBuildsForProjectInput{

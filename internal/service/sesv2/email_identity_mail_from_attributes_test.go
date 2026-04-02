@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,16 +22,16 @@ func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "email_identity", emailIdentityName, "email_identity"),
 				),
 			},
@@ -53,16 +52,16 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 	rName := domain.String()
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,16 +76,16 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,16 +102,16 @@ func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.
 	rName := domain.String()
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(types.BehaviorOnMxFailureUseDefaultValue)),
 				),
 			},
@@ -124,7 +123,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureRejectMessage), mailFromDomain.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(types.BehaviorOnMxFailureRejectMessage)),
 				),
 			},
@@ -141,16 +140,16 @@ func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 	rName := domain.String()
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain1.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1.String()),
 				),
 			},
@@ -162,7 +161,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 			{
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain2.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
+					testAccCheckEmailIdentityMailFromAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain2.String()),
 				),
 			},
@@ -170,14 +169,14 @@ func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 	})
 }
 
-func testAccCheckEmailIdentityMailFromAttributesExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEmailIdentityMailFromAttributesExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 

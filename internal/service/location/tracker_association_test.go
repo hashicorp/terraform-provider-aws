@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -77,19 +75,19 @@ func TestTrackerAssociationParseID(t *testing.T) {
 
 func TestAccLocationTrackerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTrackerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerAssociationExists(ctx, resourceName),
+					testAccCheckTrackerAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "consumer_arn", "aws_location_geofence_collection.test", "collection_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "tracker_name", "aws_location_tracker.test", "tracker_name"),
 				),
@@ -105,19 +103,19 @@ func TestAccLocationTrackerAssociation_basic(t *testing.T) {
 
 func TestAccLocationTrackerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTrackerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerAssociationExists(ctx, resourceName),
+					testAccCheckTrackerAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceTrackerAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -126,9 +124,9 @@ func TestAccLocationTrackerAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTrackerAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTrackerAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LocationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_tracker_association" {
@@ -157,7 +155,7 @@ func testAccCheckTrackerAssociationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckTrackerAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckTrackerAssociationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -174,7 +172,7 @@ func testAccCheckTrackerAssociationExists(ctx context.Context, name string) reso
 			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameTrackerAssociation, name, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LocationClient(ctx)
 
 		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 

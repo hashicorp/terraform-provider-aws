@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,10 +25,10 @@ import (
 func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var prompt bedrockagent.GetPromptOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -38,12 +36,12 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		CheckDestroy:             testAccCheckPromptDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPromptConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -65,10 +63,10 @@ func TestAccBedrockAgentPrompt_basic(t *testing.T) {
 func TestAccBedrockAgentPrompt_withEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var prompt bedrockagent.GetPromptOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -76,12 +74,12 @@ func TestAccBedrockAgentPrompt_withEncryption(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		CheckDestroy:             testAccCheckPromptDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPromptConfig_withEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -102,11 +100,11 @@ func TestAccBedrockAgentPrompt_withEncryption(t *testing.T) {
 func TestAccBedrockAgentPrompt_variants(t *testing.T) {
 	ctx := acctest.Context(t)
 	var prompt bedrockagent.GetPromptOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -114,12 +112,12 @@ func TestAccBedrockAgentPrompt_variants(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		CheckDestroy:             testAccCheckPromptDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPromptConfig_variants(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -168,11 +166,11 @@ func TestAccBedrockAgentPrompt_variants(t *testing.T) {
 func TestAccBedrockAgentPrompt_extraFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var prompt bedrockagent.GetPromptOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -180,12 +178,12 @@ func TestAccBedrockAgentPrompt_extraFields(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		CheckDestroy:             testAccCheckPromptDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPromptConfig_extraFields(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`prompt/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -223,10 +221,10 @@ func TestAccBedrockAgentPrompt_extraFields(t *testing.T) {
 func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var prompt bedrockagent.GetPromptOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -234,12 +232,12 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		CheckDestroy:             testAccCheckPromptDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPromptConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourcePrompt, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -251,10 +249,10 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 func TestAccBedrockAgentPrompt_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var prompt bedrockagent.GetPromptOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_prompt.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -262,7 +260,7 @@ func TestAccBedrockAgentPrompt_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPromptDestroy(ctx),
+		CheckDestroy:             testAccCheckPromptDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPromptConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -277,7 +275,7 @@ func TestAccBedrockAgentPrompt_tags(t *testing.T) {
 					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 				),
 			},
 			{
@@ -299,7 +297,7 @@ func TestAccBedrockAgentPrompt_tags(t *testing.T) {
 					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 				),
 			},
 			{
@@ -315,16 +313,16 @@ func TestAccBedrockAgentPrompt_tags(t *testing.T) {
 					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPromptExists(ctx, resourceName, &prompt),
+					testAccCheckPromptExists(ctx, t, resourceName, &prompt),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPromptDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPromptDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_prompt" {
@@ -348,14 +346,14 @@ func testAccCheckPromptDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPromptExists(ctx context.Context, n string, v *bedrockagent.GetPromptOutput) resource.TestCheckFunc {
+func testAccCheckPromptExists(ctx context.Context, t *testing.T, n string, v *bedrockagent.GetPromptOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindPromptByID(ctx, conn, rs.Primary.ID)
 
@@ -370,7 +368,7 @@ func testAccCheckPromptExists(ctx context.Context, n string, v *bedrockagent.Get
 }
 
 func testAccPreCheckPrompt(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 	input := &bedrockagent.ListPromptsInput{}
 

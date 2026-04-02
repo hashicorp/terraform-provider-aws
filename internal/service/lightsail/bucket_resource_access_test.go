@@ -11,11 +11,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
@@ -24,11 +22,11 @@ import (
 
 func TestAccLightsailBucketResourceAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket_resource_access.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -36,12 +34,12 @@ func TestAccLightsailBucketResourceAccess_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketResourceAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketResourceAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketResourceAccessConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketResourceAccessExists(ctx, resourceName),
+					testAccCheckBucketResourceAccessExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "resource_name", rName),
 				),
@@ -57,11 +55,11 @@ func TestAccLightsailBucketResourceAccess_basic(t *testing.T) {
 
 func TestAccLightsailBucketResourceAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket_resource_access.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -69,12 +67,12 @@ func TestAccLightsailBucketResourceAccess_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketResourceAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketResourceAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketResourceAccessConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketResourceAccessExists(ctx, resourceName),
+					testAccCheckBucketResourceAccessExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceBucketResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,7 +81,7 @@ func TestAccLightsailBucketResourceAccess_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketResourceAccessExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketResourceAccessExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -94,7 +92,7 @@ func testAccCheckBucketResourceAccessExists(ctx context.Context, resourceName st
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		out, err := tflightsail.FindBucketResourceAccessById(ctx, conn, rs.Primary.ID)
 
@@ -110,9 +108,9 @@ func testAccCheckBucketResourceAccessExists(ctx context.Context, resourceName st
 	}
 }
 
-func testAccCheckBucketResourceAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBucketResourceAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_bucket_access_key" {

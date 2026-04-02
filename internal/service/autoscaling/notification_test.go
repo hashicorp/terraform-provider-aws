@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,20 +19,20 @@ import (
 
 func TestAccAutoScalingNotification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	groups := []string{rName}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationDestroy(ctx, groups),
+		CheckDestroy:             testAccCheckNotificationDestroy(ctx, t, groups),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationExists(ctx, resourceName, groups),
+					testAccCheckNotificationExists(ctx, t, resourceName, groups),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
@@ -49,20 +47,20 @@ func TestAccAutoScalingNotification_basic(t *testing.T) {
 
 func TestAccAutoScalingNotification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	groups := []string{rName}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationDestroy(ctx, groups),
+		CheckDestroy:             testAccCheckNotificationDestroy(ctx, t, groups),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationExists(ctx, resourceName, groups),
+					testAccCheckNotificationExists(ctx, t, resourceName, groups),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceNotification(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,21 +71,21 @@ func TestAccAutoScalingNotification_disappears(t *testing.T) {
 
 func TestAccAutoScalingNotification_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	groups1 := []string{rName}
 	groups2 := []string{rName, rName + "-2"}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationDestroy(ctx, groups2),
+		CheckDestroy:             testAccCheckNotificationDestroy(ctx, t, groups2),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationExists(ctx, resourceName, groups1),
+					testAccCheckNotificationExists(ctx, t, resourceName, groups1),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
@@ -99,7 +97,7 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 			{
 				Config: testAccNotificationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationExists(ctx, resourceName, groups2),
+					testAccCheckNotificationExists(ctx, t, resourceName, groups2),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName+"-2"),
@@ -115,23 +113,23 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 
 func TestAccAutoScalingNotification_paginated(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	var groups []string
 	for i := range 20 {
 		groups = append(groups, fmt.Sprintf("%s-%d", rName, i))
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationDestroy(ctx, groups),
+		CheckDestroy:             testAccCheckNotificationDestroy(ctx, t, groups),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfig_paginated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationExists(ctx, resourceName, groups),
+					testAccCheckNotificationExists(ctx, t, resourceName, groups),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", "20"),
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "3"),
 				),
@@ -140,14 +138,14 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 	})
 }
 
-func testAccCheckNotificationExists(ctx context.Context, n string, groups []string) resource.TestCheckFunc {
+func testAccCheckNotificationExists(ctx context.Context, t *testing.T, n string, groups []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
@@ -159,9 +157,9 @@ func testAccCheckNotificationExists(ctx context.Context, n string, groups []stri
 	}
 }
 
-func testAccCheckNotificationDestroy(ctx context.Context, groups []string) resource.TestCheckFunc {
+func testAccCheckNotificationDestroy(ctx context.Context, t *testing.T, groups []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_notification" {

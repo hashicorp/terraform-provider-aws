@@ -18,6 +18,7 @@ files:
   exclude_paths:
     - "**/when_string_test.go" # standard library generated files
     - "CHANGELOG.md"
+    - ".changes/**"
   extensions:
     - ".css"
     - ".go"
@@ -71,7 +72,6 @@ third_party:
   action: "above"
   patterns:
     - "Copyright.*[a-zA-Z0-9].*"
-
 # Breakdown of file types in the repository (23,516 files, 2025)
 # these account for 99.9% of files
 # Count    Ext       Pct   Should (c)?

@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -371,9 +370,8 @@ func findInstanceGroupByTwoPartKey(ctx context.Context, conn *emr.Client, cluste
 	}
 
 	if state := output.Status.State; state == awstypes.InstanceGroupStateTerminating || state == awstypes.InstanceGroupStateTerminated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -398,9 +396,8 @@ func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListIn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -418,8 +415,8 @@ func findInstanceGroups(ctx context.Context, conn *emr.Client, input *emr.ListIn
 	return output, nil
 }
 
-func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, groupID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceGroup(conn *emr.Client, clusterID, groupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceGroupByTwoPartKey(ctx, conn, clusterID, groupID)
 
 		if retry.NotFound(err) {
@@ -435,10 +432,10 @@ func statusInstanceGroup(ctx context.Context, conn *emr.Client, clusterID, group
 }
 
 func waitInstanceGroupRunning(ctx context.Context, conn *emr.Client, clusterID, groupID string, timeout time.Duration) (*awstypes.InstanceGroup, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
 		Target:     enum.Slice(awstypes.InstanceGroupStateRunning),
-		Refresh:    statusInstanceGroup(ctx, conn, clusterID, groupID),
+		Refresh:    statusInstanceGroup(conn, clusterID, groupID),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

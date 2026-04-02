@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
+func TestAccDeviceFarmTestGridProject_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TestGridProject
@@ -39,7 +39,7 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTestGridProjectExists(ctx, resourceName, &v),
+					testAccCheckTestGridProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -112,7 +112,7 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmTestGridProject_Identity_ExistingResource(t *testing.T) {
+func TestAccDeviceFarmTestGridProject_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TestGridProject
@@ -128,7 +128,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckTestGridProjectDestroy(ctx),
+		CheckDestroy: testAccCheckTestGridProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -137,7 +137,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTestGridProjectExists(ctx, resourceName, &v),
+					testAccCheckTestGridProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -151,7 +151,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTestGridProjectExists(ctx, resourceName, &v),
+					testAccCheckTestGridProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -194,7 +194,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmTestGridProject_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDeviceFarmTestGridProject_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TestGridProject
@@ -210,7 +210,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource_NoRefresh_NoChan
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckTestGridProjectDestroy(ctx),
+		CheckDestroy: testAccCheckTestGridProjectDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -224,7 +224,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTestGridProjectExists(ctx, resourceName, &v),
+					testAccCheckTestGridProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -239,7 +239,7 @@ func TestAccDeviceFarmTestGridProject_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTestGridProjectExists(ctx, resourceName, &v),
+					testAccCheckTestGridProjectExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

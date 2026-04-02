@@ -33,7 +33,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -89,7 +89,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -137,7 +137,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -178,7 +178,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -206,7 +206,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_null(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -219,7 +219,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +231,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -272,7 +272,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyMap(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -285,7 +285,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyMap(t *testing.T) 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -295,7 +295,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyMap(t *testing.T) 
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -326,7 +326,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyMap(t *testing.T) 
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -339,7 +339,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -349,7 +349,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -372,7 +372,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -410,7 +410,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_AddOnUpdate(t *testing.
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -423,7 +423,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *te
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -435,7 +435,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -476,7 +476,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -504,7 +504,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnCreate(t *te
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -517,7 +517,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -529,7 +529,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -561,7 +561,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -609,7 +609,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -647,7 +647,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Add(t
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -660,7 +660,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Repla
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -672,7 +672,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Repla
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -703,7 +703,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Repla
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -741,7 +741,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_EmptyTag_OnUpdate_Repla
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -754,7 +754,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -767,7 +767,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -811,7 +811,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -857,7 +857,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -897,7 +897,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -926,7 +926,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_providerOnl
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -939,7 +939,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapp
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -954,7 +954,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapp
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1008,7 +1008,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapp
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1061,7 +1061,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapp
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1090,7 +1090,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nonOverlapp
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1103,7 +1103,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1118,7 +1118,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1171,7 +1171,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1228,7 +1228,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1270,7 +1270,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_overlapping
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1283,7 +1283,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToPro
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1295,7 +1295,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToPro
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1328,7 +1328,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToPro
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1364,7 +1364,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToPro
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1377,7 +1377,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToRes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1390,7 +1390,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToRes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1418,7 +1418,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToRes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1457,7 +1457,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_updateToRes
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1470,7 +1470,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyResour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1485,7 +1485,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1527,7 +1527,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyResour
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1540,7 +1540,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyProvid
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1553,7 +1553,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyProvid
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1589,7 +1589,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_emptyProvid
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1602,7 +1602,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullOverlap
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1617,7 +1617,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullOverlap
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1662,7 +1662,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullOverlap
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1675,7 +1675,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullNonOver
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1690,7 +1690,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullNonOver
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1737,7 +1737,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_DefaultTags_nullNonOver
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1750,7 +1750,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnCreate(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1760,7 +1760,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnCreate(t 
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1796,7 +1796,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnCreate(t 
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1809,7 +1809,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Ad
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1821,7 +1821,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Ad
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1853,7 +1853,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Ad
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1897,7 +1897,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Ad
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -1910,7 +1910,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Re
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1922,7 +1922,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Re
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1952,7 +1952,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Re
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1988,7 +1988,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_ComputedTag_OnUpdate_Re
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -2001,7 +2001,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2020,7 +2020,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2069,7 +2069,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2118,7 +2118,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2154,7 +2154,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Defa
 	})
 }
 
-func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroup_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v servicecatalogappregistry.GetAttributeGroupOutput
@@ -2167,7 +2167,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
-		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx),
+		CheckDestroy: testAccCheckAttributeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2184,7 +2184,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2242,7 +2242,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2299,7 +2299,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_tags_IgnoreTags_Overlap_Reso
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &v),
+					testAccCheckAttributeGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

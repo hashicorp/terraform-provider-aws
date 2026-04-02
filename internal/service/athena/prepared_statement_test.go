@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,7 +18,7 @@ import (
 
 func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 
@@ -53,7 +52,7 @@ func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 
 func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 
@@ -80,7 +79,7 @@ func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 
 func TestAccAthenaPreparedStatement_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 	updatedCondition := "y = ?"

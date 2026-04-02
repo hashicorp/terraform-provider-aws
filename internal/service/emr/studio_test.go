@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,19 +22,19 @@ func TestAccEMRStudio_sso(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_sso(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
@@ -59,7 +57,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 			{
 				Config: testAccStudioConfig_sso(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
@@ -82,18 +80,18 @@ func TestAccEMRStudio_iam(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_iam(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -119,18 +117,18 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_sso(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudio(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudio(), resourceName),
 				),
@@ -144,18 +142,18 @@ func TestAccEMRStudio_workspaceStorageEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_workspaceStorageEncryption(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -181,18 +179,18 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -205,7 +203,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 			{
 				Config: testAccStudioConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -214,7 +212,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 			{
 				Config: testAccStudioConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioExists(ctx, resourceName, &studio),
+					testAccCheckStudioExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -223,14 +221,14 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioExists(ctx context.Context, n string, v *awstypes.Studio) resource.TestCheckFunc {
+func testAccCheckStudioExists(ctx context.Context, t *testing.T, n string, v *awstypes.Studio) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 
@@ -244,9 +242,9 @@ func testAccCheckStudioExists(ctx context.Context, n string, v *awstypes.Studio)
 	}
 }
 
-func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStudioDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio" {

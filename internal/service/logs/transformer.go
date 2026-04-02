@@ -35,8 +35,6 @@ import (
 // @FrameworkResource("aws_cloudwatch_log_transformer", name="Transformer")
 // @ArnIdentity("log_group_arn")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(destroyTakesT=true)
-// @Testing(existsTakesT=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetTransformerOutput")
 func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transformerResource{}

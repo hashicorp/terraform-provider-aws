@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
@@ -39,12 +38,12 @@ func testAccLakeFormationIdentityCenterConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityCenterConfigurationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityCenterConfigurationExists(ctx, resourceName, &identityCenterConfiguration),
+					testAccCheckIdentityCenterConfigurationExists(ctx, t, resourceName, &identityCenterConfiguration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("application_arn"), knownvalue.NotNull()),
@@ -74,12 +73,12 @@ func testAccLakeFormationIdentityCenterConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityCenterConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityCenterConfigurationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentityCenterConfigurationExists(ctx, resourceName, &identitycenterconfiguration),
+					testAccCheckIdentityCenterConfigurationExists(ctx, t, resourceName, &identitycenterconfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceIdentityCenterConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,9 +92,9 @@ func testAccLakeFormationIdentityCenterConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityCenterConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIdentityCenterConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_identity_center_configuration" {
@@ -117,7 +116,7 @@ func testAccCheckIdentityCenterConfigurationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckIdentityCenterConfigurationExists(ctx context.Context, name string, identitycenterconfiguration *lakeformation.DescribeLakeFormationIdentityCenterConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckIdentityCenterConfigurationExists(ctx context.Context, t *testing.T, name string, identitycenterconfiguration *lakeformation.DescribeLakeFormationIdentityCenterConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -128,7 +127,7 @@ func testAccCheckIdentityCenterConfigurationExists(ctx context.Context, name str
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameIdentityCenterConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		resp, err := tflakeformation.FindIdentityCenterConfigurationByID(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID])
 		if err != nil {

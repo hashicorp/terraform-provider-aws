@@ -17,7 +17,7 @@ func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccImageBlockPublicAccess_basic,
-		"Identity":      testAccEC2ImageBlockPublicAccess_IdentitySerial,
+		"Identity":      testAccEC2ImageBlockPublicAccess_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -27,7 +27,7 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_image_block_public_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,

@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,20 +21,20 @@ import (
 func TestAccDataExchangeDataSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj dataexchange.GetDataSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, "tf-acc-test-updated")
 	resourceName := "aws_dataexchange_data_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &proj),
+					testAccCheckDataSetExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -51,7 +49,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 			{
 				Config: testAccDataSetConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &proj),
+					testAccCheckDataSetExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
@@ -64,19 +62,19 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 func TestAccDataExchangeDataSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj dataexchange.GetDataSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_data_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &proj),
+					testAccCheckDataSetExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -89,7 +87,7 @@ func TestAccDataExchangeDataSet_tags(t *testing.T) {
 			{
 				Config: testAccDataSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &proj),
+					testAccCheckDataSetExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -98,7 +96,7 @@ func TestAccDataExchangeDataSet_tags(t *testing.T) {
 			{
 				Config: testAccDataSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &proj),
+					testAccCheckDataSetExists(ctx, t, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -110,19 +108,19 @@ func TestAccDataExchangeDataSet_tags(t *testing.T) {
 func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proj dataexchange.GetDataSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_data_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &proj),
+					testAccCheckDataSetExists(ctx, t, resourceName, &proj),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), resourceName),
 				),
@@ -132,7 +130,7 @@ func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.GetDataSetOutput) resource.TestCheckFunc {
+func testAccCheckDataSetExists(ctx context.Context, t *testing.T, n string, v *dataexchange.GetDataSetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -143,7 +141,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 		resp, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -158,9 +156,9 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 	}
 }
 
-func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dataexchange_data_set" {

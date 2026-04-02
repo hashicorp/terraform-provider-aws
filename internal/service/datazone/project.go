@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -327,10 +326,10 @@ func (r *projectResource) ImportState(ctx context.Context, req resource.ImportSt
 }
 
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ProjectStatusActive),
-		Refresh:                   statusProject(ctx, conn, domain, identifier),
+		Refresh:                   statusProject(conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            40,
 		ContinuousTargetOccurence: 10,
@@ -345,10 +344,10 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 }
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:       []string{},
-		Refresh:      statusProject(ctx, conn, domain, identifier),
+		Refresh:      statusProject(conn, domain, identifier),
 		Delay:        5 * time.Second,
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
@@ -362,8 +361,8 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	return nil, err
 }
 
-func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProject(conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -393,9 +392,8 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	out, err := conn.GetProject(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err

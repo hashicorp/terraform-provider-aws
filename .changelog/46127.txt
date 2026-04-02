@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.oauth.default_return_url` and `credential_provider_configuration.oauth.grant_type` arguments
+```
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Retry IAM eventual consistency errors on Create
+```

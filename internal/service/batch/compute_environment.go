@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,7 +37,6 @@ import (
 // @SDKResource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.ComputeEnvironmentDetail")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -300,7 +298,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	computeEnvironmentName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	computeEnvironmentName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	computeEnvironmentType := awstypes.CEType(d.Get(names.AttrType).(string))
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
@@ -730,9 +728,8 @@ func findComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Client,
 	}
 
 	if status := output.Status; status == awstypes.CEStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -766,8 +763,8 @@ func findComputeEnvironmentDetails(ctx context.Context, conn *batch.Client, inpu
 	return output, nil
 }
 
-func statusComputeEnvironment(ctx context.Context, conn *batch.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusComputeEnvironment(conn *batch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findComputeEnvironmentDetailByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -783,10 +780,10 @@ func statusComputeEnvironment(ctx context.Context, conn *batch.Client, name stri
 }
 
 func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CEStatusCreating),
 		Target:  enum.Slice(awstypes.CEStatusValid),
-		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -802,10 +799,10 @@ func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name
 }
 
 func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CEStatusUpdating),
 		Target:  enum.Slice(awstypes.CEStatusValid),
-		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -821,10 +818,10 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name
 }
 
 func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CEStatusDeleting),
 		Target:  []string{},
-		Refresh: statusComputeEnvironment(ctx, conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 

@@ -32,7 +32,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -85,7 +85,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -131,7 +131,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -170,7 +170,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -197,7 +197,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_null(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -209,7 +209,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -264,7 +264,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_EmptyMap(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -276,7 +276,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -327,7 +327,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_AddOnUpdate(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -339,7 +339,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -348,7 +348,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -371,7 +371,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -408,7 +408,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -420,7 +420,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -431,7 +431,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -469,7 +469,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -496,7 +496,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -508,7 +508,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -519,7 +519,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -550,7 +550,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -594,7 +594,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -631,7 +631,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -643,7 +643,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Replace(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -654,7 +654,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -684,7 +684,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Replace(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -720,7 +720,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Replace(t *testin
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -732,7 +732,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -744,7 +744,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -786,7 +786,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -830,7 +830,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -868,7 +868,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -896,7 +896,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -908,7 +908,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -922,7 +922,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -974,7 +974,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1025,7 +1025,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1053,7 +1053,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testi
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1065,7 +1065,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1079,7 +1079,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1130,7 +1130,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1185,7 +1185,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1226,7 +1226,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1238,7 +1238,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToProviderOnly(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1249,7 +1249,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToProviderOnly(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1281,7 +1281,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToProviderOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1316,7 +1316,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToProviderOnly(t 
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1328,7 +1328,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToResourceOnly(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1340,7 +1340,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToResourceOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1367,7 +1367,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToResourceOnly(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1405,7 +1405,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToResourceOnly(t 
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1417,7 +1417,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyResourceTag(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1431,7 +1431,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyResourceTag(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1471,7 +1471,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyResourceTag(t *tes
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1483,7 +1483,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyProviderOnlyTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1495,7 +1495,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyProviderOnlyTag(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1529,7 +1529,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyProviderOnlyTag(t 
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1541,7 +1541,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullOverlappingResource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1555,7 +1555,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullOverlappingResource
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1592,7 +1592,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullOverlappingResource
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1604,7 +1604,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullNonOverlappingResou
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1618,7 +1618,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullNonOverlappingResou
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1655,7 +1655,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullNonOverlappingResou
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1667,7 +1667,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnCreate(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1676,7 +1676,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnCreate(t *testing.T) 
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1711,7 +1711,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnCreate(t *testing.T) 
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1723,7 +1723,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Add(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1734,7 +1734,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Add(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1765,7 +1765,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Add(t *testing
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1808,7 +1808,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Add(t *testing
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1820,7 +1820,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Replace(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1831,7 +1831,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Replace(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1860,7 +1860,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Replace(t *tes
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1895,7 +1895,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Replace(t *tes
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -1907,7 +1907,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1925,7 +1925,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1973,7 +1973,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2021,7 +2021,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2057,7 +2057,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *te
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v medialive.DescribeInputSecurityGroupOutput
@@ -2069,7 +2069,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_ResourceTag(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2085,7 +2085,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_ResourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2147,7 +2147,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_ResourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2209,7 +2209,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_ResourceTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &v),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

@@ -23,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -126,7 +124,7 @@ func (r *userProfileResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(create.UniqueId(ctx))
 	out, err := conn.CreateUserProfile(ctx, in)
 	if resp.Diagnostics.HasError() {
 		return
@@ -273,9 +271,8 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	out, err := conn.GetUserProfile(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

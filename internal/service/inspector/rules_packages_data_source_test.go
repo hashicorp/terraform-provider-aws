@@ -13,7 +13,7 @@ import (
 
 func TestAccInspectorRulesPackagesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{PreCheck: func() {
+	acctest.ParallelTest(ctx, t, resource.TestCase{PreCheck: func() {
 		acctest.PreCheck(ctx, t)
 		testAccPreCheck(ctx, t)
 	}, ErrorCheck: acctest.ErrorCheck(t, names.InspectorServiceID),

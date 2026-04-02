@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,10 +14,10 @@ import (
 
 func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	lbName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	lbName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sharedTagVal := sdkacctest.RandString(32)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	lbName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	lbName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sharedTagVal := acctest.RandString(t, 32)
 
 	resource1 := "aws_lb.test1"
 	resource2 := "aws_lb.test2"
@@ -27,13 +26,13 @@ func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 	dataSourceNameMatchBothTag := "data.aws_lbs.tag_match_shared"
 	dataSourceNameMatchNoneTag := "data.aws_lbs.tag_match_none"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancersDataSourceConfig_basic(rName, lbName1, lbName2, sharedTagVal),

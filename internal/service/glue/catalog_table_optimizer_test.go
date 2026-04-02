@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/glue"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
@@ -27,18 +25,18 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -63,18 +61,18 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_update(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -85,7 +83,7 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 			{
 				Config: testAccCatalogTableOptimizerConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -103,18 +101,18 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalogTableOptimizer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -129,18 +127,18 @@ func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_retentionConfiguration(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -162,7 +160,7 @@ func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 			{
 				Config: testAccCatalogTableOptimizerConfig_retentionConfiguration(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -184,18 +182,18 @@ func testAccCatalogTableOptimizer_RetentionConfigurationWithRunRateInHours(t *te
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_retentionConfigurationWithRunRateInHours(rName, 7, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -217,7 +215,7 @@ func testAccCatalogTableOptimizer_RetentionConfigurationWithRunRateInHours(t *te
 			{
 				Config: testAccCatalogTableOptimizerConfig_retentionConfigurationWithRunRateInHours(rName, 6, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -239,18 +237,18 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfiguration(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -271,7 +269,7 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 			{
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfiguration(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -292,18 +290,18 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHour
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfigurationWithRunRateInHours(rName, 7, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -324,7 +322,7 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHour
 			{
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfigurationWithRunRateInHours(rName, 6, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -351,7 +349,7 @@ func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.Impor
 	}
 }
 
-func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName string, catalogTableOptimizer *glue.GetTableOptimizerOutput) resource.TestCheckFunc {
+func testAccCheckCatalogTableOptimizerExists(ctx context.Context, t *testing.T, resourceName string, catalogTableOptimizer *glue.GetTableOptimizerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -362,7 +360,7 @@ func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName s
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, resourceName, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 		resp, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
 			rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 
@@ -376,14 +374,14 @@ func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName s
 	}
 }
 
-func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_catalog_table_optimizer" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 			_, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
 				rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 

@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -327,18 +327,8 @@ func resourceBroker() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Set:      resourceUserHash,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
-					// User list is not returned back after creation.
-					// Updates to users can only be in the RabbitMQ UI.
-					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get(names.AttrARN).(string) != "" {
-						return true
-					}
-
-					return false
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -402,7 +392,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	input := &mq.CreateBrokerInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
+		CreatorRequestId:        aws.String(sdkid.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
 		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -522,14 +512,18 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
-	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
+	// AWS does not return user information for RabbitMQ brokers after creation.
+	// Skip setting user state to prevent non-idempotent behavior.
+	if !strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) || d.IsNewResource() {
+		rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
+		}
 
-	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
+		}
 	}
 
 	setTagsOut(ctx, output.Tags)

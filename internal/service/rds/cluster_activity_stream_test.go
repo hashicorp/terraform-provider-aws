@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ import (
 func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
+					testAccCheckClusterActivityStreamExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_native_audit_fields_included", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 				),
@@ -56,22 +54,22 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
+					testAccCheckClusterActivityStreamExists(ctx, t, resourceName, &dbCluster),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceClusterActivityStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,14 +78,14 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterActivityStreamExists(ctx context.Context, n string, v *types.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterActivityStreamExists(ctx context.Context, t *testing.T, n string, v *types.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 
@@ -101,9 +99,9 @@ func testAccCheckClusterActivityStreamExists(ctx context.Context, n string, v *t
 	}
 }
 
-func testAccCheckClusterActivityStreamDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterActivityStreamDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_activity_stream" {

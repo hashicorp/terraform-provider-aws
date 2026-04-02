@@ -17,7 +17,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -305,9 +304,8 @@ func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.MountTargetNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -337,17 +335,16 @@ func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMountTargetLifeCycleState(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMountTargetByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -363,10 +360,10 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id s
 }
 
 func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
-		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
+		Refresh:    statusMountTargetLifeCycleState(conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -382,10 +379,10 @@ func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, ti
 }
 
 func waitMountTargetDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted),
 		Target:     []string{},
-		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
+		Refresh:    statusMountTargetLifeCycleState(conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,

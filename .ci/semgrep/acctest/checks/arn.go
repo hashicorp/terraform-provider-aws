@@ -35,6 +35,8 @@ func test1(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					// todoruleid: arn-resourceattrset
 					resource.TestCheckResourceAttrSet(resourceName, "some_other_arn"),
+					// ruleid: arn-matchresourceattr
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:aws:arc-region-switch:.*:.*:plan/.+`)),
 				),
 			},
 		},

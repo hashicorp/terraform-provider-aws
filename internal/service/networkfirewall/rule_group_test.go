@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,19 +22,19 @@ import (
 func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -67,19 +65,19 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_referenceSets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -104,19 +102,19 @@ func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_referenceSets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -137,7 +135,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_referenceSets1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -157,19 +155,19 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -207,19 +205,19 @@ func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicStateless(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -253,19 +251,19 @@ func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_Basic_statelessRuleIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicStatelessIPv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -299,21 +297,21 @@ func TestAccNetworkFirewallRuleGroup_Basic_statelessRuleIPv6(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_Basic_rules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 	rules := `#test comment
 alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basic(rName, rules),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -339,20 +337,20 @@ alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:
 func TestAccNetworkFirewallRuleGroup_statefulRuleOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_statefulOptions(rName, rules, "STRICT_ORDER"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", string(awstypes.RuleOrderStrictOrder)),
 				),
@@ -369,20 +367,20 @@ func TestAccNetworkFirewallRuleGroup_statefulRuleOptions(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup1, ruleGroup2, ruleGroup3 networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_statefulOptions(rName, rules, "STRICT_ORDER"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup1),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", string(awstypes.RuleOrderStrictOrder)),
 				),
@@ -390,7 +388,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_statefulOptions(rName, rules, "DEFAULT_ACTION_ORDER"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup2),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup2),
 					testAccCheckRuleGroupRecreated(&ruleGroup1, &ruleGroup2),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", string(awstypes.RuleOrderDefaultActionOrder)),
@@ -399,7 +397,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_sourceString(rName, rules),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup3),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup3),
 					testAccCheckRuleGroupNotRecreated(&ruleGroup2, &ruleGroup3),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
 				),
@@ -416,19 +414,19 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_statelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -467,28 +465,28 @@ func TestAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T)
 func TestAccNetworkFirewallRuleGroup_updateRules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	rules := `pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; content:"OLD.example.com"; msg:"FQDN test"; sid:1;)`
 	updatedRules := `pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; content:"NEW.example.com"; msg:"FQDN test"; sid:1;)`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basic(rName, rules),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_basic(rName, updatedRules),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rules", updatedRules),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
@@ -509,25 +507,25 @@ func TestAccNetworkFirewallRuleGroup_updateRules(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_updateSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -556,19 +554,19 @@ func TestAccNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_sourceListVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
@@ -585,7 +583,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_sourceListUpdateVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
@@ -617,7 +615,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_basicSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
@@ -637,25 +635,25 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_updateStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", "1"),
@@ -693,26 +691,26 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_multipleStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", "1"),
@@ -742,7 +740,7 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_updateStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", "1"),
@@ -770,19 +768,19 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionAlert)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionAlert)),
 				),
@@ -795,7 +793,7 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionPass)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 				),
@@ -808,7 +806,7 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionDrop)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionDrop)),
 				),
@@ -821,7 +819,7 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionReject)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionReject)),
 				),
@@ -839,19 +837,19 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_StatefulRule_header(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_statefulHeader(rName, "1990", "1994"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", "1"),
@@ -872,7 +870,7 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_header(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_statefulHeader(rName, "ANY", "ANY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", "1"),
@@ -897,25 +895,25 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_header(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicStateless(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_updateStateless(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
 						names.AttrPriority:                                        "10",
 						"rule_definition.#":                                       "1",
@@ -948,19 +946,19 @@ func TestAccNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -973,7 +971,7 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -993,19 +991,19 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_encryptionConfiguration(rName, "ALLOWLIST"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 				),
@@ -1018,14 +1016,14 @@ func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_encryptionConfigurationDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_encryptionConfiguration(rName, "ALLOWLIST"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 				),
@@ -1033,7 +1031,7 @@ func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_encryptionConfiguration(rName, "DENYLIST"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 				),
@@ -1045,19 +1043,19 @@ func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 func TestAccNetworkFirewallRuleGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basicSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkfirewall.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -1066,14 +1064,14 @@ func TestAccNetworkFirewallRuleGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRuleGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_rule_group" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 			_, err := tfnetworkfirewall.FindRuleGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -1092,14 +1090,14 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRuleGroupExists(ctx context.Context, n string, v *networkfirewall.DescribeRuleGroupOutput) resource.TestCheckFunc {
+func testAccCheckRuleGroupExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindRuleGroupByARN(ctx, conn, rs.Primary.ID)
 

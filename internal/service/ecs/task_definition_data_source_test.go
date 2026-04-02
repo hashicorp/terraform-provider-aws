@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ import (
 func TestAccECSTaskDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,9 +43,9 @@ func TestAccECSTaskDefinitionDataSource_basic(t *testing.T) {
 func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -85,9 +84,9 @@ func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 func TestAccECSTaskDefinitionDataSource_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -120,9 +119,9 @@ func TestAccECSTaskDefinitionDataSource_fargate(t *testing.T) {
 func TestAccECSTaskDefinitionDataSource_proxyConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_task_definition.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

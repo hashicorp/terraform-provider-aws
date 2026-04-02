@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPC_Identity_Basic(t *testing.T) {
+func TestAccVPC_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Vpc
@@ -98,7 +98,7 @@ func TestAccVPC_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPC_Identity_RegionOverride(t *testing.T) {
+func TestAccVPC_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc.test"
@@ -181,7 +181,7 @@ func TestAccVPC_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.15.0
-func TestAccVPC_Identity_ExistingResource(t *testing.T) {
+func TestAccVPC_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Vpc
@@ -234,7 +234,7 @@ func TestAccVPC_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.15.0
-func TestAccVPC_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccVPC_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Vpc

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,10 +23,10 @@ func TestAccM2Deployment_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var deployment m2.GetDeploymentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -36,12 +34,12 @@ func TestAccM2Deployment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
@@ -60,10 +58,10 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var deployment m2.GetDeploymentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -71,12 +69,12 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceDeployment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -91,10 +89,10 @@ func TestAccM2Deployment_start(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var deployment m2.GetDeploymentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -102,12 +100,12 @@ func TestAccM2Deployment_start(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
@@ -119,7 +117,7 @@ func TestAccM2Deployment_start(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
@@ -133,10 +131,10 @@ func TestAccM2Deployment_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var deployment m2.GetDeploymentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -144,19 +142,19 @@ func TestAccM2Deployment_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
 				),
 			},
@@ -169,9 +167,9 @@ func TestAccM2Deployment_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDeploymentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_m2_deployment" {
@@ -195,14 +193,14 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, n string, v *m2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, t *testing.T, n string, v *m2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 		output, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["deployment_id"])
 

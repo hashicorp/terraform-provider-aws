@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.RouteData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccRouteImportStateIdFunc)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -908,9 +906,8 @@ func findRouteByFourPartKey(ctx context.Context, conn *appmesh.Client, meshName,
 	}
 
 	if output.Status.Status == awstypes.RouteStatusCodeDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.Status.Status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(output.Status.Status),
 		}
 	}
 
@@ -921,9 +918,8 @@ func findRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.Describ
 	output, err := conn.DescribeRoute(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

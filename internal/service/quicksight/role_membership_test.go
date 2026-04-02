@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,7 +24,7 @@ func testAccRoleMembership_basic(t *testing.T) {
 	role := string(awstypes.RoleReader)
 	resourceName := "aws_quicksight_role_membership.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.QuickSightEndpointID)
@@ -34,12 +33,12 @@ func testAccRoleMembership_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleMembershipConfig_basic(role, memberName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoleMembershipExists(ctx, resourceName),
+					testAccCheckRoleMembershipExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "member_name", memberName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
 				),
@@ -61,7 +60,7 @@ func testAccRoleMembership_disappears(t *testing.T) {
 	role := string(awstypes.RoleReader)
 	resourceName := "aws_quicksight_role_membership.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.QuickSightEndpointID)
@@ -70,12 +69,12 @@ func testAccRoleMembership_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleMembershipConfig_basic(role, memberName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoleMembershipExists(ctx, resourceName),
+					testAccCheckRoleMembershipExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceRoleMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -91,7 +90,7 @@ func testAccRoleMembership_role(t *testing.T) {
 	roleUpdated := string(awstypes.RoleAuthor)
 	resourceName := "aws_quicksight_role_membership.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.QuickSightEndpointID)
@@ -100,12 +99,12 @@ func testAccRoleMembership_role(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleMembershipDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleMembershipConfig_basic(role, memberName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoleMembershipExists(ctx, resourceName),
+					testAccCheckRoleMembershipExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "member_name", memberName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
 				),
@@ -113,7 +112,7 @@ func testAccRoleMembership_role(t *testing.T) {
 			{
 				Config: testAccRoleMembershipConfig_basic(roleUpdated, memberName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoleMembershipExists(ctx, resourceName),
+					testAccCheckRoleMembershipExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "member_name", memberName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, roleUpdated),
 				),
@@ -127,9 +126,9 @@ func testAccRoleMembership_role(t *testing.T) {
 	})
 }
 
-func testAccCheckRoleMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRoleMembershipDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_role_membership" {
@@ -153,14 +152,14 @@ func testAccCheckRoleMembershipDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckRoleMembershipExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckRoleMembershipExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
 
 		err := tfquicksight.FindRoleMembershipByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes[names.AttrNamespace], awstypes.Role(rs.Primary.Attributes[names.AttrRole]), rs.Primary.Attributes["member_name"])
 

@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ import (
 func testAccOrganizationalUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var unit awstypes.OrganizationalUnit
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("ou/"+organizationIDRegexPattern+"/ou-[0-9a-z]{4}-[0-9a-z]{8}$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -57,22 +55,22 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 func testAccOrganizationalUnit_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var unit awstypes.OrganizationalUnit
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &unit),
 					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourceOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,23 +82,23 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 func testAccOrganizationalUnit_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var unit awstypes.OrganizationalUnit
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
@@ -112,7 +110,7 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -120,9 +118,9 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationalUnitDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationalUnitDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_organizational_unit" {
@@ -146,14 +144,14 @@ func testAccCheckOrganizationalUnitDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckOrganizationalUnitExists(ctx context.Context, n string, v *awstypes.OrganizationalUnit) resource.TestCheckFunc {
+func testAccCheckOrganizationalUnitExists(ctx context.Context, t *testing.T, n string, v *awstypes.OrganizationalUnit) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindOrganizationalUnitByID(ctx, conn, rs.Primary.ID)
 

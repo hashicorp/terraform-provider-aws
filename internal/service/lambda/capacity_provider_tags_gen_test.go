@@ -36,7 +36,7 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -94,7 +94,7 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -144,7 +144,7 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -187,7 +187,7 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -217,7 +217,7 @@ func TestAccLambdaCapacityProvider_tags(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_null(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -233,7 +233,7 @@ func TestAccLambdaCapacityProvider_tags_null(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +245,7 @@ func TestAccLambdaCapacityProvider_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -288,7 +288,7 @@ func TestAccLambdaCapacityProvider_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_EmptyMap(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -304,7 +304,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyMap(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -314,7 +314,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -347,7 +347,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -363,7 +363,7 @@ func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -373,7 +373,7 @@ func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -396,7 +396,7 @@ func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -436,7 +436,7 @@ func TestAccLambdaCapacityProvider_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -452,7 +452,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -464,7 +464,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -507,7 +507,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -537,7 +537,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -553,7 +553,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -565,7 +565,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -597,7 +597,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -647,7 +647,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -687,7 +687,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -703,7 +703,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -715,7 +715,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -746,7 +746,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -786,7 +786,7 @@ func TestAccLambdaCapacityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -802,7 +802,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -815,7 +815,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -861,7 +861,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -909,7 +909,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -951,7 +951,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -982,7 +982,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -998,7 +998,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1013,7 +1013,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1069,7 +1069,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1124,7 +1124,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1155,7 +1155,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nonOverlapping(t *testing.T)
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1171,7 +1171,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1186,7 +1186,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1241,7 +1241,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1300,7 +1300,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1344,7 +1344,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1360,7 +1360,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *test
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1372,7 +1372,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1405,7 +1405,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1443,7 +1443,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToProviderOnly(t *test
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1459,7 +1459,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *test
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1472,7 +1472,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1500,7 +1500,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1541,7 +1541,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_updateToResourceOnly(t *test
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1557,7 +1557,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyResourceTag(t *testing.
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1572,7 +1572,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyResourceTag(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1616,7 +1616,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyResourceTag(t *testing.
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1632,7 +1632,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *test
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1645,7 +1645,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1683,7 +1683,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *test
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1699,7 +1699,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullOverlappingResourceTag(t
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1714,7 +1714,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullOverlappingResourceTag(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1761,7 +1761,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullOverlappingResourceTag(t
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1777,7 +1777,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullNonOverlappingResourceTa
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1792,7 +1792,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullNonOverlappingResourceTa
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1841,7 +1841,7 @@ func TestAccLambdaCapacityProvider_tags_DefaultTags_nullNonOverlappingResourceTa
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1857,7 +1857,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1867,7 +1867,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1905,7 +1905,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -1921,7 +1921,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1933,7 +1933,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1965,7 +1965,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2011,7 +2011,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -2027,7 +2027,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2039,7 +2039,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2069,7 +2069,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2107,7 +2107,7 @@ func TestAccLambdaCapacityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -2123,7 +2123,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2142,7 +2142,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2191,7 +2191,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2240,7 +2240,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2276,7 +2276,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 	})
 }
 
-func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccLambdaCapacityProvider_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -2292,7 +2292,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2309,7 +2309,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2367,7 +2367,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2424,7 +2424,7 @@ func TestAccLambdaCapacityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

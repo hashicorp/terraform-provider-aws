@@ -191,10 +191,11 @@ func main() {
 			}
 
 			commonConfig := commonConfig{
-				AdditionalTfVars:     additionalTfVars,
-				RequiredEnvVars:      resource.RequiredEnvVars,
-				RequiredEnvVarValues: resource.RequiredEnvVarValues,
-				WithRName:            (resource.Generator != ""),
+				AdditionalTfVars:      additionalTfVars,
+				RequiredEnvVars:       resource.RequiredEnvVars,
+				RequiredEnvVarValues:  resource.RequiredEnvVarValues,
+				WithRName:             (resource.Generator != ""),
+				AlternateRegionTfVars: resource.AlternateRegionTfVars,
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
@@ -429,12 +430,13 @@ func (d ResourceDatum) HasRegionAttribute() bool {
 }
 
 type commonConfig struct {
-	AdditionalTfVars     []string
-	WithRName            bool
-	WithRegion           bool
-	ExternalProviders    map[string]requiredProvider
-	RequiredEnvVars      []string
-	RequiredEnvVarValues []string
+	AdditionalTfVars      []string
+	WithRName             bool
+	WithRegion            bool
+	AlternateRegionTfVars bool
+	ExternalProviders     map[string]requiredProvider
+	RequiredEnvVars       []string
+	RequiredEnvVarValues  []string
 }
 
 type requiredProvider struct {
@@ -739,7 +741,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.PreIdentityVersion = v5_100_0
 			}
 			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
-				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
 				return
 			}
 			if d.IsARNIdentity() {

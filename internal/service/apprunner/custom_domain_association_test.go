@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,20 +19,20 @@ import (
 func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomDomainAssociationExists(ctx, resourceName),
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
@@ -56,19 +54,19 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomDomainAssociationExists(ctx, resourceName),
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,14 +75,14 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apprunner_connection" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).AppRunnerClient(ctx)
 
 			_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
 
@@ -103,14 +101,14 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckCustomDomainAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCustomDomainAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppRunnerClient(ctx)
 
 		_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["service_arn"])
 

@@ -50,8 +50,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbClusterResource{}
 

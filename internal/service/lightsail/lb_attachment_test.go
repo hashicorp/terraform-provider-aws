@@ -11,11 +11,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
@@ -25,10 +23,10 @@ import (
 func testAccLoadBalancerAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_attachment.test"
-	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	lbName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	liName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -36,12 +34,12 @@ func testAccLoadBalancerAttachment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerAttachmentConfig_basic(lbName, liName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerAttachmentExists(ctx, resourceName, &liName),
+					testAccCheckLoadBalancerAttachmentExists(ctx, t, resourceName, &liName),
 					resource.TestCheckResourceAttr(resourceName, "lb_name", lbName),
 					resource.TestCheckResourceAttr(resourceName, "instance_name", liName),
 				),
@@ -53,10 +51,10 @@ func testAccLoadBalancerAttachment_basic(t *testing.T) {
 func testAccLoadBalancerAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_attachment.test"
-	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	lbName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	liName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -64,12 +62,12 @@ func testAccLoadBalancerAttachment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerAttachmentConfig_basic(lbName, liName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerAttachmentExists(ctx, resourceName, &liName),
+					testAccCheckLoadBalancerAttachmentExists(ctx, t, resourceName, &liName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceLoadBalancerAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,7 +76,7 @@ func testAccLoadBalancerAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLoadBalancerAttachmentExists(ctx context.Context, n string, liName *string) resource.TestCheckFunc {
+func testAccCheckLoadBalancerAttachmentExists(ctx context.Context, t *testing.T, n string, liName *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -89,7 +87,7 @@ func testAccCheckLoadBalancerAttachmentExists(ctx context.Context, n string, liN
 			return errors.New("No LightsailLoadBalancerAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		out, err := tflightsail.FindLoadBalancerAttachmentById(ctx, conn, rs.Primary.ID)
 
@@ -107,14 +105,14 @@ func testAccCheckLoadBalancerAttachmentExists(ctx context.Context, n string, liN
 	}
 }
 
-func testAccCheckLoadBalancerAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLoadBalancerAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_lb_attachment" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 			_, err := tflightsail.FindLoadBalancerAttachmentById(ctx, conn, rs.Primary.ID)
 

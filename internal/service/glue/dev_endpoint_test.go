@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,19 +23,19 @@ func TestAccGlueDevEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("devEndpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -59,19 +58,19 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_arguments(rName, "--arg1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", acctest.CtValue1),
 				),
@@ -84,7 +83,7 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_arguments2(rName, "--arg1", acctest.CtValue1Updated, "--arg2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", acctest.CtValue2),
@@ -93,7 +92,7 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_arguments(rName, "--arg2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", acctest.CtValue2),
 				),
@@ -106,28 +105,28 @@ func TestAccGlueDevEndpoint_extraJarsS3Path(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	extraJarsS3Path := "foo"
 	extraJarsS3PathUpdated := "bar"
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_extraJarsS3Path(rName, extraJarsS3Path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "extra_jars_s3_path", extraJarsS3Path),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_extraJarsS3Path(rName, extraJarsS3PathUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "extra_jars_s3_path", extraJarsS3PathUpdated),
 				),
 			},
@@ -144,28 +143,28 @@ func TestAccGlueDevEndpoint_extraPythonLibsS3Path(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	extraPythonLibsS3Path := "foo"
 	extraPythonLibsS3PathUpdated := "bar"
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_extraPythonLibsS3Path(rName, extraPythonLibsS3Path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "extra_python_libs_s3_path", extraPythonLibsS3Path),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_extraPythonLibsS3Path(rName, extraPythonLibsS3PathUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "extra_python_libs_s3_path", extraPythonLibsS3PathUpdated),
 				),
 			},
@@ -182,14 +181,14 @@ func TestAccGlueDevEndpoint_glueVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDevEndpointConfig_version(rName, "1"),
@@ -198,14 +197,14 @@ func TestAccGlueDevEndpoint_glueVersion(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_version(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_version(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
@@ -222,14 +221,14 @@ func TestAccGlueDevEndpoint_numberOfNodes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDevEndpointConfig_numberOfNodes(rName, 1),
@@ -238,14 +237,14 @@ func TestAccGlueDevEndpoint_numberOfNodes(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_numberOfNodes(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_numberOfNodes(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
 				),
 			},
@@ -262,14 +261,14 @@ func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDevEndpointConfig_numberOfWorkers(rName, 1),
@@ -278,14 +277,14 @@ func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_numberOfWorkers(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "2"),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_numberOfWorkers(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "5"),
 				),
 			},
@@ -302,7 +301,7 @@ func TestAccGlueDevEndpoint_publicKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	publicKey1, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -314,23 +313,23 @@ func TestAccGlueDevEndpoint_publicKey(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_publicKey(rName, publicKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey1),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_publicKey(rName, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey2),
 				),
 			},
@@ -347,7 +346,7 @@ func TestAccGlueDevEndpoint_publicKeys(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	publicKey1, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -367,30 +366,30 @@ func TestAccGlueDevEndpoint_publicKeys(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_publicKeys2(rName, publicKey1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "2"),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_publicKeys3(rName, publicKey1, publicKey3, publicKey4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "3"),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_publicKeys4(rName, publicKey1, publicKey1, publicKey3, publicKey4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "3"),
 				),
 			},
@@ -407,19 +406,19 @@ func TestAccGlueDevEndpoint_security(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_securityConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", rName),
 				),
 			},
@@ -437,19 +436,19 @@ func TestAccGlueDevEndpoint_SubnetID_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_subnetIDSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
@@ -469,19 +468,19 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint1, endpoint2, endpoint3 awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint1),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -494,7 +493,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint2),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -503,7 +502,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccDevEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint3),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -516,33 +515,33 @@ func TestAccGlueDevEndpoint_workerType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_workerTypeStandard(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", string(awstypes.WorkerTypeStandard)),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_workerType(rName, string(awstypes.WorkerTypeG1x)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", string(awstypes.WorkerTypeG1x)),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_workerType(rName, string(awstypes.WorkerTypeG2x)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", string(awstypes.WorkerTypeG2x)),
 				),
 			},
@@ -559,19 +558,19 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckDevEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceDevEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -580,7 +579,7 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDevEndpointExists(ctx context.Context, n string, v *awstypes.DevEndpoint) resource.TestCheckFunc {
+func testAccCheckDevEndpointExists(ctx context.Context, t *testing.T, n string, v *awstypes.DevEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -591,7 +590,7 @@ func testAccCheckDevEndpointExists(ctx context.Context, n string, v *awstypes.De
 			return fmt.Errorf("No Glue Dev Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		output, err := tfglue.FindDevEndpointByName(ctx, conn, rs.Primary.ID)
 
@@ -605,9 +604,9 @@ func testAccCheckDevEndpointExists(ctx context.Context, n string, v *awstypes.De
 	}
 }
 
-func testAccCheckDevEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDevEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_dev_endpoint" {

@@ -14,11 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -31,6 +30,7 @@ import (
 
 // @SDKResource("aws_eks_identity_provider_config", name="Identity Provider Config")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdentityProviderConfigCreate,
@@ -139,7 +139,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]any)[0].(map[string]any))
 	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
 	input := &eks.AssociateIdentityProviderConfigInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(create.UniqueId(ctx)),
 		ClusterName:        aws.String(clusterName),
 		Oidc:               oidc,
 		Tags:               getTagsIn(ctx),
@@ -249,9 +249,8 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 	output, err := conn.DescribeIdentityProviderConfig(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -266,8 +265,8 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 	return output.IdentityProviderConfig.Oidc, nil
 }
 
-func statusOIDCIdentityProviderConfig(ctx context.Context, conn *eks.Client, clusterName, configName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOIDCIdentityProviderConfig(conn *eks.Client, clusterName, configName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
 
 		if retry.NotFound(err) {
@@ -283,10 +282,10 @@ func statusOIDCIdentityProviderConfig(ctx context.Context, conn *eks.Client, clu
 }
 
 func waitOIDCIdentityProviderConfigCreated(ctx context.Context, conn *eks.Client, clusterName, configName string, timeout time.Duration) (*types.OidcIdentityProviderConfig, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigStatusCreating),
 		Target:  enum.Slice(types.ConfigStatusActive),
-		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
+		Refresh: statusOIDCIdentityProviderConfig(conn, clusterName, configName),
 		Timeout: timeout,
 	}
 
@@ -300,10 +299,10 @@ func waitOIDCIdentityProviderConfigCreated(ctx context.Context, conn *eks.Client
 }
 
 func waitOIDCIdentityProviderConfigDeleted(ctx context.Context, conn *eks.Client, clusterName, configName string, timeout time.Duration) (*types.OidcIdentityProviderConfig, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigStatusActive, types.ConfigStatusDeleting),
 		Target:  []string{},
-		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
+		Refresh: statusOIDCIdentityProviderConfig(conn, clusterName, configName),
 		Timeout: timeout,
 	}
 

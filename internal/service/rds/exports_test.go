@@ -71,7 +71,35 @@ var (
 	WaitDBInstanceAvailable                    = waitDBInstanceAvailable
 	WaitDBInstanceDeleted                      = waitDBInstanceDeleted
 
+	ClusterEngineAuroraMySQL           = clusterEngineAuroraMySQL
+	ClusterEngineAuroraPostgreSQL      = clusterEngineAuroraPostgreSQL
+	ClusterEngineMySQL                 = clusterEngineMySQL
+	ClusterEnginePostgres              = clusterEnginePostgres
 	ErrCodeInvalidAction               = errCodeInvalidAction
 	ErrCodeInvalidParameterCombination = errCodeInvalidParameterCombination
 	ErrCodeInvalidParameterValue       = errCodeInvalidParameterValue
+	InstanceEngineAuroraMySQL          = instanceEngineAuroraMySQL
+	InstanceEngineAuroraPostgreSQL     = instanceEngineAuroraPostgreSQL
+	InstanceEngineDB2Advanced          = instanceEngineDB2Advanced
+	InstanceEngineDB2Standard          = instanceEngineDB2Standard
+	InstanceEngineMariaDB              = instanceEngineMariaDB
+	InstanceEngineMySQL                = instanceEngineMySQL
+	InstanceEngineOracleEnterprise     = instanceEngineOracleEnterprise
+	InstanceEngineOracleEnterpriseCDB  = instanceEngineOracleEnterpriseCDB
+	InstanceEngineOracleStandard2      = instanceEngineOracleStandard2
+	InstanceEngineOracleStandard2CDB   = instanceEngineOracleStandard2CDB
+	InstanceEnginePostgres             = instanceEnginePostgres
+	InstanceEngineSQLServerEnterprise  = instanceEngineSQLServerEnterprise
+	InstanceEngineSQLServerExpress     = instanceEngineSQLServerExpress
+	InstanceEngineSQLServerStandard    = instanceEngineSQLServerStandard
+	InstanceEngineSQLServerWeb         = instanceEngineSQLServerWeb
+
+	ValidEventSubscriptionName       = validEventSubscriptionName
+	ValidEventSubscriptionNamePrefix = validEventSubscriptionNamePrefix
+	ValidOptionGroupName             = validOptionGroupName
+	ValidOptionGroupNamePrefix       = validOptionGroupNamePrefix
+	ValidParamGroupName              = validParamGroupName
+	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
+	ValidSubnetGroupName             = validSubnetGroupName
+	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 )

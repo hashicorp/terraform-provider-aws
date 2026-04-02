@@ -35,9 +35,9 @@ type dataSourceNetworkPeeringConnectionsList struct {
 
 func (d *dataSourceNetworkPeeringConnectionsList) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{},
-		Blocks: map[string]schema.Block{
-			"odb_peering_connections": schema.ListNestedBlock{
+		Attributes: map[string]schema.Attribute{
+			"odb_peering_connections": schema.ListAttribute{
+				Computed:    true,
 				Description: "The list of ODB peering connections. A summary of an ODB peering connection.",
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNetworkPeeringConnectionSummaryDataSourceModel](ctx),
 			},

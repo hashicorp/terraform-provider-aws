@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,16 +32,16 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -51,8 +49,8 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
-					testAccCheckBotNotExists(ctx, testBotName, "1"),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
+					testAccCheckBotNotExists(ctx, t, testBotName, "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.#", "1"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lex", "bot:{name}"),
@@ -105,17 +103,17 @@ func testAccBot_createVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -123,8 +121,8 @@ func testAccBot_createVersion(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v1),
-					testAccCheckBotNotExists(ctx, testBotName, "1"),
+					testAccCheckBotExists(ctx, t, resourceName, &v1),
+					testAccCheckBotNotExists(ctx, t, testBotName, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
 				),
@@ -141,7 +139,7 @@ func testAccBot_createVersion(t *testing.T) {
 					testAccBotConfig_createVersion(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExistsWithVersion(ctx, resourceName, "1", &v2),
+					testAccCheckBotExistsWithVersion(ctx, t, resourceName, "1", &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
 				),
@@ -154,16 +152,16 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -171,7 +169,7 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 					testAccBotConfig_abortStatement(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.0.message.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.0.message.0.content", "Sorry, I'm not able to assist at this time"),
@@ -192,7 +190,7 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 					testAccBotConfig_abortStatementUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.0.message.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.0.message.0.content", "Sorry, I'm not able to assist at this time"),
 					resource.TestCheckResourceAttr(resourceName, "abort_statement.0.message.0.content_type", "PlainText"),
@@ -217,16 +215,16 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -234,7 +232,7 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 					testAccBotConfig_clarificationPrompt(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "clarification_prompt.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "clarification_prompt.0.max_attempts", "2"),
 					resource.TestCheckResourceAttr(resourceName, "clarification_prompt.0.message.#", "1"),
@@ -259,7 +257,7 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 					testAccBotConfig_clarificationPromptUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "clarification_prompt.0.max_attempts", "3"),
 					resource.TestCheckResourceAttr(resourceName, "clarification_prompt.0.message.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "clarification_prompt.0.response_card", "I didn't understand you, what would you like to do?"),
@@ -282,16 +280,16 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -299,7 +297,7 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -314,7 +312,7 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 					testAccBotConfig_childDirectedUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "child_directed", acctest.CtTrue),
 				),
 			},
@@ -332,16 +330,16 @@ func TestAccLexModelsBot_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -349,7 +347,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -364,7 +362,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 					testAccBotConfig_descriptionUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Bot to order flowers"),
 				),
 			},
@@ -382,16 +380,16 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -399,7 +397,7 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -414,7 +412,7 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 					testAccBotConfig_detectSentimentUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "detect_sentiment", acctest.CtTrue),
 				),
 			},
@@ -432,16 +430,16 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -449,7 +447,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -464,7 +462,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 					testAccBotConfig_enableModelImprovementsUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enable_model_improvements", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "nlu_intent_confidence_threshold", "0.5"),
 				),
@@ -483,16 +481,16 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -500,7 +498,7 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -515,7 +513,7 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 					testAccBotConfig_idleSessionTTLInSecondsUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", "600"),
 				),
 			},
@@ -533,16 +531,16 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -550,7 +548,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -565,7 +563,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 					testAccBotConfig_intentsUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "intent.#", "2"),
 				),
 			},
@@ -589,16 +587,16 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 	intentResourceName := "aws_lex_intent.test"
 	intentResourceName2 := "aws_lex_intent.test_2"
 
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -607,11 +605,11 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 					testAccBotAliasConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExistsWithVersion(ctx, botResourceName, "1", &v1),
+					testAccCheckBotExistsWithVersion(ctx, t, botResourceName, "1", &v1),
 					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(botResourceName, "intent.#", "1"),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", "1"),
-					testAccCheckBotAliasExists(ctx, botAliasResourceName, &v2),
+					testAccCheckBotAliasExists(ctx, t, botAliasResourceName, &v2),
 					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", "1"),
 					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, "1"),
 				),
@@ -623,7 +621,7 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 					testAccBotAliasConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExistsWithVersion(ctx, botResourceName, "2", &v1),
+					testAccCheckBotExistsWithVersion(ctx, t, botResourceName, "2", &v1),
 					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(botResourceName, "intent.#", "2"),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", "1"),
@@ -641,16 +639,16 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -658,7 +656,7 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -673,7 +671,7 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 					testAccBotConfig_localeUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "locale", "en-GB"),
 				),
 			},
@@ -691,16 +689,16 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -708,7 +706,7 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -723,7 +721,7 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 					testAccBotConfig_voiceIdUpdate(testBotName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "voice_id", "Justin"),
 				),
 			},
@@ -741,16 +739,16 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotOutput
 	resourceName := "aws_lex_bot.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		CheckDestroy:             testAccCheckBotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -758,7 +756,7 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 					testAccBotConfig_basic(testBotName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotExists(ctx, resourceName, &v),
+					testAccCheckBotExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceBot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -767,7 +765,7 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBotExistsWithVersion(ctx context.Context, resourceName, botVersion string, v *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
+func testAccCheckBotExistsWithVersion(ctx context.Context, t *testing.T, resourceName, botVersion string, v *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -778,7 +776,7 @@ func testAccCheckBotExistsWithVersion(ctx context.Context, resourceName, botVers
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		output, err := tflexmodels.FindBotVersionByName(ctx, conn, rs.Primary.ID, botVersion)
 
@@ -792,13 +790,13 @@ func testAccCheckBotExistsWithVersion(ctx context.Context, resourceName, botVers
 	}
 }
 
-func testAccCheckBotExists(ctx context.Context, resourceName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
-	return testAccCheckBotExistsWithVersion(ctx, resourceName, tflexmodels.BotVersionLatest, output)
+func testAccCheckBotExists(ctx context.Context, t *testing.T, resourceName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
+	return testAccCheckBotExistsWithVersion(ctx, t, resourceName, tflexmodels.BotVersionLatest, output)
 }
 
-func testAccCheckBotNotExists(ctx context.Context, botName, botVersion string) resource.TestCheckFunc {
+func testAccCheckBotNotExists(ctx context.Context, t *testing.T, botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		_, err := tflexmodels.FindBotVersionByName(ctx, conn, botName, botVersion)
 
@@ -814,9 +812,9 @@ func testAccCheckBotNotExists(ctx context.Context, botName, botVersion string) r
 	}
 }
 
-func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBotDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LexModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_bot" {

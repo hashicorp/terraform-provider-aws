@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,21 +19,21 @@ import (
 
 func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					testAccCheckLBSSLNegotiationPolicy(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
 			},
@@ -45,21 +43,21 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 
 func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					testAccCheckLBSSLNegotiationPolicy(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -71,7 +69,7 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					testAccCheckLBSSLNegotiationPolicy(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -97,21 +95,21 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 
 func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
+					testAccCheckLBSSLNegotiationPolicy(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceSSLNegotiationPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,9 +118,9 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -151,7 +149,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -163,7 +161,7 @@ func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, n string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 

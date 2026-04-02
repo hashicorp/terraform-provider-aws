@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,21 +21,21 @@ import (
 func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
@@ -79,21 +77,21 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceTLSInspectionConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,21 +103,21 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_tags1(rName, commonName.String(), certificateDomainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -133,7 +131,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccTLSInspectionConfigurationConfig_tags2(rName, commonName.String(), certificateDomainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -142,7 +140,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccTLSInspectionConfigurationConfig_tags1(rName, commonName.String(), certificateDomainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -154,22 +152,22 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_tags(t *testing.T) {
 func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
@@ -216,7 +214,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t 
 func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocationStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
@@ -227,17 +225,17 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "REJECT", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
@@ -281,7 +279,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 			{
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "DROP", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
@@ -320,9 +318,9 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 	})
 }
 
-func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_tls_inspection_configuration" {
@@ -346,14 +344,14 @@ func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, n string, v *networkfirewall.DescribeTLSInspectionConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeTLSInspectionConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindTLSInspectionConfigurationByARN(ctx, conn, rs.Primary.ID)
 

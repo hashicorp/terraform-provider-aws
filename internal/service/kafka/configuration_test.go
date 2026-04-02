@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 func TestAccKafkaConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configuration1 kafka.DescribeConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`configuration/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "0"),
@@ -56,19 +54,19 @@ func TestAccKafkaConfiguration_basic(t *testing.T) {
 func TestAccKafkaConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configuration1 kafka.DescribeConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration1),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,19 +78,19 @@ func TestAccKafkaConfiguration_disappears(t *testing.T) {
 func TestAccKafkaConfiguration_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -104,7 +102,7 @@ func TestAccKafkaConfiguration_description(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 				),
@@ -116,19 +114,19 @@ func TestAccKafkaConfiguration_description(t *testing.T) {
 func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configuration1 kafka.DescribeConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_versions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "3.8.x"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "3.9.x"),
@@ -146,21 +144,21 @@ func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
 	serverProperty1 := "auto.create.topics.enable = false"
 	serverProperty2 := "auto.create.topics.enable = true"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_serverProperties(rName, serverProperty1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration1),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty1)),
 				),
 			},
@@ -172,7 +170,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_serverProperties(rName, serverProperty2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty2)),
 				),
@@ -186,21 +184,21 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 func TestAccKafkaConfiguration_serverPropertiesWithCluster(t *testing.T) {
 	ctx := acctest.Context(t)
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
 	serverProperty1 := "auto.create.topics.enable = false"
 	serverProperty2 := "auto.create.topics.enable = true"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_serverPropertiesWithCluster(rName, serverProperty1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration1),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty1)),
 				),
 			},
@@ -212,7 +210,7 @@ func TestAccKafkaConfiguration_serverPropertiesWithCluster(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_serverPropertiesWithCluster(rName, serverProperty2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
+					testAccCheckConfigurationExists(ctx, t, resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty2)),
 				),
@@ -221,9 +219,9 @@ func TestAccKafkaConfiguration_serverPropertiesWithCluster(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_configuration" {
@@ -247,14 +245,14 @@ func testAccCheckConfigurationDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckConfigurationExists(ctx context.Context, n string, v *kafka.DescribeConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckConfigurationExists(ctx context.Context, t *testing.T, n string, v *kafka.DescribeConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		output, err := tfkafka.FindConfigurationByARN(ctx, conn, rs.Primary.ID)
 

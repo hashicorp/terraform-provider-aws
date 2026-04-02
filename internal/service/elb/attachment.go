@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -70,7 +69,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", lbName)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", lbName)))
 
 	return diags
 }
@@ -129,7 +128,7 @@ func findLoadBalancerAttachmentByTwoPartKey(ctx context.Context, conn *elasticlo
 	})
 
 	if !attached {
-		return &sdkretry.NotFoundError{}
+		return &retry.NotFoundError{}
 	}
 
 	return nil

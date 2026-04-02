@@ -51,3 +51,9 @@ func ToLowercasePrefix(s string) string {
 	}
 	return strings.ToLower(s[:splitIdx]) + s[splitIdx:]
 }
+
+// AWS API structs use different capitalization than the provider standards
+func ToAWSCapitalization(s string) string {
+	// TODO: This is incomplete
+	return strings.ReplaceAll(s, "VPC", "Vpc")
+}

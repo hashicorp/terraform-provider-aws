@@ -66,11 +66,19 @@ func dataSourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"ip_discovery": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrKMSKeyARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 				"maintenance_window": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_type": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -205,9 +213,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
+	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
 	d.Set(names.AttrName, cluster.Name)
+	d.Set("network_type", cluster.NetworkType)
 	d.Set("node_type", cluster.NodeType)
 	if v, err := deriveClusterNumReplicasPerShard(cluster); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

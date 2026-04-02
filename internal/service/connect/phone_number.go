@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.ClaimedPhoneNumberSummary")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePhoneNumberCreate,
@@ -280,9 +278,8 @@ func findPhoneNumber(ctx context.Context, conn *connect.Client, input *connect.D
 	output, err := conn.DescribePhoneNumber(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -310,8 +307,8 @@ func flattenPhoneNumberStatus(apiObject *awstypes.PhoneNumberStatus) []any {
 	return []any{tfMap}
 }
 
-func statusPhoneNumber(ctx context.Context, conn *connect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPhoneNumber(conn *connect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -327,10 +324,10 @@ func statusPhoneNumber(ctx context.Context, conn *connect.Client, id string) sdk
 }
 
 func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
 		Target:  enum.Slice(awstypes.PhoneNumberWorkflowStatusClaimed),
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -348,10 +345,10 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, id string
 }
 
 func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
 		Target:  enum.Slice(awstypes.PhoneNumberWorkflowStatusClaimed),
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -369,10 +366,10 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, id string
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
 		Target:  []string{},
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -25,19 +24,19 @@ func testAccOrganizationDelegatedAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail_organization_delegated_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
+					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need environment where this test can run
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEmail),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
@@ -57,19 +56,19 @@ func testAccOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail_organization_delegated_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
+					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudtrail.ResourceOrganizationDelegatedAdminAccount, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,9 +77,9 @@ func testAccOrganizationDelegatedAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudtrail_organization_delegated_admin_account" {
@@ -104,14 +103,14 @@ func testAccCheckOrganizationDelegatedAdminAccountDestroy(ctx context.Context) r
 	}
 }
 
-func testAccCheckOrganizationDelegatedAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationDelegatedAdminAccountExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.ID, tfcloudtrail.ServicePrincipal)
 

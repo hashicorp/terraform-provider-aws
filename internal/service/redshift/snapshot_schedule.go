@@ -28,7 +28,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.SnapshotSchedule")
 // @Testing(importIgnore="force_destroy")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotScheduleCreate,
@@ -84,7 +83,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	identifier := create.Name(d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
+	identifier := create.Name(ctx, d.Get(names.AttrIdentifier).(string), d.Get("identifier_prefix").(string))
 	input := redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringValueSet(d.Get("definitions").(*schema.Set)),

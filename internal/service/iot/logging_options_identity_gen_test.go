@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccIoTLoggingOptions_IdentitySerial(t *testing.T) {
+func testAccIoTLoggingOptions_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccIoTLoggingOptions_Identity_Basic,
-		"ExistingResource":          testAccIoTLoggingOptions_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccIoTLoggingOptions_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccIoTLoggingOptions_Identity_RegionOverride,
+		acctest.CtBasic:             testAccIoTLoggingOptions_Identity_basic,
+		"ExistingResource":          testAccIoTLoggingOptions_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccIoTLoggingOptions_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccIoTLoggingOptions_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccIoTLoggingOptions_Identity_Basic(t *testing.T) {
+func testAccIoTLoggingOptions_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_logging_options.test"
@@ -69,7 +69,7 @@ func testAccIoTLoggingOptions_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccIoTLoggingOptions_Identity_RegionOverride(t *testing.T) {
+func testAccIoTLoggingOptions_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_logging_options.test"
@@ -104,7 +104,7 @@ func testAccIoTLoggingOptions_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccIoTLoggingOptions_Identity_ExistingResource(t *testing.T) {
+func testAccIoTLoggingOptions_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_logging_options.test"
@@ -177,7 +177,7 @@ func testAccIoTLoggingOptions_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccIoTLoggingOptions_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccIoTLoggingOptions_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_logging_options.test"

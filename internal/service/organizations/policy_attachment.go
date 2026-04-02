@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -33,7 +32,6 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
@@ -183,9 +181,8 @@ func findPolicyTargets(ctx context.Context, conn *organizations.Client, input *o
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -209,11 +206,11 @@ func (policyAttachmentImportID) Create(d *schema.ResourceData) string {
 	return policyAttachmentCreateResourceID(d.Get("target_id").(string), d.Get("policy_id").(string))
 }
 
-func (policyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+func (policyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		result := map[string]string{
+		result := map[string]any{
 			"target_id": parts[0],
 			"policy_id": parts[1],
 		}

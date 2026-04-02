@@ -48,8 +48,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbInstanceResource{}
 

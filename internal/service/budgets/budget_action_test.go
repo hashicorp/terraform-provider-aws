@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,22 +20,22 @@ import (
 
 func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
 	const thresholdValue = "1000000000"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), thresholdValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -66,22 +64,22 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 
 func TestAccBudgetsBudgetAction_triggeredAutomatic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
 	const thresholdValue = "100"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), thresholdValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -110,22 +108,22 @@ func TestAccBudgetsBudgetAction_triggeredAutomatic(t *testing.T) {
 
 func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
 	const thresholdValue = "100"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelManual), thresholdValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -154,22 +152,22 @@ func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 
 func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
 	const thresholdValue = "1000000000"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -182,7 +180,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 			{
 				Config: testAccBudgetActionConfig_tags2(rName, string(awstypes.ApprovalModelManual), thresholdValue, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -191,7 +189,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 			{
 				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -202,20 +200,20 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 
 func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetActionExists(ctx, resourceName, &conf),
+					testAccBudgetActionExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbudgets.ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -224,14 +222,14 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	})
 }
 
-func testAccBudgetActionExists(ctx context.Context, n string, v *awstypes.Action) resource.TestCheckFunc {
+func testAccBudgetActionExists(ctx context.Context, t *testing.T, n string, v *awstypes.Action) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BudgetsClient(ctx)
 
 		output, err := tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["action_id"], rs.Primary.Attributes["budget_name"])
 
@@ -245,9 +243,9 @@ func testAccBudgetActionExists(ctx context.Context, n string, v *awstypes.Action
 	}
 }
 
-func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBudgetActionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BudgetsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_budgets_budget_action" {

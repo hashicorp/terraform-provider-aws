@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,19 +22,19 @@ func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securityConfiguration awstypes.SecurityConfiguration
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_security_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigurationExists(ctx, resourceName, &securityConfiguration),
+					testAccCheckSecurityConfigurationExists(ctx, t, resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.cloudwatch_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.cloudwatch_encryption.0.cloudwatch_encryption_mode", "DISABLED"),
@@ -63,20 +61,20 @@ func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMo
 	ctx := acctest.Context(t)
 	var securityConfiguration awstypes.SecurityConfiguration
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_glue_security_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_cloudWatchEncryptionModeSSEKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigurationExists(ctx, resourceName, &securityConfiguration),
+					testAccCheckSecurityConfigurationExists(ctx, t, resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.cloudwatch_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.cloudwatch_encryption.0.cloudwatch_encryption_mode", "SSE-KMS"),
@@ -96,20 +94,20 @@ func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncrypti
 	ctx := acctest.Context(t)
 	var securityConfiguration awstypes.SecurityConfiguration
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_glue_security_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_jobBookmarksEncryptionModeCSEKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigurationExists(ctx, resourceName, &securityConfiguration),
+					testAccCheckSecurityConfigurationExists(ctx, t, resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.job_bookmarks_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.job_bookmarks_encryption.0.job_bookmarks_encryption_mode", "CSE-KMS"),
@@ -129,20 +127,20 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *tes
 	ctx := acctest.Context(t)
 	var securityConfiguration awstypes.SecurityConfiguration
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_glue_security_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_s3EncryptionModeSSEKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigurationExists(ctx, resourceName, &securityConfiguration),
+					testAccCheckSecurityConfigurationExists(ctx, t, resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.s3_encryption_mode", "SSE-KMS"),
@@ -162,19 +160,19 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *test
 	ctx := acctest.Context(t)
 	var securityConfiguration awstypes.SecurityConfiguration
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_security_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfigurationConfig_s3EncryptionModeSSES3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigurationExists(ctx, resourceName, &securityConfiguration),
+					testAccCheckSecurityConfigurationExists(ctx, t, resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.s3_encryption_mode", "SSE-S3"),
@@ -190,7 +188,7 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *test
 	})
 }
 
-func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName string, securityConfiguration *awstypes.SecurityConfiguration) resource.TestCheckFunc {
+func testAccCheckSecurityConfigurationExists(ctx context.Context, t *testing.T, resourceName string, securityConfiguration *awstypes.SecurityConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -201,7 +199,7 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("No Glue Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		output, err := conn.GetSecurityConfiguration(ctx, &glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
@@ -223,14 +221,14 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName s
 	}
 }
 
-func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSecurityConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_security_configuration" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 			output, err := conn.GetSecurityConfiguration(ctx, &glue.GetSecurityConfigurationInput{
 				Name: aws.String(rs.Primary.ID),

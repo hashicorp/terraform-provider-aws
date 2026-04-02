@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func TestAccAppSyncAPI_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var api awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
@@ -34,12 +32,12 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &api),
+					testAccCheckAPIExists(ctx, t, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "1"),
@@ -72,10 +70,10 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 func TestAccAppSyncAPI_comprehensive(t *testing.T) {
 	ctx := acctest.Context(t)
 	var api awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
@@ -83,12 +81,12 @@ func TestAccAppSyncAPI_comprehensive(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_eventConfigComprehensive(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &api),
+					testAccCheckAPIExists(ctx, t, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
@@ -142,11 +140,11 @@ func TestAccAppSyncAPI_comprehensive(t *testing.T) {
 func TestAccAppSyncAPI_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var api awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
@@ -154,12 +152,12 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_eventConfigComprehensive(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &api),
+					testAccCheckAPIExists(ctx, t, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
@@ -169,7 +167,7 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 			{
 				Config: testAccAPIConfig_eventConfigComprehensive(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &api),
+					testAccCheckAPIExists(ctx, t, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
@@ -189,10 +187,10 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 func TestAccAppSyncAPI_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var api awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
@@ -200,12 +198,12 @@ func TestAccAppSyncAPI_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &api),
+					testAccCheckAPIExists(ctx, t, resourceName, &api),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappsync.ResourceAPI, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -219,9 +217,9 @@ func TestAccAppSyncAPI_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPIDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_api" {
@@ -245,14 +243,14 @@ func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAPIExists(ctx context.Context, n string, v *awstypes.Api) resource.TestCheckFunc {
+func testAccCheckAPIExists(ctx context.Context, t *testing.T, n string, v *awstypes.Api) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		output, err := tfappsync.FindAPIByID(ctx, conn, rs.Primary.Attributes["api_id"])
 

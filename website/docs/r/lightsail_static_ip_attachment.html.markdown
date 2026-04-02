@@ -29,8 +29,8 @@ resource "aws_lightsail_instance" "example" {
 }
 
 resource "aws_lightsail_static_ip_attachment" "example" {
-  static_ip_name = aws_lightsail_static_ip.example.id
-  instance_name  = aws_lightsail_instance.example.id
+  static_ip_name = aws_lightsail_static_ip.example.name
+  instance_name  = aws_lightsail_instance.example.name
 }
 ```
 

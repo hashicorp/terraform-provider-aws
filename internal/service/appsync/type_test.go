@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func testAccType_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var typ awstypes.Type
 	resourceName := "aws_appsync_type.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTypeExists(ctx, resourceName, &typ),
+					testAccCheckTypeExists(ctx, t, resourceName, &typ),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, "SDL"),
@@ -55,18 +53,18 @@ func testAccType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var typ awstypes.Type
 	resourceName := "aws_appsync_type.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTypeExists(ctx, resourceName, &typ),
+					testAccCheckTypeExists(ctx, t, resourceName, &typ),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,9 +73,9 @@ func testAccType_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTypeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_type" {
@@ -101,14 +99,14 @@ func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTypeExists(ctx context.Context, n string, v *awstypes.Type) resource.TestCheckFunc {
+func testAccCheckTypeExists(ctx context.Context, t *testing.T, n string, v *awstypes.Type) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		output, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes[names.AttrFormat]), rs.Primary.Attributes[names.AttrName])
 

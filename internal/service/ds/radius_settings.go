@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -225,8 +224,8 @@ func findRadiusSettingsByID(ctx context.Context, conn *directoryservice.Client, 
 	return output.RadiusSettings, nil
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRadius(conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, directoryID)
 
 		if retry.NotFound(err) {
@@ -242,10 +241,10 @@ func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryI
 }
 
 func waitRadiusCompleted(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RadiusStatusCreating),
 		Target:  enum.Slice(awstypes.RadiusStatusCompleted),
-		Refresh: statusRadius(ctx, conn, directoryID),
+		Refresh: statusRadius(conn, directoryID),
 		Timeout: timeout,
 	}
 

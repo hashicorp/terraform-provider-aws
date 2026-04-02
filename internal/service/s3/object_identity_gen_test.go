@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3Object_Identity_Basic(t *testing.T) {
+func TestAccS3Object_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3.GetObjectOutput
@@ -35,7 +35,7 @@ func TestAccS3Object_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccS3Object_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &v),
+					testAccCheckObjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{bucket}/{key}"),
@@ -115,7 +115,7 @@ func TestAccS3Object_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_Identity_RegionOverride(t *testing.T) {
+func TestAccS3Object_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_object.test"
@@ -211,7 +211,7 @@ func TestAccS3Object_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccS3Object_Identity_ExistingResource(t *testing.T) {
+func TestAccS3Object_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3.GetObjectOutput
@@ -224,7 +224,7 @@ func TestAccS3Object_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckObjectDestroy(ctx),
+		CheckDestroy: testAccCheckObjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -233,7 +233,7 @@ func TestAccS3Object_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &v),
+					testAccCheckObjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -271,7 +271,7 @@ func TestAccS3Object_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccS3Object_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3Object_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3.GetObjectOutput
@@ -284,7 +284,7 @@ func TestAccS3Object_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckObjectDestroy(ctx),
+		CheckDestroy: testAccCheckObjectDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -298,7 +298,7 @@ func TestAccS3Object_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &v),
+					testAccCheckObjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

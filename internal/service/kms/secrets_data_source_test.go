@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +26,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 
 	// Run a resource test to setup our KMS key
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,8 +34,8 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSecretsDataSourceConfig_key,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					testAccSecretsDataSourceEncrypt(ctx, &key, plaintext, &encryptedPayload),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					testAccSecretsDataSourceEncrypt(ctx, t, &key, plaintext, &encryptedPayload),
 					// We need to dereference the encryptedPayload in a test Terraform configuration
 					testAccSecretsDataSourceDecrypt(ctx, t, plaintext, &encryptedPayload),
 				),
@@ -54,7 +53,7 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 
 	// Run a resource test to setup our KMS key
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,8 +61,8 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 			{
 				Config: testAccSecretsDataSourceConfig_asymmetricKey,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					testAccSecretsDataSourceEncryptAsymmetric(ctx, &key, plaintext, &encryptedPayload),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					testAccSecretsDataSourceEncryptAsymmetric(ctx, t, &key, plaintext, &encryptedPayload),
 					// We need to dereference the encryptedPayload in a test Terraform configuration
 					testAccSecretsDataSourceDecryptAsymmetric(ctx, t, &key, plaintext, &encryptedPayload),
 				),
@@ -72,9 +71,9 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 	})
 }
 
-func testAccSecretsDataSourceEncrypt(ctx context.Context, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsDataSourceEncrypt(ctx context.Context, t *testing.T, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
@@ -96,9 +95,9 @@ func testAccSecretsDataSourceEncrypt(ctx context.Context, key *awstypes.KeyMetad
 	}
 }
 
-func testAccSecretsDataSourceEncryptAsymmetric(ctx context.Context, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsDataSourceEncryptAsymmetric(ctx context.Context, t *testing.T, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 		input := &kms.EncryptInput{
 			KeyId:               key.Arn,
@@ -122,7 +121,7 @@ func testAccSecretsDataSourceDecrypt(ctx context.Context, t *testing.T, plaintex
 	return func(s *terraform.State) error {
 		dataSourceName := "data.aws_kms_secrets.test"
 
-		resource.Test(t, resource.TestCase{
+		acctest.Test(ctx, t, resource.TestCase{
 			PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 			ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -146,7 +145,7 @@ func testAccSecretsDataSourceDecryptAsymmetric(ctx context.Context, t *testing.T
 		dataSourceName := "data.aws_kms_secrets.test"
 		keyid := key.Arn
 
-		resource.Test(t, resource.TestCase{
+		acctest.Test(ctx, t, resource.TestCase{
 			PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 			ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -468,9 +467,8 @@ func findMultiRegionClusters(ctx context.Context, conn *memorydb.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.MultiRegionClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -493,8 +491,8 @@ func updateMultiRegionClusterAndWaitAvailable(ctx context.Context, conn *memoryd
 	return err
 }
 
-func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMultiRegionCluster(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMultiRegionClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -510,11 +508,11 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 }
 
 func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Delay:                     20 * time.Second,
 		Pending:                   []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:                    []string{clusterStatusAvailable},
-		Refresh:                   statusMultiRegionCluster(ctx, conn, name),
+		Refresh:                   statusMultiRegionCluster(conn, name),
 		ContinuousTargetOccurence: 3,
 		Timeout:                   timeout,
 	}
@@ -529,11 +527,11 @@ func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client,
 }
 
 func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Delay:                     20 * time.Second,
 		Pending:                   []string{clusterStatusDeleting},
 		Target:                    []string{},
-		Refresh:                   statusMultiRegionCluster(ctx, conn, name),
+		Refresh:                   statusMultiRegionCluster(conn, name),
 		ContinuousTargetOccurence: 3,
 		Timeout:                   timeout,
 	}

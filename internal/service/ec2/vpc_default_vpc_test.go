@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,7 +57,7 @@ func testAccPreCheckDefaultVPCNotFound(ctx context.Context, t *testing.T) {
 	if vpcID := defaultVPC(ctx, t); vpcID != "" {
 		t.Logf("Deleting existing default VPC: %s", vpcID)
 
-		err := testAccEmptyDefaultVPC(ctx, vpcID)
+		err := testAccEmptyDefaultVPC(ctx, t, vpcID)
 
 		if err != nil {
 			t.Fatalf("error emptying default VPC: %s", err)
@@ -82,7 +80,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -90,7 +88,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_basic,
@@ -127,9 +125,9 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -137,7 +135,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
@@ -176,7 +174,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -184,7 +182,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
@@ -192,7 +190,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
-					testAccCheckDefaultVPCEmpty(ctx, &v),
+					testAccCheckDefaultVPCEmpty(ctx, t, &v),
 				),
 			},
 		},
@@ -204,7 +202,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -212,7 +210,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_basic,
@@ -249,9 +247,9 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -259,7 +257,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
@@ -298,7 +296,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -306,7 +304,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
@@ -314,7 +312,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 					acctest.CheckVPCExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
-					testAccCheckDefaultVPCEmpty(ctx, &v),
+					testAccCheckDefaultVPCEmpty(ctx, t, &v),
 				),
 			},
 		},
@@ -325,9 +323,9 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 	ctx := acctest.Context(t)
 	var v awstypes.Vpc
 	resourceName := "aws_default_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
@@ -335,7 +333,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx),
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlockAdoptionStep1(rName),
@@ -413,9 +411,9 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 
 // testAccCheckDefaultVPCDestroyExists runs after all resources are destroyed.
 // It verifies that the default VPC still exists.
-func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDefaultVPCDestroyExists(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
@@ -436,9 +434,9 @@ func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheck
 // testAccCheckDefaultVPCDestroyNotFound runs after all resources are destroyed.
 // It verifies that the default VPC does not exist.
 // A new default VPC is then created.
-func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
@@ -470,15 +468,15 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 }
 
 // testAccCheckDefaultVPCEmpty returns a TestCheckFunc that empties the specified default VPC.
-func testAccCheckDefaultVPCEmpty(ctx context.Context, v *awstypes.Vpc) resource.TestCheckFunc {
+func testAccCheckDefaultVPCEmpty(ctx context.Context, t *testing.T, v *awstypes.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccEmptyDefaultVPC(ctx, aws.ToString(v.VpcId))
+		return testAccEmptyDefaultVPC(ctx, t, aws.ToString(v.VpcId))
 	}
 }
 
 // testAccEmptyDefaultVPC empties a default VPC so that it can be deleted.
-func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+func testAccEmptyDefaultVPC(ctx context.Context, t *testing.T, vpcID string) error {
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 	// Delete the default IGW.
 	igw, err := tfec2.FindInternetGateway(ctx, conn, &ec2.DescribeInternetGatewaysInput{

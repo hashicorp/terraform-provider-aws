@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +34,7 @@ func testAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
 	resourceName := "aws_vpc_block_public_access_options.test"
 	internetGatewayBlockMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
@@ -68,7 +67,7 @@ func testAccVPCBlockPublicAccessOptions_update(t *testing.T) {
 	internetGatewayBlockMode2 := string(awstypes.InternetGatewayBlockModeBlockIngress)
 	internetGatewayBlockMode3 := string(awstypes.InternetGatewayBlockModeOff)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -106,7 +105,7 @@ func testAccVPCBlockPublicAccessOptions_update(t *testing.T) {
 }
 
 func testAccPreCheckVPCBlockPublicAccess(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcBlockPublicAccessOptionsInput{}
 	_, err := conn.DescribeVpcBlockPublicAccessOptions(ctx, input)

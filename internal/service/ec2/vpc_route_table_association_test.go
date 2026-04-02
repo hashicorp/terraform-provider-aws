@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,18 +27,20 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
 	resourceNameSubnet := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^rtbassoc-[a-f0-9]+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
@@ -58,29 +62,37 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	resourceNameRouteTable1 := "aws_route_table.test"
 	resourceNameRouteTable2 := "aws_route_table.test2"
 	resourceNameSubnet := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	idExpectChange := statecheck.CompareValue(compare.ValuesDiffer())
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnetChange(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 		},
 	})
@@ -92,20 +104,22 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
 	resourceNameGateway := "aws_internet_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^rtbassoc-[a-f0-9]+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
 				),
 			},
 			{
@@ -125,29 +139,37 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	resourceNameRouteTable1 := "aws_route_table.test"
 	resourceNameRouteTable2 := "aws_route_table.test2"
 	resourceNameGateway := "aws_internet_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	idExpectChange := statecheck.CompareValue(compare.ValuesDiffer())
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gatewayChange(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					idExpectChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrID)),
+				},
 			},
 		},
 	})
@@ -157,18 +179,18 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(ctx, t, resourceName, &rta),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -177,9 +199,37 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccVPCRouteTableAssociation_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_route_table_association.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteTableAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteTableAssociationConfig_regionOverride(rName, acctest.AlternateRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+				),
+			},
+			{
+				Config:            testAccVPCRouteTableAssociationConfig_regionOverride(rName, acctest.AlternateRegion()),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteTabAssocImportStateIdFunc),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckRouteTableAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route_table_association" {
@@ -203,7 +253,7 @@ func testAccCheckRouteTableAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *awstypes.RouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckRouteTableAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.RouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -214,7 +264,7 @@ func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *a
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		association, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 
@@ -375,4 +425,53 @@ resource "aws_route_table_association" "test" {
   gateway_id     = aws_internet_gateway.test.id
 }
 `, rName))
+}
+
+func testAccVPCRouteTableAssociationConfig_regionOverride(rName, region string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  region     = %[2]q
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  region            = %[2]q
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  region = %[2]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  region         = %[2]q
+  route_table_id = aws_route_table.test.id
+  subnet_id      = aws_subnet.test.id
+}
+
+data "aws_availability_zones" "available" {
+  region = %[2]q
+  state  = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, rName, region)
 }

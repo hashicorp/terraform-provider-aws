@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 
 func TestAccImageBuilderWorkflow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("workflow/test/%s/1.0.0/[1-9][0-9]*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "change_description", ""),
 					resource.TestMatchResourceAttr(resourceName, "data", regexache.MustCompile(`schemaVersion`)),
@@ -59,19 +57,19 @@ func TestAccImageBuilderWorkflow_basic(t *testing.T) {
 
 func TestAccImageBuilderWorkflow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,19 +80,19 @@ func TestAccImageBuilderWorkflow_disappears(t *testing.T) {
 
 func TestAccImageBuilderWorkflow_changeDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_changeDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "change_description", "description1"),
 				),
 			},
@@ -109,19 +107,19 @@ func TestAccImageBuilderWorkflow_changeDescription(t *testing.T) {
 
 func TestAccImageBuilderWorkflow_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -136,20 +134,20 @@ func TestAccImageBuilderWorkflow_description(t *testing.T) {
 
 func TestAccImageBuilderWorkflow_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -164,19 +162,19 @@ func TestAccImageBuilderWorkflow_kmsKeyID(t *testing.T) {
 
 func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -189,7 +187,7 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -198,7 +196,7 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -209,19 +207,19 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 
 func TestAccImageBuilderWorkflow_uri(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_uri(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName),
+					testAccCheckWorkflowExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "data"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURI),
 				),
@@ -236,9 +234,9 @@ func TestAccImageBuilderWorkflow_uri(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkflowDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_workflow" {
@@ -262,14 +260,14 @@ func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWorkflowExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckWorkflowExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
 
 		_, err := tfimagebuilder.FindWorkflowByARN(ctx, conn, rs.Primary.ID)
 

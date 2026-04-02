@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,16 +54,16 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 
 	config := testAccADMChannelConfigurationFromEnv(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckADMChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckADMChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckADMChannelExists(ctx, resourceName, &channel),
+					testAccCheckADMChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -77,7 +76,7 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 			{
 				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckADMChannelExists(ctx, resourceName, &channel),
+					testAccCheckADMChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -85,7 +84,7 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckADMChannelExists(ctx context.Context, n string, channel *awstypes.ADMChannelResponse) resource.TestCheckFunc {
+func testAccCheckADMChannelExists(ctx context.Context, t *testing.T, n string, channel *awstypes.ADMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -96,7 +95,7 @@ func testAccCheckADMChannelExists(ctx context.Context, n string, channel *awstyp
 			return fmt.Errorf("No Pinpoint ADM channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindADMChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
@@ -110,9 +109,9 @@ func testAccCheckADMChannelExists(ctx context.Context, n string, channel *awstyp
 	}
 }
 
-func testAccCheckADMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckADMChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_adm_channel" {

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,21 +33,21 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
@@ -73,21 +71,21 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,26 +98,26 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
@@ -131,7 +129,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 			{
 				Config: testAccFleetConfig_complete(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
@@ -153,26 +151,26 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
@@ -184,7 +182,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 			{
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
@@ -207,26 +205,26 @@ func TestAccAppStreamFleet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	description := "Description of a test"
 	fleetType := "ON_DEMAND"
 	instanceType := "stream.standard.small"
 	displayName := "display name of a test"
 	displayNameUpdated := "display name of a test updated"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_tags1(rName, description, fleetType, instanceType, displayName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -239,7 +237,7 @@ func TestAccAppStreamFleet_tags(t *testing.T) {
 			{
 				Config: testAccFleetConfig_tags2(rName, description, fleetType, instanceType, displayNameUpdated, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -248,7 +246,7 @@ func TestAccAppStreamFleet_tags(t *testing.T) {
 			{
 				Config: testAccFleetConfig_tags1(rName, description, fleetType, instanceType, displayName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -262,21 +260,21 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, `""`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
@@ -287,7 +285,7 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 			{
 				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, "null"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
@@ -308,22 +306,22 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	instanceType := "stream.standard.small"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_multiSession(rName, instanceType, 1, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "5"),
@@ -340,7 +338,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 			{
 				Config: testAccFleetConfig_multiSession(rName, instanceType, 2, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					testAccCheckFleetExists(ctx, t, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "10"),
@@ -353,9 +351,9 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFleetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet" {
@@ -379,14 +377,14 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFleetExists(ctx context.Context, n string, v *awstypes.Fleet) resource.TestCheckFunc {
+func testAccCheckFleetExists(ctx context.Context, t *testing.T, n string, v *awstypes.Fleet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		output, err := tfappstream.FindFleetByID(ctx, conn, rs.Primary.ID)
 

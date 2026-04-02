@@ -37,6 +37,10 @@ To add an AWS SDK for Go service client:
         The Provider and generators depend on the file being correct.
         We strongly recommend using an editor with HCL support.
 
+    !!! tip
+        For global services, set the `is_global` argument to `true`.
+        Review the AWS service documentation and/or IAM resource type ARN formatting to determine whether the service is regional or global.
+
 Once the names data is ready, create a new service directory with the appropriate service name.
 
 ```console

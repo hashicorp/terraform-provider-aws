@@ -65,9 +65,11 @@ func (l *projectListResource) List(ctx context.Context, request list.ListRequest
 			tflog.Info(ctx, "Listing CodeBuild project")
 			diags := resourceProjectRead(ctx, rd, awsClient)
 			if diags.HasError() {
-				result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading CodeBuild project %s", projectName))
-				yield(result)
-				return
+				tflog.Error(ctx, "Error reading CodeBuild project", map[string]any{
+					"project_name": projectName,
+					"error":        diags,
+				})
+				continue
 			}
 
 			if rd.Id() == "" {
@@ -76,10 +78,13 @@ func (l *projectListResource) List(ctx context.Context, request list.ListRequest
 
 			result.DisplayName = projectName
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
-				yield(result)
-				return
+				tflog.Error(ctx, "Error setting result for CodeBuild project", map[string]any{
+					"project_name": projectName,
+					"error":        result.Diagnostics,
+				})
+				continue
 			}
 
 			if !yield(result) {

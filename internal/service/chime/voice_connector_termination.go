@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -212,19 +211,14 @@ func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.Reso
 }
 
 func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.Termination, error) {
-	in := &chimesdkvoice.GetVoiceConnectorInput{
-		VoiceConnectorId: aws.String(id),
-	}
-
 	input := &chimesdkvoice.GetVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(id),
 	}
 
 	resp, err := conn.GetVoiceConnectorTermination(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

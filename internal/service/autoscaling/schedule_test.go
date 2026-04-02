@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,22 +22,22 @@ import (
 func TestAccAutoScalingSchedule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScheduledUpdateGroupAction
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
 	endTime := testAccScheduleValidEnd(t)
 	resourceName := "aws_autoscaling_schedule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -55,22 +53,22 @@ func TestAccAutoScalingSchedule_basic(t *testing.T) {
 func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScheduledUpdateGroupAction
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
 	endTime := testAccScheduleValidEnd(t)
 	resourceName := "aws_autoscaling_schedule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,19 +80,19 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScheduledUpdateGroupAction
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_schedule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_recurrence(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recurrence", "0 8 * * *"),
 				),
 			},
@@ -111,21 +109,21 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScheduledUpdateGroupAction
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
 	endTime := testAccScheduleValidEnd(t)
 	resourceName := "aws_autoscaling_schedule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_zeroValues(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -141,21 +139,21 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScheduledUpdateGroupAction
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
 	endTime := testAccScheduleValidEnd(t)
 	resourceName := "aws_autoscaling_schedule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_negativeOne(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					testAccCheckScalingScheduleExists(ctx, t, resourceName, &v),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&v),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
@@ -187,14 +185,14 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
-func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScalingScheduleExists(ctx context.Context, t *testing.T, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindScheduleByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -208,9 +206,9 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccCheckScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_schedule" {

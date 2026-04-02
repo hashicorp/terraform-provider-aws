@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSlice",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]",
-    "source_type": "flex.awsInterfaceSlice"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
   },
   {
     "@level": "info",
@@ -53,9 +52,7 @@
     "autoflex.source.size": 2,
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]",
-    "source_type": "[]flex.awsInterfaceInterface",
-    "target_type": "ListNestedObjectTypeOf[flex.tfInterfaceFlexer]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
   },
   {
     "@level": "debug",
@@ -64,8 +61,7 @@
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]",
-    "element_type": "flex.awsInterfaceInterface"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
   },
   {
     "@level": "info",

@@ -22,19 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccS3ControlAccountPublicAccessBlock_IdentitySerial(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccS3ControlAccountPublicAccessBlock_Identity_Basic,
-		"ExistingResource":          testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccS3ControlAccountPublicAccessBlock_Identity_basic,
+		"ExistingResource":          testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PublicAccessBlockConfiguration
@@ -46,7 +46,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
-		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -54,7 +54,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
@@ -105,7 +105,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PublicAccessBlockConfiguration
@@ -117,14 +117,14 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ControlServiceID),
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy(ctx),
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -136,7 +136,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testi
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -176,7 +176,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testi
 	})
 }
 
-func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PublicAccessBlockConfiguration
@@ -188,7 +188,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefres
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ControlServiceID),
-		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy(ctx),
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -200,7 +200,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefres
 				ConfigDirectory: config.StaticDirectory("testdata/AccountPublicAccessBlock/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -213,7 +213,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefres
 				ConfigDirectory:          config.StaticDirectory("testdata/AccountPublicAccessBlock/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -220,9 +219,8 @@ func findSharedDirectories(ctx context.Context, conn *directoryservice.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -249,17 +247,16 @@ func findSharedDirectoryByTwoPartKey(ctx context.Context, conn *directoryservice
 	}
 
 	if status := output.ShareStatus; status == awstypes.ShareStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSharedDirectory(conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 
 		if retry.NotFound(err) {
@@ -275,7 +272,7 @@ func statusSharedDirectory(ctx context.Context, conn *directoryservice.Client, o
 }
 
 func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ShareStatusDeleting,
 			awstypes.ShareStatusShared,
@@ -285,7 +282,7 @@ func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Clie
 			awstypes.ShareStatusRejecting,
 		),
 		Target:                    []string{},
-		Refresh:                   statusSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID),
+		Refresh:                   statusSharedDirectory(conn, ownerDirectoryID, sharedDirectoryID),
 		Timeout:                   timeout,
 		MinTimeout:                30 * time.Second,
 		ContinuousTargetOccurence: 2,

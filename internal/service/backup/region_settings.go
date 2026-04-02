@@ -26,7 +26,6 @@ import (
 // @Testing(checkDestroyNoop=true)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRegionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionSettingsUpdate,

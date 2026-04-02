@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEventsTarget_Identity_Basic(t *testing.T) {
+func TestAccEventsTarget_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Target
@@ -35,7 +35,7 @@ func TestAccEventsTarget_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccEventsTarget_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -117,7 +117,7 @@ func TestAccEventsTarget_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEventsTarget_Identity_RegionOverride(t *testing.T) {
+func TestAccEventsTarget_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_event_target.test"
@@ -213,7 +213,7 @@ func TestAccEventsTarget_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccEventsTarget_Identity_ExistingResource(t *testing.T) {
+func TestAccEventsTarget_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Target
@@ -226,7 +226,7 @@ func TestAccEventsTarget_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -235,7 +235,7 @@ func TestAccEventsTarget_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -275,7 +275,7 @@ func TestAccEventsTarget_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccEventsTarget_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccEventsTarget_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Target
@@ -288,7 +288,7 @@ func TestAccEventsTarget_Identity_ExistingResource_NoRefresh_NoChange(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -302,7 +302,7 @@ func TestAccEventsTarget_Identity_ExistingResource_NoRefresh_NoChange(t *testing
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

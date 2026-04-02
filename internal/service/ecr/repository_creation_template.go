@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -383,9 +382,8 @@ func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.TemplateNotFoundException](err) {
-			return nil, nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

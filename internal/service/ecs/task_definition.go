@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -40,6 +40,16 @@ import (
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("family")
+// @IdentityAttribute("revision", valueType="int")
+// @MutableIdentity
+// @ImportIDHandler("taskDefinitionImportID")
+// @CustomImport
+// @Testing(preIdentityVersion="v6.32.0")
+// @Testing(idAttrDuplicates="family")
+// @Testing(importStateIdFunc=testAccTaskDefinitionImportStateIdFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.TaskDefinition")
+// @Testing(importIgnore="skip_destroy;track_latest", plannableImportAction="NoOp")
 func resourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -50,19 +60,22 @@ func resourceTaskDefinition() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set(names.AttrARN, d.Id())
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
 
-				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
-				resARN, err := arn.Parse(d.Id())
-				if err != nil {
-					return nil, idErr
+				client := meta.(*conns.AWSClient)
+
+				family, revision := d.Get(names.AttrFamily).(string), d.Get("revision").(int)
+
+				region := client.Region(ctx)
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					region = v.(string)
 				}
-				familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
-				familyRevisionParts := strings.Split(familyRevision, ":")
-				if len(familyRevisionParts) != 2 {
-					return nil, idErr
-				}
-				d.SetId(familyRevisionParts[0])
+
+				taskDefinitionARN := client.RegionalARNWithRegion(ctx, names.ECS, region, "task-definition/"+family+":"+strconv.Itoa(revision))
+				d.Set(names.AttrARN, taskDefinitionARN)
+				d.SetId(family)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -664,54 +677,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
 	}
 
-	d.SetId(aws.ToString(taskDefinition.Family))
-	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
-	d.Set("cpu", taskDefinition.Cpu)
-	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
-	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
-	}
-	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
-	d.Set(names.AttrFamily, taskDefinition.Family)
-	d.Set("ipc_mode", taskDefinition.IpcMode)
-	d.Set("memory", taskDefinition.Memory)
-	d.Set("network_mode", taskDefinition.NetworkMode)
-	d.Set("pid_mode", taskDefinition.PidMode)
-	if err := d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
-	}
-	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting proxy_configuration: %s", err)
-	}
-	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
-	d.Set("revision", taskDefinition.Revision)
-	if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime_platform: %s", err)
-	}
-	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set("track_latest", d.Get("track_latest"))
-	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
-	}
-
-	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
-	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
-	// some other property changes).
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
-
-	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("container_definitions", defs)
-
-	setTagsOut(ctx, tags)
-
-	return diags
+	return append(diags, resourceTaskDefinitionFlatten(ctx, d, taskDefinition, tags)...)
 }
 
 func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -751,9 +717,8 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
-		return nil, nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -788,9 +753,8 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	}
 
 	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
-		return nil, nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -1237,6 +1201,49 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	return []any{tfMap}
 }
 
+func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, taskDefinition *awstypes.TaskDefinition, tags []awstypes.Tag) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.SetId(aws.ToString(taskDefinition.Family))
+	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
+	d.Set(names.AttrARN, arn)
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
+	d.Set("cpu", taskDefinition.Cpu)
+	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
+	d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage))
+	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
+	d.Set(names.AttrFamily, taskDefinition.Family)
+	d.Set("ipc_mode", taskDefinition.IpcMode)
+	d.Set("memory", taskDefinition.Memory)
+	d.Set("network_mode", taskDefinition.NetworkMode)
+	d.Set("pid_mode", taskDefinition.PidMode)
+	d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints))
+	d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration))
+	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
+	d.Set("revision", taskDefinition.Revision)
+	d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform))
+	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+	d.Set("track_latest", d.Get("track_latest"))
+	d.Set("volume", flattenVolumes(taskDefinition.Volumes))
+
+	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
+	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
+	// some other property changes).
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
+
+	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("container_definitions", defs)
+
+	setTagsOut(ctx, tags)
+
+	return diags
+}
+
 // taskDefinitionARNStripRevision strips the trailing revision number from a task definition ARN
 //
 // Invalid ARNs will return an empty string. ARNs with an unexpected number of
@@ -1251,4 +1258,45 @@ func taskDefinitionARNStripRevision(s string) string {
 		tdArn.Resource = parts[0]
 	}
 	return tdArn.String()
+}
+
+func parseRevisionParts(id string) (string, string, error) {
+	resARN, err := arn.Parse(id)
+	if err != nil {
+		return "", "", err
+	}
+
+	familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+	familyRevisionParts := strings.Split(familyRevision, ":")
+	if len(familyRevisionParts) != 2 {
+		return "", "", fmt.Errorf("expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", id)
+	}
+
+	return familyRevisionParts[0], familyRevisionParts[1], nil
+}
+
+type taskDefinitionImportID struct{}
+
+func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
+	// pass through an unset id since it is not used and will be
+	// parsed in the custom import
+	return d.Id()
+}
+
+func (taskDefinitionImportID) Parse(id string) (string, map[string]any, error) {
+	family, revision, err := parseRevisionParts(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	rev, err := strconv.Atoi(revision)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrFamily: family,
+		"revision":       rev,
+	}
+	return id, result, nil
 }

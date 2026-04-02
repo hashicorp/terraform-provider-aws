@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,11 +20,11 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 	}
 
 	var collection types.CollectionDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection.test"
 	resourceName := "aws_opensearchserverless_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -33,12 +32,12 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionDataSourceConfig_basic(rName, "encryption"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, dataSourceName, &collection),
+					testAccCheckCollectionExists(ctx, t, dataSourceName, &collection),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -61,11 +60,11 @@ func TestAccOpenSearchServerlessCollectionDataSource_name(t *testing.T) {
 	}
 
 	var collection types.CollectionDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_opensearchserverless_collection.test"
 	resourceName := "aws_opensearchserverless_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -73,12 +72,12 @@ func TestAccOpenSearchServerlessCollectionDataSource_name(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionDataSourceConfig_name(rName, "encryption"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, dataSourceName, &collection),
+					testAccCheckCollectionExists(ctx, t, dataSourceName, &collection),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),

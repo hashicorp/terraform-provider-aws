@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,7 +30,6 @@ import (
 // @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationAggregator")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,
@@ -239,9 +237,8 @@ func findConfigurationAggregators(ctx context.Context, conn *configservice.Clien
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConfigurationAggregatorException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

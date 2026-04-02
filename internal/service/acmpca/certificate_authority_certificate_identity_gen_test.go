@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccACMPCACertificateAuthorityCertificate_Identity_Basic(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v acmpca.GetCertificateAuthorityCertificateOutput
@@ -108,7 +108,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccACMPCACertificateAuthorityCertificate_Identity_RegionOverride(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
@@ -228,7 +228,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_RegionOverride(t *tes
 	})
 }
 
-func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v acmpca.GetCertificateAuthorityCertificateOutput
@@ -307,7 +307,7 @@ func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource(t *t
 	})
 }
 
-func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccACMPCACertificateAuthorityCertificate_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v acmpca.GetCertificateAuthorityCertificateOutput

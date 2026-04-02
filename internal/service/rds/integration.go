@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -41,7 +40,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Integration")
 // @Testing(tagsTest=false)
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -279,9 +277,8 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -299,8 +296,8 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func statusIntegration(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIntegration(conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -316,10 +313,10 @@ func statusIntegration(ctx context.Context, conn *rds.Client, arn string) sdkret
 }
 
 func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{integrationStatusCreating, integrationStatusModifying},
 		Target:  []string{integrationStatusActive},
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -335,10 +332,10 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 }
 
 func waitIntegrationDeleted(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{integrationStatusDeleting, integrationStatusActive},
 		Target:  []string{},
-		Refresh: statusIntegration(ctx, conn, arn),
+		Refresh: statusIntegration(conn, arn),
 		Timeout: timeout,
 	}
 

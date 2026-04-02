@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSFNStateMachine_Identity_Basic(t *testing.T) {
+func TestAccSFNStateMachine_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sfn.DescribeStateMachineOutput
@@ -35,7 +35,7 @@ func TestAccSFNStateMachine_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
-		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSFNStateMachine_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStateMachineExists(ctx, resourceName, &v),
+					testAccCheckStateMachineExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -108,7 +108,7 @@ func TestAccSFNStateMachine_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSFNStateMachine_Identity_RegionOverride(t *testing.T) {
+func TestAccSFNStateMachine_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sfn_state_machine.test"
@@ -229,7 +229,7 @@ func TestAccSFNStateMachine_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.13.0
-func TestAccSFNStateMachine_Identity_ExistingResource(t *testing.T) {
+func TestAccSFNStateMachine_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sfn.DescribeStateMachineOutput
@@ -242,7 +242,7 @@ func TestAccSFNStateMachine_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SFNServiceID),
-		CheckDestroy: testAccCheckStateMachineDestroy(ctx),
+		CheckDestroy: testAccCheckStateMachineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -251,7 +251,7 @@ func TestAccSFNStateMachine_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStateMachineExists(ctx, resourceName, &v),
+					testAccCheckStateMachineExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -285,7 +285,7 @@ func TestAccSFNStateMachine_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.13.0
-func TestAccSFNStateMachine_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSFNStateMachine_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sfn.DescribeStateMachineOutput
@@ -298,7 +298,7 @@ func TestAccSFNStateMachine_Identity_ExistingResource_NoRefresh_NoChange(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SFNServiceID),
-		CheckDestroy: testAccCheckStateMachineDestroy(ctx),
+		CheckDestroy: testAccCheckStateMachineDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -312,7 +312,7 @@ func TestAccSFNStateMachine_Identity_ExistingResource_NoRefresh_NoChange(t *test
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStateMachineExists(ctx, resourceName, &v),
+					testAccCheckStateMachineExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

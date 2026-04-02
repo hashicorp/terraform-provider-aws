@@ -25,8 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -43,6 +42,7 @@ import (
 
 // @FrameworkResource("aws_eks_capability", name="Capability")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newCapabilityResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capabilityResource{}
 
@@ -243,7 +243,7 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateCapability(ctx, &input)
@@ -342,7 +342,7 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 		}
 
 		// Additional fields.
-		input.ClientRequestToken = aws.String(sdkid.UniqueId())
+		input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 
 		// argo_cd block can only be modified in-place (not added or removed).
 		var oldConfiguration, newConfiguration awstypes.CapabilityConfigurationRequest
@@ -456,9 +456,8 @@ func findCapability(ctx context.Context, conn *eks.Client, input *eks.DescribeCa
 	output, err := conn.DescribeCapability(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -483,8 +482,8 @@ func findCapabilityUpdateByThreePartKey(ctx context.Context, conn *eks.Client, c
 	return findUpdate(ctx, conn, &input)
 }
 
-func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapability(conn *eks.Client, clusterName, capabilityName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
 
 		if retry.NotFound(err) {
@@ -499,8 +498,8 @@ func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabi
 	}
 }
 
-func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapabilityUpdate(conn *eks.Client, clusterName, capabilityName, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapabilityUpdateByThreePartKey(ctx, conn, clusterName, capabilityName, id)
 
 		if retry.NotFound(err) {
@@ -516,10 +515,10 @@ func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, 
 }
 
 func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*awstypes.Capability, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapabilityStatusCreating),
 		Target:  enum.Slice(awstypes.CapabilityStatusActive),
-		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
+		Refresh: statusCapability(conn, clusterName, capabilityName),
 		Timeout: timeout,
 	}
 
@@ -537,10 +536,10 @@ func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, c
 }
 
 func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*awstypes.Capability, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapabilityStatusActive, awstypes.CapabilityStatusDeleting),
 		Target:  []string{},
-		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
+		Refresh: statusCapability(conn, clusterName, capabilityName),
 		Timeout: timeout,
 	}
 
@@ -558,10 +557,10 @@ func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, c
 }
 
 func waitCapabilityUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string, timeout time.Duration) (*awstypes.Update, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.UpdateStatusSuccessful),
-		Refresh: statusCapabilityUpdate(ctx, conn, clusterName, capabilityName, id),
+		Refresh: statusCapabilityUpdate(conn, clusterName, capabilityName, id),
 		Timeout: timeout,
 	}
 

@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,20 +21,20 @@ import (
 func TestAccEFSMountTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 	resourceName2 := "aws_efs_mount_target.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
@@ -57,8 +55,8 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 			{
 				Config: testAccMountTargetConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
-					testAccCheckMountTargetExists(ctx, resourceName2, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName2, &mount),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
 					acctest.MatchResourceAttrRegionalHostname(resourceName2, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
 				),
@@ -70,19 +68,19 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 func TestAccEFSMountTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,19 +92,19 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddress(rName, "10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "10.0.0.100"),
 				),
 			},
@@ -122,19 +120,19 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 func TestAccEFSMountTarget_ipAddressTypeIPv6Only(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddressTypeIPv6Only(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv6Only)),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_address"),
@@ -152,19 +150,19 @@ func TestAccEFSMountTarget_ipAddressTypeIPv6Only(t *testing.T) {
 func TestAccEFSMountTarget_ipAddressTypeIPv6OnlyWithIPv6Address(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddressTypeIPv6OnlyWithIPv6Address(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv6Only)),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_address"),
@@ -182,19 +180,19 @@ func TestAccEFSMountTarget_ipAddressTypeIPv6OnlyWithIPv6Address(t *testing.T) {
 func TestAccEFSMountTarget_ipAddressTypeDualStack(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddressTypeDualStack(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeDualStack)),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_address"),
@@ -212,19 +210,19 @@ func TestAccEFSMountTarget_ipAddressTypeDualStack(t *testing.T) {
 func TestAccEFSMountTarget_ipAddressTypeDualStackWithIPv6Address(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddressTypeDualStackWithIPv6Address(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeDualStack)),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_address"),
@@ -243,19 +241,19 @@ func TestAccEFSMountTarget_ipAddressTypeDualStackWithIPv6Address(t *testing.T) {
 func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddressNullIP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 				),
 			},
@@ -268,9 +266,9 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 	})
 }
 
-func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMountTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_mount_target" {
 				continue
@@ -293,14 +291,14 @@ func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckMountTargetExists(ctx context.Context, n string, v *awstypes.MountTargetDescription) resource.TestCheckFunc {
+func testAccCheckMountTargetExists(ctx context.Context, t *testing.T, n string, v *awstypes.MountTargetDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
 
 		output, err := tfefs.FindMountTargetByID(ctx, conn, rs.Primary.ID)
 

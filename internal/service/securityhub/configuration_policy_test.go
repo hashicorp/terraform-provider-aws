@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 	resourceName := "aws_securityhub_configuration_policy.test"
 	exampleStandardsARN := fmt.Sprintf("arn:%s:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0", acctest.Partition())
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -32,7 +31,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
@@ -45,7 +44,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 				},
 				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a disabled policy"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
@@ -62,7 +61,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationPolicyConfig_baseEnabled("TestPolicy", "This is an enabled policy", exampleStandardsARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is an enabled policy"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
@@ -81,7 +80,7 @@ func testAccConfigurationPolicy_disappears(t *testing.T) {
 	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -89,7 +88,7 @@ func testAccConfigurationPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
@@ -102,7 +101,7 @@ func testAccConfigurationPolicy_disappears(t *testing.T) {
 				},
 				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceConfigurationPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -118,7 +117,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 	foundationalStandardsARN := fmt.Sprintf("arn:%s:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Partition(), acctest.Region())
 	nistStandardsARN := fmt.Sprintf("arn:%s:securityhub:%s::standards/nist-800-53/v/5.0.0", acctest.Partition(), acctest.Region())
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -126,7 +125,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
@@ -139,7 +138,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				},
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersMulti(foundationalStandardsARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.#", "2"),
@@ -177,7 +176,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				// bool type
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(nistStandardsARN, "CloudWatch.15", "insufficientDataActionRequired", "bool", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "CloudWatch.15"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName: "insufficientDataActionRequired",
@@ -190,7 +189,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				// double type
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "RDS.14", "BacktrackWindowInHours", "double", "20.25"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "RDS.14"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName:   "BacktrackWindowInHours",
@@ -203,7 +202,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				// enum type
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "APIGateway.1", "loggingLevel", "enum", `"ERROR"`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "APIGateway.1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName: "loggingLevel",
@@ -216,7 +215,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				// enum_list type
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "S3.11", "eventTypes", "enum_list", `["s3:IntelligentTiering", "s3:LifecycleExpiration:*"]`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "S3.11"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName:        "eventTypes",
@@ -231,7 +230,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				// int type
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "DocumentDB.2", "minimumBackupRetentionPeriod", "int", "20"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "DocumentDB.2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName: "minimumBackupRetentionPeriod",
@@ -244,7 +243,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				// int_list type
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "EC2.18", "authorizedTcpPorts", "int_list", "[443, 8080]"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "EC2.18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName:       "authorizedTcpPorts",
@@ -266,7 +265,7 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 	resourceName := "aws_securityhub_configuration_policy.test"
 	foundationalStandardsARN := fmt.Sprintf("arn:%s:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Partition(), acctest.Region())
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -274,7 +273,7 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
@@ -287,7 +286,7 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 				},
 				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsARN, "IAM.7", "APIGateway.1", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.#", "2"),
@@ -304,7 +303,7 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 			{
 				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsARN, "APIGateway.1", "IAM.7", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.#", "2"),
@@ -317,14 +316,14 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckConfigurationPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		_, err := tfsecurityhub.FindConfigurationPolicyByID(ctx, conn, rs.Primary.ID)
 
@@ -332,9 +331,9 @@ func testAccCheckConfigurationPolicyExists(ctx context.Context, n string) resour
 	}
 }
 
-func testAccCheckConfigurationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_configuration_policy" {

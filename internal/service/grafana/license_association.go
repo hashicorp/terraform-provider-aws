@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -165,17 +164,17 @@ func findLicensedWorkspaceByID(ctx context.Context, conn *grafana.Client, id str
 	}
 
 	if output.LicenseType == "" {
-		return nil, &sdkretry.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
 func waitLicenseAssociationCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusUpgrading),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 

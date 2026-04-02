@@ -15,11 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -34,7 +32,7 @@ func testAccResourceCollection_basic(t *testing.T) {
 	var resourcecollection types.ResourceCollectionFilter
 	resourceName := "aws_devopsguru_resource_collection.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -42,12 +40,12 @@ func testAccResourceCollection_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCollectionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
+					testAccCheckResourceCollectionExists(ctx, t, resourceName, &resourcecollection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsService)),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.0.stack_names.#", "1"),
@@ -68,7 +66,7 @@ func testAccResourceCollection_disappears(t *testing.T) {
 	var resourcecollection types.ResourceCollectionFilter
 	resourceName := "aws_devopsguru_resource_collection.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -76,12 +74,12 @@ func testAccResourceCollection_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCollectionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
+					testAccCheckResourceCollectionExists(ctx, t, resourceName, &resourcecollection),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,9 +93,9 @@ func testAccResourceCollection_cloudformation(t *testing.T) {
 	var resourcecollection types.ResourceCollectionFilter
 	resourceName := "aws_devopsguru_resource_collection.test"
 	cfnStackResourceName := "aws_cloudformation_stack.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -105,12 +103,12 @@ func testAccResourceCollection_cloudformation(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCollectionConfig_cloudformation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
+					testAccCheckResourceCollectionExists(ctx, t, resourceName, &resourcecollection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsCloudFormation)),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.0.stack_names.#", "1"),
@@ -131,9 +129,9 @@ func testAccResourceCollection_tags(t *testing.T) {
 	var resourcecollection types.ResourceCollectionFilter
 	resourceName := "aws_devopsguru_resource_collection.test"
 	appBoundaryKey := "DevOps-Guru-tfacctest"
-	tagValue := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tagValue := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -141,12 +139,12 @@ func testAccResourceCollection_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCollectionConfig_tags(appBoundaryKey, tagValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
+					testAccCheckResourceCollectionExists(ctx, t, resourceName, &resourcecollection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsTags)),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0.app_boundary_key", appBoundaryKey),
@@ -170,7 +168,7 @@ func testAccResourceCollection_tagsAllResources(t *testing.T) {
 	appBoundaryKey := "DevOps-Guru-tfacctest"
 	tagValue := "*" // To include all resources with the specified app boundary key
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -178,12 +176,12 @@ func testAccResourceCollection_tagsAllResources(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCollectionConfig_tags(appBoundaryKey, tagValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
+					testAccCheckResourceCollectionExists(ctx, t, resourceName, &resourcecollection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsTags)),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0.app_boundary_key", appBoundaryKey),
@@ -231,9 +229,9 @@ func resourceCollectionDisappearsStateFunc(ctx context.Context, state *tfsdk.Sta
 	return nil
 }
 
-func testAccCheckResourceCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceCollectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devopsguru_resource_collection" {
@@ -255,7 +253,7 @@ func testAccCheckResourceCollectionDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckResourceCollectionExists(ctx context.Context, name string, resourcecollection *types.ResourceCollectionFilter) resource.TestCheckFunc {
+func testAccCheckResourceCollectionExists(ctx context.Context, t *testing.T, name string, resourcecollection *types.ResourceCollectionFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -266,7 +264,7 @@ func testAccCheckResourceCollectionExists(ctx context.Context, name string, reso
 			return create.Error(names.DevOpsGuru, create.ErrActionCheckingExistence, tfdevopsguru.ResNameResourceCollection, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 		resp, err := tfdevopsguru.FindResourceCollectionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.DevOpsGuru, create.ErrActionCheckingExistence, tfdevopsguru.ResNameResourceCollection, rs.Primary.ID, err)

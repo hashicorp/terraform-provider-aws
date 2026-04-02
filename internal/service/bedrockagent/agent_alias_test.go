@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,20 +19,20 @@ import (
 
 func TestAccBedrockAgentAgentAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v awstypes.AgentAlias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
@@ -55,20 +53,20 @@ func TestAccBedrockAgentAgentAlias_basic(t *testing.T) {
 
 func TestAccBedrockAgentAgentAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v awstypes.AgentAlias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceAgentAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,22 +77,22 @@ func TestAccBedrockAgentAgentAlias_disappears(t *testing.T) {
 
 func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	descriptionOld := "Agent Alias Before Update"
 	descriptionNew := "Agent Alias After Update"
 	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v awstypes.AgentAlias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentAliasConfig_update(rName, descriptionOld),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
@@ -113,7 +111,7 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 			{
 				Config: testAccAgentAliasConfig_update(rName, descriptionNew),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
@@ -130,20 +128,20 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 
 func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v awstypes.AgentAlias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccagentAliasConfig_routingUpdateOne(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
@@ -162,7 +160,7 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 			{
 				Config: testAccagentAliasConfig_routingUpdateTwo(rName, "2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
@@ -179,20 +177,20 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 
 func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v awstypes.AgentAlias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -205,7 +203,7 @@ func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 			{
 				Config: testAccAgentAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -214,7 +212,7 @@ func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 			{
 				Config: testAccAgentAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -227,20 +225,20 @@ func TestAccBedrockAgentAgentAlias_provisionedThroughput(t *testing.T) {
 	acctest.Skip(t, "Bedrock Provisioned Model Throughput for Antropic Claude 2 has a minimum 1 month commitment and costs > $45K/month")
 
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test2"
 	var v awstypes.AgentAlias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentAliasConfig_provisionedThroughout(rName, "1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					testAccCheckAgentAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
@@ -261,9 +259,9 @@ func TestAccBedrockAgentAgentAlias_provisionedThroughput(t *testing.T) {
 	})
 }
 
-func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_agent_alias" {
@@ -287,14 +285,14 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAgentAliasExists(ctx context.Context, n string, v *awstypes.AgentAlias) resource.TestCheckFunc {
+func testAccCheckAgentAliasExists(ctx context.Context, t *testing.T, n string, v *awstypes.AgentAlias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindAgentAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_alias_id"], rs.Primary.Attributes["agent_id"])
 

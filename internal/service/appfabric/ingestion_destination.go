@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -396,9 +395,8 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	output, err := conn.GetIngestionDestination(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -413,8 +411,8 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 	return output.IngestionDestination, nil
 }
 
-func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIngestionDestination(conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if retry.NotFound(err) {
@@ -430,10 +428,10 @@ func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, app
 }
 
 func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string, timeout time.Duration) (*awstypes.IngestionDestination, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.IngestionDestinationStatusActive),
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 
@@ -449,10 +447,10 @@ func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client,
 }
 
 func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string, timeout time.Duration) (*awstypes.IngestionDestination, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IngestionDestinationStatusActive),
 		Target:  []string{},
-		Refresh: statusIngestionDestination(ctx, conn, appBundleARN, ingestionARN, arn),
+		Refresh: statusIngestionDestination(conn, appBundleARN, ingestionARN, arn),
 		Timeout: timeout,
 	}
 

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -201,8 +200,8 @@ func findDBInstanceRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbIns
 	}))
 }
 
-func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.Client, dbInstanceIdentifier, roleARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstanceRoleAssociation(conn *rds.Client, dbInstanceIdentifier, roleARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceRoleByTwoPartKey(ctx, conn, dbInstanceIdentifier, roleARN)
 
 		if retry.NotFound(err) {
@@ -218,10 +217,10 @@ func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.Client, dbIn
 }
 
 func waitDBInstanceRoleAssociationCreated(ctx context.Context, conn *rds.Client, dbInstanceIdentifier, roleARN string, timeout time.Duration) (*types.DBInstanceRole, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{dbInstanceRoleStatusPending},
 		Target:  []string{dbInstanceRoleStatusActive},
-		Refresh: statusDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleARN),
+		Refresh: statusDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleARN),
 		Timeout: timeout,
 	}
 
@@ -235,10 +234,10 @@ func waitDBInstanceRoleAssociationCreated(ctx context.Context, conn *rds.Client,
 }
 
 func waitDBInstanceRoleAssociationDeleted(ctx context.Context, conn *rds.Client, dbInstanceIdentifier, roleARN string, timeout time.Duration) (*types.DBInstanceRole, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{dbInstanceRoleStatusActive, dbInstanceRoleStatusPending},
 		Target:  []string{},
-		Refresh: statusDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleARN),
+		Refresh: statusDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleARN),
 		Timeout: timeout,
 	}
 

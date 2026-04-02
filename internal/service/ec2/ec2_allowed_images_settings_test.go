@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,18 +45,18 @@ func testAccEC2AllowedImagesSettings_basic(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 				),
 			},
@@ -77,18 +76,18 @@ func testAccEC2AllowedImagesSettings_disappears(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceAllowedImagesSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -107,18 +106,18 @@ func testAccEC2AllowedImagesSettings_auditMode(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_auditMode(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "audit-mode"),
 				),
 			},
@@ -138,18 +137,18 @@ func testAccEC2AllowedImagesSettings_imageCriteria(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteria(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
@@ -172,18 +171,18 @@ func testAccEC2AllowedImagesSettings_imageCriteriaMultiple(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaMultiple(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
@@ -208,18 +207,18 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithNames(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithNames(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "2"),
@@ -243,18 +242,18 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithMarketplace(t *testing.T) 
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithMarketplace(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.marketplace_product_codes.#", "1"),
@@ -277,18 +276,18 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate(t *testing.T)
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithCreationDate(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.#", "1"),
@@ -311,18 +310,18 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime(t *testing
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithDeprecationTime(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.#", "1"),
@@ -345,18 +344,18 @@ func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
 	var settings ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaComplete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "1"),
@@ -382,25 +381,25 @@ func testAccEC2AllowedImagesSettings_stateUpdate(t *testing.T) {
 	var settings1, settings2 ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings1),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 				),
 			},
 			{
 				Config: testAccAllowedImagesSettingsConfig_auditMode(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings2),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "audit-mode"),
 				),
 			},
@@ -413,25 +412,25 @@ func testAccEC2AllowedImagesSettings_imageCriteriaUpdate(t *testing.T) {
 	var settings1, settings2 ec2.GetAllowedImagesSettingsOutput
 	resourceName := "aws_ec2_allowed_images_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckAllowedImagesSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteria(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings1),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings1),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 				),
 			},
 			{
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaMultiple(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings2),
+					testAccCheckAllowedImagesSettingsExists(ctx, t, resourceName, &settings2),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "2"),
 				),
 			},
@@ -439,9 +438,9 @@ func testAccEC2AllowedImagesSettings_imageCriteriaUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckAllowedImagesSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAllowedImagesSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_allowed_images_settings" {
@@ -465,14 +464,14 @@ func testAccCheckAllowedImagesSettingsDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckAllowedImagesSettingsExists(ctx context.Context, n string, v *ec2.GetAllowedImagesSettingsOutput) resource.TestCheckFunc {
+func testAccCheckAllowedImagesSettingsExists(ctx context.Context, t *testing.T, n string, v *ec2.GetAllowedImagesSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindAllowedImagesSettings(ctx, conn)
 

@@ -19,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_eks_cluster", name="Cluster")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,

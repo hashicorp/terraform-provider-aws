@@ -22,6 +22,8 @@ import (
 
 // @FrameworkDataSource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
+// @Region(overrideDeprecated=true)
+// @Testing(altRegionTfVars=true)
 func newPlanDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &planDataSource{}, nil
 }

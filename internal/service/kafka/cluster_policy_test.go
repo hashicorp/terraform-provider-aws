@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func TestAccKafkaClusterPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var clusterpolicy kafka.GetClusterPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -34,12 +32,12 @@ func TestAccKafkaClusterPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
 				),
@@ -56,10 +54,10 @@ func TestAccKafkaClusterPolicy_basic(t *testing.T) {
 func TestAccKafkaClusterPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var clusterpolicy kafka.GetClusterPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -67,12 +65,12 @@ func TestAccKafkaClusterPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterpolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceClusterPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,10 +82,10 @@ func TestAccKafkaClusterPolicy_disappears(t *testing.T) {
 func TestAccKafkaClusterPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var clusterpolicy kafka.GetClusterPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -95,12 +93,12 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
 				),
@@ -108,7 +106,7 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 			{
 				Config: testAccClusterPolicyConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
+					testAccCheckClusterPolicyExists(ctx, t, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"kafka:DescribeCluster","kafka:DescribeClusterV2"`)),
 				),
@@ -117,9 +115,9 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_cluster_policy" {
@@ -143,14 +141,14 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckClusterPolicyExists(ctx context.Context, n string, v *kafka.GetClusterPolicyOutput) resource.TestCheckFunc {
+func testAccCheckClusterPolicyExists(ctx context.Context, t *testing.T, n string, v *kafka.GetClusterPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		output, err := tfkafka.FindClusterPolicyByARN(ctx, conn, rs.Primary.ID)
 

@@ -32,7 +32,6 @@ import (
 
 // @SDKResource("aws_dms_s3_endpoint", name="S3 Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceS3Endpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3EndpointCreate,

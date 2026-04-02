@@ -10,14 +10,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevopsguru "github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,11 +23,11 @@ import (
 func testAccNotificationChannel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel types.NotificationChannel
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devopsguru_notification_channel.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -37,12 +35,12 @@ func testAccNotificationChannel_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
+					testAccCheckNotificationChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
 				),
@@ -59,10 +57,10 @@ func testAccNotificationChannel_basic(t *testing.T) {
 func testAccNotificationChannel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel types.NotificationChannel
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devopsguru_notification_channel.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -70,12 +68,12 @@ func testAccNotificationChannel_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
+					testAccCheckNotificationChannelExists(ctx, t, resourceName, &channel),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdevopsguru.ResourceNotificationChannel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,12 +85,12 @@ func testAccNotificationChannel_disappears(t *testing.T) {
 func testAccNotificationChannel_filters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel types.NotificationChannel
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_devopsguru_notification_channel.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 	messageType := string(types.NotificationMessageTypeNewInsight)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -100,12 +98,12 @@ func testAccNotificationChannel_filters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationChannelConfig_filters(rName, messageType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
+					testAccCheckNotificationChannelExists(ctx, t, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -123,9 +121,9 @@ func testAccNotificationChannel_filters(t *testing.T) {
 	})
 }
 
-func testAccCheckNotificationChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNotificationChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devopsguru_notification_channel" {
@@ -133,7 +131,7 @@ func testAccCheckNotificationChannelDestroy(ctx context.Context) resource.TestCh
 			}
 
 			_, err := tfdevopsguru.FindNotificationChannelByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*sdkretry.NotFoundError](err) {
+			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {
@@ -147,7 +145,7 @@ func testAccCheckNotificationChannelDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckNotificationChannelExists(ctx context.Context, name string, channel *types.NotificationChannel) resource.TestCheckFunc {
+func testAccCheckNotificationChannelExists(ctx context.Context, t *testing.T, name string, channel *types.NotificationChannel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -158,7 +156,7 @@ func testAccCheckNotificationChannelExists(ctx context.Context, name string, cha
 			return create.Error(names.DevOpsGuru, create.ErrActionCheckingExistence, tfdevopsguru.ResNameNotificationChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 		resp, err := tfdevopsguru.FindNotificationChannelByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

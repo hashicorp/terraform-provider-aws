@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
+func TestAccDirectConnectGateway_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DirectConnectGateway
@@ -36,7 +36,7 @@ func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
-		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -47,7 +47,7 @@ func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &v),
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -108,7 +108,7 @@ func TestAccDirectConnectGateway_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDirectConnectGateway_Identity_ExistingResource(t *testing.T) {
+func TestAccDirectConnectGateway_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DirectConnectGateway
@@ -122,7 +122,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DirectConnectServiceID),
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckGatewayDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -132,7 +132,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource(t *testing.T) {
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &v),
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -147,7 +147,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource(t *testing.T) {
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &v),
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -193,7 +193,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDirectConnectGateway_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDirectConnectGateway_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DirectConnectGateway
@@ -207,7 +207,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource_NoRefresh_NoChange(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DirectConnectServiceID),
-		CheckDestroy: testAccCheckGatewayDestroy(ctx),
+		CheckDestroy: testAccCheckGatewayDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -222,7 +222,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource_NoRefresh_NoChange(t 
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &v),
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -238,7 +238,7 @@ func TestAccDirectConnectGateway_Identity_ExistingResource_NoRefresh_NoChange(t 
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayExists(ctx, resourceName, &v),
+					testAccCheckGatewayExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

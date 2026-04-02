@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -264,7 +263,7 @@ func findVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Clien
 	output, err := conn.DescribeVpcEndpointAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -288,8 +287,8 @@ func findVPCEndpointAssociationByARN(ctx context.Context, conn *networkfirewall.
 	return findVPCEndpointAssociation(ctx, conn, &input)
 }
 
-func statusVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCEndpointAssociation(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCEndpointAssociationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -305,10 +304,10 @@ func statusVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Cli
 }
 
 func waitVPCEndpointAssociationCreated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeVpcEndpointAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:                    enum.Slice(awstypes.FirewallStatusValueReady),
-		Refresh:                   statusVPCEndpointAssociation(ctx, conn, arn),
+		Refresh:                   statusVPCEndpointAssociation(conn, arn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -323,10 +322,10 @@ func waitVPCEndpointAssociationCreated(ctx context.Context, conn *networkfirewal
 }
 
 func waitVPCEndpointAssociationDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeVpcEndpointAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueReady, awstypes.FirewallStatusValueDeleting),
 		Target:  []string{},
-		Refresh: statusVPCEndpointAssociation(ctx, conn, arn),
+		Refresh: statusVPCEndpointAssociation(conn, arn),
 		Timeout: timeout,
 	}
 

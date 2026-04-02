@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +20,20 @@ import (
 func testAccContactFlowModule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ContactFlowModule
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactFlowModuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContactFlowModuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowModuleConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactFlowModuleExists(ctx, resourceName, &v),
+					testAccCheckContactFlowModuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/flow-module/{contact_flow_module_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_module_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
@@ -53,7 +51,7 @@ func testAccContactFlowModule_basic(t *testing.T) {
 			{
 				Config: testAccContactFlowModuleConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactFlowModuleExists(ctx, resourceName, &v),
+					testAccCheckContactFlowModuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/flow-module/{contact_flow_module_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_module_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
@@ -70,20 +68,20 @@ func testAccContactFlowModule_basic(t *testing.T) {
 func testAccContactFlowModule_filename(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ContactFlowModule
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactFlowModuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContactFlowModuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowModuleConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow_module.json"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactFlowModuleExists(ctx, resourceName, &v),
+					testAccCheckContactFlowModuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/flow-module/{contact_flow_module_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_module_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -104,7 +102,7 @@ func testAccContactFlowModule_filename(t *testing.T) {
 			{
 				Config: testAccContactFlowModuleConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_module_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactFlowModuleExists(ctx, resourceName, &v),
+					testAccCheckContactFlowModuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/flow-module/{contact_flow_module_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_module_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -120,20 +118,20 @@ func testAccContactFlowModule_filename(t *testing.T) {
 func testAccContactFlowModule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ContactFlowModule
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactFlowModuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContactFlowModuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowModuleConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactFlowModuleExists(ctx, resourceName, &v),
+					testAccCheckContactFlowModuleExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceContactFlowModule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -142,14 +140,14 @@ func testAccContactFlowModule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckContactFlowModuleExists(ctx context.Context, n string, v *awstypes.ContactFlowModule) resource.TestCheckFunc {
+func testAccCheckContactFlowModuleExists(ctx context.Context, t *testing.T, n string, v *awstypes.ContactFlowModule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 		output, err := tfconnect.FindContactFlowModuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_module_id"])
 
@@ -163,14 +161,14 @@ func testAccCheckContactFlowModuleExists(ctx context.Context, n string, v *awsty
 	}
 }
 
-func testAccCheckContactFlowModuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContactFlowModuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_contact_flow_module" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 			_, err := tfconnect.FindContactFlowModuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_module_id"])
 

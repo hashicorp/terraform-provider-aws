@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,18 +21,18 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rName, basicWidget),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					resource.TestCheckResourceAttrSet(resourceName, "dashboard_arn"),
 				),
 			},
@@ -46,7 +44,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 			{
 				Config: testAccDashboardConfig_basic(rName, updatedWidget),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					resource.TestCheckResourceAttrSet(resourceName, "dashboard_arn"),
 				),
 			},
@@ -58,18 +56,18 @@ func TestAccCloudWatchDashboard_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	resourceName := "aws_cloudwatch_dashboard.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig_basic(rName, basicWidget),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatch.ResourceDashboard(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,14 +76,14 @@ func TestAccCloudWatchDashboard_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDashboardExists(ctx context.Context, n string, v *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+func testAccCheckDashboardExists(ctx context.Context, t *testing.T, n string, v *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 		output, err := tfcloudwatch.FindDashboardByName(ctx, conn, rs.Primary.ID)
 
@@ -99,9 +97,9 @@ func testAccCheckDashboardExists(ctx context.Context, n string, v *cloudwatch.Ge
 	}
 }
 
-func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDashboardDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_dashboard" {

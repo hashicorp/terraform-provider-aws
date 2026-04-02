@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalogappregistry "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
@@ -24,24 +22,24 @@ import (
 func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 	applicationResourceName := "aws_servicecatalogappregistry_application.test"
 	attributeGroupResourceName := "aws_servicecatalogappregistry_attribute_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
+					testAccCheckAttributeGroupAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, applicationResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "attribute_group_id", attributeGroupResourceName, names.AttrID),
 				),
@@ -60,22 +58,22 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.
 func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
+					testAccCheckAttributeGroupAssociationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicecatalogappregistry.ResourceAttributeGroupAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,9 +82,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_disappears(t *tes
 	})
 }
 
-func testAccCheckAttributeGroupAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAttributeGroupAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogAppRegistryClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogAppRegistryClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalogappregistry_attribute_group_association" {
@@ -111,7 +109,7 @@ func testAccCheckAttributeGroupAssociationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckAttributeGroupAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckAttributeGroupAssociationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -127,7 +125,7 @@ func testAccCheckAttributeGroupAssociationExists(ctx context.Context, name strin
 			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, tfservicecatalogappregistry.ResNameAttributeGroupAssociation, name, errors.New("attribute_group_id not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogAppRegistryClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogAppRegistryClient(ctx)
 		_, err := tfservicecatalogappregistry.FindAttributeGroupAssociationByTwoPartKey(ctx, conn, applicationId, attributeGroupId)
 		if err != nil {
 			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, tfservicecatalogappregistry.ResNameAttributeGroupAssociation, attributeGroupId, err)

@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,15 +21,15 @@ import (
 func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config types.OidcIdentityProviderConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	eksClusterResourceName := "aws_eks_cluster.test"
 	resourceName := "aws_eks_identity_provider_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIdentityProviderConfigConfig_issuerURL(rName, "http://example.com"),
@@ -40,7 +38,7 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 			{
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
+					testAccCheckIdentityProviderExistsConfig(ctx, t, resourceName, &config),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
@@ -67,19 +65,19 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 func TestAccEKSIdentityProviderConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config types.OidcIdentityProviderConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_identity_provider_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
+					testAccCheckIdentityProviderExistsConfig(ctx, t, resourceName, &config),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -91,19 +89,19 @@ func TestAccEKSIdentityProviderConfig_disappears(t *testing.T) {
 func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config types.OidcIdentityProviderConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_identity_provider_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfigConfig_allOIDCOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
+					testAccCheckIdentityProviderExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", "groups"),
@@ -129,19 +127,19 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config types.OidcIdentityProviderConfig
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_identity_provider_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityProviderConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
+					testAccCheckIdentityProviderExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -154,7 +152,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 			{
 				Config: testAccIdentityProviderConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
+					testAccCheckIdentityProviderExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -163,7 +161,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 			{
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
+					testAccCheckIdentityProviderExistsConfig(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -172,7 +170,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityProviderExistsConfig(ctx context.Context, n string, v *types.OidcIdentityProviderConfig) resource.TestCheckFunc {
+func testAccCheckIdentityProviderExistsConfig(ctx context.Context, t *testing.T, n string, v *types.OidcIdentityProviderConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -184,7 +182,7 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, n string, v *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		output, err := tfeks.FindOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
 
@@ -198,9 +196,9 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckIdentityProviderConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIdentityProviderConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_identity_provider_config" {

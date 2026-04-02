@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,7 +30,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAutoScalingConfigurationCreate,
@@ -204,9 +202,8 @@ func findAutoScalingConfigurationByARN(ctx context.Context, conn *apprunner.Clie
 	output, err := conn.DescribeAutoScalingConfiguration(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -219,9 +216,8 @@ func findAutoScalingConfigurationByARN(ctx context.Context, conn *apprunner.Clie
 	}
 
 	if status := string(output.AutoScalingConfiguration.Status); status == autoScalingConfigurationStatusInactive {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
@@ -264,8 +260,8 @@ const (
 	autoScalingConfigurationStatusInactive = "inactive"
 )
 
-func statusAutoScalingConfiguration(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAutoScalingConfiguration(conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAutoScalingConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -284,10 +280,10 @@ func waitAutoScalingConfigurationCreated(ctx context.Context, conn *apprunner.Cl
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{autoScalingConfigurationStatusActive},
-		Refresh: statusAutoScalingConfiguration(ctx, conn, arn),
+		Refresh: statusAutoScalingConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -304,10 +300,10 @@ func waitAutoScalingConfigurationDeleted(ctx context.Context, conn *apprunner.Cl
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{autoScalingConfigurationStatusActive},
 		Target:  []string{},
-		Refresh: statusAutoScalingConfiguration(ctx, conn, arn),
+		Refresh: statusAutoScalingConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 

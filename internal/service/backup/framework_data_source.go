@@ -20,7 +20,7 @@ import (
 // @SDKDataSource("aws_backup_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
-// @Testing(generator="randomFrameworkName()")
+// @Testing(generator="randomFrameworkName(t)")
 func dataSourceFramework() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFrameworkRead,

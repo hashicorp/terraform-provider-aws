@@ -14,7 +14,6 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
@@ -35,17 +33,17 @@ func TestAccEMRCluster_basic(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
@@ -92,17 +90,17 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_autoTermination(rName, 10000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "10000"),
 				),
@@ -120,7 +118,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 			{
 				Config: testAccClusterConfig_autoTermination(rName, 20000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "20000"),
 				),
@@ -128,14 +126,14 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 			{
 				Config: testAccClusterConfig_noAutoTermination(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_autoTermination(rName, 20000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "20000"),
 				),
@@ -156,17 +154,17 @@ func TestAccEMRCluster_additionalInfo(t *testing.T) {
 }`
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_additionalInfo(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "additional_info", expectedJSON),
@@ -192,17 +190,17 @@ func TestAccEMRCluster_disappears(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), resourceName),
 				),
@@ -217,17 +215,17 @@ func TestAccEMRCluster_sJSON(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_configurationsJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestMatchResourceAttr(resourceName, "configurations_json",
 						regexache.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
 				),
@@ -315,19 +313,19 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
   ]
 }
 `
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_coreInstanceGroupAutoScalingPolicy(rName, autoscalingPolicy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "core_instance_group.0.autoscaling_policy", autoscalingPolicy1),
 				),
@@ -345,7 +343,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupAutoScalingPolicy(rName, autoscalingPolicy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "core_instance_group.0.autoscaling_policy", autoscalingPolicy2),
@@ -354,7 +352,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupAutoScalingPolicyRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.autoscaling_policy", ""),
@@ -367,19 +365,19 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_coreInstanceGroupBidPrice(rName, "0.50"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.bid_price", "0.50"),
 				),
@@ -397,7 +395,7 @@ func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupBidPrice(rName, "0.51"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.bid_price", "0.51"),
@@ -410,19 +408,19 @@ func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2, cluster3 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_coreInstanceGroupInstanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "2"),
 				),
@@ -440,7 +438,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupInstanceCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "1"),
@@ -449,7 +447,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupInstanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "2"),
@@ -462,19 +460,19 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_coreInstanceGroupInstanceType(rName, "m4.large"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.large"),
 				),
@@ -492,7 +490,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupInstanceType(rName, "m4.xlarge"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.xlarge"),
@@ -505,19 +503,19 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_coreInstanceGroupName(rName, "name1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.name", "name1"),
 				),
@@ -535,7 +533,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 			{
 				Config: testAccClusterConfig_coreInstanceGroupName(rName, "name2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.name", "name2"),
@@ -550,20 +548,20 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 	var cluster awstypes.Cluster
 	var vpc ec2types.Vpc
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 	vpcResourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 				),
 			},
@@ -574,7 +572,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+					conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 					err := testAccDeleteManagedSecurityGroups(ctx, conn, &vpc)
 
@@ -594,18 +592,18 @@ func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	password := fmt.Sprintf("NeverKeepPasswordsInPlainText%s!", rName)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_kerberosDedicatedKdc(rName, password),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.0.kdc_admin_password", password),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.0.realm", "EC2.INTERNAL"),
@@ -629,19 +627,19 @@ func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_masterInstanceGroupBidPrice(rName, "0.50"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.bid_price", "0.50"),
 				),
@@ -659,7 +657,7 @@ func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 			{
 				Config: testAccClusterConfig_masterInstanceGroupBidPrice(rName, "0.51"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.bid_price", "0.51"),
@@ -672,19 +670,19 @@ func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_masterInstanceGroupInstanceCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "3"),
 				),
@@ -702,7 +700,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 			{
 				Config: testAccClusterConfig_masterInstanceGroupInstanceCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "1"),
@@ -715,19 +713,19 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_masterInstanceGroupInstanceType(rName, "m4.large"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.large"),
 				),
@@ -745,7 +743,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 			{
 				Config: testAccClusterConfig_masterInstanceGroupInstanceType(rName, "m4.xlarge"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.xlarge"),
@@ -758,19 +756,19 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_masterInstanceGroupName(rName, "name1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.name", "name1"),
 				),
@@ -788,7 +786,7 @@ func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 			{
 				Config: testAccClusterConfig_masterInstanceGroupName(rName, "name2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.name", "name2"),
@@ -803,17 +801,17 @@ func TestAccEMRCluster_security(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_securityConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttrPair(resourceName, "security_configuration", "aws_emr_security_configuration.test", names.AttrName),
 				),
 			},
@@ -836,17 +834,17 @@ func TestAccEMRCluster_Step_basic(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepSingle(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
@@ -875,17 +873,17 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 	var cluster1, cluster2, cluster3 awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
 				),
 			},
@@ -902,7 +900,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 			{
 				Config: testAccClusterConfig_stepNoBlocks(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
 				),
 			},
@@ -919,7 +917,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 			{
 				Config: testAccClusterConfig_stepZeroed(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 				),
 			},
@@ -942,17 +940,17 @@ func TestAccEMRCluster_Step_multiple(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepMultiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
@@ -985,17 +983,17 @@ func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepMultipleListStates(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
@@ -1029,17 +1027,17 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_bootstrap(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1075,7 +1073,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 			{
 				Config: testAccClusterConfig_bootstrapAdd(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1116,7 +1114,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 			{
 				Config: testAccClusterConfig_bootstrapReorder(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
@@ -1163,17 +1161,17 @@ func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_PlacementGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.instance_role", "MASTER"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.placement_strategy", "SPREAD"),
@@ -1182,7 +1180,7 @@ func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 			{
 				Config: testAccClusterConfig_PlacementGroupWithOptionalUnset(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.instance_role", "MASTER"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.placement_strategy", "SPREAD"),
@@ -1207,24 +1205,24 @@ func TestAccEMRCluster_terminationProtected(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_terminationPolicy(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccClusterConfig_terminationPolicy(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection", acctest.CtTrue),
 				),
 			},
@@ -1242,7 +1240,7 @@ func TestAccEMRCluster_terminationProtected(t *testing.T) {
 				//Need to turn off termination_protection to allow the job to be deleted
 				Config: testAccClusterConfig_terminationPolicy(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection", acctest.CtFalse),
 				),
 			},
@@ -1265,17 +1263,17 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_keepJob(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "keep_job_flow_alive_when_no_steps", acctest.CtFalse),
 				),
 			},
@@ -1298,18 +1296,18 @@ func TestAccEMRCluster_s3Logging(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketName := fmt.Sprintf("s3n://%s/", rName)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_s3Logging(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
 				),
 			},
@@ -1332,18 +1330,18 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketName := fmt.Sprintf("s3n://%s/", rName)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_s3Encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
 				),
@@ -1367,17 +1365,17 @@ func TestAccEMRCluster_tags(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.role", "rolename"),
 					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "env_zone"),
@@ -1387,7 +1385,7 @@ func TestAccEMRCluster_tags(t *testing.T) {
 			{
 				Config: testAccClusterConfig_updatedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "new_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "production"),
@@ -1413,24 +1411,24 @@ func TestAccEMRCluster_RootVolume_size(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "21"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updatedRootVolumeSize(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "48"),
 				),
 			},
@@ -1451,25 +1449,25 @@ func TestAccEMRCluster_RootVolume_size(t *testing.T) {
 func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_stepConcurrencyLevel(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step_concurrency_level", "2"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_stepConcurrencyLevel(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "step_concurrency_level", "1"),
 				),
 			},
@@ -1490,18 +1488,18 @@ func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 func TestAccEMRCluster_ebs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster awstypes.Cluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_ebs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
 				),
@@ -1525,17 +1523,17 @@ func TestAccEMRCluster_CustomAMI_id(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_customAMIID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttrSet(resourceName, "custom_ami_id"),
 				),
 			},
@@ -1560,18 +1558,18 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 	resourceName := "aws_emr_cluster.test"
 	subnetResourceName := "aws_subnet.test"
 	subnet2ResourceName := "aws_subnet.test2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_instanceFleets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
@@ -1597,7 +1595,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 			{
 				Config: testAccClusterConfig_instanceFleetMultipleSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
@@ -1630,17 +1628,17 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_instanceFleetsMasterOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "0"),
 				),
@@ -1664,17 +1662,17 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", acctest.CtTrue),
 				),
 			},
@@ -1691,7 +1689,7 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 			{
 				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", acctest.CtFalse),
 				),
 			},
@@ -1717,17 +1715,17 @@ func TestAccEMRCluster_osReleaseLabel(t *testing.T) {
 	var osReleaseLabel1 = "2.0.20240109.0"
 	var osReleaseLabel2 = "2.0.20250116.0"
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_osReleaseLabel(rName, releaseLabel, osReleaseLabel1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "release_label", releaseLabel),
 					resource.TestCheckResourceAttr(resourceName, "os_release_label", osReleaseLabel1),
 				),
@@ -1745,7 +1743,7 @@ func TestAccEMRCluster_osReleaseLabel(t *testing.T) {
 			{
 				Config: testAccClusterConfig_osReleaseLabel(rName, releaseLabel, osReleaseLabel2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "release_label", releaseLabel),
 					resource.TestCheckResourceAttr(resourceName, "os_release_label", osReleaseLabel2),
@@ -1770,11 +1768,11 @@ func TestAccEMRCluster_upgradeV5_100_0(t *testing.T) {
 	var cluster awstypes.Cluster
 
 	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EMRServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -1785,7 +1783,7 @@ func TestAccEMRCluster_upgradeV5_100_0(t *testing.T) {
 				},
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1800,7 +1798,7 @@ func TestAccEMRCluster_upgradeV5_100_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1815,9 +1813,9 @@ func TestAccEMRCluster_upgradeV5_100_0(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_cluster" {
@@ -1841,14 +1839,14 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, t *testing.T, n string, v *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		output, err := tfemr.FindClusterByID(ctx, conn, rs.Primary.ID)
 

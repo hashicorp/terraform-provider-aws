@@ -34,7 +34,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
 // @Testing(importIgnore="policy")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 

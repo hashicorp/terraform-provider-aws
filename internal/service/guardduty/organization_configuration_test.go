@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,7 +22,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -36,7 +35,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
@@ -65,7 +64,7 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 				t.Run(to, func(t *testing.T) {
 					ctx := acctest.Context(t)
 
-					resource.Test(t, resource.TestCase{
+					acctest.Test(ctx, t, resource.TestCase{
 						PreCheck: func() {
 							acctest.PreCheck(ctx, t)
 							acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -78,7 +77,7 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 							{
 								Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(types.AutoEnableMembers(from)),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+									testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 									resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", from),
 								),
 							},
@@ -90,7 +89,7 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 							{
 								Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(types.AutoEnableMembers(to)),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+									testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 									resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", to),
 								),
 							},
@@ -112,7 +111,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -125,7 +124,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", acctest.CtTrue),
@@ -140,7 +139,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", acctest.CtFalse),
@@ -156,7 +155,7 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -169,7 +168,7 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
@@ -185,7 +184,7 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
@@ -202,7 +201,7 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 	detectorResourceName := "aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_organization_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -215,7 +214,7 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_malwareprotection(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
@@ -232,7 +231,7 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_malwareprotection(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
@@ -245,14 +244,14 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		_, err := tfguardduty.FindOrganizationConfigurationByID(ctx, conn, rs.Primary.ID)
 

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ import (
 func TestAccSSMParameterDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,9 +51,9 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
-	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
+	name := acctest.RandomWithPrefix(t, "/tf-acc-test/tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,20 +75,20 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var param awstypes.Parameter
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_parameter.test"
 	dataSourceName := "data.aws_ssm_parameter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_insecureValue(rName, "String"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterExists(ctx, dataSourceName, &param),
+					testAccCheckParameterExists(ctx, t, dataSourceName, &param),
 					resource.TestCheckResourceAttrPair(dataSourceName, "insecure_value", resourceName, "insecure_value"),
 				),
 			},

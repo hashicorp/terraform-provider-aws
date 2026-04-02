@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,18 +25,18 @@ func TestAccRDSClusterSnapshotCopy_basic(t *testing.T) {
 
 	var v types.DBClusterSnapshot
 	resourceName := "aws_rds_cluster_snapshot_copy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotCopyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -60,18 +58,18 @@ func TestAccRDSClusterSnapshotCopy_share(t *testing.T) {
 
 	var v types.DBClusterSnapshot
 	resourceName := "aws_rds_cluster_snapshot_copy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotCopyConfig_share(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotCopyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
 				),
@@ -84,7 +82,7 @@ func TestAccRDSClusterSnapshotCopy_share(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotCopyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
 				),
 			},
@@ -100,18 +98,18 @@ func TestAccRDSClusterSnapshotCopy_tags(t *testing.T) {
 
 	var v types.DBClusterSnapshot
 	resourceName := "aws_rds_cluster_snapshot_copy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotCopyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -124,7 +122,7 @@ func TestAccRDSClusterSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotCopyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -133,7 +131,7 @@ func TestAccRDSClusterSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotCopyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -150,18 +148,18 @@ func TestAccRDSClusterSnapshotCopy_disappears(t *testing.T) {
 
 	var v types.DBClusterSnapshot
 	resourceName := "aws_rds_cluster_snapshot_copy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotCopyExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceClusterSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -178,18 +176,18 @@ func TestAccRDSClusterSnapshotCopy_destinationRegion(t *testing.T) {
 
 	var v types.DBClusterSnapshot
 	resourceName := "aws_rds_cluster_snapshot_copy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotCopyConfig_destinationRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotCopyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
@@ -221,18 +219,18 @@ func TestAccRDSClusterSnapshotCopy_kmsKeyID(t *testing.T) {
 	var v types.DBClusterSnapshot
 	resourceName := "aws_rds_cluster_snapshot_copy.test"
 	keyResourceName := "aws_kms_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotCopyConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					testAccCheckClusterSnapshotCopyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, keyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
@@ -241,9 +239,9 @@ func TestAccRDSClusterSnapshotCopy_kmsKeyID(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotCopyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_snapshot_copy" {
@@ -267,14 +265,14 @@ func testAccCheckClusterSnapshotCopyDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckClusterSnapshotCopyExists(ctx context.Context, n string, v *types.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotCopyExists(ctx context.Context, t *testing.T, n string, v *types.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

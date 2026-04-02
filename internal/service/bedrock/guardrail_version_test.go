@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,22 +24,22 @@ func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
 	}
 
 	var guardrailversion bedrock.GetGuardrailOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_guardrail_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardrailVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckGuardrailVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, t, resourceName, &guardrailversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
@@ -65,22 +63,22 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 	}
 
 	var guardrailversion bedrock.GetGuardrailOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_guardrail_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardrailVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckGuardrailVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, t, resourceName, &guardrailversion),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrailVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,21 +90,21 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_bedrock_guardrail_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var guardrailversion bedrock.GetGuardrailOutput
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardrailVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckGuardrailVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, t, resourceName, &guardrailversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
@@ -114,7 +112,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 			{
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
+					testAccCheckGuardrailVersionExists(ctx, t, resourceName, &guardrailversion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
@@ -122,9 +120,9 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 	})
 }
 
-func testAccCheckGuardrailVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGuardrailVersionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_guardrail_version" {
@@ -148,14 +146,14 @@ func testAccCheckGuardrailVersionDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckGuardrailVersionExists(ctx context.Context, n string, v *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
+func testAccCheckGuardrailVersionExists(ctx context.Context, t *testing.T, n string, v *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		output, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, rs.Primary.Attributes["guardrail_arn"], rs.Primary.Attributes[names.AttrVersion])
 

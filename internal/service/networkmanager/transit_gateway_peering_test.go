@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,18 +23,18 @@ func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayPeeringExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`peering/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -61,18 +59,18 @@ func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayPeeringExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceTransitGatewayPeering(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,7 +79,7 @@ func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayPeeringExists(ctx context.Context, n string, v *awstypes.TransitGatewayPeering) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPeeringExists(ctx context.Context, t *testing.T, n string, v *awstypes.TransitGatewayPeering) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -92,7 +90,7 @@ func testAccCheckTransitGatewayPeeringExists(ctx context.Context, n string, v *a
 			return fmt.Errorf("No Network Manager Transit Gateway Peering ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindTransitGatewayPeeringByID(ctx, conn, rs.Primary.ID)
 
@@ -106,9 +104,9 @@ func testAccCheckTransitGatewayPeeringExists(ctx context.Context, n string, v *a
 	}
 }
 
-func testAccCheckTransitGatewayPeeringDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPeeringDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_transit_gateway_peering" {

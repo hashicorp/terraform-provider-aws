@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
+func TestAccS3TablesTableBucketReplication_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v s3tables.GetTableBucketReplicationOutput
@@ -112,7 +112,7 @@ func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3TablesTableBucketReplication_Identity_RegionOverride(t *testing.T) {
+func TestAccS3TablesTableBucketReplication_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3tables_table_bucket_replication.test"

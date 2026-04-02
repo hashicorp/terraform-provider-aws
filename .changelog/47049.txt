@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim` configuration block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim` configuration block
+```

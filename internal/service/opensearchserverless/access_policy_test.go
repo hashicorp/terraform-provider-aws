@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var accesspolicy types.AccessPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -34,12 +32,12 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, t, resourceName, &accesspolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
 				),
 			},
@@ -56,10 +54,10 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var accesspolicy types.AccessPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -67,12 +65,12 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, t, resourceName, &accesspolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
@@ -80,7 +78,7 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 			{
 				Config: testAccAccessPolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, t, resourceName, &accesspolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
@@ -88,7 +86,7 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 			{
 				Config: testAccAccessPolicyConfig_updatePolicy(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, t, resourceName, &accesspolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
@@ -108,10 +106,10 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var accesspolicy types.AccessPolicyDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_access_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -119,12 +117,12 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					testAccCheckAccessPolicyExists(ctx, t, resourceName, &accesspolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceAccessPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -133,9 +131,9 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_access_policy" {
@@ -159,14 +157,14 @@ func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckAccessPolicyExists(ctx context.Context, n string, v *types.AccessPolicyDetail) resource.TestCheckFunc {
+func testAccCheckAccessPolicyExists(ctx context.Context, t *testing.T, n string, v *types.AccessPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		output, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
@@ -181,7 +179,7 @@ func testAccCheckAccessPolicyExists(ctx context.Context, n string, v *types.Acce
 }
 
 func testAccPreCheckAccessPolicy(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListAccessPoliciesInput{
 		Type: types.AccessPolicyTypeData,

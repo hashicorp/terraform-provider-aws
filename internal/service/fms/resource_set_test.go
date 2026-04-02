@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	"github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -27,10 +25,10 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var resourceset fms.GetResourceSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -39,12 +37,12 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &resourceset),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.resource_set_status"),
@@ -61,10 +59,10 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 	}
 
 	var resourceset fms.GetResourceSetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -73,12 +71,12 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
+					testAccCheckResourceSetExists(ctx, t, resourceName, &resourceset),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tffms.ResourceSet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,9 +85,9 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_resource_set" {
@@ -111,7 +109,7 @@ func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckResourceSetExists(ctx context.Context, name string, resourceset *fms.GetResourceSetOutput) resource.TestCheckFunc {
+func testAccCheckResourceSetExists(ctx context.Context, t *testing.T, name string, resourceset *fms.GetResourceSetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -122,7 +120,7 @@ func testAccCheckResourceSetExists(ctx context.Context, name string, resourceset
 			return create.Error(names.FMS, create.ErrActionCheckingExistence, tffms.ResNameResourceSet, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FMSClient(ctx)
 		resp, err := tffms.FindResourceSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

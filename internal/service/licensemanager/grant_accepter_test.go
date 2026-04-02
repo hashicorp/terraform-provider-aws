@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ import (
 
 func testAccGrantAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
@@ -32,7 +31,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -67,7 +66,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 func testAccGrantAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	licenseARN := envvar.SkipIfEmpty(t, licenseARNKey, envVarLicenseARNKeyError)
 	principal := envvar.SkipIfEmpty(t, principalKey, envVarPrincipalKeyError)
 	homeRegion := envvar.SkipIfEmpty(t, homeRegionKey, envVarHomeRegionError)
@@ -75,7 +74,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

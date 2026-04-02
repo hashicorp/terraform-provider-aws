@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,16 +33,16 @@ func TestAccKMSKey_basic(t *testing.T) {
 	var key awstypes.KeyMetadata
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtFalse),
@@ -64,7 +62,7 @@ func TestAccKMSKey_basic(t *testing.T) {
 				// Set deletion window to 7 days
 				Config: testAccKeyConfig_basicDeletionWindow(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 		},
@@ -74,19 +72,19 @@ func TestAccKMSKey_basic(t *testing.T) {
 func TestAccKMSKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,19 +96,19 @@ func TestAccKMSKey_disappears(t *testing.T) {
 func TestAccKMSKey_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtTrue),
 				),
 			},
@@ -127,19 +125,19 @@ func TestAccKMSKey_multiRegion(t *testing.T) {
 func TestAccKMSKey_asymmetricKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_asymmetric(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "ECC_NIST_P384"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
 				),
@@ -151,19 +149,19 @@ func TestAccKMSKey_asymmetricKey(t *testing.T) {
 func TestAccKMSKey_hmacKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_hmac(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "HMAC_256"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "GENERATE_VERIFY_MAC"),
 				),
@@ -175,19 +173,19 @@ func TestAccKMSKey_hmacKey(t *testing.T) {
 func TestAccKMSKey_postQuantum(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_postQuantum(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "ML_DSA_65"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
 				),
@@ -199,21 +197,21 @@ func TestAccKMSKey_postQuantum(t *testing.T) {
 func TestAccKMSKey_Policy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 	expectedPolicyText := fmt.Sprintf(`{"Version":"2012-10-17","Id":%[1]q,"Statement":[{"Sid":"Enable IAM User Permissions","Effect":"Allow","Principal":{"AWS":"*"},"Action":"kms:*","Resource":"*"}]}`, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					testAccCheckKeyHasPolicy(ctx, resourceName, expectedPolicyText),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					testAccCheckKeyHasPolicy(ctx, t, resourceName, expectedPolicyText),
 				),
 			},
 			{
@@ -225,7 +223,7 @@ func TestAccKMSKey_Policy_basic(t *testing.T) {
 			{
 				Config: testAccKeyConfig_removedPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 		},
@@ -235,14 +233,14 @@ func TestAccKMSKey_Policy_basic(t *testing.T) {
 func TestAccKMSKey_Policy_bypass(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccKeyConfig_policyBypass(rName, false),
@@ -251,7 +249,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
@@ -268,26 +266,26 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 func TestAccKMSKey_Policy_bypassUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &before),
+					testAccCheckKeyExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &after),
+					testAccCheckKeyExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
@@ -298,19 +296,19 @@ func TestAccKMSKey_Policy_bypassUpdate(t *testing.T) {
 func TestAccKMSKey_Policy_iamRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_policyIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 			{
@@ -326,25 +324,25 @@ func TestAccKMSKey_Policy_iamRole(t *testing.T) {
 func TestAccKMSKey_Policy_iamRoleUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 			{
 				Config: testAccKeyConfig_policyIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 		},
@@ -355,19 +353,19 @@ func TestAccKMSKey_Policy_iamRoleUpdate(t *testing.T) {
 func TestAccKMSKey_Policy_iamRoleOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_policyIAMMultiRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 		},
@@ -378,19 +376,19 @@ func TestAccKMSKey_Policy_iamRoleOrder(t *testing.T) {
 func TestAccKMSKey_Policy_iamServiceLinkedRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_policyIAMServiceLinkedRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 			{
@@ -406,19 +404,19 @@ func TestAccKMSKey_Policy_iamServiceLinkedRole(t *testing.T) {
 func TestAccKMSKey_Policy_booleanCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_policyBooleanCondition(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 			},
 		},
@@ -428,19 +426,19 @@ func TestAccKMSKey_Policy_booleanCondition(t *testing.T) {
 func TestAccKMSKey_isEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key1, key2, key3 awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key1),
+					testAccCheckKeyExists(ctx, t, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
@@ -454,7 +452,7 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 			{
 				Config: testAccKeyConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key2),
+					testAccCheckKeyExists(ctx, t, resourceName, &key2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtFalse),
 				),
@@ -462,7 +460,7 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 			{
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key3),
+					testAccCheckKeyExists(ctx, t, resourceName, &key3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
@@ -474,19 +472,19 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 func TestAccKMSKey_rotation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key1, key2, key3 awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key1),
+					testAccCheckKeyExists(ctx, t, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
@@ -500,7 +498,7 @@ func TestAccKMSKey_rotation(t *testing.T) {
 			{
 				Config: testAccKeyConfig_enabledRotationPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key2),
+					testAccCheckKeyExists(ctx, t, resourceName, &key2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
@@ -509,7 +507,7 @@ func TestAccKMSKey_rotation(t *testing.T) {
 			{
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key3),
+					testAccCheckKeyExists(ctx, t, resourceName, &key3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
@@ -523,13 +521,13 @@ func TestAccKMSKey_rotation(t *testing.T) {
 func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -548,7 +546,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -654,7 +652,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -698,7 +696,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyText string) resource.TestCheckFunc {
+func testAccCheckKeyHasPolicy(ctx context.Context, t *testing.T, name string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -709,7 +707,7 @@ func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyTe
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 		output, err := tfkms.FindKeyPolicyByTwoPartKey(ctx, conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
@@ -732,9 +730,9 @@ func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyTe
 	}
 }
 
-func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_key" {
@@ -758,14 +756,14 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMetadata) resource.TestCheckFunc {
+func testAccCheckKeyExists(ctx context.Context, t *testing.T, name string, key *awstypes.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 		output, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func(ctx context.Context) (*awstypes.KeyMetadata, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
@@ -784,7 +782,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMe
 func testAccKeyAddTag(ctx context.Context, t *testing.T, identifier, key, value string) {
 	t.Helper()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
 
 	input := &kms.TagResourceInput{
 		KeyId: aws.String(identifier),

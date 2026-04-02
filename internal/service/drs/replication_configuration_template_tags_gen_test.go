@@ -25,25 +25,25 @@ func testAccDRSReplicationConfigurationTemplate_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccDRSReplicationConfigurationTemplate_tags,
-		"null":                                      testAccDRSReplicationConfigurationTemplate_tags_null,
-		"EmptyMap":                                  testAccDRSReplicationConfigurationTemplate_tags_EmptyMap,
-		"AddOnUpdate":                               testAccDRSReplicationConfigurationTemplate_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccDRSReplicationConfigurationTemplate_Tags_null,
+		"EmptyMap":                                  testAccDRSReplicationConfigurationTemplate_Tags_emptyMap,
+		"AddOnUpdate":                               testAccDRSReplicationConfigurationTemplate_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccDRSReplicationConfigurationTemplate_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccDRSReplicationConfigurationTemplate_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccDRSReplicationConfigurationTemplate_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccDRSReplicationConfigurationTemplate_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccDRSReplicationConfigurationTemplate_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccDRSReplicationConfigurationTemplate_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccDRSReplicationConfigurationTemplate_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccDRSReplicationConfigurationTemplate_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -235,7 +235,7 @@ func testAccDRSReplicationConfigurationTemplate_tags(t *testing.T) {
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -301,7 +301,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_EmptyMap(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -355,7 +355,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_AddOnUpdate(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -439,7 +439,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -533,7 +533,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnCreate(t *testin
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -676,7 +676,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Add(t *te
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -770,7 +770,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Replace(t
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -955,7 +955,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_providerOnly(t 
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1119,7 +1119,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nonOverlapping(
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1299,7 +1299,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_overlapping(t *
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1393,7 +1393,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToProvide
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1486,7 +1486,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToResourc
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1556,7 +1556,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyResourceTa
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1618,7 +1618,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyProviderOn
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1691,7 +1691,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlapping
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1766,7 +1766,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlapp
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1825,7 +1825,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnCreate(t *tes
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -1926,7 +1926,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Add(t 
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -2017,7 +2017,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Replac
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate
@@ -2183,7 +2183,7 @@ func testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_DefaultT
 	})
 }
 
-func testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccDRSReplicationConfigurationTemplate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReplicationConfigurationTemplate

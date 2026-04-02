@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
@@ -28,10 +26,10 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 	}
 
 	var inputSecurityGroup medialive.DescribeInputSecurityGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -39,12 +37,12 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &inputSecurityGroup),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
@@ -67,10 +65,10 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 	}
 
 	var inputSecurityGroup medialive.DescribeInputSecurityGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -78,12 +76,12 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &inputSecurityGroup),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
@@ -93,7 +91,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.2.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &inputSecurityGroup),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.2.0.0/16",
@@ -111,10 +109,10 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 	}
 
 	var inputSecurityGroup medialive.DescribeInputSecurityGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -122,12 +120,12 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, t, resourceName, &inputSecurityGroup),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceInputSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -136,9 +134,9 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInputSecurityGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInputSecurityGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_input_security_group" {
@@ -160,7 +158,7 @@ func testAccCheckInputSecurityGroupDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckInputSecurityGroupExists(ctx context.Context, name string, inputSecurityGroup *medialive.DescribeInputSecurityGroupOutput) resource.TestCheckFunc {
+func testAccCheckInputSecurityGroupExists(ctx context.Context, t *testing.T, name string, inputSecurityGroup *medialive.DescribeInputSecurityGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -171,7 +169,7 @@ func testAccCheckInputSecurityGroupExists(ctx context.Context, name string, inpu
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameInputSecurityGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -186,7 +184,7 @@ func testAccCheckInputSecurityGroupExists(ctx context.Context, name string, inpu
 }
 
 func testAccInputSecurityGroupsPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).MediaLiveClient(ctx)
 
 	input := &medialive.ListInputSecurityGroupsInput{}
 	_, err := conn.ListInputSecurityGroups(ctx, input)

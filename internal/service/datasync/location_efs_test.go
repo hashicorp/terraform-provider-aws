@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,18 +24,18 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	efsFileSystemResourceName := "aws_efs_file_system.test"
 	resourceName := "aws_datasync_location_efs.test"
 	subnetResourceName := "aws_subnet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", "1"),
@@ -61,18 +59,18 @@ func TestAccDataSyncLocationEFS_accessPointARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig_accessPointARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "access_point_arn", "aws_efs_access_point.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "in_transit_encryption", "TLS1_2"),
 				),
@@ -90,18 +88,18 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationEFS(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationEFS(), resourceName),
 				),
@@ -115,18 +113,18 @@ func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
@@ -143,18 +141,18 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationEFSConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -167,7 +165,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -176,7 +174,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &v),
+					testAccCheckLocationEFSExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -185,9 +183,9 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationEFSDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationEFSDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_efs" {
@@ -211,14 +209,14 @@ func testAccCheckLocationEFSDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckLocationEFSExists(ctx context.Context, n string, v *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationEFSExists(ctx context.Context, t *testing.T, n string, v *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationEFSByARN(ctx, conn, rs.Primary.ID)
 

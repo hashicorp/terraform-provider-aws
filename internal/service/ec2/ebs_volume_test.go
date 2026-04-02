@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +25,16 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
@@ -65,16 +63,16 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,18 +85,18 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_attached(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -112,7 +110,7 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_attachedUpdateSize(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "20"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -125,18 +123,18 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -150,7 +148,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_updateSize(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -163,18 +161,18 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_tags1("Name", rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -188,7 +186,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_updateType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "sc1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -201,18 +199,18 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_iopsIo1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -226,7 +224,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_iopsIo1Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -239,18 +237,18 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_iopsIo2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -264,7 +262,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_iopsIo2Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
@@ -278,18 +276,18 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 	var v awstypes.Volume
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
@@ -309,18 +307,18 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_noIOPS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
@@ -337,11 +335,11 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_invalidIOPSForType,
@@ -353,11 +351,11 @@ func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
 
 func TestAccEC2EBSVolume_invalidThroughputForType(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_invalidThroughputForType,
@@ -372,16 +370,16 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -395,7 +393,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -404,7 +402,7 @@ func TestAccEC2EBSVolume_withTags(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -417,18 +415,18 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_multiAttach(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io1"),
@@ -448,18 +446,18 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_multiAttach(rName, "io2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io2"),
@@ -477,11 +475,11 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 
 func TestAccEC2EBSVolume_multiAttach_gp2(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_invalidMultiAttachEnabledForType,
@@ -496,18 +494,18 @@ func TestAccEC2EBSVolume_outpost(t *testing.T) {
 	var v awstypes.Volume
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
@@ -525,18 +523,18 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
@@ -565,18 +563,18 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
@@ -600,7 +598,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "5000"),
@@ -623,18 +621,18 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
@@ -658,7 +656,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
@@ -681,18 +679,18 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "3000", "400"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
@@ -716,7 +714,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp2", "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
@@ -739,18 +737,18 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "io1", "4000", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
@@ -774,7 +772,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 			{
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "gp3", "4000", "125"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4000"),
@@ -798,18 +796,18 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
@@ -839,18 +837,18 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_snapshotIdAndSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
@@ -880,18 +878,18 @@ func TestAccEC2EBSVolume_snapshotIDAndVolumeInitializationRate(t *testing.T) {
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_snapshotIdAndVolumeInitializationRate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
@@ -919,11 +917,11 @@ func TestAccEC2EBSVolume_snapshotIDAndVolumeInitializationRate(t *testing.T) {
 func TestAccEC2EBSVolume_volumeInitializationRateWithoutSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_volumeInitializationRateWithoutSnapshotId,
@@ -937,18 +935,18 @@ func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
 	resourceName := "aws_ebs_volume.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeExists(ctx, resourceName, &v),
+					testAccCheckVolumeExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -961,16 +959,16 @@ func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 				Config:  testAccEBSVolumeConfig_finalSnapshot(rName),
 				Destroy: true,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeFinalSnapshotExists(ctx, &v),
+					testAccCheckVolumeFinalSnapshotExists(ctx, t, &v),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVolumeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ebs_volume" {
@@ -994,7 +992,7 @@ func testAccCheckVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVolumeExists(ctx context.Context, n string, v *awstypes.Volume) resource.TestCheckFunc {
+func testAccCheckVolumeExists(ctx context.Context, t *testing.T, n string, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1005,7 +1003,7 @@ func testAccCheckVolumeExists(ctx context.Context, n string, v *awstypes.Volume)
 			return fmt.Errorf("No EBS Volume ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
 
@@ -1019,9 +1017,9 @@ func testAccCheckVolumeExists(ctx context.Context, n string, v *awstypes.Volume)
 	}
 }
 
-func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *awstypes.Volume) resource.TestCheckFunc {
+func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, t *testing.T, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		input := ec2.DescribeSnapshotsInput{
 			Filters: tfec2.NewAttributeFilterList(map[string]string{

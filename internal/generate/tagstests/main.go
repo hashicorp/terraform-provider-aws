@@ -206,6 +206,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
@@ -276,6 +277,7 @@ func main() {
 					AdditionalTfVars:        additionalTfVars,
 					WithRName:               (resource.Generator != ""),
 					AlternateRegionProvider: resource.AlternateRegionProvider,
+					AlternateRegionTfVars:   resource.AlternateRegionTfVars,
 				}
 
 				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
@@ -429,6 +431,7 @@ type commonConfig struct {
 	AdditionalTfVars        []string
 	WithRName               bool
 	AlternateRegionProvider bool
+	AlternateRegionTfVars   bool
 }
 
 type ConfigDatum struct {

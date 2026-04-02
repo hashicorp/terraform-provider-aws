@@ -14,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -31,19 +29,19 @@ import (
 func TestAccBackupVault_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -64,19 +62,19 @@ func TestAccBackupVault_basic(t *testing.T) {
 func TestAccBackupVault_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,19 +86,19 @@ func TestAccBackupVault_disappears(t *testing.T) {
 func TestAccBackupVault_withKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -117,19 +115,19 @@ func TestAccBackupVault_withKMSKey(t *testing.T) {
 func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_forceDestroyEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
@@ -146,33 +144,33 @@ func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVaultDestroy(ctx),
+		CheckDestroy:             testAccCheckVaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					testAccCheckRunDynamoDBTableBackupJob(ctx, rName),
 				),
 			},
 			{
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(ctx, resourceName, &v),
+					testAccCheckVaultExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
 				),
 			},
@@ -180,9 +178,9 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 	})
 }
 
-func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault" {
 				continue
@@ -205,14 +203,14 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVaultExists(ctx context.Context, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultExists(ctx context.Context, t *testing.T, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
@@ -268,7 +266,7 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 	input := &backup.ListBackupVaultsInput{}
 
@@ -291,9 +289,8 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	output, err := conn.DescribeBackupJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -308,8 +305,8 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	return output, nil
 }
 
-func statusJobState(ctx context.Context, conn *backup.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusJobState(conn *backup.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findJobByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -325,10 +322,10 @@ func statusJobState(ctx context.Context, conn *backup.Client, id string) sdkretr
 }
 
 func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupJobStateCreated, awstypes.BackupJobStatePending, awstypes.BackupJobStateRunning, awstypes.BackupJobStateAborting),
 		Target:  enum.Slice(awstypes.BackupJobStateCompleted),
-		Refresh: statusJobState(ctx, conn, id),
+		Refresh: statusJobState(conn, id),
 		Timeout: timeout,
 	}
 

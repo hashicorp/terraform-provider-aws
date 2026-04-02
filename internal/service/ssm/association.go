@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,7 +37,6 @@ import (
 // @IdentityAttribute("association_id")
 // @Testing(idAttrDuplicates="association_id")
 // @Testing(preIdentityVersion="v6.10.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -410,9 +408,8 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	output, err := conn.DescribeAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.AssociationDoesNotExist](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -427,8 +424,8 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	return output.AssociationDescription, nil
 }
 
-func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAssociation(conn *ssm.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -446,10 +443,10 @@ func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretr
 }
 
 func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.AssociationDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusNamePending),
 		Target:  enum.Slice(awstypes.AssociationStatusNameSuccess),
-		Refresh: statusAssociation(ctx, conn, id),
+		Refresh: statusAssociation(conn, id),
 		Timeout: timeout,
 	}
 

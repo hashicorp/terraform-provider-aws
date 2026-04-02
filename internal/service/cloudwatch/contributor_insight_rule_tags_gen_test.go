@@ -33,7 +33,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -94,7 +94,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -147,7 +147,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -193,7 +193,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -226,7 +226,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -239,7 +239,7 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -251,7 +251,7 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -295,7 +295,7 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -308,7 +308,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -318,7 +318,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -352,7 +352,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -365,7 +365,7 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -375,7 +375,7 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -398,7 +398,7 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -441,7 +441,7 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -454,7 +454,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -466,7 +466,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -512,7 +512,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -545,7 +545,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -558,7 +558,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -570,7 +570,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -602,7 +602,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -655,7 +655,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -698,7 +698,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -711,7 +711,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -723,7 +723,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -754,7 +754,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -797,7 +797,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -810,7 +810,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -823,7 +823,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -872,7 +872,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -923,7 +923,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -968,7 +968,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1002,7 +1002,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1015,7 +1015,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1030,7 +1030,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1089,7 +1089,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1147,7 +1147,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1181,7 +1181,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1194,7 +1194,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1209,7 +1209,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1267,7 +1267,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1329,7 +1329,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1376,7 +1376,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1389,7 +1389,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1401,7 +1401,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1434,7 +1434,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1475,7 +1475,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1488,7 +1488,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1501,7 +1501,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1529,7 +1529,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1573,7 +1573,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1586,7 +1586,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1601,7 +1601,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1648,7 +1648,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1661,7 +1661,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1674,7 +1674,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1715,7 +1715,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1728,7 +1728,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1743,7 +1743,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1791,7 +1791,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1804,7 +1804,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1819,7 +1819,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1869,7 +1869,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1882,7 +1882,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1892,7 +1892,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1933,7 +1933,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -1946,7 +1946,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1958,7 +1958,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1990,7 +1990,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2039,7 +2039,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -2052,7 +2052,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2064,7 +2064,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2094,7 +2094,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2135,7 +2135,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -2148,7 +2148,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2167,7 +2167,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2216,7 +2216,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2265,7 +2265,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2301,7 +2301,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 	})
 }
 
-func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccCloudWatchContributorInsightRule_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
@@ -2314,7 +2314,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy: testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2331,7 +2331,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2389,7 +2389,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2446,7 +2446,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

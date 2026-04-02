@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -233,7 +232,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			if use, ok := errs.As[*sdkretry.UnexpectedStateError](err); ok {
+			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
 				if use.State == string(awstypes.DirectoryStageFailed) {
 					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
 						"directory_id":       d.Id(),
@@ -647,9 +646,8 @@ func findDirectories(ctx context.Context, conn *directoryservice.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -675,17 +673,16 @@ func findDirectoryByID(ctx context.Context, conn *directoryservice.Client, id st
 	}
 
 	if stage := output.Stage; stage == awstypes.DirectoryStageDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(stage),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(stage),
 		}
 	}
 
 	return output, nil
 }
 
-func statusDirectoryStage(ctx context.Context, conn *directoryservice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDirectoryStage(conn *directoryservice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -701,10 +698,10 @@ func statusDirectoryStage(ctx context.Context, conn *directoryservice.Client, id
 }
 
 func waitDirectoryCreated(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.DirectoryDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
 		Target:  enum.Slice(awstypes.DirectoryStageActive),
-		Refresh: statusDirectoryStage(ctx, conn, id),
+		Refresh: statusDirectoryStage(conn, id),
 		Timeout: timeout,
 	}
 
@@ -727,10 +724,10 @@ func waitDirectoryCreated(ctx context.Context, conn *directoryservice.Client, id
 }
 
 func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
 		Target:     []string{},
-		Refresh:    statusDirectoryStage(ctx, conn, id),
+		Refresh:    statusDirectoryStage(conn, id),
 		Timeout:    timeout,
 		Delay:      1 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -772,9 +769,8 @@ func findDomainControllers(ctx context.Context, conn *directoryservice.Client, i
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -801,17 +797,16 @@ func findDomainControllerByTwoPartKey(ctx context.Context, conn *directoryservic
 	}
 
 	if status := output.Status; status == awstypes.DomainControllerStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusDomainController(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, optFns ...func(*directoryservice.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainController(conn *directoryservice.Client, directoryID, domainControllerID string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainControllerByTwoPartKey(ctx, conn, directoryID, domainControllerID, optFns...)
 
 		if retry.NotFound(err) {
@@ -827,10 +822,10 @@ func statusDomainController(ctx context.Context, conn *directoryservice.Client, 
 }
 
 func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainControllerStatusCreating),
 		Target:  enum.Slice(awstypes.DomainControllerStatusActive),
-		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID, optFns...),
+		Refresh: statusDomainController(conn, directoryID, domainControllerID, optFns...),
 		Timeout: timeout,
 	}
 
@@ -846,10 +841,10 @@ func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Cli
 }
 
 func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainControllerStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID, optFns...),
+		Refresh: statusDomainController(conn, directoryID, domainControllerID, optFns...),
 		Timeout: timeout,
 	}
 

@@ -25,7 +25,6 @@ import (
 // @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
 // @Tags(identifierAttribute="arn")
 // @Testing(importIgnore="hsm_partition_password;hsm_server_public_certificate")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,

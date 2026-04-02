@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,10 +19,10 @@ import (
 
 func testAccPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -33,12 +31,12 @@ func testAccPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
@@ -59,10 +57,10 @@ func testAccPolicy_basic(t *testing.T) {
 
 func testAccPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -71,12 +69,12 @@ func testAccPolicy_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tffms.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,10 +85,10 @@ func testAccPolicy_disappears(t *testing.T) {
 
 func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -99,12 +97,12 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_cloudFrontDistribution(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
@@ -121,10 +119,10 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 
 func testAccPolicy_includeMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -133,12 +131,12 @@ func testAccPolicy_includeMap(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_include(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
@@ -155,11 +153,11 @@ func testAccPolicy_includeMap(t *testing.T) {
 
 func testAccPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -168,12 +166,12 @@ func testAccPolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
@@ -181,7 +179,7 @@ func testAccPolicy_update(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_updated(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -193,10 +191,10 @@ func testAccPolicy_policyOption(t *testing.T) {
 	acctest.Skip(t, "PolicyOption not returned from AWS API")
 
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
@@ -204,12 +202,12 @@ func testAccPolicy_policyOption(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_policyOption(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -234,10 +232,10 @@ func testAccPolicy_policyOption(t *testing.T) {
 
 func testAccPolicy_resourceTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -246,12 +244,12 @@ func testAccPolicy_resourceTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_resourceTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1),
 				),
@@ -270,10 +268,10 @@ func testAccPolicy_resourceTags(t *testing.T) {
 
 func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -282,7 +280,7 @@ func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_resourceTagLogicalOperator_default(rName, acctest.CtKey1, acctest.CtValue1),
@@ -308,10 +306,10 @@ func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
 
 func testAccPolicy_alb(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -320,12 +318,12 @@ func testAccPolicy_alb(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "ResourceTypeList"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_list.#", "1"),
@@ -342,10 +340,10 @@ func testAccPolicy_alb(t *testing.T) {
 
 func testAccPolicy_securityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -354,12 +352,12 @@ func testAccPolicy_securityGroup(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_securityGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::SecurityGroup"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
@@ -374,10 +372,10 @@ func testAccPolicy_securityGroup(t *testing.T) {
 
 func testAccPolicy_rscSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -386,12 +384,12 @@ func testAccPolicy_rscSet(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_rscSet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_ids.#", "1"),
 				),
@@ -402,10 +400,10 @@ func testAccPolicy_rscSet(t *testing.T) {
 
 func testAccPolicy_nacl(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -414,12 +412,12 @@ func testAccPolicy_nacl(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_nacl(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Subnet"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", "1"),
@@ -448,9 +446,9 @@ func testAccPolicy_nacl(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_policy" {
@@ -474,14 +472,14 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FMSClient(ctx)
 
 		_, err := tffms.FindPolicyByID(ctx, conn, rs.Primary.ID)
 

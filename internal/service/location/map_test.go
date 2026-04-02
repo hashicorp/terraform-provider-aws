@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/location"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 
 func TestAccLocationMap_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_location_map.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMapDestroy(ctx),
+		CheckDestroy:             testAccCheckMapDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMapConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.style", "VectorHereBerlin"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
@@ -57,19 +55,19 @@ func TestAccLocationMap_basic(t *testing.T) {
 
 func TestAccLocationMap_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_location_map.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMapDestroy(ctx),
+		CheckDestroy:             testAccCheckMapDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMapConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceMap(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,19 +78,19 @@ func TestAccLocationMap_disappears(t *testing.T) {
 
 func TestAccLocationMap_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_location_map.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMapDestroy(ctx),
+		CheckDestroy:             testAccCheckMapDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMapConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -104,7 +102,7 @@ func TestAccLocationMap_description(t *testing.T) {
 			{
 				Config: testAccMapConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -114,19 +112,19 @@ func TestAccLocationMap_description(t *testing.T) {
 
 func TestAccLocationMap_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_location_map.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMapDestroy(ctx),
+		CheckDestroy:             testAccCheckMapDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMapConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -139,7 +137,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 			{
 				Config: testAccMapConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -148,7 +146,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 			{
 				Config: testAccMapConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMapExists(ctx, resourceName),
+					testAccCheckMapExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -157,9 +155,9 @@ func TestAccLocationMap_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckMapDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMapDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LocationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_map" {
@@ -189,7 +187,7 @@ func testAccCheckMapDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMapExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckMapExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -197,7 +195,7 @@ func testAccCheckMapExists(ctx context.Context, resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LocationClient(ctx)
 
 		input := &location.DescribeMapInput{
 			MapName: aws.String(rs.Primary.ID),

@@ -15,7 +15,7 @@ func TestAccEMRReleaseLabels_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,7 +35,7 @@ func TestAccEMRReleaseLabels_prefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,7 +55,7 @@ func TestAccEMRReleaseLabels_application(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,7 +75,7 @@ func TestAccEMRReleaseLabels_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +95,7 @@ func TestAccEMRReleaseLabels_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_emr_release_labels.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -196,8 +195,8 @@ func findTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autosc
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrafficSourceAttachment(conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 		if retry.NotFound(err) {
@@ -213,10 +212,10 @@ func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client
 }
 
 func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficSourceStateAdding},
 		Target:  []string{TrafficSourceStateAdded, TrafficSourceStateInService},
-		Refresh: statusTrafficSourceAttachment(ctx, conn, asgName, trafficSourceType, trafficSourceID),
+		Refresh: statusTrafficSourceAttachment(conn, asgName, trafficSourceType, trafficSourceID),
 		Timeout: timeout,
 	}
 
@@ -230,10 +229,10 @@ func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.C
 }
 
 func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficSourceStateRemoving, TrafficSourceStateRemoved},
 		Target:  []string{},
-		Refresh: statusTrafficSourceAttachment(ctx, conn, asgName, trafficSourceType, trafficSourceID),
+		Refresh: statusTrafficSourceAttachment(conn, asgName, trafficSourceType, trafficSourceID),
 		Timeout: timeout,
 	}
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +31,7 @@ import (
 
 // @SDKResource("aws_eks_access_entry", name="Access Entry")
 // @Tags(identifierAttribute="access_entry_arn")
+// @Testing(tagsTest=false)
 func resourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessEntryCreate,
@@ -251,9 +251,8 @@ func findAccessEntryByTwoPartKey(ctx context.Context, conn *eks.Client, clusterN
 	output, err := conn.DescribeAccessEntry(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

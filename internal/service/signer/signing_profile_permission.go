@@ -109,7 +109,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s) Permissions: %s", profileName, err)
 	}
 
-	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
+	statementID := create.Name(ctx, d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 	input := &signer.AddProfilePermissionInput{
 		Action:      aws.String(d.Get(names.AttrAction).(string)),
 		Principal:   aws.String(d.Get(names.AttrPrincipal).(string)),

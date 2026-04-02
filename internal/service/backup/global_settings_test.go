@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +30,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 	var settings map[string]string
 	resourceName := "aws_backup_global_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -44,7 +43,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalSettingsExists(ctx, resourceName, &settings),
+					testAccCheckGlobalSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtTrue),
 				),
@@ -57,7 +56,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalSettingsExists(ctx, resourceName, &settings),
+					testAccCheckGlobalSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtFalse),
 				),
@@ -65,7 +64,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalSettingsExists(ctx, resourceName, &settings),
+					testAccCheckGlobalSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtTrue),
 				),
@@ -74,14 +73,14 @@ func testAccGlobalSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalSettingsExists(ctx context.Context, n string, v *map[string]string) resource.TestCheckFunc {
+func testAccCheckGlobalSettingsExists(ctx context.Context, t *testing.T, n string, v *map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindGlobalSettings(ctx, conn)
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualGatewayData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualGatewayImportStateIdFunc)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualGatewayCreate,
@@ -811,9 +809,8 @@ func findVirtualGatewayByThreePartKey(ctx context.Context, conn *appmesh.Client,
 	}
 
 	if output.Status.Status == awstypes.VirtualGatewayStatusCodeDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.Status.Status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(output.Status.Status),
 		}
 	}
 
@@ -824,9 +821,8 @@ func findVirtualGateway(ctx context.Context, conn *appmesh.Client, input *appmes
 	output, err := conn.DescribeVirtualGateway(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAggregateAuthorizationConfig_basic(accountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &aa),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{authorized_aws_region}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttr(resourceName, "authorized_aws_region", acctest.Region()),
@@ -53,19 +51,19 @@ func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAggregateAuthorizationConfig_deprecatedRegion(accountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &aa),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "config", "aggregation-authorization/{account_id}/{region}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckNoResourceAttr(resourceName, "authorized_aws_region"),
@@ -79,19 +77,19 @@ func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAggregateAuthorizationConfig_basic(accountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &aa),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceAggregateAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,14 +98,14 @@ func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAggregateAuthorizationExists(ctx context.Context, n string, v *types.AggregationAuthorization) resource.TestCheckFunc {
+func testAccCheckAggregateAuthorizationExists(ctx context.Context, t *testing.T, n string, v *types.AggregationAuthorization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		authorizedRegion := rs.Primary.Attributes["authorized_aws_region"]
 		if authorizedRegion == "" {
@@ -125,9 +123,9 @@ func testAccCheckAggregateAuthorizationExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckAggregateAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAggregateAuthorizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_aggregate_authorization" {

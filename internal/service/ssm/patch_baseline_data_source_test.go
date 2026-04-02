@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,7 +16,7 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -51,13 +50,13 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 	resourceName := "aws_ssm_patch_baseline.test"
-	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
+	rName := acctest.RandomWithPrefix(t, "tf-bl-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineDataSourceConfig_new(rName),

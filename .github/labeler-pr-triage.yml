@@ -809,6 +809,8 @@ service/ec2:
               - 'website/**/ec2_image_*'
               - 'website/**/ec2_instance_*'
               - 'website/**/ec2_public_ipv4_pool*'
+              - 'website/**/ec2_secondary_network*'
+              - 'website/**/ec2_secondary_subnet*'
               - 'website/**/ec2_serial_*'
               - 'website/**/ec2_spot_*'
               - 'website/**/ec2_tag*'
@@ -2294,6 +2296,12 @@ service/translate:
           - any-glob-to-any-file:
               - 'internal/service/translate/**/*'
               - 'website/**/translate_*'
+service/uxc:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/uxc/**/*'
+              - 'website/**/uxc_*'
 service/verifiedaccess:
   - any:
       - changed-files:

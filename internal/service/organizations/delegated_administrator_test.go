@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +33,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 	servicePrincipal := "securitylake.amazonaws.com"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -42,12 +41,12 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
+					testAccCheckDelegatedAdministratorExists(ctx, t, resourceName, &organization),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/o-[0-9a-z]{10}/\d{12}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceIdentity, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
@@ -65,20 +64,20 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "securitylake.amazonaws.com"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
+					testAccCheckDelegatedAdministratorExists(ctx, t, resourceName, &organization),
 					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourceDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,25 +86,25 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsDelegatedAdministrator_IdentitySerial(t *testing.T) {
+func testAccOrganizationsDelegatedAdministrator_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccOrganizationsDelegatedAdministrator_Identity_Basic,
-		"ExistingResource": testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource,
+		acctest.CtBasic:    testAccOrganizationsDelegatedAdministrator_Identity_basic,
+		"ExistingResource": testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsDelegatedAdministrator_Identity_Basic(t *testing.T) {
+func testAccOrganizationsDelegatedAdministrator_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "securitylake.amazonaws.com"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -116,13 +115,13 @@ func testAccOrganizationsDelegatedAdministrator_Identity_Basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &v),
+					testAccCheckDelegatedAdministratorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{account_id}/{service_principal}"),
@@ -174,7 +173,7 @@ func testAccOrganizationsDelegatedAdministrator_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DelegatedAdministrator
@@ -182,7 +181,7 @@ func testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource(t *tes
 	servicePrincipal := "securitylake.amazonaws.com"
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -192,7 +191,7 @@ func testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource(t *tes
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckDelegatedAdministratorDestroy(ctx),
+		CheckDestroy: testAccCheckDelegatedAdministratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -205,7 +204,7 @@ func testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
 				Config:                   testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &v),
+					testAccCheckDelegatedAdministratorExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -238,9 +237,9 @@ func testAccOrganizationsDelegatedAdministrator_Identity_ExistingResource(t *tes
 	})
 }
 
-func testAccCheckDelegatedAdministratorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDelegatedAdministratorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_delegated_administrator" {
@@ -264,14 +263,14 @@ func testAccCheckDelegatedAdministratorDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckDelegatedAdministratorExists(ctx context.Context, n string, v *awstypes.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckDelegatedAdministratorExists(ctx context.Context, t *testing.T, n string, v *awstypes.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["service_principal"])
 

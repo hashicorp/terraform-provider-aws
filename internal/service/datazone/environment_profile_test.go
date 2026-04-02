@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -26,7 +24,7 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_environment_profile.test"
 	domainName := "aws_datazone_domain.test"
@@ -35,19 +33,19 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 	regionName := "data.aws_region.test"
 	blueName := "data.aws_datazone_environment_blueprint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, t, resourceName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_account_region", regionName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -74,23 +72,23 @@ func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_environment_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, t, resourceName, &environmentprofile),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,7 +101,7 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_environment_profile.test"
 	domainName := "aws_datazone_domain.test"
@@ -112,19 +110,19 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 	regionName := "data.aws_region.test"
 	blueName := "data.aws_datazone_environment_blueprint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, t, resourceName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_account_region", regionName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -149,8 +147,8 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 			{
 				Config: testAccEnvironmentProfileConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
-					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, t, resourceName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, t, resourceName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_account_region", regionName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -177,9 +175,9 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEnvironmentProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_environment_profile" {
@@ -202,7 +200,7 @@ func testAccCheckEnvironmentProfileDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckEnvironmentProfileExists(ctx context.Context, name string, environmentprofile *datazone.GetEnvironmentProfileOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentProfileExists(ctx context.Context, t *testing.T, name string, environmentprofile *datazone.GetEnvironmentProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -213,7 +211,7 @@ func testAccCheckEnvironmentProfileExists(ctx context.Context, name string, envi
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironmentProfile, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		resp, err := tfdatazone.FindEnvironmentProfileByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 
 		if err != nil {
