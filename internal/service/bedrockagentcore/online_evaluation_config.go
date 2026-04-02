@@ -205,7 +205,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 									"sampling_percentage": schema.Float64Attribute{
 										Required: true,
 										Validators: []validator.Float64{
-											float64validator.Between(0.01, 100.0),
+											float64validator.Between(samplingPercentageMin, samplingPercentageMax),
 										},
 									},
 								},

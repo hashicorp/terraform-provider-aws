@@ -9,4 +9,7 @@ import (
 
 const (
 	propagationTimeout = 2 * time.Minute
+
+	samplingPercentageMin = 0.01
+	samplingPercentageMax = 100.0
 )

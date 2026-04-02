@@ -395,9 +395,9 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccOnlineEvaluationConfigConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name  = %[1]q
-  enable_on_create               = false
-  evaluation_execution_role_arn  = aws_iam_role.test.arn
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
     cloud_watch_logs {
@@ -422,10 +422,10 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 func testAccOnlineEvaluationConfigConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name  = %[1]q
-  description                    = "Updated description"
-  enable_on_create               = false
-  evaluation_execution_role_arn  = aws_iam_role.test.arn
+  online_evaluation_config_name = %[1]q
+  description                   = "Updated description"
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
     cloud_watch_logs {
@@ -458,9 +458,9 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 func testAccOnlineEvaluationConfigConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name  = %[1]q
-  enable_on_create               = false
-  evaluation_execution_role_arn  = aws_iam_role.test.arn
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
     cloud_watch_logs {
@@ -489,9 +489,9 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 func testAccOnlineEvaluationConfigConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name  = %[1]q
-  enable_on_create               = false
-  evaluation_execution_role_arn  = aws_iam_role.test.arn
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
     cloud_watch_logs {
@@ -521,10 +521,10 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 func testAccOnlineEvaluationConfigConfig_executionStatus(rName, executionStatus string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name  = %[1]q
-  enable_on_create               = false
-  execution_status               = %[2]q
-  evaluation_execution_role_arn  = aws_iam_role.test.arn
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  execution_status              = %[2]q
+  evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
     cloud_watch_logs {
@@ -549,9 +549,9 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
 func testAccOnlineEvaluationConfigConfig_filters(rName string) string {
 	return acctest.ConfigCompose(testAccOnlineEvaluationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_online_evaluation_config" "test" {
-  online_evaluation_config_name  = %[1]q
-  enable_on_create               = false
-  evaluation_execution_role_arn  = aws_iam_role.test.arn
+  online_evaluation_config_name = %[1]q
+  enable_on_create              = false
+  evaluation_execution_role_arn = aws_iam_role.test.arn
 
   data_source_config {
     cloud_watch_logs {
