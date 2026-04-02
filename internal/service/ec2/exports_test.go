@@ -286,6 +286,7 @@ var (
 	InstanceMigrateState                                        = instanceMigrateState
 	InstanceStateUpgradeV1                                      = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                    = internetGatewayAttachmentParseResourceID
+	IanaProtocolIToA                                            = ianaProtocolIToA
 	IPPermissionsContainIPv6Ranges                              = ipPermissionsContainIPv6Ranges
 	KeyPairMigrateState                                         = keyPairMigrateState
 	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
