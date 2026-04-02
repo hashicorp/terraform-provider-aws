@@ -69,9 +69,9 @@ func TestAccBCMDataExportsExport_CUR_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("export").AtSliceIndex(0).AtMapKey("data_query").AtSliceIndex(0).AtMapKey("table_configurations"), knownvalue.MapExact(map[string]knownvalue.Check{
 						"COST_AND_USAGE_REPORT": knownvalue.MapExact(map[string]knownvalue.Check{
 							"TIME_GRANULARITY":                      knownvalue.StringExact("HOURLY"),
-							"INCLUDE_RESOURCES":                     knownvalue.StringExact("FALSE"),
-							"INCLUDE_SPLIT_COST_ALLOCATION_DATA":    knownvalue.StringExact("FALSE"),
-							"INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY": knownvalue.StringExact("FALSE"),
+							"INCLUDE_RESOURCES":                     knownvalue.StringExact(acctest.CtFalseCaps),
+							"INCLUDE_SPLIT_COST_ALLOCATION_DATA":    knownvalue.StringExact(acctest.CtFalseCaps),
+							"INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY": knownvalue.StringExact(acctest.CtFalseCaps),
 							"BILLING_VIEW_ARN":                      tfknownvalue.GlobalARNExact("billing", "billingview/primary"),
 						}),
 					})),
@@ -127,9 +127,9 @@ func TestAccBCMDataExportsExport_CUR_tableConfigurations(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("export").AtSliceIndex(0).AtMapKey("data_query").AtSliceIndex(0).AtMapKey("table_configurations"), knownvalue.MapExact(map[string]knownvalue.Check{
 						"COST_AND_USAGE_REPORT": knownvalue.MapExact(map[string]knownvalue.Check{
 							"TIME_GRANULARITY":                      knownvalue.StringExact("DAILY"),
-							"INCLUDE_RESOURCES":                     knownvalue.StringExact("TRUE"),
-							"INCLUDE_SPLIT_COST_ALLOCATION_DATA":    knownvalue.StringExact("TRUE"),
-							"INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY": knownvalue.StringExact("TRUE"),
+							"INCLUDE_RESOURCES":                     knownvalue.StringExact(acctest.CtTrueCaps),
+							"INCLUDE_SPLIT_COST_ALLOCATION_DATA":    knownvalue.StringExact(acctest.CtTrueCaps),
+							"INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY": knownvalue.StringExact(acctest.CtTrueCaps),
 							"BILLING_VIEW_ARN":                      tfknownvalue.GlobalARNExact("billing", "billingview/primary"),
 						}),
 					})),
