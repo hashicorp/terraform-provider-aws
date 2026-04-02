@@ -33,7 +33,7 @@ func TestAccSSOAdminApplicationGrant_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.Region())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		CheckDestroy:             testAccCheckApplicationGrantDestroy(ctx, t),
@@ -127,7 +127,7 @@ func TestAccSSOAdminApplicationGrant_Identity_regionOverride(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.AlternateRegion())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,

@@ -113,7 +113,7 @@ func TestAccSSOAdminApplicationGrant_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceKnownValues("aws_ssoadmin_application_grant.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), grantID.ValueCheck()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("grant_type"), knownvalue.StringExact("authorization_code")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("grant_type"), knownvalue.StringExact("refresh_token")),
 					}),
 				},
 			},
@@ -138,7 +138,7 @@ func TestAccSSOAdminApplicationGrant_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.AlternateRegion())
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,

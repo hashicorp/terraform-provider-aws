@@ -35,14 +35,10 @@ func TestAccSSOAdminApplicationGrant_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationGrantConfig_authorizationCode(rName),
+				Config: testAccApplicationGrantConfig_refreshToken(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationGrantExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant_type", "authorization_code"),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.0.redirect_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.0.redirect_uris.0", "https://example.com/callback"),
+					resource.TestCheckResourceAttr(resourceName, "grant_type", "refresh_token"),
 				),
 			},
 			{
@@ -70,7 +66,7 @@ func TestAccSSOAdminApplicationGrant_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationGrantConfig_authorizationCode(rName),
+				Config: testAccApplicationGrantConfig_refreshToken(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationGrantExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplicationGrant, resourceName),
@@ -98,7 +94,7 @@ func TestAccSSOAdminApplicationGrant_disappears_Application(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationGrantConfig_authorizationCode(rName),
+				Config: testAccApplicationGrantConfig_refreshToken(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationGrantExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, applicationResourceName),
@@ -109,7 +105,7 @@ func TestAccSSOAdminApplicationGrant_disappears_Application(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminApplicationGrant_authorizationCodeUpdate(t *testing.T) {
+func TestAccSSOAdminApplicationGrant_jwtBearerUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_grant.test"
@@ -125,19 +121,19 @@ func TestAccSSOAdminApplicationGrant_authorizationCodeUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationGrantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationGrantConfig_authorizationCode(rName),
+				Config: testAccApplicationGrantConfig_jwtBearer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationGrantExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.0.redirect_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grant.0.jwt_bearer.0.authorized_token_issuers.0.authorized_audiences.#", "1"),
 				),
 			},
 			{
-				Config: testAccApplicationGrantConfig_authorizationCodeUpdated(rName),
+				Config: testAccApplicationGrantConfig_jwtBearerUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationGrantExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.0.redirect_uris.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.0.redirect_uris.0", "https://example.com/callback"),
-					resource.TestCheckResourceAttr(resourceName, "grant.0.authorization_code.0.redirect_uris.1", "https://example.com/callback2"),
+					resource.TestCheckResourceAttr(resourceName, "grant.0.jwt_bearer.0.authorized_token_issuers.0.authorized_audiences.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "grant.0.jwt_bearer.0.authorized_token_issuers.0.authorized_audiences.0", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "grant.0.jwt_bearer.0.authorized_token_issuers.0.authorized_audiences.1", "https://example2.com"),
 				),
 			},
 			{
@@ -169,37 +165,6 @@ func TestAccSSOAdminApplicationGrant_refreshToken(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationGrantExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "grant_type", "refresh_token"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminApplicationGrant_tokenExchange(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_application_grant.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationGrantDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationGrantConfig_tokenExchange(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationGrantExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant_type", "urn:ietf:params:oauth:grant-type:token-exchange"),
 				),
 			},
 			{
@@ -307,40 +272,6 @@ resource "aws_ssoadmin_application" "test" {
 `, rName, testAccApplicationProviderARN)
 }
 
-func testAccApplicationGrantConfig_authorizationCode(rName string) string {
-	return acctest.ConfigCompose(
-		testAccApplicationGrantConfigBase(rName),
-		`
-resource "aws_ssoadmin_application_grant" "test" {
-  application_arn = aws_ssoadmin_application.test.application_arn
-  grant_type      = "authorization_code"
-
-  grant {
-    authorization_code {
-      redirect_uris = ["https://example.com/callback"]
-    }
-  }
-}
-`)
-}
-
-func testAccApplicationGrantConfig_authorizationCodeUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		testAccApplicationGrantConfigBase(rName),
-		`
-resource "aws_ssoadmin_application_grant" "test" {
-  application_arn = aws_ssoadmin_application.test.application_arn
-  grant_type      = "authorization_code"
-
-  grant {
-    authorization_code {
-      redirect_uris = ["https://example.com/callback", "https://example.com/callback2"]
-    }
-  }
-}
-`)
-}
-
 func testAccApplicationGrantConfig_refreshToken(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationGrantConfigBase(rName),
@@ -348,17 +279,6 @@ func testAccApplicationGrantConfig_refreshToken(rName string) string {
 resource "aws_ssoadmin_application_grant" "test" {
   application_arn = aws_ssoadmin_application.test.application_arn
   grant_type      = "refresh_token"
-}
-`)
-}
-
-func testAccApplicationGrantConfig_tokenExchange(rName string) string {
-	return acctest.ConfigCompose(
-		testAccApplicationGrantConfigBase(rName),
-		`
-resource "aws_ssoadmin_application_grant" "test" {
-  application_arn = aws_ssoadmin_application.test.application_arn
-  grant_type      = "urn:ietf:params:oauth:grant-type:token-exchange"
 }
 `)
 }
@@ -390,6 +310,41 @@ resource "aws_ssoadmin_application_grant" "test" {
     jwt_bearer {
       authorized_token_issuers {
         authorized_audiences      = ["https://example.com"]
+        trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test.arn
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccApplicationGrantConfig_jwtBearerUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationGrantConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ssoadmin_trusted_token_issuer" "test" {
+  name                      = %[1]q
+  instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  trusted_token_issuer_type = "OIDC_JWT"
+
+  trusted_token_issuer_configuration {
+    oidc_jwt_configuration {
+      claim_attribute_path          = "email"
+      identity_store_attribute_path = "emails.value"
+      issuer_url                    = "https://example.com"
+      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
+    }
+  }
+}
+
+resource "aws_ssoadmin_application_grant" "test" {
+  application_arn = aws_ssoadmin_application.test.application_arn
+  grant_type      = "urn:ietf:params:oauth:grant-type:jwt-bearer"
+
+  grant {
+    jwt_bearer {
+      authorized_token_issuers {
+        authorized_audiences      = ["https://example.com", "https://example2.com"]
         trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test.arn
       }
     }

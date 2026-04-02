@@ -12,11 +12,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,8 +36,8 @@ import (
 // @IdentityAttribute("application_arn")
 // @IdentityAttribute("grant_type")
 // @ArnFormat(global=true)
-// @ImportIDHandler("applicationGrantImportID")
-// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstances")
+// @ImportIDHandler("applicationGrantImportID", setIDAttribute=true)
+// @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttributes="application_arn;grant_type", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newApplicationGrantResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -469,7 +471,10 @@ type authorizedTokenIssuerModel struct {
 	TrustedTokenIssuerArn fwtypes.ARN          `tfsdk:"trusted_token_issuer_arn"`
 }
 
-var _ inttypes.ImportIDParser = applicationGrantImportID{}
+var (
+	_ inttypes.ImportIDParser           = applicationGrantImportID{}
+	_ inttypes.FrameworkImportIDCreator = applicationGrantImportID{}
+)
 
 type applicationGrantImportID struct{}
 
@@ -485,4 +490,15 @@ func (applicationGrantImportID) Parse(id string) (string, map[string]any, error)
 	}
 
 	return id, result, nil
+}
+
+func (applicationGrantImportID) Create(ctx context.Context, state tfsdk.State) string {
+	var applicationARN fwtypes.ARN
+	var grantType fwtypes.StringEnum[awstypes.GrantType]
+
+	state.GetAttribute(ctx, path.Root("application_arn"), &applicationARN)
+	state.GetAttribute(ctx, path.Root("grant_type"), &grantType)
+
+	id, _ := intflex.FlattenResourceId([]string{applicationARN.ValueString(), grantType.ValueString()}, applicationGrantIDPartCount, false)
+	return id
 }
