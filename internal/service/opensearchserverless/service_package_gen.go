@@ -89,6 +89,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_opensearchserverless_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrType, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      lifecyclePolicyImportID{},
+				SetIDAttr:     true,
+			},
 		},
 		{
 			Factory:  newSecurityConfigResource,
