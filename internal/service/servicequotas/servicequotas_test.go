@@ -33,6 +33,7 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 			acctest.CtDisappears:    testAccAutoManagement_disappears,
 			"updateExclusionList":   testAccAutoManagement_updateExclusionList,
 			"updateNotificationARN": testAccAutoManagement_updateNotificationARN,
+			"Identity":              testAccServiceQuotasAutoManagement_identitySerial,
 		},
 	}
 

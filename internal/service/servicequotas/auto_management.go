@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,11 +29,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_servicequotas_auto_management", name="Auto Management")
-// @SingletonIdentity
+// @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(generator=false)
+// @Testing(serialize=true)
 func newAutoManagementResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &autoManagementResource{}
 
@@ -59,6 +63,7 @@ func (r *autoManagementResource) Schema(ctx context.Context, req resource.Schema
 					mapvalidator.ValueListsAre(listvalidator.SizeAtLeast(1)),
 				},
 			},
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			"notification_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -115,6 +120,8 @@ func (r *autoManagementResource) Create(ctx context.Context, req resource.Create
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 		return
 	}
+
+	plan.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -232,6 +239,7 @@ func findAutoManagement(ctx context.Context, conn *servicequotas.Client) (*servi
 type autoManagementResourceModel struct {
 	framework.WithRegionModel
 	ExclusionList   fwtypes.MapValueOf[fwtypes.ListOfString] `tfsdk:"exclusion_list"`
+	ID              types.String                             `tfsdk:"id"`
 	NotificationARN fwtypes.ARN                              `tfsdk:"notification_arn"`
 	OptInLevel      fwtypes.StringEnum[awstypes.OptInLevel]  `tfsdk:"opt_in_level"`
 	OptInType       fwtypes.StringEnum[awstypes.OptInType]   `tfsdk:"opt_in_type"`

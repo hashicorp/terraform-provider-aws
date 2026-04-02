@@ -51,17 +51,39 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Quotas Auto Management using the account ID. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_servicequotas_auto_management.example
-  id = "123456789012"
+  identity = {
+    region = "us-west-2"
+  }
+}
+
+resource "aws_servicequotas_auto_management" "example" {
+  ...
 }
 ```
 
-Using `terraform import`, import Service Quotas Auto Management using the account ID. For example:
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Quotas Auto Management using the region name. For example:
+
+```terraform
+import {
+  to = aws_servicequotas_auto_management.example
+  id = "us-west-2"
+}
+```
+
+Using `terraform import`, import Service Quotas Auto Management using the region name. For example:
 
 ```console
-% terraform import aws_servicequotas_auto_management.example 123456789012
+% terraform import aws_servicequotas_auto_management.example us-west-2
 ```
