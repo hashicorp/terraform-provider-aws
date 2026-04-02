@@ -23,17 +23,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearchserverless_security_config", name="Security Config")
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @ImportIDHandler("securityConfigImportID", setIDAttribute=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.SecurityConfigDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newSecurityConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &securityConfigResource{}, nil
 }
@@ -44,6 +51,7 @@ const (
 
 type securityConfigResource struct {
 	framework.ResourceWithModel[securityConfigResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *securityConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -274,18 +282,6 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *securityConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, resourceIDSeparator)
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected saml/account-id/name", req.ID)
-		resp.Diagnostics.AddError(fmt.Sprintf("importing Security Policy (%s)", req.ID), err.Error())
-		return
-	}
-
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[2])...)
-}
-
 type securityConfigResourceModel struct {
 	framework.WithRegionModel
 	ID            types.String                                     `tfsdk:"id"`
@@ -301,4 +297,34 @@ type samlOptionsData struct {
 	Metadata       types.String `tfsdk:"metadata"`
 	SessionTimeout types.Int64  `tfsdk:"session_timeout"`
 	UserAttribute  types.String `tfsdk:"user_attribute"`
+}
+
+type securityConfigImportID struct{}
+
+func (securityConfigImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, resourceIDSeparator)
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected saml/account-id/name", id, resourceIDSeparator)
+	}
+
+	name := parts[2]
+	securityConfigType := parts[0]
+
+	result := map[string]any{
+		names.AttrName: name,
+		names.AttrType: securityConfigType,
+	}
+
+	return id, result, nil
+}
+
+func (securityConfigImportID) Create(ctx context.Context, state tfsdk.State) string {
+	client := importer.Client(ctx)
+	var name types.String
+	var securityConfigType fwtypes.StringEnum[awstypes.SecurityConfigType]
+
+	state.GetAttribute(ctx, path.Root(names.AttrName), &name)
+	state.GetAttribute(ctx, path.Root(names.AttrType), &securityConfigType)
+
+	return fmt.Sprintf("%s/%s/%s", securityConfigType.ValueString(), client.AccountID(ctx), name.ValueString())
 }

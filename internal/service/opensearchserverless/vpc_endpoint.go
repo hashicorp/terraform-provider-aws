@@ -37,6 +37,9 @@ import (
 )
 
 // @FrameworkResource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.VpcEndpointDetail")
+// @Testing(preIdentityVersion="v6.39.0")
 func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := vpcEndpointResource{}
 
@@ -54,7 +57,7 @@ const (
 type vpcEndpointResource struct {
 	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
