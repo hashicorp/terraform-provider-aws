@@ -210,6 +210,26 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelConnect(t *testing.T) {
 	})
 }
 
+func TestAccPinpointSMSVoiceV2PhoneNumber_shortCodeCreateValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPhoneNumber(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPhoneNumberConfig_shortCode,
+				ExpectError: regexache.MustCompile(`SHORT_CODE cannot be created via Terraform`),
+			},
+		},
+	})
+}
+
 func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var phoneNumber awstypes.PhoneNumberInformation
@@ -569,3 +589,13 @@ resource "aws_pinpointsmsvoicev2_phone_number" "test" {
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+
+const testAccPhoneNumberConfig_shortCode = `
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code = "US"
+  message_type     = "TRANSACTIONAL"
+  number_type      = "SHORT_CODE"
+
+  number_capabilities = ["SMS"]
+}
+`
