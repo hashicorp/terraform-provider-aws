@@ -1005,26 +1005,6 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 						logAttrKeySourceSize: len(from),
 					})
 
-					// Check for omitempty: if all inner maps are empty, return null
-					if fieldOpts.omitempty {
-						allEmpty := true
-						for _, innerMap := range from {
-							if len(innerMap) > 0 {
-								allEmpty = false
-								break
-							}
-						}
-						if allEmpty {
-							tflog.SubsystemTrace(ctx, subsystemName, "All inner maps empty with omitempty, returning null")
-							to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
-							diags.Append(d...)
-							if !diags.HasError() {
-								vTo.Set(reflect.ValueOf(to))
-							}
-							return diags
-						}
-					}
-
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						innerElements := make(map[string]attr.Value, len(v))
