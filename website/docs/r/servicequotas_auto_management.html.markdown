@@ -62,7 +62,7 @@ import {
 }
 
 resource "aws_servicequotas_auto_management" "example" {
-  ...
+  # Additional attributes.
 }
 ```
 
