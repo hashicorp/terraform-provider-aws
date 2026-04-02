@@ -84,6 +84,7 @@ The `storage_lens_configuration` block supports the following:
 * `enabled` (Required) Whether the S3 Storage Lens configuration is enabled.
 * `exclude` (Optional) What is excluded in this configuration. Conflicts with `include`. See [Exclude](#exclude) below for more details.
 * `include` (Optional) What is included in this configuration. Conflicts with `exclude`. See [Include](#include) below for more details.
+* `prefix_delimiter` (Optional) The delimiter to divide S3 key into hierarchy of prefixes.
 
 ### Account Level
 
@@ -163,6 +164,11 @@ The `data_export` block supports the following:
 * `cloud_watch_metrics` (Optional) Amazon CloudWatch publishing for S3 Storage Lens metrics. See [Cloud Watch Metrics](#cloud-watch-metrics) below for more details.
 * `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens metrics export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
 * `storage_lens_table_destination` (Optional) S3 table bucket where the S3 Storage Lens metrics export will be located. See [Storage Lens Table Destination](#storage-lens-table-destination) below for more details.
+
+The `expanded_prefixes_data_export` block supports the following:
+
+* `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens expanded prefixes data export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
+* `storage_lens_table_destination` (Optional) The table where the S3 Storage Lens expanded prefixes data export will be located. See [Storage Lens Table Destination](#storage-lens-table-destination) below for more details.
 
 ### Cloud Watch Metrics
 
