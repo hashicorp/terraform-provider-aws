@@ -161,12 +161,7 @@ func (l *routeTableAssociationListResource) List(ctx context.Context, request li
 			rd.SetId(id)
 
 			if request.IncludeResource {
-				if err := resourceRouteTableAssociationFlatten(&item, rd); err != nil {
-					tflog.Error(ctx, "Reading EC2 Route Table Association", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
+				resourceRouteTableAssociationFlatten(&item, rd)
 			}
 
 			var targetDisplayName string
