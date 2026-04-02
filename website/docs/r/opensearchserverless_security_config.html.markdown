@@ -52,7 +52,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Access Policy using the `name` argument prefixed with the string `saml/account_id/`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_opensearchserverless_security_config.example
+  identity = {
+    name = "example"
+    type = "saml"
+  }
+}
+
+resource "aws_opensearchserverless_security_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the policy.
+* `type` (String) Type of configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Security Config using the `name` argument prefixed with the string `saml/account_id/`. For example:
 
 ```terraform
 import {
@@ -61,7 +89,7 @@ import {
 }
 ```
 
-Using `terraform import`, import OpenSearchServerless Access Policy using the `name` argument prefixed with the string `saml/account_id/`. For example:
+Using `terraform import`, import OpenSearchServerless Security Config using the `name` argument prefixed with the string `saml/account_id/`. For example:
 
 ```console
 % terraform import aws_opensearchserverless_security_config.example saml/123456789012/example
