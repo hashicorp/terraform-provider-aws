@@ -3,6 +3,11 @@
 ENHANCEMENTS:
 
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-2_2` as a valid value for `runtime_environment` ([#47207](https://github.com/hashicorp/terraform-provider-aws/issues/47207))
+* resource/aws_opensearchserverless_access_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_lifecycle_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_security_config: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_security_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_vpc_endpoint: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
 * resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.data_export.storage_lens_table_destination` argument ([#47152](https://github.com/hashicorp/terraform-provider-aws/issues/47152))
 
 ## 6.39.0 (April 1, 2026)
