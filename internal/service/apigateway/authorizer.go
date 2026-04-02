@@ -6,6 +6,7 @@
 package apigateway
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
@@ -15,14 +16,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -330,26 +336,46 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
+func resourceAuthorizerCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v any) error {
+	var plan authorizerResourceModel
+	if err := tfcty.GetFramework(ctx, diff.GetRawPlan(), &plan); err != nil {
+		return fmt.Errorf("RawPlan to framework model: %w", err)
+	}
+	if plan.Type.IsUnknown() {
+		return nil
+	}
+
+	// RawPlan contains no schema defaults in CustomizeDiff.
+	authType := cmp.Or(plan.Type.ValueEnum(), awstypes.AuthorizerTypeToken)
+
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
-	if diff.HasChange(names.AttrType) {
-		o, n := diff.GetChange(names.AttrType)
-		if o.(string) == string(awstypes.AuthorizerTypeCognitoUserPools) || n.(string) == string(awstypes.AuthorizerTypeCognitoUserPools) {
+	if rawState := diff.GetRawState(); !rawState.IsNull() { // RawState is null on Create.
+		var state authorizerResourceModel
+		if err := tfcty.GetFramework(ctx, rawState, &state); err != nil {
+			return fmt.Errorf("RawState to framework model: %w", err)
+		}
+
+		if o, n := state.Type.ValueEnum(), authType; o != n && (o == awstypes.AuthorizerTypeCognitoUserPools || n == awstypes.AuthorizerTypeCognitoUserPools) {
 			if err := diff.ForceNew(names.AttrType); err != nil {
 				return err
 			}
 		}
 	}
 
-	switch authType, rawConfig := awstypes.AuthorizerType(diff.Get(names.AttrType).(string)), diff.GetRawConfig(); authType {
-	// authorizer_uri is required for authorizer TOKEN/REQUEST.
+	var config authorizerResourceModel
+	if err := tfcty.GetFramework(ctx, diff.GetRawConfig(), &config); err != nil {
+		return fmt.Errorf("RawConfig to framework model: %w", err)
+	}
+
+	switch authType {
 	case awstypes.AuthorizerTypeRequest, awstypes.AuthorizerTypeToken:
-		if v := rawConfig.GetAttr("authorizer_uri"); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
+		// authorizer_uri is required for authorizer TOKEN/REQUEST.
+		if authorizerURI := config.AuthorizerURI; !authorizerURI.IsUnknown() && (authorizerURI.IsNull() || authorizerURI.ValueString() == "") {
 			return fmt.Errorf("authorizer_uri must be set non-empty when authorizer type is %s", authType)
 		}
-		// provider_arns is required for authorizer COGNITO_USER_POOLS.
 	case awstypes.AuthorizerTypeCognitoUserPools:
-		if v := rawConfig.GetAttr("provider_arns"); v.IsKnown() && (v.IsNull() || v.AsValueSet().Length() == 0) {
+		// provider_arns is required for authorizer COGNITO_USER_POOLS.
+		if providerARNs := config.ProviderARNs; !providerARNs.IsUnknown() && providerARNs.Length(basetypes.CollectionLengthOptions{UnhandledNullAsZero: true}) == 0 {
 			return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
 		}
 	}
@@ -363,7 +389,11 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 		RestApiId:    aws.String(apiID),
 	}
 
-	output, err := conn.GetAuthorizer(ctx, &input)
+	return findAuthorizer(ctx, conn, &input)
+}
+
+func findAuthorizer(ctx context.Context, conn *apigateway.Client, input *apigateway.GetAuthorizerInput) (*apigateway.GetAuthorizerOutput, error) {
+	output, err := conn.GetAuthorizer(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -384,4 +414,18 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 
 func authorizerARN(ctx context.Context, c *conns.AWSClient, apiID, authorizerID string) string {
 	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID))
+}
+
+type authorizerResourceModel struct {
+	framework.WithRegionModel
+	ARN                          types.String                                `tfsdk:"arn"`
+	AuthorizerCredentials        fwtypes.ARN                                 `tfsdk:"authorizer_credentials"`
+	AuthorizerResultTTLInSeconds types.Int64                                 `tfsdk:"authorizer_result_ttl_in_seconds"`
+	AuthorizerURI                types.String                                `tfsdk:"authorizer_uri"`
+	IdentitySource               types.String                                `tfsdk:"identity_source"`
+	IdentityValidationExpression types.String                                `tfsdk:"identity_validation_expression"`
+	Name                         types.String                                `tfsdk:"name"`
+	ProviderARNs                 fwtypes.SetOfARN                            `tfsdk:"provider_arns"`
+	RestApiID                    types.String                                `tfsdk:"rest_api_id"`
+	Type                         fwtypes.StringEnum[awstypes.AuthorizerType] `tfsdk:"type"`
 }
