@@ -42,6 +42,7 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.network_type", string(types.NetworkTypeIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", "1"),
