@@ -2613,6 +2613,58 @@ func TestAccWAFV2RuleGroup_rateBasedStatement_ASNMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2RuleGroup_computedCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_computedCapacity(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName:                      "rule-1",
+						names.AttrPriority:                  "1",
+						"action.#":                          "1",
+						"action.0.allow.#":                  "0",
+						"action.0.block.#":                  "0",
+						"action.0.count.#":                  "1",
+						"action.0.captcha.#":                "0",
+						"action.0.challenge.#":              "0",
+						"statement.#":                       "1",
+						"statement.0.geo_match_statement.#": "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
@@ -5762,6 +5814,43 @@ resource "aws_wafv2_rule_group" "test" {
       SampledRequestsEnabled   = false
     }
   }])
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_computedCapacity(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  description = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
