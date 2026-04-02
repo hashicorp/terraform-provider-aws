@@ -127,6 +127,40 @@ func TestAccElastiCacheUser_iamAuthMode(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheUser_noPasswordAuthMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigWithNoPasswordAuthMode_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "no-password"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheUser_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var user awstypes.User
@@ -483,6 +517,21 @@ resource "aws_elasticache_user" "test" {
 
   authentication_mode {
     type = "iam"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfigWithNoPasswordAuthMode_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = %[1]q
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "redis"
+
+  authentication_mode {
+    type = "no-password-required"
   }
 }
 `, rName)
