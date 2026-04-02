@@ -219,9 +219,7 @@ func TestAccVPCRouteTableAssociation_List_Gateway_basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/list_gateway_basic/"),
-				ConfigVariables: config.Variables{
-					"resource_count": config.IntegerVariable(2),
-				},
+				ConfigVariables: config.Variables{},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.CompareValuePairs(resourceName1, tfjsonpath.New("route_table_id"), "aws_route_table.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
@@ -237,9 +235,7 @@ func TestAccVPCRouteTableAssociation_List_Gateway_basic(t *testing.T) {
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/list_gateway_basic/"),
-				ConfigVariables: config.Variables{
-					"resource_count": config.IntegerVariable(2),
-				},
+				ConfigVariables: config.Variables{},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_route_table_association.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_route_table_association.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^igw-[a-f0-9]+ / rtb-[a-f0-9]+ \(rtbassoc-[a-f0-9]+\)$`))),
@@ -279,8 +275,7 @@ func TestAccVPCRouteTableAssociation_List_Gateway_includeResource(t *testing.T) 
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/list_gateway_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					"resource_count": config.IntegerVariable(2),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -298,8 +293,7 @@ func TestAccVPCRouteTableAssociation_List_Gateway_includeResource(t *testing.T) 
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/RouteTableAssociation/list_gateway_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:  config.StringVariable(rName),
-					"resource_count": config.IntegerVariable(2),
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_route_table_association.test", identity1.Checks()),

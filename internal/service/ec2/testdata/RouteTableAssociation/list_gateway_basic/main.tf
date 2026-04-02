@@ -42,9 +42,3 @@ resource "aws_subnet" "test" {
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 }
-
-variable "resource_count" {
-  description = "Number of resources to create"
-  type        = number
-  nullable    = false
-}
