@@ -624,13 +624,13 @@ func testAccMultiRegionClusterConfig_0Regions(rName string) string {
 		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
 		fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  provider 						   = aws
+  provider = aws
 
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   description                      = "%[1]s-mmr-description"
-  engine         				   = "valkey"
-  engine_version 				   = "7.3"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
 }
 `, rName))
 }
@@ -643,23 +643,23 @@ func testAccMultiRegionClusterConfig_1Regions(rName string) string {
 		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
 		fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  provider 						   = aws
+  provider = aws
 
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   description                      = "%[1]s-mmr-description"
-  engine         				   = "valkey"
-  engine_version 				   = "7.3"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
 }
 
 resource "aws_memorydb_cluster" "primary" {
-  provider 		 			= aws
+  provider = aws
 
-  acl_name       			= "open-access"
-  name           			= "%[1]s-p"
-  node_type      			= "db.r7g.xlarge"
-  engine         			= "valkey"
-  engine_version 			= "7.3"
+  acl_name                  = "open-access"
+  name                      = "%[1]s-p"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 }
 
@@ -674,34 +674,34 @@ func testAccMultiRegionClusterConfig_2Regions(rName string) string {
 		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
 		fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  provider 						   = aws
+  provider = aws
 
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   description                      = "%[1]s-mmr-description"
-  engine         				   = "valkey"
-  engine_version 				   = "7.3"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
 }
 
 resource "aws_memorydb_cluster" "primary" {
-  provider 		 			= aws
+  provider = aws
 
-  acl_name       			= "open-access"
-  name           			= "%[1]s-p"
-  node_type      			= "db.r7g.xlarge"
-  engine         			= "valkey"
-  engine_version 			= "7.3"
+  acl_name                  = "open-access"
+  name                      = "%[1]s-p"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 }
 
 resource "aws_memorydb_cluster" "alternate" {
-  provider 		 			= awsalternate
+  provider = awsalternate
 
-  acl_name       			= "open-access"
-  name           			= "%[1]s-a"
-  node_type      			= "db.r7g.xlarge"
-  engine         			= "valkey"
-  engine_version 			= "7.3"
+  acl_name                  = "open-access"
+  name                      = "%[1]s-a"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 }
 `, rName))
@@ -715,45 +715,45 @@ func testAccMultiRegionClusterConfig_3Regions(rName string) string {
 		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
 		fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  provider 						   = aws
+  provider = aws
 
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   description                      = "%[1]s-mmr-description"
-  engine         				   = "valkey"
-  engine_version 				   = "7.3"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
 }
 
 resource "aws_memorydb_cluster" "primary" {
-  provider 		 			= aws
+  provider = aws
 
-  acl_name       			= "open-access"
-  name           			= "%[1]s-p"
-  node_type      			= "db.r7g.xlarge"
-  engine         			= "valkey"
-  engine_version 			= "7.3"
+  acl_name                  = "open-access"
+  name                      = "%[1]s-p"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 }
 
 resource "aws_memorydb_cluster" "alternate" {
-  provider 		 			= awsalternate
+  provider = awsalternate
 
-  acl_name       			= "open-access"
-  name           			= "%[1]s-a"
-  node_type      			= "db.r7g.xlarge"
-  engine         			= "valkey"
-  engine_version 			= "7.3"
+  acl_name                  = "open-access"
+  name                      = "%[1]s-a"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 }
 
 resource "aws_memorydb_cluster" "third" {
-  provider 		 			= awsthird
+  provider = awsthird
 
-  acl_name       			= "open-access"
-  name           			= "%[1]s-t"
-  node_type      			= "db.r7g.xlarge"
-  engine         			= "valkey"
-  engine_version 			= "7.3"
+  acl_name                  = "open-access"
+  name                      = "%[1]s-t"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 }
 `, rName))
