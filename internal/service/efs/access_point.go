@@ -287,7 +287,7 @@ func listAccessPointPages(ctx context.Context, conn *efs.Client, input *efs.Desc
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(nil, fmt.Errorf("listing EFS Access Point: %w", err))
+				yield(nil, fmt.Errorf("listing EFS Access Points: %w", err))
 				return
 			}
 
