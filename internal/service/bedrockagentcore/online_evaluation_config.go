@@ -174,7 +174,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"log_group_name": schema.StringAttribute{
+									names.AttrLogGroupName: schema.StringAttribute{
 										Computed: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.UseStateForUnknown(),
@@ -186,7 +186,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 					},
 				},
 			},
-			"rule": schema.ListNestedBlock{
+			names.AttrRule: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 1),
@@ -211,7 +211,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 								},
 							},
 						},
-						"filter": schema.ListNestedBlock{
+						names.AttrFilter: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[filterModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(5),
@@ -293,52 +293,14 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	input := bedrockagentcorecontrol.CreateOnlineEvaluationConfigInput{
-		OnlineEvaluationConfigName: fwflex.StringFromFramework(ctx, data.OnlineEvaluationConfigName),
-		EnableOnCreate:             fwflex.BoolFromFramework(ctx, data.EnableOnCreate),
-		EvaluationExecutionRoleArn: fwflex.StringFromFramework(ctx, data.EvaluationExecutionRoleArn),
-		Description:                fwflex.StringFromFramework(ctx, data.Description),
-		ClientToken:                aws.String(create.UniqueId(ctx)),
-		Tags:                       getTagsIn(ctx),
-	}
-
-	// Expand data_source_config (union type).
-	dataSourceConfigs, d := data.DataSourceConfig.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	var input bedrockagentcorecontrol.CreateOnlineEvaluationConfigInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if len(dataSourceConfigs) > 0 {
-		expanded, d := expandDataSourceConfig(ctx, dataSourceConfigs[0])
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.DataSourceConfig = expanded
-	}
 
-	// Expand evaluators (union type).
-	evaluatorModels, d := data.Evaluators.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	input.Evaluators = expandEvaluatorReferences(evaluatorModels)
-
-	// Expand rule.
-	ruleModels, d := data.Rule.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	if len(ruleModels) > 0 {
-		expanded, d := expandRule(ctx, ruleModels[0])
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.Rule = expanded
-	}
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateOnlineEvaluationConfig(ctx, &input)
 	if err != nil {
@@ -359,7 +321,7 @@ func (r *onlineEvaluationConfigResource) Create(ctx context.Context, request res
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flattenOnlineEvaluationConfig(ctx, config, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, config, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -388,7 +350,7 @@ func (r *onlineEvaluationConfigResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flattenOnlineEvaluationConfig(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -414,54 +376,14 @@ func (r *onlineEvaluationConfigResource) Update(ctx context.Context, request res
 
 	if diff.HasChanges() {
 		configID := fwflex.StringValueFromFramework(ctx, new.OnlineEvaluationConfigID)
-		input := bedrockagentcorecontrol.UpdateOnlineEvaluationConfigInput{
-			OnlineEvaluationConfigId: aws.String(configID),
-			Description:              fwflex.StringFromFramework(ctx, new.Description),
-			EvaluationExecutionRoleArn: fwflex.StringFromFramework(ctx, new.EvaluationExecutionRoleArn),
-		}
 
-		// Expand execution_status if changed.
-		if !new.ExecutionStatus.IsNull() && !new.ExecutionStatus.IsUnknown() {
-			input.ExecutionStatus = awstypes.OnlineEvaluationExecutionStatus(new.ExecutionStatus.ValueString())
-		}
-
-		// Expand data_source_config.
-		dataSourceConfigs, d := new.DataSourceConfig.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		var input bedrockagentcorecontrol.UpdateOnlineEvaluationConfigInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
-		if len(dataSourceConfigs) > 0 {
-			expanded, d := expandDataSourceConfig(ctx, dataSourceConfigs[0])
-			smerr.AddEnrich(ctx, &response.Diagnostics, d)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			input.DataSourceConfig = expanded
-		}
 
-		// Expand evaluators.
-		evaluatorModels, d := new.Evaluators.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.Evaluators = expandEvaluatorReferences(evaluatorModels)
-
-		// Expand rule.
-		ruleModels, d := new.Rule.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		if len(ruleModels) > 0 {
-			expanded, d := expandRule(ctx, ruleModels[0])
-			smerr.AddEnrich(ctx, &response.Diagnostics, d)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			input.Rule = expanded
-		}
+		input.OnlineEvaluationConfigId = aws.String(configID)
 
 		_, err := conn.UpdateOnlineEvaluationConfig(ctx, &input)
 		if err != nil {
@@ -474,14 +396,13 @@ func (r *onlineEvaluationConfigResource) Update(ctx context.Context, request res
 			return
 		}
 
-		// Re-read to get the latest state.
 		config, err := findOnlineEvaluationConfigByID(ctx, conn, configID)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, configID)
 			return
 		}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, flattenOnlineEvaluationConfig(ctx, config, &new))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, config, &new))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -589,11 +510,9 @@ func statusOnlineEvaluationConfig(conn *bedrockagentcorecontrol.Client, id strin
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
-
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
 		}
-
 		return out, string(out.Status), nil
 	}
 }
@@ -604,53 +523,87 @@ func findOnlineEvaluationConfigByID(ctx context.Context, conn *bedrockagentcorec
 	input := bedrockagentcorecontrol.GetOnlineEvaluationConfigInput{
 		OnlineEvaluationConfigId: aws.String(id),
 	}
-
 	return findOnlineEvaluationConfig(ctx, conn, &input)
 }
 
 func findOnlineEvaluationConfig(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.GetOnlineEvaluationConfigInput) (*bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput, error) {
 	out, err := conn.GetOnlineEvaluationConfig(ctx, input)
-
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: err,
-		})
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 	}
-
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
-
 	if out == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
-
 	return out, nil
 }
 
 // Models.
 
 type onlineEvaluationConfigResourceModel struct {
-	DataSourceConfig          fwtypes.ListNestedObjectValueOf[dataSourceConfigModel]   `tfsdk:"data_source_config"`
-	Description               types.String                                             `tfsdk:"description"`
-	EnableOnCreate            types.Bool                                               `tfsdk:"enable_on_create"`
-	EvaluationExecutionRoleArn fwtypes.ARN                                             `tfsdk:"evaluation_execution_role_arn"`
-	Evaluators                fwtypes.ListNestedObjectValueOf[evaluatorReferenceModel] `tfsdk:"evaluator"`
-	ExecutionStatus           fwtypes.StringEnum[awstypes.OnlineEvaluationExecutionStatus] `tfsdk:"execution_status"`
-	FailureReason             types.String                                             `tfsdk:"failure_reason"`
-	OnlineEvaluationConfigARN types.String                                             `tfsdk:"online_evaluation_config_arn"`
-	OnlineEvaluationConfigID  types.String                                             `tfsdk:"online_evaluation_config_id"`
-	OnlineEvaluationConfigName types.String                                            `tfsdk:"online_evaluation_config_name"`
-	OutputConfig              fwtypes.ListNestedObjectValueOf[outputConfigModel]       `tfsdk:"output_config"`
-	Rule                      fwtypes.ListNestedObjectValueOf[ruleModel]               `tfsdk:"rule"`
-	Status                    fwtypes.StringEnum[awstypes.OnlineEvaluationConfigStatus] `tfsdk:"status"`
-	Tags                      tftags.Map                                               `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                               `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                           `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	DataSourceConfig           fwtypes.ListNestedObjectValueOf[dataSourceConfigModel]       `tfsdk:"data_source_config"`
+	Description                types.String                                                 `tfsdk:"description"`
+	EnableOnCreate             types.Bool                                                   `tfsdk:"enable_on_create"`
+	EvaluationExecutionRoleArn fwtypes.ARN                                                  `tfsdk:"evaluation_execution_role_arn"`
+	Evaluators                 fwtypes.ListNestedObjectValueOf[evaluatorReferenceModel]     `tfsdk:"evaluator"`
+	ExecutionStatus            fwtypes.StringEnum[awstypes.OnlineEvaluationExecutionStatus] `tfsdk:"execution_status"`
+	FailureReason              types.String                                                 `tfsdk:"failure_reason"`
+	OnlineEvaluationConfigARN  types.String                                                 `tfsdk:"online_evaluation_config_arn"`
+	OnlineEvaluationConfigID   types.String                                                 `tfsdk:"online_evaluation_config_id"`
+	OnlineEvaluationConfigName types.String                                                 `tfsdk:"online_evaluation_config_name"`
+	OutputConfig               fwtypes.ListNestedObjectValueOf[outputConfigModel]           `tfsdk:"output_config"`
+	Rule                       fwtypes.ListNestedObjectValueOf[ruleModel]                   `tfsdk:"rule"`
+	Status                     fwtypes.StringEnum[awstypes.OnlineEvaluationConfigStatus]    `tfsdk:"status"`
+	Tags                       tftags.Map                                                   `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                   `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                                               `tfsdk:"timeouts"`
 }
 
 type dataSourceConfigModel struct {
 	CloudWatchLogs fwtypes.ListNestedObjectValueOf[cloudWatchLogsInputConfigModel] `tfsdk:"cloud_watch_logs"`
+}
+
+var (
+	_ fwflex.Expander  = dataSourceConfigModel{}
+	_ fwflex.Flattener = &dataSourceConfigModel{}
+)
+
+func (m dataSourceConfigModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.CloudWatchLogs.IsNull():
+		data, d := m.CloudWatchLogs.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DataSourceConfigMemberCloudWatchLogs
+		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+	return nil, diags
+}
+
+func (m *dataSourceConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.DataSourceConfigMemberCloudWatchLogs:
+		var data cloudWatchLogsInputConfigModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.CloudWatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("data source config flatten: %T", v))
+	}
+	return diags
 }
 
 type cloudWatchLogsInputConfigModel struct {
@@ -662,6 +615,29 @@ type evaluatorReferenceModel struct {
 	EvaluatorID types.String `tfsdk:"evaluator_id"`
 }
 
+var (
+	_ fwflex.Expander  = evaluatorReferenceModel{}
+	_ fwflex.Flattener = &evaluatorReferenceModel{}
+)
+
+func (m evaluatorReferenceModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	return &awstypes.EvaluatorReferenceMemberEvaluatorId{
+		Value: m.EvaluatorID.ValueString(),
+	}, diags
+}
+
+func (m *evaluatorReferenceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.EvaluatorReferenceMemberEvaluatorId:
+		m.EvaluatorID = types.StringValue(t.Value)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("evaluator reference flatten: %T", v))
+	}
+	return diags
+}
+
 type outputConfigModel struct {
 	CloudWatchConfig fwtypes.ListNestedObjectValueOf[cloudWatchOutputConfigModel] `tfsdk:"cloud_watch_config"`
 }
@@ -671,9 +647,9 @@ type cloudWatchOutputConfigModel struct {
 }
 
 type ruleModel struct {
-	Filters       fwtypes.ListNestedObjectValueOf[filterModel]        `tfsdk:"filter"`
+	Filters        fwtypes.ListNestedObjectValueOf[filterModel]         `tfsdk:"filter"`
 	SamplingConfig fwtypes.ListNestedObjectValueOf[samplingConfigModel] `tfsdk:"sampling_config"`
-	SessionConfig fwtypes.ListNestedObjectValueOf[sessionConfigModel] `tfsdk:"session_config"`
+	SessionConfig  fwtypes.ListNestedObjectValueOf[sessionConfigModel]  `tfsdk:"session_config"`
 }
 
 type samplingConfigModel struct {
@@ -681,9 +657,9 @@ type samplingConfigModel struct {
 }
 
 type filterModel struct {
-	Key      types.String                                       `tfsdk:"key"`
-	Operator fwtypes.StringEnum[awstypes.FilterOperator]        `tfsdk:"operator"`
-	Value    fwtypes.ListNestedObjectValueOf[filterValueModel]  `tfsdk:"value"`
+	Key      types.String                                      `tfsdk:"key"`
+	Operator fwtypes.StringEnum[awstypes.FilterOperator]       `tfsdk:"operator"`
+	Value    fwtypes.ListNestedObjectValueOf[filterValueModel] `tfsdk:"value"`
 }
 
 type filterValueModel struct {
@@ -692,288 +668,45 @@ type filterValueModel struct {
 	StringValue  types.String  `tfsdk:"string_value"`
 }
 
-type sessionConfigModel struct {
-	SessionTimeoutMinutes types.Int64 `tfsdk:"session_timeout_minutes"`
-}
+var (
+	_ fwflex.Expander  = filterValueModel{}
+	_ fwflex.Flattener = &filterValueModel{}
+)
 
-// Expand functions for union types.
-
-func expandDataSourceConfig(ctx context.Context, m *dataSourceConfigModel) (awstypes.DataSourceConfig, diag.Diagnostics) {
+func (m filterValueModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
-	if !m.CloudWatchLogs.IsNull() && !m.CloudWatchLogs.IsUnknown() {
-		cwModels, d := m.CloudWatchLogs.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		if len(cwModels) > 0 {
-			return &awstypes.DataSourceConfigMemberCloudWatchLogs{
-				Value: awstypes.CloudWatchLogsInputConfig{
-					LogGroupNames: fwflex.ExpandFrameworkStringValueList(ctx, cwModels[0].LogGroupNames),
-					ServiceNames:  fwflex.ExpandFrameworkStringValueList(ctx, cwModels[0].ServiceNames),
-				},
-			}, diags
-		}
+	switch {
+	case !m.StringValue.IsNull() && !m.StringValue.IsUnknown():
+		return &awstypes.FilterValueMemberStringValue{
+			Value: m.StringValue.ValueString(),
+		}, diags
+	case !m.BooleanValue.IsNull() && !m.BooleanValue.IsUnknown():
+		return &awstypes.FilterValueMemberBooleanValue{
+			Value: m.BooleanValue.ValueBool(),
+		}, diags
+	case !m.DoubleValue.IsNull() && !m.DoubleValue.IsUnknown():
+		return &awstypes.FilterValueMemberDoubleValue{
+			Value: m.DoubleValue.ValueFloat64(),
+		}, diags
 	}
-
 	return nil, diags
 }
 
-func expandEvaluatorReferences(models []*evaluatorReferenceModel) []awstypes.EvaluatorReference {
-	if len(models) == 0 {
-		return nil
-	}
-
-	refs := make([]awstypes.EvaluatorReference, len(models))
-	for i, m := range models {
-		refs[i] = &awstypes.EvaluatorReferenceMemberEvaluatorId{
-			Value: m.EvaluatorID.ValueString(),
-		}
-	}
-	return refs
-}
-
-func expandRule(ctx context.Context, m *ruleModel) (*awstypes.Rule, diag.Diagnostics) {
+func (m *filterValueModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	rule := &awstypes.Rule{}
-
-	// Sampling config (required).
-	samplingModels, d := m.SamplingConfig.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-	if len(samplingModels) > 0 {
-		rule.SamplingConfig = &awstypes.SamplingConfig{
-			SamplingPercentage: aws.Float64(samplingModels[0].SamplingPercentage.ValueFloat64()),
-		}
-	}
-
-	// Filters (optional).
-	filterModels, d := m.Filters.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-	if len(filterModels) > 0 {
-		filters := make([]awstypes.Filter, len(filterModels))
-		for i, fm := range filterModels {
-			f := awstypes.Filter{
-				Key:      aws.String(fm.Key.ValueString()),
-				Operator: awstypes.FilterOperator(fm.Operator.ValueString()),
-			}
-
-			valueModels, d := fm.Value.ToSlice(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			if len(valueModels) > 0 {
-				f.Value = expandFilterValue(valueModels[0])
-			}
-
-			filters[i] = f
-		}
-		rule.Filters = filters
-	}
-
-	// Session config (optional).
-	sessionModels, d := m.SessionConfig.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-	if len(sessionModels) > 0 {
-		rule.SessionConfig = &awstypes.SessionConfig{
-			SessionTimeoutMinutes: aws.Int32(int32(sessionModels[0].SessionTimeoutMinutes.ValueInt64())),
-		}
-	}
-
-	return rule, diags
-}
-
-func expandFilterValue(m *filterValueModel) awstypes.FilterValue {
-	if !m.StringValue.IsNull() && !m.StringValue.IsUnknown() {
-		return &awstypes.FilterValueMemberStringValue{
-			Value: m.StringValue.ValueString(),
-		}
-	}
-	if !m.BooleanValue.IsNull() && !m.BooleanValue.IsUnknown() {
-		return &awstypes.FilterValueMemberBooleanValue{
-			Value: m.BooleanValue.ValueBool(),
-		}
-	}
-	if !m.DoubleValue.IsNull() && !m.DoubleValue.IsUnknown() {
-		return &awstypes.FilterValueMemberDoubleValue{
-			Value: m.DoubleValue.ValueFloat64(),
-		}
-	}
-	return nil
-}
-
-// Flatten functions.
-
-func flattenOnlineEvaluationConfig(ctx context.Context, out *bedrockagentcorecontrol.GetOnlineEvaluationConfigOutput, data *onlineEvaluationConfigResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	data.OnlineEvaluationConfigARN = types.StringValue(aws.ToString(out.OnlineEvaluationConfigArn))
-	data.OnlineEvaluationConfigID = types.StringValue(aws.ToString(out.OnlineEvaluationConfigId))
-	data.OnlineEvaluationConfigName = types.StringValue(aws.ToString(out.OnlineEvaluationConfigName))
-	data.Description = types.StringPointerValue(out.Description)
-	data.EvaluationExecutionRoleArn = fwtypes.ARNValue(aws.ToString(out.EvaluationExecutionRoleArn))
-	data.ExecutionStatus = fwtypes.StringEnumValue(out.ExecutionStatus)
-	data.FailureReason = types.StringPointerValue(out.FailureReason)
-	data.Status = fwtypes.StringEnumValue(out.Status)
-
-	// Flatten data_source_config.
-	diags.Append(flattenDataSourceConfig(ctx, out.DataSourceConfig, data)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Flatten evaluators.
-	diags.Append(flattenEvaluatorReferences(ctx, out.Evaluators, data)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Flatten rule.
-	if out.Rule != nil {
-		diags.Append(flattenRule(ctx, out.Rule, data)...)
-		if diags.HasError() {
-			return diags
-		}
-	}
-
-	// Flatten output_config.
-	if out.OutputConfig != nil {
-		diags.Append(flattenOutputConfig(ctx, out.OutputConfig, data)...)
-		if diags.HasError() {
-			return diags
-		}
-	} else {
-		data.OutputConfig = fwtypes.NewListNestedObjectValueOfNull[outputConfigModel](ctx)
-	}
-
-	return diags
-}
-
-func flattenDataSourceConfig(ctx context.Context, v awstypes.DataSourceConfig, data *onlineEvaluationConfigResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	switch t := v.(type) {
-	case *awstypes.DataSourceConfigMemberCloudWatchLogs:
-		cwModel := cloudWatchLogsInputConfigModel{
-			LogGroupNames: fwflex.FlattenFrameworkStringValueListOfString(ctx, t.Value.LogGroupNames),
-			ServiceNames:  fwflex.FlattenFrameworkStringValueListOfString(ctx, t.Value.ServiceNames),
-		}
-		dsModel := dataSourceConfigModel{
-			CloudWatchLogs: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &cwModel),
-		}
-		data.DataSourceConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsModel)
-
-	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("data source config flatten: %T", v))
-	}
-
-	return diags
-}
-
-func flattenEvaluatorReferences(ctx context.Context, refs []awstypes.EvaluatorReference, data *onlineEvaluationConfigResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	models := make([]*evaluatorReferenceModel, 0, len(refs))
-	for _, ref := range refs {
-		switch t := ref.(type) {
-		case *awstypes.EvaluatorReferenceMemberEvaluatorId:
-			models = append(models, &evaluatorReferenceModel{
-				EvaluatorID: types.StringValue(t.Value),
-			})
-		default:
-			diags.AddError("Unsupported Type", fmt.Sprintf("evaluator reference flatten: %T", ref))
-			return diags
-		}
-	}
-
-	data.Evaluators = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, models)
-	return diags
-}
-
-func flattenRule(ctx context.Context, rule *awstypes.Rule, data *onlineEvaluationConfigResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	rm := &ruleModel{}
-
-	// Sampling config.
-	if rule.SamplingConfig != nil {
-		sm := &samplingConfigModel{
-			SamplingPercentage: types.Float64Value(aws.ToFloat64(rule.SamplingConfig.SamplingPercentage)),
-		}
-		rm.SamplingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sm)
-	} else {
-		rm.SamplingConfig = fwtypes.NewListNestedObjectValueOfNull[samplingConfigModel](ctx)
-	}
-
-	// Filters.
-	if len(rule.Filters) > 0 {
-		filterModels := make([]*filterModel, len(rule.Filters))
-		for i, f := range rule.Filters {
-			fm := &filterModel{
-				Key:      types.StringValue(aws.ToString(f.Key)),
-				Operator: fwtypes.StringEnumValue(f.Operator),
-			}
-
-			fvm := flattenFilterValue(f.Value)
-			fm.Value = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, fvm)
-
-			filterModels[i] = fm
-		}
-		rm.Filters = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, filterModels)
-	} else {
-		rm.Filters = fwtypes.NewListNestedObjectValueOfNull[filterModel](ctx)
-	}
-
-	// Session config.
-	if rule.SessionConfig != nil {
-		scm := &sessionConfigModel{
-			SessionTimeoutMinutes: types.Int64Value(int64(aws.ToInt32(rule.SessionConfig.SessionTimeoutMinutes))),
-		}
-		rm.SessionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, scm)
-	} else {
-		rm.SessionConfig = fwtypes.NewListNestedObjectValueOfNull[sessionConfigModel](ctx)
-	}
-
-	data.Rule = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, rm)
-	return diags
-}
-
-func flattenFilterValue(v awstypes.FilterValue) *filterValueModel {
-	m := &filterValueModel{}
-	switch t := v.(type) {
-	case *awstypes.FilterValueMemberStringValue:
+	case awstypes.FilterValueMemberStringValue:
 		m.StringValue = types.StringValue(t.Value)
-	case *awstypes.FilterValueMemberBooleanValue:
+	case awstypes.FilterValueMemberBooleanValue:
 		m.BooleanValue = types.BoolValue(t.Value)
-	case *awstypes.FilterValueMemberDoubleValue:
+	case awstypes.FilterValueMemberDoubleValue:
 		m.DoubleValue = types.Float64Value(t.Value)
+	default:
+		diags.AddError("Unsupported Type", fmt.Sprintf("filter value flatten: %T", v))
 	}
-	return m
+	return diags
 }
 
-func flattenOutputConfig(ctx context.Context, oc *awstypes.OutputConfig, data *onlineEvaluationConfigResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	ocm := &outputConfigModel{}
-	if oc.CloudWatchConfig != nil {
-		cwm := &cloudWatchOutputConfigModel{
-			LogGroupName: types.StringValue(aws.ToString(oc.CloudWatchConfig.LogGroupName)),
-		}
-		ocm.CloudWatchConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, cwm)
-	} else {
-		ocm.CloudWatchConfig = fwtypes.NewListNestedObjectValueOfNull[cloudWatchOutputConfigModel](ctx)
-	}
-
-	data.OutputConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, ocm)
-	return diags
+type sessionConfigModel struct {
+	SessionTimeoutMinutes types.Int64 `tfsdk:"session_timeout_minutes"`
 }

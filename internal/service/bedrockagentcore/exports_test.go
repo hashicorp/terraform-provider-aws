@@ -19,7 +19,7 @@ var (
 	ResourceOnlineEvaluationConfig   = newOnlineEvaluationConfigResource
 	ResourceWorkloadIdentity         = newWorkloadIdentityResource
 
-	FindAgentRuntimeByID                     = findAgentRuntimeByID
+	FindAgentRuntimeByID                 = findAgentRuntimeByID
 	FindAgentRuntimeEndpointByTwoPartKey = findAgentRuntimeEndpointByTwoPartKey
 	FindAPIKeyCredentialProviderByName   = findAPIKeyCredentialProviderByName
 	FindBrowserByID                      = findBrowserByID
