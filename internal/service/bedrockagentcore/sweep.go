@@ -27,6 +27,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
+	awsv2.Register("aws_bedrockagentcore_online_evaluation_config", sweepOnlineEvaluationConfigs)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -275,6 +276,28 @@ func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		for _, v := range page.Memories {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMemoryResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepOnlineEvaluationConfigs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListOnlineEvaluationConfigsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.OnlineEvaluationConfigs {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newOnlineEvaluationConfigResource, client,
+				framework.NewAttribute("online_evaluation_config_id", aws.ToString(v.OnlineEvaluationConfigId))),
 			)
 		}
 	}
