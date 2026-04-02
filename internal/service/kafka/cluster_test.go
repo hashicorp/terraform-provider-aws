@@ -1582,6 +1582,105 @@ func TestAccKafkaCluster_rebalancing(t *testing.T) {
 	})
 }
 
+func TestAccKafkaCluster_networkTypeCreateDual(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.ClusterInfo
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_networkType(rName, string(types.NetworkTypeDual)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.network_type", string(types.NetworkTypeDual)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkClusterARN),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+		},
+	})
+}
+
+func TestAccKafkaCluster_networkTypeUpdateToDual(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.ClusterInfo
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_networkType(rName, string(types.NetworkTypeIpv4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.network_type", string(types.NetworkTypeIpv4)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkClusterARN),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				Config: testAccClusterConfig_networkType(rName, string(types.NetworkTypeDual)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.network_type", string(types.NetworkTypeDual)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkClusterARN),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := acctest.PrimaryInstanceState(s, resourceName)
@@ -2831,4 +2930,40 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, status))
+}
+
+func testAccClusterConfig_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 3), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.m7g.large"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+
+    connectivity_info {
+      network_type = %[2]q
+    }
+  }
+}
+`, rName, networkType))
 }
