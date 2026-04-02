@@ -2861,18 +2861,20 @@ func testAccCheckSecurityGroupEnsureDefaultIPv6Egress(ctx context.Context, t *te
 			ToPort:     aws.Int32(0),
 		}
 
-		_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
+		revokeInput := ec2.RevokeSecurityGroupEgressInput{
 			GroupId:       aws.String(groupID),
 			IpPermissions: []awstypes.IpPermission{permission},
-		})
+		}
+		_, err := conn.RevokeSecurityGroupEgress(ctx, &revokeInput)
 		if err != nil && !tfawserr.ErrCodeEquals(err, "InvalidPermission.NotFound") {
 			return fmt.Errorf("revoking default IPv6 egress rule from Security Group (%s): %w", groupID, err)
 		}
 
-		_, err = conn.AuthorizeSecurityGroupEgress(ctx, &ec2.AuthorizeSecurityGroupEgressInput{
+		authorizeInput := ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       aws.String(groupID),
 			IpPermissions: []awstypes.IpPermission{permission},
-		})
+		}
+		_, err = conn.AuthorizeSecurityGroupEgress(ctx, &authorizeInput)
 		if err != nil && !tfawserr.ErrCodeEquals(err, "InvalidPermission.Duplicate") {
 			return fmt.Errorf("authorizing default IPv6 egress rule to Security Group (%s): %w", groupID, err)
 		}
