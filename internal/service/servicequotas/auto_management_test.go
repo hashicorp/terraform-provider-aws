@@ -11,7 +11,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -29,7 +28,7 @@ func testAccAutoManagement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_auto_management.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
@@ -77,7 +76,7 @@ func testAccAutoManagement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicequotas_auto_management.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
@@ -113,7 +112,7 @@ func testAccAutoManagement_updateExclusionList(t *testing.T) {
 	quotaCodeUpdated := "L-F98FE922"
 	resourceName := "aws_servicequotas_auto_management.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
@@ -178,9 +177,9 @@ func testAccAutoManagement_updateNotificationARN(t *testing.T) {
 	notificationResourceName1 := "aws_notifications_notification_configuration.test_1"
 	notificationResourceName2 := "aws_notifications_notification_configuration.test_2"
 	resourceName := "aws_servicequotas_auto_management.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
