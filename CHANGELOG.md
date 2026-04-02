@@ -1,10 +1,5 @@
 ## 6.40.0 (Unreleased)
 
-FEATURES:
-
-* **New List Resource:** `aws_ssoadmin_application_grant`
-* **New Resource:** `aws_ssoadmin_application_grant`
-
 ENHANCEMENTS:
 
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-2_2` as a valid value for `runtime_environment` ([#47207](https://github.com/hashicorp/terraform-provider-aws/issues/47207))
