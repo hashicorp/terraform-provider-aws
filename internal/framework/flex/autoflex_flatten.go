@@ -911,7 +911,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework value.
-func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
