@@ -182,6 +182,8 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", "p1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.buckets.#", "2"),
@@ -230,6 +232,11 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "Parquet"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.storage_lens_table_destination.0.encryption.0.sse_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "1"),
@@ -483,6 +490,10 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         output_schema_version = "V_1"
         prefix                = "p1"
       }
+
+      storage_lens_table_destination {
+        enabled = false
+      }
     }
 
     exclude {
@@ -530,6 +541,14 @@ resource "aws_s3control_storage_lens_configuration" "test" {
         arn                   = aws_s3_bucket.test[0].arn
         format                = "Parquet"
         output_schema_version = "V_1"
+
+        encryption {
+          sse_s3 {}
+        }
+      }
+
+      storage_lens_table_destination {
+        enabled = true
 
         encryption {
           sse_s3 {}
