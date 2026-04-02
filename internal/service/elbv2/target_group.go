@@ -263,10 +263,11 @@ func resourceTargetGroup() *schema.Resource {
 				),
 			},
 			"stickiness": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cookie_duration": {
@@ -308,9 +309,10 @@ func resourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 			"target_failover": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_deregistration": {
@@ -327,10 +329,11 @@ func resourceTargetGroup() *schema.Resource {
 				},
 			},
 			"target_group_health": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dns_failover": {
