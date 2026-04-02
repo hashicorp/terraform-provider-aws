@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -485,13 +484,6 @@ func testAccCheckMultiRegionClusterRegionalClusterExists(ctx context.Context, t 
 
 		childClusterName := rs2.Primary.Attributes[names.AttrName]
 		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
-
-		timeout := 10 * time.Minute
-
-		_, err := tfmemorydb.WaitMultiRegionClusterAvailable(ctx, conn, parentName, timeout)
-		if err != nil {
-			return fmt.Errorf("waiting for parent multi-region cluster availability: %s", err)
-		}
 
 		out, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, parentName)
 

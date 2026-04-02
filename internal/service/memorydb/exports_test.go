@@ -22,7 +22,4 @@ var (
 	FindUserByName               = findUserByName
 	ParameterChanges             = parameterChanges
 	ParameterHash                = parameterHash
-
-	WaitMultiRegionClusterAvailable = waitMultiRegionClusterAvailable
-	WaitClusterAvailable            = waitClusterAvailable
 )
