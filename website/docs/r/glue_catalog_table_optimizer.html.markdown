@@ -23,6 +23,14 @@ resource "aws_glue_catalog_table_optimizer" "example" {
   configuration {
     role_arn = "arn:aws:iam::123456789012:role/example-role"
     enabled  = true
+
+    compaction_configuration {
+      iceberg_configuration {
+        strategy = "binpack"
+        min_input_files = 5
+        delete_file_threshold = 1
+      }
+    }
   }
 
   type = "compaction"
@@ -97,6 +105,7 @@ This resource supports the following arguments:
 * `orphan_file_deletion_configuration` (Optional) - The configuration block for an orphan file deletion optimizer. See [Orphan File Deletion Configuration](#orphan-file-deletion-configuration) for additional details.
 * `retention_configuration` (Optional) - The configuration block for a snapshot retention optimizer. See [Retention Configuration](#retention-configuration) for additional details.
 * `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
+* `compaction_configuration` (Optional) - The configuration block for a compaction optimizer. See [Compaction Configuration](#compaction-configuration) for additional details.
 
 ### Orphan File Deletion Configuration
 
@@ -112,6 +121,14 @@ This resource supports the following arguments:
     * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
     * `run_rate_in_hours` (Optional) - Interval in hours between retention job runs. Defaults to `24`.
     * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
+
+ 
+### Compaction Configuration
+
+* `iceberg_configuration` (Optional) - The configuration for an Iceberg compaction optimizer.
+    * `strategy` (Optional) - The strategy to use for compaction. Valid values are `binpack`, `sort` and `z-order` Defaults to `binpack`.
+    * `min_input_files` (Optional) - The minimum number of data files that must be present in a partition before compaction will actually compact files. Defaults to `100`.
+    * `delete_file_threshold` (Optional) - The minimum number of deletes that must be present in a data file to make it eligible for compaction. Defaults to `1`.
 
 ## Attribute Reference
 
