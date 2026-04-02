@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBCMDataExportsExport_basic(t *testing.T) {
+func TestAccBCMDataExportsExport_CUR_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -76,7 +76,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 	})
 }
 
-func TestAccBCMDataExportsExport_carbonEmissions(t *testing.T) {
+func TestAccBCMDataExportsExport_CarbonEmissions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
