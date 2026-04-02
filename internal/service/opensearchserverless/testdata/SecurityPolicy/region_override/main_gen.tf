@@ -4,13 +4,13 @@
 resource "aws_opensearchserverless_security_policy" "test" {
   region = var.region
 
-  name        = var.rName
-  type        = "encryption"
+  name = var.rName
+  type = "encryption"
   policy = jsonencode({
     Rules = [
       {
         Resource = [
-				"collection/${var.rName}"
+          "collection/${var.rName}"
         ],
         ResourceType = "collection"
       }
