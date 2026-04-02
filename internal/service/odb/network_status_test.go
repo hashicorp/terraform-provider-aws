@@ -158,7 +158,7 @@ func TestStatusManagedService_NilManagedServices(t *testing.T) {
 // TestStatusManagedService_NilOutput verifies that statusManagedService
 // handles a nil OdbNetwork result (empty API response) without panicking.
 // This is the primary regression test for the nil pointer dereference at
-// network.go:682 that caused the Atlantis crash.
+// network.go:682 that caused the panic.
 func TestStatusManagedService_NilOutput(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
