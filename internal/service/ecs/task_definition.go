@@ -121,7 +121,6 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
@@ -306,8 +305,8 @@ func resourceTaskDefinition() *schema.Resource {
 						"configure_at_launch": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
+							Default:  false,
 						},
 						"docker_volume_configuration": {
 							Type:     schema.TypeList,
