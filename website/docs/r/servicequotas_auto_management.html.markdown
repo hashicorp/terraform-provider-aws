@@ -15,7 +15,8 @@ Manages AWS Service Quotas Automatic Management.
 
 ```terraform
 resource "aws_servicequotas_auto_management" "example" {
-  opt_in_type = "NotifyOnly"
+  opt_in_level = "ACCOUNT"
+  opt_in_type  = "NotifyOnly"
 
   exclusion_list = {
     "dynamodb" = [
@@ -35,7 +36,8 @@ resource "aws_notifications_notification_configuration" "example" {
 
 The following arguments are required:
 
-* `opt_in_type` - (Required) Sets the opt-in type for Automatic Management. There are two modes: `NotifyOnly` and `NotifyAndAdjust`.
+* `opt_in_level` - (Required) The opt-in level for Automatic Management. Valid values: `ACCOUNT`.
+* `opt_in_type` - (Required) The opt-in type for Automatic Management. Valid values: `NotifyOnly`, `NotifyAndAdjust`.
 
 The following arguments are optional:
 

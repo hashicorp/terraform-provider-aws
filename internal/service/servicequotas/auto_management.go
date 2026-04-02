@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
-	sqtypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -23,31 +23,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_servicequotas_auto_management", name="Auto Management")
-func newResourceAutoManagement(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAutoManagement{}
+// @SingletonIdentity
+// @Testing(hasNoPreExistingResource=true)
+func newAutoManagementResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &autoManagementResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameAutoManagement = "Auto Management"
-)
-
-type resourceAutoManagement struct {
-	framework.ResourceWithModel[resourceAutoManagementModel]
-	framework.WithImportByID
+type autoManagementResource struct {
+	framework.ResourceWithModel[autoManagementResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceAutoManagement) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *autoManagementResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"exclusion_list": schema.MapAttribute{
@@ -62,7 +59,6 @@ func (r *resourceAutoManagement) Schema(ctx context.Context, req resource.Schema
 					mapvalidator.ValueListsAre(listvalidator.SizeAtLeast(1)),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"notification_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -77,36 +73,42 @@ func (r *resourceAutoManagement) Schema(ctx context.Context, req resource.Schema
 					),
 				},
 			},
+			"opt_in_level": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.OptInLevel](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"opt_in_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.OptInType](),
+				Required:   true,
 			},
 		},
 	}
 }
 
-func (r *resourceAutoManagement) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *autoManagementResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ServiceQuotasClient(ctx)
 
-	var plan resourceAutoManagementModel
+	var plan autoManagementResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input servicequotas.StartAutoManagementInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithIgnoredFieldNames([]string{"ExclusionList"})))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNames([]string{"ExclusionList"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	exclusionList := expandExclusionList(ctx, plan.ExclusionList, &resp.Diagnostics)
+	exclusionList, diags := expandExclusionList(ctx, plan.ExclusionList)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	input.ExclusionList = exclusionList
-
-	// Additional fields.
-	input.OptInLevel = "ACCOUNT"
 
 	_, err := conn.StartAutoManagement(ctx, &input)
 	if err != nil {
@@ -114,22 +116,19 @@ func (r *resourceAutoManagement) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	// Set values for unknowns.
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceAutoManagement) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *autoManagementResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ServiceQuotasClient(ctx)
 
-	var state resourceAutoManagementModel
+	var state autoManagementResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := getAutoManagementConfiguration(ctx, conn)
+	out, err := findAutoManagement(ctx, conn)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -140,7 +139,7 @@ func (r *resourceAutoManagement) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNames([]string{"ExclusionList"})))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNames([]string{"ExclusionList"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -150,17 +149,17 @@ func (r *resourceAutoManagement) Read(ctx context.Context, req resource.ReadRequ
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceAutoManagement) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *autoManagementResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ServiceQuotasClient(ctx)
 
-	var plan, state resourceAutoManagementModel
+	var plan, state autoManagementResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,12 +167,13 @@ func (r *resourceAutoManagement) Update(ctx context.Context, req resource.Update
 
 	if diff.HasChanges() {
 		var input servicequotas.UpdateAutoManagementInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithIgnoredFieldNames([]string{"ExclusionList"})))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithIgnoredFieldNames([]string{"ExclusionList"})))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		exclusionList := expandExclusionList(ctx, plan.ExclusionList, &resp.Diagnostics)
+		exclusionList, diags := expandExclusionList(ctx, plan.ExclusionList)
+		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -189,70 +189,70 @@ func (r *resourceAutoManagement) Update(ctx context.Context, req resource.Update
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceAutoManagement) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *autoManagementResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ServiceQuotasClient(ctx)
 
-	var state resourceAutoManagementModel
+	var state autoManagementResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := servicequotas.StopAutoManagementInput{}
-
 	_, err := conn.StopAutoManagement(ctx, &input)
+	if errs.IsA[*awstypes.NoSuchResourceException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*sqtypes.NoSuchResourceException](err) {
-			return
-		}
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 		return
 	}
 }
 
-func getAutoManagementConfiguration(ctx context.Context, conn *servicequotas.Client) (*servicequotas.GetAutoManagementConfigurationOutput, error) {
-	input := servicequotas.GetAutoManagementConfigurationInput{}
-
+func findAutoManagement(ctx context.Context, conn *servicequotas.Client) (*servicequotas.GetAutoManagementConfigurationOutput, error) {
+	var input servicequotas.GetAutoManagementConfigurationInput
 	out, err := conn.GetAutoManagementConfiguration(ctx, &input)
 	if err != nil {
 		return nil, smarterr.NewError(err)
-	}
-
-	if out.OptInStatus == "DISABLED" {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			Message: string(out.OptInStatus),
-		})
 	}
 
 	if out == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
+	if status := out.OptInStatus; status == awstypes.OptInStatusDisabled {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			Message: string(status),
+		})
+	}
+
 	return out, nil
 }
 
-type resourceAutoManagementModel struct {
+type autoManagementResourceModel struct {
 	framework.WithRegionModel
 	ExclusionList   fwtypes.MapValueOf[fwtypes.ListOfString] `tfsdk:"exclusion_list"`
-	ID              types.String                             `tfsdk:"id"`
 	NotificationARN fwtypes.ARN                              `tfsdk:"notification_arn"`
-	OptInType       types.String                             `tfsdk:"opt_in_type"`
+	OptInLevel      fwtypes.StringEnum[awstypes.OptInLevel]  `tfsdk:"opt_in_level"`
+	OptInType       fwtypes.StringEnum[awstypes.OptInType]   `tfsdk:"opt_in_type"`
 }
 
-func expandExclusionList(ctx context.Context, tfMap fwtypes.MapValueOf[fwtypes.ListOfString], diags *diag.Diagnostics) map[string][]string { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+func expandExclusionList(ctx context.Context, tfMap fwtypes.MapValueOf[fwtypes.ListOfString]) (map[string][]string, diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
+	var diags diag.Diagnostics
+
 	if tfMap.IsNull() || tfMap.IsUnknown() {
 		// Return an empty map to clear a configured exclusion list in the API; nil would leave it unchanged
-		return make(map[string][]string, 0)
+		return make(map[string][]string, 0), diags
 	}
 
 	apiMap := make(map[string][]string, len(tfMap.Elements()))
 
 	diags.Append(tfMap.ElementsAs(ctx, &apiMap, false)...)
 
-	return apiMap
+	return apiMap, diags
 }
 
-func flattenExclusionList(ctx context.Context, apiMap map[string][]sqtypes.QuotaInfo) fwtypes.MapValueOf[fwtypes.ListOfString] { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenExclusionList(ctx context.Context, apiMap map[string][]awstypes.QuotaInfo) fwtypes.MapValueOf[fwtypes.ListOfString] { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if len(apiMap) == 0 {
 		return fwtypes.NewMapValueOfNull[fwtypes.ListOfString](ctx)
 	}

@@ -9,16 +9,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicequotas "github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,11 +27,6 @@ import (
 
 func TestAccServiceQuotasAutoManagement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var automanagement servicequotas.GetAutoManagementConfigurationOutput
 	resourceName := "aws_servicequotas_auto_management.test"
 
 	resource.Test(t, resource.TestCase{
@@ -44,28 +40,33 @@ func TestAccServiceQuotasAutoManagement_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAutoManagementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoManagementConfig_basic("NotifyOnly"),
+				Config: testAccAutoManagementConfig_basic(awstypes.OptInTypeNotifyOnly),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckResourceAttr(resourceName, "opt_in_type", "NotifyOnly"),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exclusion_list"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_in_type"), tfknownvalue.StringExact(awstypes.OptInTypeNotifyOnly)),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAutoManagementConfig_basic("NotifyAndAdjust"),
+				Config: testAccAutoManagementConfig_basic(awstypes.OptInTypeNotifyAndAdjust),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckResourceAttr(resourceName, "opt_in_type", "NotifyAndAdjust"),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exclusion_list"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_in_type"), tfknownvalue.StringExact(awstypes.OptInTypeNotifyAndAdjust)),
 				},
 			},
 		},
@@ -74,11 +75,6 @@ func TestAccServiceQuotasAutoManagement_basic(t *testing.T) {
 
 func TestAccServiceQuotasAutoManagement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var automanagement servicequotas.GetAutoManagementConfigurationOutput
 	resourceName := "aws_servicequotas_auto_management.test"
 
 	resource.Test(t, resource.TestCase{
@@ -92,13 +88,16 @@ func TestAccServiceQuotasAutoManagement_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAutoManagementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoManagementConfig_basic("NotifyOnly"),
+				Config: testAccAutoManagementConfig_basic(awstypes.OptInTypeNotifyOnly),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceAutoManagement, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -110,11 +109,6 @@ func TestAccServiceQuotasAutoManagement_disappears(t *testing.T) {
 
 func TestAccServiceQuotasAutoManagement_updateExclusionList(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var automanagement servicequotas.GetAutoManagementConfigurationOutput
 	quotaCode := "L-F7858A77"
 	quotaCodeUpdated := "L-F98FE922"
 	resourceName := "aws_servicequotas_auto_management.test"
@@ -132,37 +126,48 @@ func TestAccServiceQuotasAutoManagement_updateExclusionList(t *testing.T) {
 			{
 				Config: testAccAutoManagementConfig_exclusionList(quotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckResourceAttr(resourceName, "exclusion_list.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exclusion_list.dynamodb.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exclusion_list.dynamodb.0", quotaCode),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exclusion_list"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"dynamodb": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact(quotaCode)}),
+					})),
+				},
 			},
 			{
 				Config: testAccAutoManagementConfig_exclusionList(quotaCodeUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckResourceAttr(resourceName, "exclusion_list.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exclusion_list.dynamodb.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "exclusion_list.dynamodb.0", quotaCodeUpdated),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exclusion_list"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"dynamodb": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact(quotaCodeUpdated)}),
+					})),
+				},
 			},
 			{
 				Config: testAccAutoManagementConfig_basic("NotifyOnly"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckNoResourceAttr(resourceName, "exclusion_list.%"),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exclusion_list"), knownvalue.Null()),
+				},
 			},
 		},
 	})
@@ -170,11 +175,6 @@ func TestAccServiceQuotasAutoManagement_updateExclusionList(t *testing.T) {
 
 func TestAccServiceQuotasAutoManagement_updateNotificationARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var automanagement servicequotas.GetAutoManagementConfigurationOutput
 	notificationResourceName1 := "aws_notifications_notification_configuration.test_1"
 	notificationResourceName2 := "aws_notifications_notification_configuration.test_2"
 	resourceName := "aws_servicequotas_auto_management.test"
@@ -193,37 +193,43 @@ func TestAccServiceQuotasAutoManagement_updateNotificationARN(t *testing.T) {
 			{
 				Config: testAccAutoManagementConfig_notificationARN(rName, notificationResourceName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckResourceAttrPair(resourceName, "notification_arn", notificationResourceName1, names.AttrARN),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("notification_arn"), notificationResourceName1, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
 				Config: testAccAutoManagementConfig_notificationARN(rName, notificationResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckResourceAttrPair(resourceName, "notification_arn", notificationResourceName2, names.AttrARN),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("notification_arn"), notificationResourceName2, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAutoManagementConfig_basic("NotifyOnly"),
+				Config: testAccAutoManagementConfig_basic(awstypes.OptInTypeNotifyOnly),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoManagementExists(ctx, t, resourceName, &automanagement),
-					resource.TestCheckNoResourceAttr(resourceName, "notification_arn"),
+					testAccCheckAutoManagementExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("notification_arn"), knownvalue.Null()),
 				},
 			},
 		},
@@ -239,49 +245,43 @@ func testAccCheckAutoManagementDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			_, err := tfservicequotas.GetAutoManagementConfiguration(ctx, conn)
+			_, err := tfservicequotas.FindAutoManagement(ctx, conn)
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.ServiceQuotas, create.ErrActionCheckingDestroyed, tfservicequotas.ResNameAutoManagement, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingDestroyed, tfservicequotas.ResNameAutoManagement, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return errors.New("Service Quotas Auto Management still exists")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAutoManagementExists(ctx context.Context, t *testing.T, name string, automanagement *servicequotas.GetAutoManagementConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckAutoManagementExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameAutoManagement, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameAutoManagement, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
-		resp, err := tfservicequotas.GetAutoManagementConfiguration(ctx, conn)
-		if err != nil {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameAutoManagement, "", err)
-		}
+		_, err := tfservicequotas.FindAutoManagement(ctx, conn)
 
-		*automanagement = *resp
-
-		return nil
+		return err
 	}
 }
 
-func testAccAutoManagementConfig_basic(optInType string) string {
+func testAccAutoManagementConfig_basic(optInType awstypes.OptInType) string {
 	return fmt.Sprintf(`
 resource "aws_servicequotas_auto_management" "test" {
-  opt_in_type = %[1]q
+  opt_in_level = "ACCOUNT"
+  opt_in_type  = %[1]q
 }
 `, optInType)
 }
@@ -289,7 +289,8 @@ resource "aws_servicequotas_auto_management" "test" {
 func testAccAutoManagementConfig_exclusionList(quotaCode string) string {
 	return fmt.Sprintf(`
 resource "aws_servicequotas_auto_management" "test" {
-  opt_in_type = "NotifyOnly"
+  opt_in_level = "ACCOUNT"
+  opt_in_type  = "NotifyOnly"
 
   exclusion_list = {
     "dynamodb" = [
@@ -313,7 +314,8 @@ resource "aws_notifications_notification_configuration" "test_2" {
 }
 
 resource "aws_servicequotas_auto_management" "test" {
-  opt_in_type = "NotifyOnly"
+  opt_in_level = "ACCOUNT"
+  opt_in_type  = "NotifyOnly"
 
   notification_arn = %[2]s.arn
 }
