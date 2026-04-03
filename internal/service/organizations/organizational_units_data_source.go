@@ -47,7 +47,7 @@ func dataSourceOrganizationalUnits() *schema.Resource {
 								Computed: true,
 							},
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -138,7 +138,7 @@ func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []any 
 			names.AttrARN:  aws.ToString(ou.Arn),
 			names.AttrID:   aws.ToString(ou.Id),
 			names.AttrName: aws.ToString(ou.Name),
-			"path":         aws.ToString(ou.Path),
+			names.AttrPath:         aws.ToString(ou.Path),
 		})
 	}
 
