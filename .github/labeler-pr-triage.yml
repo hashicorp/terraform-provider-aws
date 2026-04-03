@@ -499,6 +499,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_metric_*'
               - 'website/**/cloudwatch_composite_*'
               - 'website/**/cloudwatch_contributor_*'
+              - 'website/**/cloudwatch_otel_*'
 service/codeartifact:
   - any:
       - changed-files:
