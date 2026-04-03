@@ -55,10 +55,10 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_sagemaker_hyper_parameter_tuning_job", name="Hyper Parameter Tuning Job")
 // @Tags(identifierAttribute="arn")
-// @IdentityAttribute("hyper_parameter_tuning_job_name")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeHyperParameterTuningJobOutput")
-// @Testing(importStateIdAttribute="hyper_parameter_tuning_job_name")
-// @Testing(importIgnore="failure_reason;hyper_parameter_tuning_job_status;training_job_definition.0.algorithm_specification.0.metric_definitions")
+// @Testing(importStateIdAttribute="name")
+// @Testing(importIgnore="failure_reason;status;training_job_definition.0.algorithm_specification.0.metric_definitions")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(hasNoPreExistingResource=true)
 func newHyperParameterTuningJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -89,7 +89,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"hyper_parameter_tuning_job_name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,31}$`), "must be 1-32 characters long, start and end with an alphanumeric character, and contain only letters, numbers, and hyphens"),
@@ -98,7 +98,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"hyper_parameter_tuning_job_status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.HyperParameterTuningJobStatus](),
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -129,7 +129,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 					},
 				},
 			},
-			"hyper_parameter_tuning_job_config": schema.ListNestedBlock{
+			"config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningJobConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -168,7 +168,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"hyper_parameter_tuning_job_objective": schema.ListNestedBlock{
+						"objective": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[hyperParameterTuningConfigObjectiveModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -352,7 +352,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
+				Delete: true,
 			}),
 			"training_job_definition":  hyperParameterTrainingJobDefinitionBlock(ctx, false),
 			"training_job_definitions": hyperParameterTrainingJobDefinitionBlock(ctx, true),
@@ -381,7 +381,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"hyper_parameter_tuning_job_name": schema.StringAttribute{
+									"name": schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -1477,18 +1477,18 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 		return false, err
 	})
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.HyperParameterTuningJobName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	if out == nil || out.HyperParameterTuningJobArn == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.HyperParameterTuningJobName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	describeOut, err := waitHyperParameterTuningJobCreated(ctx, conn, plan.HyperParameterTuningJobName.ValueString(), createTimeout)
+	describeOut, err := waitHyperParameterTuningJobCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.HyperParameterTuningJobName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -1497,7 +1497,7 @@ func (r *hyperParameterTuningJobResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan), flex.WithFieldNamePrefix("HyperParameterTuningJob"))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *hyperParameterTuningJobResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -1509,7 +1509,7 @@ func (r *hyperParameterTuningJobResource) Read(ctx context.Context, req resource
 		return
 	}
 
-	out, err := findHyperParameterTuningJobByName(ctx, conn, state.HyperParameterTuningJobName.ValueString())
+	out, err := findHyperParameterTuningJobByName(ctx, conn, state.Name.ValueString())
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -1517,7 +1517,7 @@ func (r *hyperParameterTuningJobResource) Read(ctx context.Context, req resource
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.HyperParameterTuningJobName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 
@@ -1539,7 +1539,7 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 	}
 
 	input := sagemaker.DeleteHyperParameterTuningJobInput{
-		HyperParameterTuningJobName: state.HyperParameterTuningJobName.ValueStringPointer(),
+		HyperParameterTuningJobName: state.Name.ValueStringPointer(),
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
@@ -1549,11 +1549,11 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "not in a terminal state") {
 			stopInput := sagemaker.StopHyperParameterTuningJobInput{
-				HyperParameterTuningJobName: state.HyperParameterTuningJobName.ValueStringPointer(),
+				HyperParameterTuningJobName: state.Name.ValueStringPointer(),
 			}
 
 			_, stopErr := conn.StopHyperParameterTuningJob(ctx, &stopInput)
-			if stopErr != nil && !errs.IsA[*awstypes.ResourceNotFound](stopErr) && !tfawserr.ErrMessageContains(stopErr, ErrCodeValidationException, "already") {
+			if stopErr != nil && !errs.IsA[*awstypes.ResourceNotFound](stopErr) && !tfawserr.ErrMessageContains(stopErr, ErrCodeValidationException, "already in a terminal state") {
 				return nil, stopErr
 			}
 		}
@@ -1572,13 +1572,13 @@ func (r *hyperParameterTuningJobResource) Delete(ctx context.Context, req resour
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.HyperParameterTuningJobName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 
-	_, err = waitHyperParameterTuningJobDeleted(ctx, conn, state.HyperParameterTuningJobName.ValueString(), deleteTimeout)
+	_, err = waitHyperParameterTuningJobDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.HyperParameterTuningJobName.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 }
@@ -1886,18 +1886,18 @@ func findHyperParameterTuningJobByName(ctx context.Context, conn *sagemaker.Clie
 
 type hyperParameterTuningJobResourceModel struct {
 	framework.WithRegionModel
-	ARN                           types.String                                                              `tfsdk:"arn"`
-	Autotune                      fwtypes.ListNestedObjectValueOf[autotuneModel]                            `tfsdk:"autotune"`
-	FailureReason                 types.String                                                              `tfsdk:"failure_reason"`
-	HyperParameterTuningJobConfig fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobConfigModel]       `tfsdk:"hyper_parameter_tuning_job_config"`
-	HyperParameterTuningJobName   types.String                                                              `tfsdk:"hyper_parameter_tuning_job_name"`
-	HyperParameterTuningJobStatus fwtypes.StringEnum[awstypes.HyperParameterTuningJobStatus]                `tfsdk:"hyper_parameter_tuning_job_status"`
-	Tags                          tftags.Map                                                                `tfsdk:"tags"`
-	TagsAll                       tftags.Map                                                                `tfsdk:"tags_all"`
-	Timeouts                      timeouts.Value                                                            `tfsdk:"timeouts"`
-	TrainingJobDefinition         fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel] `tfsdk:"training_job_definition"`
-	TrainingJobDefinitions        fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel] `tfsdk:"training_job_definitions"`
-	WarmStartConfig               fwtypes.ListNestedObjectValueOf[warmStartConfigModel]                     `tfsdk:"warm_start_config"`
+	ARN                    types.String                                                              `tfsdk:"arn"`
+	Autotune               fwtypes.ListNestedObjectValueOf[autotuneModel]                            `tfsdk:"autotune"`
+	FailureReason          types.String                                                              `tfsdk:"failure_reason"`
+	Config                 fwtypes.ListNestedObjectValueOf[hyperParameterTuningJobConfigModel]       `tfsdk:"config"`
+	Name                   types.String                                                              `tfsdk:"name"`
+	Status                 fwtypes.StringEnum[awstypes.HyperParameterTuningJobStatus]                `tfsdk:"status"`
+	Tags                   tftags.Map                                                                `tfsdk:"tags"`
+	TagsAll                tftags.Map                                                                `tfsdk:"tags_all"`
+	Timeouts               timeouts.Value                                                            `tfsdk:"timeouts"`
+	TrainingJobDefinition  fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel] `tfsdk:"training_job_definition"`
+	TrainingJobDefinitions fwtypes.ListNestedObjectValueOf[hyperParameterTrainingJobDefinitionModel] `tfsdk:"training_job_definitions"`
+	WarmStartConfig        fwtypes.ListNestedObjectValueOf[warmStartConfigModel]                     `tfsdk:"warm_start_config"`
 }
 
 type autotuneModel struct {
@@ -1905,14 +1905,14 @@ type autotuneModel struct {
 }
 
 type hyperParameterTuningJobConfigModel struct {
-	HyperParameterTuningJobObjective fwtypes.ListNestedObjectValueOf[hyperParameterTuningConfigObjectiveModel] `tfsdk:"hyper_parameter_tuning_job_objective"`
-	ParameterRanges                  fwtypes.ListNestedObjectValueOf[parameterRangesModel]                     `tfsdk:"parameter_ranges"`
-	RandomSeed                       types.Int64                                                               `tfsdk:"random_seed"`
-	ResourceLimits                   fwtypes.ListNestedObjectValueOf[resourceLimitsModel]                      `tfsdk:"resource_limits"`
-	Strategy                         fwtypes.StringEnum[awstypes.HyperParameterTuningJobStrategyType]          `tfsdk:"strategy"`
-	StrategyConfig                   fwtypes.ListNestedObjectValueOf[strategyConfigModel]                      `tfsdk:"strategy_config"`
-	TrainingJobEarlyStoppingType     fwtypes.StringEnum[awstypes.TrainingJobEarlyStoppingType]                 `tfsdk:"training_job_early_stopping_type"`
-	TuningJobCompletionCriteria      fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel]         `tfsdk:"tuning_job_completion_criteria"`
+	Objective                    fwtypes.ListNestedObjectValueOf[hyperParameterTuningConfigObjectiveModel] `tfsdk:"objective"`
+	ParameterRanges              fwtypes.ListNestedObjectValueOf[parameterRangesModel]                     `tfsdk:"parameter_ranges"`
+	RandomSeed                   types.Int64                                                               `tfsdk:"random_seed"`
+	ResourceLimits               fwtypes.ListNestedObjectValueOf[resourceLimitsModel]                      `tfsdk:"resource_limits"`
+	Strategy                     fwtypes.StringEnum[awstypes.HyperParameterTuningJobStrategyType]          `tfsdk:"strategy"`
+	StrategyConfig               fwtypes.ListNestedObjectValueOf[strategyConfigModel]                      `tfsdk:"strategy_config"`
+	TrainingJobEarlyStoppingType fwtypes.StringEnum[awstypes.TrainingJobEarlyStoppingType]                 `tfsdk:"training_job_early_stopping_type"`
+	TuningJobCompletionCriteria  fwtypes.ListNestedObjectValueOf[tuningJobCompletionCriteriaModel]         `tfsdk:"tuning_job_completion_criteria"`
 }
 
 type hyperParameterTuningConfigObjectiveModel struct {
@@ -2136,5 +2136,5 @@ type warmStartConfigModel struct {
 }
 
 type parentHyperParameterTuningJobModel struct {
-	HyperParameterTuningJobName types.String `tfsdk:"hyper_parameter_tuning_job_name"`
+	Name types.String `tfsdk:"name"`
 }

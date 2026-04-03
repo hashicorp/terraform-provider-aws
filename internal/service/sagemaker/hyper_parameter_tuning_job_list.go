@@ -59,12 +59,12 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 			}
 
 			hyperParameterTuningJobName := aws.ToString(item.HyperParameterTuningJobName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("hyper_parameter_tuning_job_name"), hyperParameterTuningJobName)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("name"), hyperParameterTuningJobName)
 
 			result := request.NewListResult(ctx)
 
 			var data hyperParameterTuningJobResourceModel
-			data.HyperParameterTuningJobName = fwflex.StringValueToFramework(ctx, hyperParameterTuningJobName)
+			data.Name = fwflex.StringValueToFramework(ctx, hyperParameterTuningJobName)
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
 				if request.IncludeResource {

@@ -51,11 +51,11 @@ func TestAccSageMakerHyperParameterTuningJob_List_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("name"), knownvalue.NotNull()),
 
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("name"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("name"), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -130,11 +130,11 @@ func TestAccSageMakerHyperParameterTuningJob_List_includeResource(t *testing.T) 
 					querycheck.ExpectResourceKnownValues("aws_sagemaker_hyper_parameter_tuning_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("name"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("config"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectPartial(map[string]knownvalue.Check{
 								"strategy": knownvalue.StringExact("Bayesian"),
-								"hyper_parameter_tuning_job_objective": knownvalue.ListExact([]knownvalue.Check{
+								"objective": knownvalue.ListExact([]knownvalue.Check{
 									knownvalue.ObjectPartial(map[string]knownvalue.Check{
 										names.AttrMetricName: knownvalue.StringExact("validation:accuracy"),
 										names.AttrType:       knownvalue.StringExact("Maximize"),
@@ -205,11 +205,11 @@ func TestAccSageMakerHyperParameterTuningJob_List_regionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("name"), knownvalue.NotNull()),
 
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("name"), knownvalue.NotNull()),
 				},
 			},
 			{

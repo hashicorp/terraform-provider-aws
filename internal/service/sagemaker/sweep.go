@@ -794,7 +794,7 @@ func sweepHyperParameterTuningJobs(ctx context.Context, client *conns.AWSClient)
 
 		for _, v := range page.HyperParameterTuningJobSummaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newHyperParameterTuningJobResource, client,
-				framework.NewAttribute("hyper_parameter_tuning_job_name", aws.ToString(v.HyperParameterTuningJobName))))
+				framework.NewAttribute("name", aws.ToString(v.HyperParameterTuningJobName))))
 		}
 	}
 

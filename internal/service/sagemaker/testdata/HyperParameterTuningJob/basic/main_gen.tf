@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = var.rName
+  name = var.rName
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }

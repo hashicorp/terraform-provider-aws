@@ -49,7 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("hyper_parameter_tuning_job_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -127,7 +127,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("hyper_parameter_tuning_job_name"),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
 		},
 		{
 			Factory:  newTrainingJobResourceAsListResource,

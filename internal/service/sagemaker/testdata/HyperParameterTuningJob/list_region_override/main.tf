@@ -5,12 +5,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
   count  = var.resource_count
   region = var.region
 
-  hyper_parameter_tuning_job_name = "hptj-${substr(var.rName, 0, 20)}-${count.index}"
+  name = "hptj-${substr(var.rName, 0, 20)}-${count.index}"
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "validation:accuracy"
       type        = "Maximize"
     }

@@ -16,12 +16,12 @@ Manages an AWS SageMaker AI Hyper Parameter Tuning Job.
 
 ```terraform
 resource "aws_sagemaker_hyper_parameter_tuning_job" "example" {
-  hyper_parameter_tuning_job_name = "example"
+  name = "example"
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -120,8 +120,8 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "example" {
 
 The following arguments are required:
 
-* `hyper_parameter_tuning_job_name` - (Required) Name of the tuning job.
-* `hyper_parameter_tuning_job_config` - (Required) Tuning job settings. See [`hyper_parameter_tuning_job_config`](#hyper_parameter_tuning_job_config).
+* `name` - (Required) Name of the tuning job.
+* `config` - (Required) Tuning job settings. See [`config`](#config).
 
 The following arguments are optional:
 
@@ -136,18 +136,18 @@ The following arguments are optional:
 
 * `mode` - (Required) Autotune mode.
 
-### hyper_parameter_tuning_job_config
+### config
 
 * `random_seed` - (Optional) Random seed for tuning.
 * `strategy` - (Required) Search strategy for tuning.
 * `training_job_early_stopping_type` - (Optional) Early stopping behavior for training jobs.
-* `hyper_parameter_tuning_job_objective` - (Optional) Objective metric used by tuning. See [`hyper_parameter_tuning_job_objective`](#hyper_parameter_tuning_job_objective).
+* `objective` - (Optional) Objective metric used by tuning. See [`objective`](#objective).
 * `parameter_ranges` - (Optional) Hyperparameter search ranges. See [`parameter_ranges`](#parameter_ranges).
 * `resource_limits` - (Required) Training job limits for tuning. See [`resource_limits`](#resource_limits).
 * `strategy_config` - (Optional) Extra strategy options. See [`strategy_config`](#strategy_config).
 * `tuning_job_completion_criteria` - (Optional) Conditions to complete tuning. See [`tuning_job_completion_criteria`](#tuning_job_completion_criteria).
 
-#### hyper_parameter_tuning_job_objective
+#### objective
 
 * `metric_name` - (Required) Metric name that tuning tries to optimize.
 * `type` - (Required) Optimization direction. Valid values include `Minimize` and `Maximize`.
@@ -379,7 +379,7 @@ Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `insta
 
 #### parent_hyper_parameter_tuning_jobs
 
-* `hyper_parameter_tuning_job_name` - (Required) Parent tuning job name.
+* `name` - (Required) Parent tuning job name.
 
 ## Attribute Reference
 
@@ -387,7 +387,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Hyper Parameter Tuning Job.
 * `failure_reason` - Reason returned by SageMaker AI when a job fails.
-* `hyper_parameter_tuning_job_status` - Current tuning job status.
+* `status` - Current tuning job status.
 * `tags_all` - Map of tags assigned to the resource, including provider default tags.
 
 ## Timeouts
@@ -405,7 +405,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_sagemaker_hyper_parameter_tuning_job.example
   identity = {
-    hyper_parameter_tuning_job_name = "example-hyper-parameter-tuning-job"
+    name = "example-hyper-parameter-tuning-job"
   }
 }
 
@@ -418,14 +418,14 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "example" {
 
 #### Required
 
-* `hyper_parameter_tuning_job_name` (String) Name of the Hyper Parameter Tuning Job.
+* `name` (String) Name of the Hyper Parameter Tuning Job.
 
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Hyper Parameter Tuning Jobs using `hyper_parameter_tuning_job_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Hyper Parameter Tuning Jobs using `name`. For example:
 
 ```terraform
 import {
@@ -434,7 +434,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker AI Hyper Parameter Tuning Jobs using `hyper_parameter_tuning_job_name`. For example:
+Using `terraform import`, import SageMaker AI Hyper Parameter Tuning Jobs using `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_hyper_parameter_tuning_job.example example-hyper-parameter-tuning-job

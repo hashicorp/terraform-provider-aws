@@ -1269,12 +1269,12 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"strategy": knownvalue.StringExact("Bayesian"),
-							"hyper_parameter_tuning_job_objective": knownvalue.ListExact([]knownvalue.Check{
+							"objective": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									names.AttrMetricName: knownvalue.StringExact("test:msd"),
 									names.AttrType:       knownvalue.StringExact("Minimize"),
@@ -1363,12 +1363,12 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportState:       true,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "name"),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
 				},
-				ImportStateVerifyIdentifierAttribute: "hyper_parameter_tuning_job_name",
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -1679,10 +1679,10 @@ func TestAccSageMakerHyperParameterTuningJob_jobConfigOptions(t *testing.T) {
 				Config: testAccHyperParameterTuningJobConfig_jobConfigOptions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.strategy", "Bayesian"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.strategy", "Bayesian"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"random_seed":                      knownvalue.Int64Exact(42),
 							"training_job_early_stopping_type": knownvalue.StringExact("Auto"),
@@ -1724,8 +1724,8 @@ func TestAccSageMakerHyperParameterTuningJob_objective(t *testing.T) {
 				Config: testAccHyperParameterTuningJobConfig_objective(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.metric_name", "test:msd"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.hyper_parameter_tuning_job_objective.0.type", "Minimize"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.objective.0.metric_name", "test:msd"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.objective.0.type", "Minimize"),
 				),
 			},
 		},
@@ -1796,7 +1796,7 @@ func TestAccSageMakerHyperParameterTuningJob_parameterRanges(t *testing.T) {
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hyper_parameter_tuning_job_config"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"parameter_ranges": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
@@ -1859,8 +1859,8 @@ func TestAccSageMakerHyperParameterTuningJob_strategyConfig(t *testing.T) {
 				Config: testAccHyperParameterTuningJobConfig_strategyConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.strategy_config.0.hyperband_strategy_config.0.max_resource", "9"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.strategy_config.0.hyperband_strategy_config.0.min_resource", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.strategy_config.0.hyperband_strategy_config.0.max_resource", "9"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.strategy_config.0.hyperband_strategy_config.0.min_resource", "1"),
 				),
 			},
 		},
@@ -1890,18 +1890,18 @@ func TestAccSageMakerHyperParameterTuningJob_completionCriteria(t *testing.T) {
 				Config: testAccHyperParameterTuningJobConfig_completionCriteria(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHyperParameterTuningJobExists(ctx, t, resourceName, &tuningJob),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.tuning_job_completion_criteria.0.target_objective_metric_value", "0.95"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.tuning_job_completion_criteria.0.best_objective_not_improving.0.max_number_of_training_jobs_not_improving", "3"),
-					resource.TestCheckResourceAttr(resourceName, "hyper_parameter_tuning_job_config.0.tuning_job_completion_criteria.0.convergence_detected.0.complete_on_convergence", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.tuning_job_completion_criteria.0.target_objective_metric_value", "0.95"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.tuning_job_completion_criteria.0.best_objective_not_improving.0.max_number_of_training_jobs_not_improving", "3"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.tuning_job_completion_criteria.0.convergence_detected.0.complete_on_convergence", "Enabled"),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "name"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "hyper_parameter_tuning_job_name",
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -1946,7 +1946,7 @@ func TestAccSageMakerHyperParameterTuningJob_warmStartConfig(t *testing.T) {
 							"warm_start_type": knownvalue.StringExact("TransferLearning"),
 							"parent_hyper_parameter_tuning_jobs": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"hyper_parameter_tuning_job_name": knownvalue.NotNull(),
+									"name": knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -2037,9 +2037,9 @@ func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "hyper_parameter_tuning_job_name"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "name"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "hyper_parameter_tuning_job_name",
+				ImportStateVerifyIdentifierAttribute: "name",
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
 				},
@@ -2057,7 +2057,7 @@ func testAccCheckHyperParameterTuningJobDestroy(ctx context.Context, t *testing.
 				continue
 			}
 
-			hyperParameterTuningJobName := rs.Primary.Attributes["hyper_parameter_tuning_job_name"]
+			hyperParameterTuningJobName := rs.Primary.Attributes["name"]
 
 			if hyperParameterTuningJobName == "" {
 				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, errors.New("not set"))
@@ -2085,7 +2085,7 @@ func testAccCheckHyperParameterTuningJobExists(ctx context.Context, t *testing.T
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not found"))
 		}
 
-		hyperParameterTuningJobName := rs.Primary.Attributes["hyper_parameter_tuning_job_name"]
+		hyperParameterTuningJobName := rs.Primary.Attributes["name"]
 
 		if hyperParameterTuningJobName == "" {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not set"))
@@ -2111,7 +2111,7 @@ func testAccCheckHyperParameterTuningJobCompleted(ctx context.Context, t *testin
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not found"))
 		}
 
-		hyperParameterTuningJobName := rs.Primary.Attributes["hyper_parameter_tuning_job_name"]
+		hyperParameterTuningJobName := rs.Primary.Attributes["name"]
 		if hyperParameterTuningJobName == "" {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not set"))
 		}
@@ -2258,12 +2258,12 @@ resource "aws_sagemaker_algorithm" "test" {
 func testAccHyperParameterTuningJobConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -2364,12 +2364,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_metricDefinitions(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -2485,9 +2485,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
     resource_limits {
@@ -2725,12 +2725,12 @@ EOT
 }
 
 resource "aws_sagemaker_hyper_parameter_tuning_job" "parent" {
-  hyper_parameter_tuning_job_name = "p-${substr(%[1]q, 0, 30)}"
+  name = "p-${substr(%[1]q, 0, 30)}"
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -2833,12 +2833,12 @@ EOT
 }
 
 resource "aws_sagemaker_hyper_parameter_tuning_job" "parent" {
-  hyper_parameter_tuning_job_name = "p-${substr(%[1]q, 0, 30)}"
+  name = "p-${substr(%[1]q, 0, 30)}"
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -2918,12 +2918,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "parent" {
 }
 
 resource "aws_sagemaker_hyper_parameter_tuning_job" "child" {
-  hyper_parameter_tuning_job_name = "c-${substr(%[1]q, 0, 30)}"
+  name = "c-${substr(%[1]q, 0, 30)}"
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -2947,7 +2947,7 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "child" {
     warm_start_type = "TransferLearning"
 
     parent_hyper_parameter_tuning_jobs {
-      hyper_parameter_tuning_job_name = aws_sagemaker_hyper_parameter_tuning_job.parent.hyper_parameter_tuning_job_name
+      name = aws_sagemaker_hyper_parameter_tuning_job.parent.name
     }
   }
 
@@ -3015,12 +3015,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "child" {
 func testAccHyperParameterTuningJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "validation:accuracy"
       type        = "Maximize"
     }
@@ -3074,12 +3074,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "validation:accuracy"
       type        = "Maximize"
     }
@@ -3175,16 +3175,16 @@ resource "aws_s3_object" "input" {
 }
 
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
   autotune {
     mode = "Enabled"
   }
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -3276,12 +3276,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_objective(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -3373,12 +3373,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_trainingJobDefinitionEnvironment(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), testAccHyperParameterTuningJobConfigAlgorithmResource(rName), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "validation:accuracy"
       type        = "Maximize"
     }
@@ -3459,12 +3459,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_parameterRanges(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -3556,12 +3556,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_strategyConfig(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Hyperband"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -3660,12 +3660,12 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_completionCriteria(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     strategy = "Bayesian"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
@@ -3769,14 +3769,14 @@ resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
 func testAccHyperParameterTuningJobConfig_jobConfigOptions(rName string) string {
 	return acctest.ConfigCompose(testAccHyperParameterTuningJobConfig_base(rName), testAccHyperParameterTuningJobConfigKMeansDependencies(), fmt.Sprintf(`
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
-  hyper_parameter_tuning_job_name = %[1]q
+  name = %[1]q
 
-  hyper_parameter_tuning_job_config {
+  config {
     random_seed                      = 42
     strategy                         = "Bayesian"
     training_job_early_stopping_type = "Auto"
 
-    hyper_parameter_tuning_job_objective {
+    objective {
       metric_name = "test:msd"
       type        = "Minimize"
     }
