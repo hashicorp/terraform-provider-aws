@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/network_peering_connection: Peer cidr management through `peer_network_cidrs` argument.
+```
