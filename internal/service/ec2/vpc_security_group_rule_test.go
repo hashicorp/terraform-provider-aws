@@ -362,6 +362,39 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupRule_egressIPv6DefaultRuleOutOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.SecurityGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_ipv6Base(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, t, sgResourceName, &group),
+					testAccCheckSecurityGroupEnsureDefaultIPv6Egress(ctx, t, &group),
+				),
+			},
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_egressIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, t, sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.0", "::/0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "egress"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroupRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.SecurityGroup
@@ -1801,6 +1834,24 @@ resource "aws_security_group_rule" "test" {
   security_group_id = aws_security_group.test.id
 }
 `, rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_ipv6Base(rName string) string {
+	return testAccVPCSecurityGroupConfig_ipv6VPCOnly(rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_egressIPv6(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_ipv6Base(rName), `
+resource "aws_security_group_rule" "test" {
+  type             = "egress"
+  protocol         = "-1"
+  from_port        = 0
+  to_port          = 0
+  ipv6_cidr_blocks = ["::/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+`)
 }
 
 func testAccVPCSecurityGroupRuleConfig_multiDescription(rName, ruleType string) string {

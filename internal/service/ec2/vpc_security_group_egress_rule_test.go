@@ -80,6 +80,42 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupEgressRule_cidrIPv6DefaultRuleOutOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.SecurityGroup
+	var v awstypes.SecurityGroupRule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_egress_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupEgressRuleConfig_ipv6Base(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, t, sgResourceName, &group),
+					testAccCheckSecurityGroupEnsureDefaultIPv6Egress(ctx, t, &group),
+				),
+			},
+			{
+				Config: testAccVPCSecurityGroupEgressRuleConfig_cidrIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupEgressRuleExists(ctx, t, resourceName, &v),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "::/0"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecurityGroupEgressRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -140,6 +176,23 @@ resource "aws_vpc_security_group_egress_rule" "test" {
   from_port   = 80
   ip_protocol = "tcp"
   to_port     = 8080
+}
+`)
+}
+
+func testAccVPCSecurityGroupEgressRuleConfig_ipv6Base(rName string) string {
+	return testAccVPCSecurityGroupConfig_ipv6VPCOnly(rName)
+}
+
+func testAccVPCSecurityGroupEgressRuleConfig_cidrIPv6(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupEgressRuleConfig_ipv6Base(rName), `
+resource "aws_vpc_security_group_egress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  cidr_ipv6   = "::/0"
+  from_port   = 0
+  ip_protocol = "-1"
+  to_port     = 0
 }
 `)
 }

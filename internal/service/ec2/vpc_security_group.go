@@ -239,27 +239,8 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
 	}
 
-	inputR = &ec2.RevokeSecurityGroupEgressInput{
-		GroupId: aws.String(d.Id()),
-		IpPermissions: []awstypes.IpPermission{
-			{
-				FromPort: aws.Int32(0),
-				ToPort:   aws.Int32(0),
-				Ipv6Ranges: []awstypes.Ipv6Range{
-					{
-						CidrIpv6: aws.String("::/0"),
-					},
-				},
-				IpProtocol: aws.String("-1"),
-			},
-		},
-	}
-
-	if _, err := conn.RevokeSecurityGroupEgress(ctx, inputR); err != nil {
-		// If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6 enabled SG.
-		if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
-			return sdkdiag.AppendErrorf(diags, "revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
-		}
+	if err := revokeSecurityGroupDefaultIPv6EgressRule(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSecurityGroupUpdate(ctx, d, meta)...)
@@ -789,6 +770,12 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.Client, d *schema.R
 	}
 
 	if len(add) > 0 {
+		if ruleType == "egress" && ipPermissionsContainIPv6Ranges(add) {
+			if err := revokeSecurityGroupDefaultIPv6EgressRule(ctx, conn, aws.ToString(group.GroupId)); err != nil {
+				return fmt.Errorf("revoking default IPv6 egress rule for Security Group (%s): %w", aws.ToString(group.GroupId), err)
+			}
+		}
+
 		if ruleType == "egress" {
 			input := &ec2.AuthorizeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
@@ -811,6 +798,43 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.Client, d *schema.R
 	}
 
 	return nil
+}
+
+func revokeSecurityGroupDefaultIPv6EgressRule(ctx context.Context, conn *ec2.Client, securityGroupID string) error {
+	input := &ec2.RevokeSecurityGroupEgressInput{
+		GroupId: aws.String(securityGroupID),
+		IpPermissions: []awstypes.IpPermission{
+			{
+				FromPort: aws.Int32(0),
+				ToPort:   aws.Int32(0),
+				Ipv6Ranges: []awstypes.Ipv6Range{
+					{
+						CidrIpv6: aws.String("::/0"),
+					},
+				},
+				IpProtocol: aws.String("-1"),
+			},
+		},
+	}
+
+	if _, err := conn.RevokeSecurityGroupEgress(ctx, input); err != nil {
+		// NotFound and remote-ipv6-range errors are expected for non-IPv6-enabled security groups.
+		if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ipPermissionsContainIPv6Ranges(permissions []awstypes.IpPermission) bool {
+	for _, permission := range permissions {
+		if len(permission.Ipv6Ranges) > 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Takes the result of flatmap.Expand for an array of ingress/egress security
