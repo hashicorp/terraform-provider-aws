@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,11 +88,15 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for rule, err := range listSecurityGroupEgressRules(ctx, conn, &input) {
+		for rule, err := range listSecurityGroupRules(ctx, conn, &input) {
 			if err != nil {
 				tflog.Error(ctx, "Listing resources", map[string]any{
 					"error": err.Error(),
 				})
+				continue
+			}
+
+			if !aws.ToBool(rule.IsEgress) {
 				continue
 			}
 
@@ -137,25 +141,6 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 	}
 }
 
-func listSecurityGroupEgressRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) iter.Seq2[awstypes.SecurityGroupRule, error] {
-	return func(yield func(awstypes.SecurityGroupRule, error) bool) {
-		pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecurityGroupRule{}, fmt.Errorf("listing VPC Security Group Egress Rules: %w", err))
-				return
-			}
-
-			for _, rule := range page.SecurityGroupRules {
-				if !aws.ToBool(rule.IsEgress) {
-					continue
-				}
-
-				if !yield(rule, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecurityGroupRule, error] {
+	return tfiter.ConcatValuesWithError(listSecurityGroupRulePages(ctx, conn, input, optFns...))
 }

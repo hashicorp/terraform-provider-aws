@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 )
 
 // @FrameworkListResource("aws_ec2_secondary_network")
@@ -78,21 +78,6 @@ type listSecondaryNetworkModel struct {
 	framework.WithRegionModel
 }
 
-func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) iter.Seq2[awstypes.SecondaryNetwork, error] {
-	return func(yield func(awstypes.SecondaryNetwork, error) bool) {
-		pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecondaryNetwork{}, fmt.Errorf("listing EC2 Secondary Network resources: %w", err))
-				return
-			}
-
-			for _, item := range page.SecondaryNetworks {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecondaryNetwork, error] {
+	return tfiter.ConcatValuesWithError(listSecondaryNetworkPages(ctx, conn, input, optFns...))
 }

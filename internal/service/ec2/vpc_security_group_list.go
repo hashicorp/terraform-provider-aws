@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -146,21 +147,6 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 	}
 }
 
-func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) iter.Seq2[awstypes.SecurityGroup, error] {
-	return func(yield func(awstypes.SecurityGroup, error) bool) {
-		pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecurityGroup{}, fmt.Errorf("listing EC2 Security Groups: %w", err))
-				return
-			}
-
-			for _, item := range page.SecurityGroups {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecurityGroup, error] {
+	return tfiter.ConcatValuesWithError(listSecurityGroupPages(ctx, conn, input, optFns...))
 }

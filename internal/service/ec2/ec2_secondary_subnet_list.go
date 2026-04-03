@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -107,21 +107,6 @@ func (l *secondarySubnetListResource) List(ctx context.Context, request list.Lis
 	}
 }
 
-func listSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) iter.Seq2[awstypes.SecondarySubnet, error] {
-	return func(yield func(awstypes.SecondarySubnet, error) bool) {
-		pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.SecondarySubnet{}, fmt.Errorf("listing EC2 Secondary Subnet resources: %w", err))
-				return
-			}
-
-			for _, item := range page.SecondarySubnets {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.SecondarySubnet, error] {
+	return tfiter.ConcatValuesWithError(listSecondarySubnetPages(ctx, conn, input, optFns...))
 }

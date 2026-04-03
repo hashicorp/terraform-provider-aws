@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -178,21 +179,6 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 	}
 }
 
-func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) iter.Seq2[awstypes.Subnet, error] {
-	return func(yield func(awstypes.Subnet, error) bool) {
-		pages := ec2.NewDescribeSubnetsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Subnet{}, fmt.Errorf("listing EC2 Subnets: %w", err))
-				return
-			}
-
-			for _, subnet := range page.Subnets {
-				if !yield(subnet, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput, optFns ...func(*ec2.Options)) iter.Seq2[awstypes.Subnet, error] {
+	return tfiter.ConcatValuesWithError(listSubnetPages(ctx, conn, input, optFns...))
 }

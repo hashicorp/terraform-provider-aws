@@ -8,6 +8,8 @@ package cloudwatch
 import (
 	"context"
 	"errors"
+	"fmt"
+	"iter"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -427,22 +430,43 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.MetricAlarm, error) {
-	input := &cloudwatch.DescribeAlarmsInput{
+	input := cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []string{name},
 		AlarmTypes: []types.AlarmType{types.AlarmTypeMetricAlarm},
 	}
 
-	output, err := conn.DescribeAlarms(ctx, input)
+	return findMetricAlarm(ctx, conn, &input)
+}
+
+func findMetricAlarm(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) (*types.MetricAlarm, error) {
+	output, err := findMetricAlarms(ctx, conn, input)
 
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
 
-	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
+}
 
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))
+func findMetricAlarms(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput) ([]types.MetricAlarm, error) {
+	return tfslices.CollectAndConcatWithError(listMetricAlarmPages(ctx, conn, input))
+}
+
+func listMetricAlarmPages(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeAlarmsInput, optFns ...func(*cloudwatch.Options)) iter.Seq2[[]types.MetricAlarm, error] {
+	return func(yield func([]types.MetricAlarm, error) bool) {
+		pages := cloudwatch.NewDescribeAlarmsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Metric Alarms: %w", err))
+				return
+			}
+
+			if !yield(page.MetricAlarms, nil) {
+				return
+			}
+		}
+	}
 }
 
 func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutMetricAlarmInput {
