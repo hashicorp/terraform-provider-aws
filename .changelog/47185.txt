@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3control_storage_lens_configuration: Add support for Expanded Prefixes Analysis
+```
+
+```release-note:enhancement
+resource/aws_s3control_storage_lens_configuration: Add support for Prefix Delimiter
+```
