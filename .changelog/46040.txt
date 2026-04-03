@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_metric_alarm: Fix plan-time validation to allow `datapoints_to_alarm` to be set to `0`
+```
