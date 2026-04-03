@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Add `broker_node_group_info.connectivity_info.network_type` argument
+```
+
+```release-note:enhancement
+data-source/aws_msk_cluster: Add `broker_node_group_info.connectivity_info.network_type` attribute
+```
