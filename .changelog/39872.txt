@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix `instance_refresh.preferences.max_healthy_percentage` incorrectly defaulting to `100`, which caused unintended "launch before terminate" instance replacement behavior when the attribute was not explicitly configured
+```
