@@ -354,6 +354,51 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 	})
 }
 
+// TestAccECSExpressGatewayService_clusterForceNew verifies that changing
+// the cluster attribute triggers a destroy + create (ForceNew).
+// See: https://github.com/hashicorp/terraform-provider-aws/issues/47277
+func TestAccECSExpressGatewayService_clusterForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service1, service2 awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_cluster(rName, rName+"-cluster-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "cluster", rName+"-cluster-1"),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_cluster(rName, rName+"-cluster-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
+					resource.TestCheckResourceAttr(resourceName, "cluster", rName+"-cluster-2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 // TestAccECSExpressGatewayService_environmentVariableOrdering verifies that
 // non-alphabetical environment variables don't cause inconsistent apply errors.
 // See: https://github.com/hashicorp/terraform-provider-aws/issues/45792
@@ -863,4 +908,22 @@ resource "aws_ecs_express_gateway_service" "test" {
   }
 }
 `)
+}
+
+func testAccExpressGatewayServiceConfig_cluster(rName, clusterName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[2]q
+}
+
+resource "aws_ecs_express_gateway_service" "test" {
+  cluster                 = aws_ecs_cluster.test.name
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+}
+`, rName, clusterName))
 }
