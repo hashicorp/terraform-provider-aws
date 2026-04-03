@@ -19,6 +19,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
@@ -59,7 +60,7 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 			}
 
 			hyperParameterTuningJobName := aws.ToString(item.HyperParameterTuningJobName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("name"), hyperParameterTuningJobName)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), hyperParameterTuningJobName)
 
 			result := request.NewListResult(ctx)
 

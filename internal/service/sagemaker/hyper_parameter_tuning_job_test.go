@@ -1269,7 +1269,7 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(acctest.CtName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
@@ -1363,12 +1363,12 @@ func TestAccSageMakerHyperParameterTuningJob_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportState:       true,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "name"),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, acctest.CtName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
 				},
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 			},
 		},
 	})
@@ -1899,9 +1899,9 @@ func TestAccSageMakerHyperParameterTuningJob_completionCriteria(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "name"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, acctest.CtName),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 			},
 		},
 	})
@@ -1946,7 +1946,7 @@ func TestAccSageMakerHyperParameterTuningJob_warmStartConfig(t *testing.T) {
 							"warm_start_type": knownvalue.StringExact("TransferLearning"),
 							"parent_hyper_parameter_tuning_jobs": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"name": knownvalue.NotNull(),
+									acctest.CtName: knownvalue.NotNull(),
 								}),
 							}),
 						}),
@@ -2037,9 +2037,9 @@ func TestAccSageMakerHyperParameterTuningJob_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "name"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, acctest.CtName),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateVerifyIdentifierAttribute: acctest.CtName,
 				ImportStateVerifyIgnore: []string{
 					"training_job_definition.0.algorithm_specification.0.metric_definitions",
 				},
@@ -2057,7 +2057,7 @@ func testAccCheckHyperParameterTuningJobDestroy(ctx context.Context, t *testing.
 				continue
 			}
 
-			hyperParameterTuningJobName := rs.Primary.Attributes["name"]
+			hyperParameterTuningJobName := rs.Primary.Attributes[acctest.CtName]
 
 			if hyperParameterTuningJobName == "" {
 				return create.Error(names.SageMaker, create.ErrActionCheckingDestroyed, tfsagemaker.ResNameHyperParameterTuningJob, hyperParameterTuningJobName, errors.New("not set"))
@@ -2085,7 +2085,7 @@ func testAccCheckHyperParameterTuningJobExists(ctx context.Context, t *testing.T
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not found"))
 		}
 
-		hyperParameterTuningJobName := rs.Primary.Attributes["name"]
+		hyperParameterTuningJobName := rs.Primary.Attributes[acctest.CtName]
 
 		if hyperParameterTuningJobName == "" {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not set"))
@@ -2111,7 +2111,7 @@ func testAccCheckHyperParameterTuningJobCompleted(ctx context.Context, t *testin
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not found"))
 		}
 
-		hyperParameterTuningJobName := rs.Primary.Attributes["name"]
+		hyperParameterTuningJobName := rs.Primary.Attributes[acctest.CtName]
 		if hyperParameterTuningJobName == "" {
 			return create.Error(names.SageMaker, create.ErrActionCheckingExistence, tfsagemaker.ResNameHyperParameterTuningJob, name, errors.New("not set"))
 		}
