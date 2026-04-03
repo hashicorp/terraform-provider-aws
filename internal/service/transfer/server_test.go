@@ -1126,6 +1126,39 @@ func testAccServer_apiGateway_forceDestroy(t *testing.T) {
 	})
 }
 
+func testAccServer_updateIdentityProviderType_notRecreated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after awstypes.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_role", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccServerConfig_apiGatewayIdentityProviderType(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &after),
+					testAccCheckServerNotRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccServer_directoryService(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.DescribedServer
@@ -1502,6 +1535,20 @@ func testAccCheckServerDestroy(ctx context.Context, t *testing.T) resource.TestC
 			}
 
 			return fmt.Errorf("Transfer Server %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckServerNotRecreated(before, after *awstypes.DescribedServer) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before == nil || before.ServerId == nil || after == nil || after.ServerId == nil {
+			return errors.New("missing Transfer Server ID while checking recreation")
+		}
+
+		if *before.ServerId != *after.ServerId {
+			return fmt.Errorf("Transfer Server was recreated: %s -> %s", *before.ServerId, *after.ServerId)
 		}
 
 		return nil
