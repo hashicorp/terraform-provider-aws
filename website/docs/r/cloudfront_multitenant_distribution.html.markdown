@@ -165,7 +165,7 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 * `origin_access_control_id` - (Optional) CloudFront origin access control identifier to associate with the origin.
 * `origin_path` - (Optional) Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) CloudFront Origin Shield configuration information. See [Origin Shield](#origin-shield) below.
-* `response_completion_timeout` - (Optional) Number of seconds that CloudFront waits for a response after forwarding a request to the origin. Default: 30.
+* `response_completion_timeout` - (Optional) Number of seconds that CloudFront waits for a response after forwarding a request to the origin. Must be integer greater than or equal to the value of `origin_read_timeout` in [Custom Origin Config](#custom-origin-config). If omitted, no maximum value is enforced.
 * `vpc_origin_config` - (Optional) CloudFront VPC origin configuration. See [VPC Origin Config](#vpc-origin-config) below.
 
 ### Custom Header
