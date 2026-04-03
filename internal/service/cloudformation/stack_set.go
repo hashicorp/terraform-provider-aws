@@ -679,7 +679,9 @@ func expandAutoDeployment(l []any) *awstypes.AutoDeployment {
 	if enabled {
 		autoDeployment.RetainStacksOnAccountRemoval = aws.Bool(m["retain_stacks_on_account_removal"].(bool))
 	}
-
+	if v, ok := m["depends_on_stack_sets"].([]any); ok && len(v) > 0 {
+		autoDeployment.DependsOn = flex.ExpandStringValueList(v)
+	}
 	return autoDeployment
 }
 
