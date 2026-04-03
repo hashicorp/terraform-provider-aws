@@ -1,5 +1,7 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_config_config_rule" "test" {
-  {{- template "region" }}
   name = var.rName
 
   source {
@@ -8,7 +10,6 @@ resource "aws_config_config_rule" "test" {
   }
 
   depends_on = [aws_config_configuration_recorder.test]
-{{- template "tags" . }}
 }
 
 # testAccConfigRuleConfig_base
@@ -16,7 +17,6 @@ resource "aws_config_config_rule" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_config_configuration_recorder" "test" {
-{{- template "region" }}
   name     = var.rName
   role_arn = aws_iam_role.test.arn
 }
@@ -45,3 +45,19 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
   role       = aws_iam_role.test.name
 }
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.39.0"
+    }
+  }
+}
+
+provider "aws" {}

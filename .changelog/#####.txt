@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_config_config_rule: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_config_configuration_aggregator: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_config_configuration_recorder_status: Add Resource Identity support
+```
+
+```release-note:bug
+resource/aws_config_configuration_recorder_status: Mark `name` as as `ForceNew`
+```
+
+```release-note:enhancement
+resource/aws_config_configuration_recorder: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_config_conformance_pack: Add Resource Identity support
+```
+
+```release-note:enhancement
+resource/aws_config_delivery_channel: Add Resource Identity support
+```

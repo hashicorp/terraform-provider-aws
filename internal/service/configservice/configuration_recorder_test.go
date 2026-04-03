@@ -243,7 +243,7 @@ func testAccCheckConfigurationRecorderDestroy(ctx context.Context, t *testing.T)
 	}
 }
 
-func testAccConfigurationRecorderConfigBase(rName string) string {
+func testAccConfigurationRecorderConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -302,7 +302,7 @@ resource "aws_config_delivery_channel" "test" {
 
 func testAccConfigurationRecorderConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigurationRecorderConfigBase(rName),
+		testAccConfigurationRecorderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q
@@ -313,7 +313,7 @@ resource "aws_config_configuration_recorder" "test" {
 
 func testAccConfigurationRecorderConfig_allParams(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigurationRecorderConfigBase(rName),
+		testAccConfigurationRecorderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q
@@ -339,7 +339,7 @@ resource "aws_config_configuration_recorder" "test" {
 
 func testAccConfigurationRecorderConfig_recordStrategy(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigurationRecorderConfigBase(rName),
+		testAccConfigurationRecorderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q
@@ -371,7 +371,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 
 func testAccConfigurationRecorderConfig_allSupported(rName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigurationRecorderConfigBase(rName),
+		testAccConfigurationRecorderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q

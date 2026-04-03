@@ -28,18 +28,16 @@ import (
 )
 
 // @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationAggregator")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,
 		ReadWithoutTimeout:   resourceConfigurationAggregatorRead,
 		UpdateWithoutTimeout: resourceConfigurationAggregatorPut,
 		DeleteWithoutTimeout: resourceConfigurationAggregatorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			// This is to prevent this error:
@@ -135,7 +133,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 
 	if d.IsNewResource() || d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		name := d.Get(names.AttrName).(string)
-		input := &configservice.PutConfigurationAggregatorInput{
+		input := configservice.PutConfigurationAggregatorInput{
 			ConfigurationAggregatorName: aws.String(name),
 			Tags:                        getTagsIn(ctx),
 		}
@@ -148,7 +146,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 			input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]any)[0].(map[string]any))
 		}
 
-		output, err := conn.PutConfigurationAggregator(ctx, input)
+		output, err := conn.PutConfigurationAggregator(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Aggregator (%s): %s", name, err)
@@ -212,11 +210,11 @@ func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.Resour
 }
 
 func findConfigurationAggregatorByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationAggregator, error) {
-	input := &configservice.DescribeConfigurationAggregatorsInput{
+	input := configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []string{name},
 	}
 
-	return findConfigurationAggregator(ctx, conn, input)
+	return findConfigurationAggregator(ctx, conn, &input)
 }
 
 func findConfigurationAggregator(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationAggregatorsInput) (*types.ConfigurationAggregator, error) {

@@ -31,11 +31,13 @@ func TestAccConfigService_serial(t *testing.T) {
 			"scopeTagValue":      testAccConfigRule_Scope_TagValue,
 			"tags":               testAccConfigServiceConfigRule_tagsSerial,
 			acctest.CtDisappears: testAccConfigRule_disappears,
+			"Identity":           testAccConfigServiceConfigRule_identitySerial,
 		},
 		"ConfigurationRecorderStatus": {
 			acctest.CtBasic:      testAccConfigurationRecorderStatus_basic,
 			"startEnabled":       testAccConfigurationRecorderStatus_startEnabled,
 			acctest.CtDisappears: testAccConfigurationRecorderStatus_disappears,
+			"Identity":           testAccConfigServiceConfigurationRecorderStatus_identitySerial,
 		},
 		"ConfigurationRecorder": {
 			acctest.CtBasic:            testAccConfigurationRecorder_basic,
@@ -43,6 +45,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"exclusionsToAllSupported": testAccConfigurationRecorder_exclusionsToAllSupported,
 			"recordStrategy":           testAccConfigurationRecorder_recordStrategy,
 			acctest.CtDisappears:       testAccConfigurationRecorder_disappears,
+			"Import":                   testAccConfigServiceConfigurationRecorder_identitySerial,
 		},
 		"ConformancePack": {
 			acctest.CtBasic:             testAccConformancePack_basic,
@@ -56,11 +59,13 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Delivery":          testAccConformancePack_updateS3Delivery,
 			"updateS3Template":          testAccConformancePack_updateS3Template,
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
+			"Identity":                  testAccConfigServiceConformancePack_identitySerial,
 		},
 		"DeliveryChannel": {
 			acctest.CtBasic:      testAccDeliveryChannel_basic,
 			"allParams":          testAccDeliveryChannel_allParams,
 			acctest.CtDisappears: testAccDeliveryChannel_disappears,
+			"Identity":           testAccConfigServiceDeliveryChannel_identitySerial,
 		},
 		"OrganizationConformancePack": {
 			acctest.CtBasic:          testAccOrganizationConformancePack_basic,
