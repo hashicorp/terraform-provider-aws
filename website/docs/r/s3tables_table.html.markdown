@@ -79,6 +79,60 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Metadata Schema and Partition Spec
+
+```terraform
+resource "aws_s3tables_table" "example" {
+  name             = "example_table"
+  namespace        = aws_s3tables_namespace.example.namespace
+  table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "long"
+          required = true
+        }
+        field {
+          name     = "event_date"
+          type     = "date"
+          required = true
+        }
+        field {
+          name = "category"
+          type = "string"
+        }
+      }
+
+      partition_spec {
+        field {
+          name      = "date_partition"
+          source_id = 2
+          transform = "month"
+        }
+        field {
+          name      = "category_partition"
+          source_id = 3
+          transform = "identity"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "example" {
+  namespace        = "example_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.example.arn
+}
+
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -164,25 +218,43 @@ The `metadata` configuration block supports the following argument:
 
 ### `iceberg`
 
-The `iceberg` configuration block supports the following argument:
+The `iceberg` configuration block supports the following arguments:
 
 * `schema` - (Required) Schema configuration for the Iceberg table.
   [See `schema` below](#schema).
+* `partition_spec` - (Optional, Forces new resource) Partition specification for the Iceberg table.
+  [See `partition_spec` below](#partition_spec).
 
 ### `schema`
 
 The `schema` configuration block supports the following argument:
 
 * `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema.
-  [See `field` below](#field).
+  [See `schema.field` below](#schemafield).
 
-### `field`
+### `schema.field`
 
-The `field` configuration block supports the following arguments:
+The `schema` `field` configuration block supports the following arguments:
 
 * `name` - (Required) The name of the field.
 * `type` - (Required) The field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
 * `required` - (Optional) A Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
+
+### `partition_spec`
+
+The `partition_spec` configuration block supports the following argument:
+
+* `field` - (Required) List of partition fields that define how the table data is partitioned. At least one field must be specified.
+  [See `partition_spec.field` below](#partition_specfield).
+
+### `partition_spec.field`
+
+The `partition_spec` `field` configuration block supports the following arguments:
+
+* `name` - (Required, Forces new resource) The name for this partition field. This name is used in the partitioned file paths.
+* `source_id` - (Required, Forces new resource) The ID of the source schema field to partition by. This must reference a valid field ID from the table schema.
+* `transform` - (Required, Forces new resource) The partition transform to apply to the source field. Valid values: `identity`, `year`, `month`, `day`, `hour`, `bucket`, `truncate`.
+* `field_id` - (Optional, Forces new resource) Unique identifier for this partition field. Auto-assigned if not specified.
 
 ## Attribute Reference
 
