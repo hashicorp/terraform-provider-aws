@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -413,21 +415,56 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	tflog.Info(ctx, "Deleting EC2 Subnet")
 
+	subnet, err := findSubnetByID(ctx, conn, d.Id())
+	if err != nil {
+		if retry.NotFound(err) {
+			return diags
+		}
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
+	}
+
+	vpcID := aws.ToString(subnet.VpcId)
+
 	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
-			SubnetId: aws.String(d.Id()),
-		})
-	}, errCodeDependencyViolation)
+	var guardDutyWarnings []string
+
+	_, err = tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
+				SubnetId: aws.String(d.Id()),
+			})
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+				tflog.Debug(ctx, "Subnet deletion failed with DependencyViolation, checking for GuardDuty resources")
+				warningMsg, cleanupErr := dissociateGuardDutyVPCEndpoints(ctx, conn, d.Id(), vpcID)
+				if warningMsg != "" {
+					guardDutyWarnings = append(guardDutyWarnings, warningMsg)
+				}
+				if cleanupErr != nil {
+					tflog.Warn(ctx, "Error dissociating GuardDuty VPC endpoints", map[string]any{
+						names.AttrVPCID: vpcID, "error": cleanupErr.Error(),
+					})
+				}
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 		return diags
 	}
 
 	if err != nil {
+		if len(guardDutyWarnings) > 0 {
+			for _, w := range guardDutyWarnings {
+				diags = sdkdiag.AppendWarningf(diags, "%s", w)
+			}
+		}
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
@@ -766,4 +803,177 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	}
 
 	setTagsOut(ctx, subnet.Tags)
+}
+
+func IsUnauthorizedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "UnauthorizedOperation") ||
+		strings.Contains(errMsg, "AccessDenied") ||
+		strings.Contains(errMsg, "not authorized")
+}
+
+func IsVPCEndpointNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "InvalidVpcEndpointId.NotFound") ||
+		strings.Contains(errMsg, "InvalidVpcEndpoint.NotFound") ||
+		strings.Contains(errMsg, "does not exist")
+}
+
+const (
+	vpcEndpointDeletionTimeout = 10 * time.Minute
+)
+
+func hasGuardDutyManagedTag(tags []awstypes.Tag) bool {
+	for _, tag := range tags {
+		if aws.ToString(tag.Key) == guardDutyManagedTagKey &&
+			aws.ToString(tag.Value) == guardDutyManagedTagValue {
+			return true
+		}
+	}
+	return false
+}
+
+func findGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, vpcID string) ([]awstypes.VpcEndpoint, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("vpc-id"),
+				Values: []string{vpcID},
+			},
+			{
+				Name:   aws.String("service-name"),
+				Values: []string{guardDutyServiceNamePattern},
+			},
+			{
+				Name:   aws.String("tag:" + guardDutyManagedTagKey),
+				Values: []string{guardDutyManagedTagValue},
+			},
+		},
+	}
+
+	output, err := conn.DescribeVpcEndpoints(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output.VpcEndpoints, nil
+}
+
+func isSubnetOwnedBySameAccount(ctx context.Context, conn *ec2.Client, subnetID, vpcID string) (bool, error) {
+	subnet, err := findSubnetByID(ctx, conn, subnetID)
+	if err != nil {
+		return false, fmt.Errorf("describing subnet %s: %w", subnetID, err)
+	}
+
+	vpc, err := findVPCByID(ctx, conn, vpcID)
+	if err != nil {
+		return false, fmt.Errorf("describing VPC %s: %w", vpcID, err)
+	}
+
+	subnetOwner := aws.ToString(subnet.OwnerId)
+	vpcOwner := aws.ToString(vpc.OwnerId)
+
+	if subnetOwner != vpcOwner {
+		log.Printf("[INFO] Subnet %s owner (%s) differs from VPC %s owner (%s) - shared subnet, skipping GuardDuty cleanup",
+			subnetID, subnetOwner, vpcID, vpcOwner)
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func dissociateGuardDutyVPCEndpoints(ctx context.Context, conn *ec2.Client, subnetID, vpcID string) (string, error) {
+	sameAccount, err := isSubnetOwnedBySameAccount(ctx, conn, subnetID, vpcID)
+	if err != nil {
+		if IsUnauthorizedError(err) {
+			return fmt.Sprintf(
+				"During deletion of subnet %s, Terraform attempted to check for and clean up "+
+					"GuardDuty-managed resources that may have been causing a DependencyViolation, "+
+					"but lacked sufficient IAM permissions (ec2:DescribeSubnets, ec2:DescribeVpcs) to do so. "+
+					"If GuardDuty is enabled in this VPC, these permissions may be required for automatic cleanup.",
+				subnetID,
+			), nil
+		}
+		log.Printf("[WARN] Error checking subnet ownership for GuardDuty cleanup (subnet %s, VPC %s): %s", subnetID, vpcID, err)
+		return "", nil
+	}
+	if !sameAccount {
+		log.Printf("[INFO] Subnet %s is a shared subnet, skipping GuardDuty cleanup", subnetID)
+		return "", nil
+	}
+
+	log.Printf("[DEBUG] Checking for GuardDuty VPC endpoints in VPC %s for subnet %s dissociation", vpcID, subnetID)
+
+	endpoints, err := findGuardDutyVPCEndpoints(ctx, conn, vpcID)
+	if err != nil {
+		if IsUnauthorizedError(err) {
+			return fmt.Sprintf(
+				"During deletion of subnet %s, Terraform attempted to check for and clean up "+
+					"GuardDuty-managed resources that may have been causing a DependencyViolation, "+
+					"but lacked sufficient IAM permissions (ec2:DescribeVpcEndpoints) to do so. "+
+					"If GuardDuty is enabled in this VPC, these permissions may be required for automatic cleanup.",
+				subnetID,
+			), nil
+		}
+		return "", fmt.Errorf("describing GuardDuty VPC endpoints in VPC %s: %w", vpcID, err)
+	}
+
+	if len(endpoints) == 0 {
+		log.Printf("[DEBUG] No GuardDuty VPC endpoints found in VPC %s", vpcID)
+		return "", nil
+	}
+
+	log.Printf("[INFO] Found %d GuardDuty VPC endpoint(s) in VPC %s, checking subnet %s association", len(endpoints), vpcID, subnetID)
+
+	for _, endpoint := range endpoints {
+		endpointID := aws.ToString(endpoint.VpcEndpointId)
+
+		subnetAssociated := slices.Contains(endpoint.SubnetIds, subnetID)
+		if !subnetAssociated {
+			log.Printf("[DEBUG] Subnet %s is not associated with GuardDuty VPC endpoint %s, skipping", subnetID, endpointID)
+			continue
+		}
+
+		log.Printf("[DEBUG] Dissociating subnet %s from GuardDuty VPC endpoint %s", subnetID, endpointID)
+
+		modifyInput := ec2.ModifyVpcEndpointInput{
+			VpcEndpointId:   aws.String(endpointID),
+			RemoveSubnetIds: []string{subnetID},
+		}
+		_, err := conn.ModifyVpcEndpoint(ctx, &modifyInput)
+		if err != nil {
+			if IsUnauthorizedError(err) {
+				return fmt.Sprintf(
+					"During deletion of subnet %s, Terraform attempted to check for and clean up "+
+						"GuardDuty-managed resources that may have been causing a DependencyViolation, "+
+						"but lacked sufficient IAM permissions (ec2:ModifyVpcEndpoint) to do so. "+
+						"If GuardDuty is enabled in this VPC, these permissions may be required for automatic cleanup.",
+					subnetID,
+				), nil
+			}
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				log.Printf("[DEBUG] GuardDuty VPC endpoint %s not found during dissociation, continuing", endpointID)
+				continue
+			}
+			return "", fmt.Errorf("modifying GuardDuty VPC endpoint %s to remove subnet %s: %w", endpointID, subnetID, err)
+		}
+
+		if _, err := waitVPCEndpointAvailable(ctx, conn, endpointID, vpcEndpointDeletionTimeout); err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				log.Printf("[DEBUG] GuardDuty VPC endpoint %s not found while waiting for available state, continuing", endpointID)
+				continue
+			}
+			return "", fmt.Errorf("waiting for GuardDuty VPC endpoint %s to reach available state after dissociating subnet %s: %w", endpointID, subnetID, err)
+		}
+
+		log.Printf("[INFO] Successfully dissociated subnet %s from GuardDuty VPC endpoint %s", subnetID, endpointID)
+	}
+
+	return "", nil
 }
