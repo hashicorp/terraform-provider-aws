@@ -706,6 +706,7 @@ func flattenStackSetAutoDeploymentResponse(autoDeployment *awstypes.AutoDeployme
 
 	m := map[string]any{
 		names.AttrEnabled:                  aws.ToBool(autoDeployment.Enabled),
+		"depends_on_stack_sets":            autoDeployment.DependsOn,
 		"retain_stacks_on_account_removal": aws.ToBool(autoDeployment.RetainStacksOnAccountRemoval),
 	}
 
