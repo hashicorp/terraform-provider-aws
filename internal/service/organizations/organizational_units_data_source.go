@@ -46,10 +46,10 @@ func dataSourceOrganizationalUnits() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
