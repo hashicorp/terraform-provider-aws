@@ -39,7 +39,7 @@ func dataSourceOrganizationalUnit() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(ou.Id))
 	d.Set(names.AttrARN, ou.Arn)
-	d.Set("path", aws.ToString(ou.Path))
+	d.Set(names.AttrPath, aws.ToString(ou.Path))
 
 	return diags
 }
