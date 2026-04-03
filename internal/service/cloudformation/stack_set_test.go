@@ -654,6 +654,43 @@ func TestAccCloudFormationStackSet_AutoDeployment_administrationRoleARN(t *testi
 	})
 }
 
+func TestAccCloudFormationStackSet_AutoDeployment_dependsOnStackSets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet1 awstypes.StackSet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_autoDeploymentDependsOn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, t, resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.depends_on_stack_sets.#", "1"),
+				),
+			},
+			{
+				Config: testAccStackSetConfig_autoDeploymentDependsOn(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFormationStackSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackSet1, stackSet2 awstypes.StackSet
@@ -1458,6 +1495,39 @@ resource "aws_cloudformation_stack_set" "test" {
   auto_deployment {
     enabled                          = true
     retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName))
+}
+
+func testAccStackSetConfig_autoDeploymentDependsOn(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "dependency" {
+  name             = "%[1]s-dep"
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false
+    depends_on_stack_sets            = [aws_cloudformation_stack_set.dependency.arn]
   }
 
   template_body = <<TEMPLATE

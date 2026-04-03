@@ -94,6 +94,7 @@ This resource supports the following arguments:
 * `administration_role_arn` - (Optional) Amazon Resource Number (ARN) of the IAM Role in the administrator account. This must be defined when using the `SELF_MANAGED` permission model.
 * `auto_deployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `SERVICE_MANAGED` permission model.
     * `enabled` - (Optional) Whether or not auto-deployment is enabled.
+    * `depends_on_stack_sets` - (Optional) A list of StackSet ARNs that this StackSet depends on for auto-deployment operations. When auto-deployment is triggered, operations will be sequenced to ensure all dependencies complete successfully before this StackSet's operation begins.
     * `retain_stacks_on_account_removal` - (Optional) Whether or not to retain stacks when the account is removed.
 * `name` - (Required) Name of the StackSet. The name must be unique in the region where you create your StackSet. The name can contain only alphanumeric characters (case-sensitive) and hyphens. It must start with an alphabetic character and cannot be longer than 128 characters.
 * `capabilities` - (Optional) A list of capabilities. Valid values: `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_AUTO_EXPAND`.
