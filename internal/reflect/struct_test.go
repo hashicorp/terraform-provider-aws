@@ -294,3 +294,98 @@ func TestExportedStructFields(t *testing.T) {
 		})
 	}
 }
+
+func TestFieldByTag(t *testing.T) {
+	t.Parallel()
+
+	type sample struct {
+		ID    int    `json:"id"`
+		Name  string `json:"name,omitempty"`
+		Email string `json:"email" xml:"email_addr"`
+		Skip  string
+	}
+
+	tests := []struct {
+		name     string
+		v        any
+		tagKey   string
+		tagValue string
+		wantName string
+		wantOK   bool
+	}{
+		{
+			name:     "simple match",
+			v:        sample{},
+			tagKey:   "json",
+			tagValue: "id",
+			wantName: "ID",
+			wantOK:   true,
+		},
+		{
+			name:     "match with options stripped",
+			v:        sample{},
+			tagKey:   "json",
+			tagValue: "name",
+			wantName: "Name",
+			wantOK:   true,
+		},
+		{
+			name:     "different tag key",
+			v:        sample{},
+			tagKey:   "xml",
+			tagValue: "email_addr",
+			wantName: "Email",
+			wantOK:   true,
+		},
+		{
+			name:     "no match",
+			v:        sample{},
+			tagKey:   "json",
+			tagValue: "missing",
+			wantOK:   false,
+		},
+		{
+			name:     "field without tag",
+			v:        sample{},
+			tagKey:   "json",
+			tagValue: "Skip",
+			wantOK:   false,
+		},
+		{
+			name:     "pointer to struct",
+			v:        &sample{},
+			tagKey:   "json",
+			tagValue: "email",
+			wantName: "Email",
+			wantOK:   true,
+		},
+		{
+			name:     "non-struct value",
+			v:        42,
+			tagKey:   "json",
+			tagValue: "id",
+			wantOK:   false,
+		},
+		{
+			name:     "pointer to non-struct",
+			v:        new(int),
+			tagKey:   "json",
+			tagValue: "id",
+			wantOK:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			f, ok := FieldByTag(tt.v, tt.tagKey, tt.tagValue)
+			if ok != tt.wantOK {
+				t.Fatalf("got ok=%v, want %v", ok, tt.wantOK)
+			}
+			if ok && f.Name != tt.wantName {
+				t.Fatalf("got field %q, want %q", f.Name, tt.wantName)
+			}
+		})
+	}
+}
