@@ -1027,3 +1027,96 @@ resource "aws_kinesis_stream" "test" {
 }
 `, rName)
 }
+
+func TestNextShardStep(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		current int32
+		target  int32
+		want    int32
+	}{
+		{"double up", 2, 16, 4},
+		{"double up exact", 4, 8, 8},
+		{"clamp up", 3, 5, 5},
+		{"halve down", 16, 2, 8},
+		{"halve down exact", 8, 4, 4},
+		{"clamp down", 10, 6, 6},
+		{"single to many", 1, 8, 2},
+		{"many to single", 8, 1, 4},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := tfkinesis.NextShardStep(tt.current, tt.target)
+			if got != tt.want {
+				t.Errorf("NextShardStep(%d, %d) = %d, want %d", tt.current, tt.target, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAccKinesisStream_shardCountStepScaling(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	var updatedStream types.StreamDescriptionSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_stream.test"
+
+	testCheckStreamNotDestroyed := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if *stream.StreamCreationTimestamp != *updatedStream.StreamCreationTimestamp {
+				return fmt.Errorf("Creation timestamps dont match, stream was recreated")
+			}
+			return nil
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Start at 2 shards.
+				Config: testAccStreamConfig_shardCountStepScaling(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count_step_scaling", "true"),
+				),
+			},
+			{
+				// Scale up 2 -> 16 (requires stepping: 2->4->8->16).
+				Config: testAccStreamConfig_shardCountStepScaling(rName, 16),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &updatedStream),
+					testCheckStreamNotDestroyed(),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "16"),
+				),
+			},
+			{
+				// Scale down 16 -> 2 (requires stepping: 16->8->4->2).
+				Config: testAccStreamConfig_shardCountStepScaling(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &updatedStream),
+					testCheckStreamNotDestroyed(),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccStreamConfig_shardCountStepScaling(rName string, shardCount int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name                     = %[1]q
+  shard_count              = %[2]d
+  shard_count_step_scaling = true
+}
+`, rName, shardCount)
+}
