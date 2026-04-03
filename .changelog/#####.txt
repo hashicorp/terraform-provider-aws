@@ -21,3 +21,7 @@ resource/aws_config_configuration_recorder: Add Resource Identity support
 ```release-note:enhancement
 resource/aws_config_conformance_pack: Add Resource Identity support
 ```
+
+```release-note:enhancement
+resource/aws_config_delivery_channel: Add Resource Identity support
+```

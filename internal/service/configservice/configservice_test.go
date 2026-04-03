@@ -65,6 +65,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtBasic:      testAccDeliveryChannel_basic,
 			"allParams":          testAccDeliveryChannel_allParams,
 			acctest.CtDisappears: testAccDeliveryChannel_disappears,
+			"Identity":           testAccConfigServiceDeliveryChannel_identitySerial,
 		},
 		"OrganizationConformancePack": {
 			acctest.CtBasic:          testAccOrganizationConformancePack_basic,
