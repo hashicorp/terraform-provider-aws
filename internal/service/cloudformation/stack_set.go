@@ -78,6 +78,14 @@ func resourceStackSet() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"depends_on_stack_sets": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
 						"retain_stacks_on_account_removal": {
 							Type:     schema.TypeBool,
 							Optional: true,
