@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -398,6 +399,112 @@ func TestAccMemoryDBMultiRegionCluster_tags(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBMultiRegionCluster_3Regions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_1Regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.primary"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_2Regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.primary"),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.alternate"),
+				),
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_3Regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.primary"),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.alternate"),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.third"),
+				),
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_1Regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
+					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.primary"),
+				),
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_0Regions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckMultiRegionClusterRegionalClusterExists(ctx context.Context, t *testing.T, n string, m string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		parentName := rs.Primary.Attributes["multi_region_cluster_name"]
+		if parentName == "" {
+			return fmt.Errorf("No MemoryDB Multi Region Cluster Name is set")
+		}
+
+		rs2, ok := s.RootModule().Resources[m]
+		if !ok {
+			return fmt.Errorf("Not found: %s", m)
+		}
+
+		if rs2.Primary.ID == "" {
+			return fmt.Errorf("No MemoryDB Cluster ID is set")
+		}
+
+		childClusterName := rs2.Primary.Attributes[names.AttrName]
+		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
+
+		out, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, parentName)
+
+		if err != nil {
+			return fmt.Errorf("No multi-region cluster found: %w", err)
+		}
+
+		for _, c := range out.Clusters {
+			if aws.ToString(c.ClusterName) == childClusterName {
+				return nil
+			}
+		}
+
+		return fmt.Errorf(
+			"MemoryDB Cluster (%s) not found in multi-region cluster (%s)",
+			childClusterName,
+			parentName,
+		)
+	}
+}
+
 func testAccCheckMultiRegionClusterExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -462,6 +569,194 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   node_type                        = "db.r7g.xlarge"
 }
 `, rName)
+}
+
+func testAccAvailableAZsNoOptInConfigWithProvider(name, provider string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "%[1]s" {
+  provider = %[2]s
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, name, provider)
+}
+
+func testAccVPCBaseWithProvider(rName, name, provider string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		testAccAvailableAZsNoOptInConfigWithProvider(name, provider),
+		fmt.Sprintf(`
+resource "aws_vpc" "%[1]s" {
+  provider = %[2]s
+
+  cidr_block = "192.168.0.0/16"
+}
+
+resource "aws_subnet" "%[1]s" {
+  provider = %[2]s
+
+  count = %[4]d
+
+  vpc_id            = aws_vpc.%[1]s.id
+  cidr_block        = "192.168.${count.index}.0/24"
+  availability_zone = data.aws_availability_zones.%[1]s.names[count.index]
+}
+
+resource "aws_elasticache_subnet_group" "%[1]s" {
+  provider = %[2]s
+
+  name       = %[3]q
+  subnet_ids = aws_subnet.%[1]s[*].id
+}
+`, name, provider, rName, subnetCount),
+	)
+}
+
+func testAccMultiRegionClusterConfig_0Regions(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 3),
+		testAccVPCBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 3),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
+		fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  provider = aws
+
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  description                      = "%[1]s-mmr-description"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
+}
+`, rName))
+}
+
+func testAccMultiRegionClusterConfig_1Regions(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 3),
+		testAccVPCBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 3),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
+		fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  provider = aws
+
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  description                      = "%[1]s-mmr-description"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
+}
+
+resource "aws_memorydb_cluster" "primary" {
+  provider = aws
+
+  acl_name                  = "open-access"
+  name                      = "%[1]s-p"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+
+`, rName))
+}
+
+func testAccMultiRegionClusterConfig_2Regions(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 3),
+		testAccVPCBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 3),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
+		fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  provider = aws
+
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  description                      = "%[1]s-mmr-description"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
+}
+
+resource "aws_memorydb_cluster" "primary" {
+  provider = aws
+
+  acl_name                  = "open-access"
+  name                      = "%[1]s-p"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+
+resource "aws_memorydb_cluster" "alternate" {
+  provider = awsalternate
+
+  acl_name                  = "open-access"
+  name                      = "%[1]s-a"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+`, rName))
+}
+
+func testAccMultiRegionClusterConfig_3Regions(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 3),
+		testAccVPCBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 3),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 3),
+		fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  provider = aws
+
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  description                      = "%[1]s-mmr-description"
+  engine                           = "valkey"
+  engine_version                   = "7.3"
+}
+
+resource "aws_memorydb_cluster" "primary" {
+  provider = aws
+
+  acl_name                  = "open-access"
+  name                      = "%[1]s-p"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+
+resource "aws_memorydb_cluster" "alternate" {
+  provider = awsalternate
+
+  acl_name                  = "open-access"
+  name                      = "%[1]s-a"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+
+resource "aws_memorydb_cluster" "third" {
+  provider = awsthird
+
+  acl_name                  = "open-access"
+  name                      = "%[1]s-t"
+  node_type                 = "db.r7g.xlarge"
+  engine                    = "valkey"
+  engine_version            = "7.3"
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
+}
+`, rName))
 }
 
 // Sets `num_shards` to also test an update of the resource
