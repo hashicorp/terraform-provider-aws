@@ -28,6 +28,13 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 			acctest.CtBasic: testAccTemplatesDataSource_basic,
 			"region":        testAccTemplatesDataSource_region,
 		},
+		"AutoManagement": {
+			acctest.CtBasic:         testAccAutoManagement_basic,
+			acctest.CtDisappears:    testAccAutoManagement_disappears,
+			"updateExclusionList":   testAccAutoManagement_updateExclusionList,
+			"updateNotificationARN": testAccAutoManagement_updateNotificationARN,
+			"Identity":              testAccServiceQuotasAutoManagement_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
