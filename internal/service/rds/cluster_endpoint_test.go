@@ -114,6 +114,41 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterEndpoint_writerType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var customWriterEndpoint types.DBClusterEndpoint
+	resourceName := "aws_rds_cluster_endpoint.writer"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterEndpointConfig_writerType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterEndpointExists(ctx, t, resourceName, &customWriterEndpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "custom_endpoint_type", "WRITER"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
@@ -253,4 +288,16 @@ resource "aws_rds_cluster_endpoint" "reader" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccClusterEndpointConfig_writerType(rName string) string {
+	return acctest.ConfigCompose(testAccClusterEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_endpoint" "writer" {
+  cluster_identifier          = aws_rds_cluster.default.id
+  cluster_endpoint_identifier = "%[1]s-writer"
+  custom_endpoint_type        = "WRITER"
+
+  static_members = [aws_rds_cluster_instance.test1.id]
+}
+`, rName))
 }
