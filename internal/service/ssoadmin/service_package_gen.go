@@ -95,6 +95,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newApplicationGrantResource,
+			TypeName: "aws_ssoadmin_application_grant",
+			Name:     "Application Grant",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("application_arn", true),
+				inttypes.StringIdentityAttribute("grant_type", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      applicationGrantImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
 			Factory:  newCustomerManagedPolicyAttachmentsExclusiveResource,
 			TypeName: "aws_ssoadmin_customer_managed_policy_attachments_exclusive",
 			Name:     "Customer Managed Policy Attachments Exclusive",
@@ -134,6 +149,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newApplicationGrantResourceAsListResource,
+			TypeName: "aws_ssoadmin_application_grant",
+			Name:     "Application Grant",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("application_arn", true),
+				inttypes.StringIdentityAttribute("grant_type", true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

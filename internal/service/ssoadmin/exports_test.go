@@ -10,6 +10,7 @@ var (
 	ResourceApplicationAccessScope                    = newApplicationAccessScopeResource
 	ResourceApplicationAssignment                     = newApplicationAssignmentResource
 	ResourceApplicationAssignmentConfiguration        = newApplicationAssignmentConfigurationResource
+	ResourceApplicationGrant                          = newApplicationGrantResource
 	ResourceCustomerManagedPolicyAttachment           = resourceCustomerManagedPolicyAttachment
 	ResourceCustomerManagedPolicyAttachmentsExclusive = newCustomerManagedPolicyAttachmentsExclusiveResource
 	ResourceInstanceAccessControlAttributes           = resourceInstanceAccessControlAttributes
@@ -24,6 +25,7 @@ var (
 	FindApplicationAccessScopeByID                   = findApplicationAccessScopeByID
 	FindApplicationAssignmentByID                    = findApplicationAssignmentByID
 	FindApplicationAssignmentConfigurationByID       = findApplicationAssignmentConfigurationByID
+	FindApplicationGrantByID                         = findApplicationGrantByID
 	FindApplicationByID                              = findApplicationByID
 	FindCustomerManagedPolicyAttachmentsByTwoPartKey = findCustomerManagedPolicyAttachmentsByTwoPartKey
 	FindCustomerManagedPolicyByFourPartKey           = findCustomerManagedPolicyByFourPartKey
