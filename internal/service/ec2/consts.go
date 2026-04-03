@@ -70,6 +70,13 @@ const (
 	vpnStateModifying = "modifying"
 )
 
+const (
+	guardDutyServiceNamePattern  = "*guardduty-data*"
+	GuardDutySecurityGroupPrefix = "GuardDutyManagedSecurityGroup-"
+	guardDutyManagedTagKey       = "GuardDutyManaged"
+	guardDutyManagedTagValue     = "true"
+)
+
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
 const (
 	ebsSnapshotImportStateActive     = "active"
