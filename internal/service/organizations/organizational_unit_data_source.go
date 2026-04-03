@@ -67,7 +67,7 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(ou.Id))
 	d.Set(names.AttrARN, ou.Arn)
-	d.Set(names.AttrPath, aws.ToString(ou.Path))
+	d.Set(names.AttrPath, ou.Path)
 
 	return diags
 }
