@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_mq_configuration: Implement resource deletion. This functionality requires the `mq:DeleteConfiguration` IAM permission.
+```
