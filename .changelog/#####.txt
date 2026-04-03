@@ -13,3 +13,7 @@ resource/aws_config_configuration_recorder_status: Add Resource Identity support
 ```release-note:bug
 resource/aws_config_configuration_recorder_status: Mark `name` as as `ForceNew`
 ```
+
+```release-note:enhancement
+resource/aws_config_configuration_recorder: Add Resource Identity support
+```

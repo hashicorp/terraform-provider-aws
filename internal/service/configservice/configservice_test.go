@@ -45,6 +45,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"exclusionsToAllSupported": testAccConfigurationRecorder_exclusionsToAllSupported,
 			"recordStrategy":           testAccConfigurationRecorder_recordStrategy,
 			acctest.CtDisappears:       testAccConfigurationRecorder_disappears,
+			"Import":                   testAccConfigServiceConfigurationRecorder_identitySerial,
 		},
 		"ConformancePack": {
 			acctest.CtBasic:             testAccConformancePack_basic,
