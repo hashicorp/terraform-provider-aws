@@ -104,7 +104,7 @@ func resourcePool() *schema.Resource {
 			},
 
 			"saml_provider_arns": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -151,7 +151,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {
-		input.SamlProviderARNs = aws.ToStringSlice(flex.ExpandStringList(v.([]any)))
+		input.SamlProviderARNs = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
@@ -234,7 +234,7 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 			CognitoIdentityProviders:       expandIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set)),
 			SupportedLoginProviders:        expandSupportedLoginProviders(d.Get("supported_login_providers").(map[string]any)),
 			OpenIdConnectProviderARNs:      flex.ExpandStringValueSet(d.Get("openid_connect_provider_arns").(*schema.Set)),
-			SamlProviderARNs:               flex.ExpandStringValueList(d.Get("saml_provider_arns").([]any)),
+			SamlProviderARNs:               flex.ExpandStringValueSet(d.Get("saml_provider_arns").(*schema.Set)),
 		}
 
 		_, err := conn.UpdateIdentityPool(ctx, params)
