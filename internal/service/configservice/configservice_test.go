@@ -59,6 +59,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Delivery":          testAccConformancePack_updateS3Delivery,
 			"updateS3Template":          testAccConformancePack_updateS3Template,
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
+			"Identity":                  testAccConfigServiceConformancePack_identitySerial,
 		},
 		"DeliveryChannel": {
 			acctest.CtBasic:      testAccDeliveryChannel_basic,
