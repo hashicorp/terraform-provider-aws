@@ -136,7 +136,7 @@ func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []any 
 			names.AttrARN:  aws.ToString(ou.Arn),
 			names.AttrID:   aws.ToString(ou.Id),
 			names.AttrName: aws.ToString(ou.Name),
-			names.AttrPath:         aws.ToString(ou.Path),
+			names.AttrPath: aws.ToString(ou.Path),
 		})
 	}
 
