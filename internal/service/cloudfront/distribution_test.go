@@ -361,6 +361,42 @@ func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_DefaultCacheBehavior_cachePolicyAndOriginRequestPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.main"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_defaultCacheBehaviorCachePolicyAndOriginRequestPolicy(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestMatchResourceAttr(resourceName, "default_cache_behavior.0.cache_policy_id", regexache.MustCompile(`^[0-9a-z-]+`)),
+					resource.TestMatchResourceAttr(resourceName, "default_cache_behavior.0.origin_request_policy_id", regexache.MustCompile(`^[0-9a-z-]+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 // TestAccCloudFrontDistribution_multiOrigin runs an
 // aws_cloudfront_distribution acceptance test with multiple origins.
 //
@@ -3332,6 +3368,60 @@ resource "aws_cloudfront_distribution" "main" {
     max_ttl                = 51
     viewer_protocol_policy = "allow-all"
     path_pattern           = "images2/*.jpg"
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[1]s
+}
+`, testAccDistributionRetainConfig())
+}
+
+func testAccDistributionConfig_defaultCacheBehaviorCachePolicyAndOriginRequestPolicy() string {
+	return fmt.Sprintf(`
+data "aws_cloudfront_cache_policy" "test" {
+  name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_origin_request_policy" "test" {
+  name = "Managed-CORS-S3Origin"
+}
+
+resource "aws_cloudfront_distribution" "main" {
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+
+    cache_policy_id          = data.aws_cloudfront_cache_policy.test.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.test.id
+
+    viewer_protocol_policy = "allow-all"
   }
 
   price_class = "PriceClass_All"
