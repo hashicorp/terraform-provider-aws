@@ -85,7 +85,7 @@ func resourceKeyPair() *schema.Resource {
 				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
-						return strings.TrimSpace(v)
+						return normalizeOpenSSHPublicKey(v)
 					default:
 						return ""
 					}
@@ -142,6 +142,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
+	d.Set(names.AttrPublicKey, normalizeOpenSSHPublicKey(aws.ToString(keyPair.PublicKey)))
 
 	setTagsOut(ctx, keyPair.Tags)
 
@@ -190,6 +191,23 @@ func openSSHPublicKeysEqual(v1, v2 string) bool {
 
 	return key1.Type() == key2.Type() && bytes.Equal(key1.Marshal(), key2.Marshal())
 }
+
+// normalizeOpenSSHPublicKey canonicalizes an OpenSSH public key so provider state
+// does not drift when AWS rewrites the trailing comment or formatting.
+// For example, AWS may return:
+// "ssh-rsa AAAA... tf-acc-test-123\n"
+// for config that was originally:
+// "ssh-rsa AAAA... no-reply@hashicorp.com".
+func normalizeOpenSSHPublicKey(v string) string {
+	key, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v))
+
+	if err != nil {
+		return strings.TrimSpace(v)
+	}
+
+	return strings.TrimSpace(string(ssh.MarshalAuthorizedKey(key)))
+}
+
 func keyPairARN(ctx context.Context, c *conns.AWSClient, keyName string) string {
 	return c.RegionalARN(ctx, names.EC2, "key-pair/"+keyName)
 }
