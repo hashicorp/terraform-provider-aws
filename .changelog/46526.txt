@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix modification. Previously, when upgrading from redis 5.0.6 to either redis 6.x or valkey 7.x and addition of `log_delivery_configuration` with `log_type = "slow-log"` was causing an error.
+```
