@@ -349,13 +349,28 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	// Check if ipv6_cidr_block needs to be modified. When Optional+Computed, removal from config doesn't trigger HasChange()
 	rawConfig := d.GetRawConfig()
 	if currentIPv6, ipv6InConfig := d.Get("ipv6_cidr_block").(string), !rawConfig.GetAttr("ipv6_cidr_block").IsNull(); d.HasChange("ipv6_cidr_block") || (currentIPv6 != "" && !ipv6InConfig) {
-		targetValue := ""
-		if ipv6InConfig {
-			targetValue = d.Get("ipv6_cidr_block").(string)
+		// When ipv6_cidr_block is absent from config but was computed via IPAM
+		// or ipv6_native, skip modification to avoid disassociating the
+		// provider-managed CIDR. This mirrors the guard in resourceSubnetCreate.
+		computedIPv6CidrBlock := false
+		if !ipv6InConfig {
+			if _, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+				computedIPv6CidrBlock = true
+			}
+			if _, ok := d.GetOk("ipv6_native"); ok {
+				computedIPv6CidrBlock = true
+			}
 		}
 
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), targetValue); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		if !computedIPv6CidrBlock {
+			targetValue := ""
+			if ipv6InConfig {
+				targetValue = d.Get("ipv6_cidr_block").(string)
+			}
+
+			if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), targetValue); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
 		}
 	}
 
