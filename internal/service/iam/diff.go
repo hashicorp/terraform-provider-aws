@@ -10,17 +10,15 @@ import (
 )
 
 func suppressOpenIDURL(k, old, new string, d *schema.ResourceData) bool {
-	oldUrl, err := url.Parse(old)
+	oldURL, err := url.Parse(normalizeOpenIDURL(old))
 	if err != nil {
 		return false
 	}
 
-	newUrl, err := url.Parse(new)
+	newURL, err := url.Parse(normalizeOpenIDURL(new))
 	if err != nil {
 		return false
 	}
 
-	oldUrl.Scheme = "https"
-
-	return oldUrl.String() == newUrl.String()
+	return oldURL.String() == newURL.String()
 }
