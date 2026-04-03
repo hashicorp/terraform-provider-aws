@@ -37,6 +37,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtBasic:      testAccConfigurationRecorderStatus_basic,
 			"startEnabled":       testAccConfigurationRecorderStatus_startEnabled,
 			acctest.CtDisappears: testAccConfigurationRecorderStatus_disappears,
+			"Identity":           testAccConfigServiceConfigurationRecorderStatus_identitySerial,
 		},
 		"ConfigurationRecorder": {
 			acctest.CtBasic:            testAccConfigurationRecorder_basic,
