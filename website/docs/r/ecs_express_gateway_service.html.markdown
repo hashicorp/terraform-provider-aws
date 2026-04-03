@@ -46,7 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
+* `cluster` - (Optional, Forces new resource) Name or ARN of the ECS cluster. Defaults to `default`. Changing this value will recreate the resource.
 * `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096.
 * `health_check_path` - (Optional) Path for health check requests. Defaults to `/ping`.
 * `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192.

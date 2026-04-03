@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_express_gateway_service: Changing `cluster` now correctly triggers resource replacement instead of an in-place update that fails with "Provider produced inconsistent result after apply"
+```
