@@ -61,6 +61,7 @@ func newResourceCloudVmCluster(_ context.Context) (resource.ResourceWithConfigur
 const (
 	ResNameCloudVmCluster = "Cloud Vm Cluster"
 	MajorGiVersionPattern = `^\d+\.0\.0\.0$`
+	GiVersionSystemTag    = "odb:input_gi_version"
 )
 
 var ResourceCloudVmCluster = newResourceCloudVmCluster
@@ -510,6 +511,18 @@ func (r *resourceCloudVmCluster) ValidateConfig(ctx context.Context, req resourc
 		)
 		return
 	}
+	vmcTagAsMap := data.Tags.Elements()
+	v, ok := vmcTagAsMap[GiVersionSystemTag]
+	if ok {
+		if v.String() != data.GiVersion.String() {
+			err := errors.New(GiVersionSystemTag + " tag value must be equals to GiVersion value")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
 }
 
 func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -569,7 +582,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = flex.Int32ToFramework(ctx, createdVmCluster.ListenerPort)
 	plan.GiVersionComputed = flex.StringToFramework(ctx, createdVmCluster.GiVersion)
-	giVersionMajor, err := getMajorGiVersion(createdVmCluster.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(ctx, conn, createdVmCluster.CloudVmClusterArn, createdVmCluster.GiVersion)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
@@ -615,7 +628,7 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	//scan listener port not returned by API directly
 	state.ScanListenerPortTcp = flex.Int32ToFramework(ctx, out.ListenerPort)
 	state.GiVersionComputed = flex.StringToFramework(ctx, out.GiVersion)
-	giVersionMajor, err := getMajorGiVersion(out.GiVersion)
+	giVersionMajor, err := getMajorGiVersion(ctx, conn, out.CloudVmClusterArn, out.GiVersion)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameCloudVmCluster, state.CloudVmClusterId.ValueString(), err),
@@ -748,15 +761,29 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	}
 	return out.CloudVmCluster, nil
 }
-func getMajorGiVersion(giVersionComputed *string) (*string, error) {
-	giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
-	giVersionMajor = giVersionMajor + ".0.0.0"
-	regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
-	if !regxGiVersionMajor.MatchString(giVersionMajor) {
-		err := errors.New("gi_version major retrieved from gi_version_computed does not match the pattern 19.0.0.0")
+
+// Here we will go through tag to find out whether we can find the input gi_version or not. If not found we will get the version from
+// computed gi version to ensure backward compatibility.
+func getMajorGiVersion(ctx context.Context, conn *odb.Client, arn *string, giVersionComputed *string) (*string, error) {
+	tagsRead, err := listTags(ctx, conn, *arn)
+	if err != nil {
 		return nil, err
 	}
-	return &giVersionMajor, nil
+	var inputGiVersion *string
+	if tagsRead.KeyExists(GiVersionSystemTag) {
+		inputGiVersion = tagsRead.KeyValue(GiVersionSystemTag)
+		return inputGiVersion, nil
+	} else {
+		//This regx based approach is for backward compatibility
+		giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
+		giVersionMajor = giVersionMajor + ".0.0.0"
+		regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
+		if !regxGiVersionMajor.MatchString(giVersionMajor) {
+			err := errors.New("gi_version major retrieved from gi_version_computed does not match the pattern 19.0.0.0")
+			return nil, err
+		}
+		return &giVersionMajor, nil
+	}
 }
 
 type cloudVmClusterResourceModel struct {
