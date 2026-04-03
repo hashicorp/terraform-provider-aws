@@ -1370,7 +1370,7 @@ func statusClusterOperation(conn *kafka.Client, arn string) retry.StateRefreshFu
 	}
 }
 
-func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
+func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateCreating),
 		Target:  enum.Slice(types.ClusterStateActive),
