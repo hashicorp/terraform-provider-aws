@@ -268,6 +268,45 @@ func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 	})
 }
 
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46045
+func TestAccCloudFrontMultiTenantDistribution_originSwapOrder(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_originOrder(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_originOrder(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_originOrder(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontMultiTenantDistribution_update(t *testing.T) {
 	t.Parallel()
 
@@ -745,4 +784,90 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `, rName)
+}
+
+func testAccMultiTenantDistributionConfig_originOrder(swapped bool) string {
+	origin1 := `
+  origin {
+    domain_name = "origin-a.example.com"
+    id          = "origin-a"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }`
+
+	origin2 := `
+  origin {
+    domain_name = "origin-b.example.com"
+    id          = "origin-b"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }`
+
+	origins := origin1 + origin2
+	if swapped {
+		origins = origin2 + origin1
+	}
+
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution origin ordering"
+%s
+
+  default_cache_behavior {
+    target_origin_id       = "origin-a"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  cache_behavior {
+    path_pattern           = "/api/*"
+    target_origin_id       = "origin-b"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`, origins)
 }

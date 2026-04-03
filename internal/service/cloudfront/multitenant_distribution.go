@@ -402,8 +402,8 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
-			"origin": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[originModel](ctx),
+			"origin": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[originModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_attempts": schema.Int32Attribute{
@@ -1043,7 +1043,7 @@ type multiTenantDistributionResourceModel struct {
 	ID                            types.String                                                 `tfsdk:"id"`
 	InProgressInvalidationBatches types.Int32                                                  `tfsdk:"in_progress_invalidation_batches"`
 	LastModifiedTime              timetypes.RFC3339                                            `tfsdk:"last_modified_time"`
-	Origin                        fwtypes.ListNestedObjectValueOf[originModel]                 `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
+	Origin                        fwtypes.SetNestedObjectValueOf[originModel]                  `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
 	OriginGroup                   fwtypes.ListNestedObjectValueOf[originGroupModel]            `tfsdk:"origin_group" autoflex:",xmlwrapper=Items,omitempty"`
 	Restrictions                  fwtypes.ListNestedObjectValueOf[restrictionsModel]           `tfsdk:"restrictions"`
 	Status                        types.String                                                 `tfsdk:"status"`
