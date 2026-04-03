@@ -1,5 +1,9 @@
 ## 6.40.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_servicequotas_auto_management` ([#45968](https://github.com/hashicorp/terraform-provider-aws/issues/45968))
+
 ENHANCEMENTS:
 
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-2_2` as a valid value for `runtime_environment` ([#47207](https://github.com/hashicorp/terraform-provider-aws/issues/47207))
