@@ -158,6 +158,37 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 	})
 }
 
+func TestAccEMRContainersJobTemplate_parameterConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.JobTemplate
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_emrcontainers_job_template.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobTemplateConfig_parameterConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobTemplateExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.parameter_configuration.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckJobTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.JobTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -282,6 +313,38 @@ resource "aws_emrcontainers_job_template" "test" {
           log_stream_name_prefix = "spark-job-logs"
         }
       }
+    }
+  }
+
+  name = %[1]q
+}
+`, rName))
+}
+
+func testAccJobTemplateConfig_parameterConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobTemplateConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_emrcontainers_job_template" "test" {
+  job_template_data {
+    execution_role_arn = aws_iam_role.test.arn
+    release_label      = "emr-6.10.0-latest"
+
+    job_driver {
+      spark_sql_job_driver {
+        entry_point = "${EntryPointUri}"
+      }
+    }
+
+    parameter_configuration {
+      name          = "EntryPointUri"
+      type          = "STRING"
+      default_value = "s3://my-bucket/my-script.sql"
+    }
+
+    parameter_configuration {
+      name = "SparkCores"
+      type = "NUMBER"
     }
   }
 

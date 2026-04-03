@@ -61,6 +61,7 @@ This resource supports the following arguments:
 * `executionRoleArn` - (Required) The execution role ARN of the job run.
 * `jobDriver` - (Required) Specify the driver that the job runs on. Exactly one of the two available job drivers is required, either sparkSqlJobDriver or sparkSubmitJobDriver.
 * `jobTags` - (Optional) The tags assigned to jobs started using the job template.
+* `parameterConfiguration` - (Optional) The configuration of parameters existing in the job template. See [`parameterConfiguration`](#parameter_configuration-arguments) below.
 * `releaseLabel` - (Required) The release version of Amazon EMR.
 
 #### configuration_overrides Arguments
@@ -104,6 +105,12 @@ This resource supports the following arguments:
 * `entryPoint` - (Required) The entry point of job application.
 * `entryPointArguments` - (Optional) The arguments for job application.
 * `sparkSubmitParameters` - (Optional) The Spark submit parameters that are used for job runs.
+
+#### parameter_configuration Arguments
+
+* `name` - (Required) The name of the parameter. Referenced as `${ParameterName}` in job template fields.
+* `type` - (Required) The type of the parameter. Valid values: `STRING`, `NUMBER`.
+* `defaultValue` - (Optional) The default value for the parameter.
 
 ## Attribute Reference
 
