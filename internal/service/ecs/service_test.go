@@ -1126,6 +1126,39 @@ func TestAccECSService_BlueGreenDeployment_outOfBandRemoval(t *testing.T) {
 	})
 }
 
+func TestAccECSService_BlueGreenDeployment_removeLifecycleHook(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_switchToRolling(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "ROLLING"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_switchToRollingWithoutLifecycleHook(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "ROLLING"),
+					resource.TestCheckNoResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#"),
+					testAccCheckServiceNoLifecycleHooks(&service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
 	acctest.Skip(t, "SIGINT handling can't reliably be tested in CI")
 
@@ -3321,6 +3354,16 @@ func testAccCheckServiceExists(ctx context.Context, t *testing.T, name string, s
 	}
 }
 
+func testAccCheckServiceNoLifecycleHooks(service *awstypes.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if service.DeploymentConfiguration != nil && len(service.DeploymentConfiguration.LifecycleHooks) > 0 {
+			return fmt.Errorf("expected ECS service %s to have no lifecycle hooks, found %d", aws.ToString(service.ServiceName), len(service.DeploymentConfiguration.LifecycleHooks))
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckServiceDisableServiceConnect(ctx context.Context, t *testing.T, service *awstypes.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -4367,6 +4410,65 @@ resource "aws_ecs_service" "test" {
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["PRE_SCALE_UP"]
     }
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    service {
+      client_alias {
+        dns_name = "test-service.local"
+        port     = 8080
+
+        test_traffic_rules {
+          header {
+            name = "x-test-header"
+            value {
+              exact = "test-value"
+            }
+          }
+        }
+      }
+      discovery_name = "test-service"
+      port_name      = "http"
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.alternate.arn
+    container_name   = "test"
+    container_port   = 80
+  }
+
+  wait_for_steady_state = true
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName))
+}
+
+func testAccServiceConfig_blueGreenDeployment_switchToRollingWithoutLifecycleHook(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy = "ROLLING"
   }
 
   service_connect_configuration {
