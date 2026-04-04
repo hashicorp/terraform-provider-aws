@@ -313,6 +313,18 @@ func resourceCertificateAuthority() *schema.Resource {
 											return true
 										},
 									},
+									"crl_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.CrlType](),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
+									},
 								},
 							},
 						},
@@ -734,6 +746,9 @@ func expandCrlConfiguration(l []any) *types.CrlConfiguration {
 		if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
 			config.S3ObjectAcl = types.S3ObjectAcl(v.(string))
 		}
+		if v, ok := m["crl_type"]; ok && v.(string) != "" {
+			config.CrlType = types.CrlType(v.(string))
+		}
 	}
 
 	return config
@@ -822,6 +837,7 @@ func flattenCrlConfiguration(config *types.CrlConfiguration) []any {
 		"expiration_in_days":   int(aws.ToInt32(config.ExpirationInDays)),
 		names.AttrS3BucketName: aws.ToString(config.S3BucketName),
 		"s3_object_acl":        string(config.S3ObjectAcl),
+		"crl_type":             string(config.CrlType),
 	}
 
 	return []any{m}
