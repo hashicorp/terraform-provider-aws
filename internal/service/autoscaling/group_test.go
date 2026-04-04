@@ -4144,6 +4144,268 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
+// Regression tests for https://github.com/hashicorp/terraform-provider-aws/issues/47088
+// desired_capacity_type causes perpetual drift on non-attribute-based ASGs because
+// the AWS API accepts the value but does not return it for specific instance_type ASGs.
+
+func TestAccAutoScalingGroup_desiredCapacityTypeUnits_nonAttributeBased_noDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Apply with desired_capacity_type = "units" on a specific instance_type ASG.
+				// The API will accept the value but return nil — this must not cause drift.
+				Config: testAccGroupConfig_desiredCapacityTypeNonAttributeBased(rName, "units"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity_type", "units"),
+				),
+			},
+			{
+				// Second plan immediately after apply must be empty (no drift).
+				Config:             testAccGroupConfig_desiredCapacityTypeNonAttributeBased(rName, "units"),
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				// On import the API returns nil for this field on non-attribute-based ASGs,
+				// so desired_capacity_type will not be present in imported state.
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"desired_capacity_type",
+					names.AttrForceDelete,
+					"ignore_failed_scaling_activities",
+					"initial_lifecycle_hook",
+					"load_balancers",
+					"tag",
+					names.AttrTags,
+					"target_group_arns",
+					"traffic_source",
+					"wait_for_capacity_timeout",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_desiredCapacityType_nonAttributeBased_removeField(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_desiredCapacityTypeNonAttributeBased(rName, "units"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity_type", "units"),
+				),
+			},
+			{
+				// Remove the field from config. Because the API returns nil for non-attribute-based
+				// ASGs, the nil guard preserves the prior state value ("units") rather than clearing
+				// it. This is a known limitation: Optional+Computed+nil-guard means the field cannot
+				// be unset once written on a non-attribute-based ASG. The plan must still be clean.
+				Config: testAccGroupConfig_desiredCapacityTypeNonAttributeBasedOmitted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity_type", "units"),
+				),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func testAccGroupConfig_desiredCapacityTypeBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+}
+`, rName))
+}
+
+func testAccGroupConfig_desiredCapacityTypeNonAttributeBased(rName, desiredCapacityType string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_desiredCapacityTypeBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  desired_capacity      = 1
+  desired_capacity_type = %[2]q
+  max_size              = 2
+  min_size              = 1
+  name                  = %[1]q
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+}
+`, rName, desiredCapacityType))
+}
+
+func testAccGroupConfig_desiredCapacityTypeNonAttributeBasedOmitted(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_desiredCapacityTypeBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 1
+  max_size           = 2
+  min_size           = 1
+  name               = %[1]q
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+}
+`, rName))
+}
+
+func testAccGroupConfig_desiredCapacityTypeAttributeBased(rName, desiredCapacityType string, desired, minSize, maxSize, memoryMiB, vcpuCount int) string {
+	return acctest.ConfigCompose(testAccGroupConfig_desiredCapacityTypeBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  desired_capacity      = %[2]d
+  desired_capacity_type = %[3]q
+  max_size              = %[4]d
+  min_size              = %[5]d
+  name                  = %[1]q
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.test.id
+      }
+
+      override {
+        instance_requirements {
+          memory_mib {
+            min = %[6]d
+          }
+
+          vcpu_count {
+            min = %[7]d
+          }
+        }
+      }
+    }
+
+    instances_distribution {
+      on_demand_percentage_above_base_capacity = 50
+      spot_allocation_strategy                 = "capacity-optimized"
+    }
+  }
+}
+`, rName, desired, desiredCapacityType, maxSize, minSize, memoryMiB, vcpuCount))
+}
+
+// Attribute-based ASG — API actually returns the value, so state should reflect it and plan must stay clean.
+
+func TestAccAutoScalingGroup_desiredCapacityTypeUnits_attributeBased_noDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_desiredCapacityTypeAttributeBased(rName, "units", 1, 1, 1, 500, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity_type", "units"),
+				),
+			},
+			{
+				Config:             testAccGroupConfig_desiredCapacityTypeAttributeBased(rName, "units", 1, 1, 1, 500, 1),
+				ExpectNonEmptyPlan: false,
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_desiredCapacityTypeVCPU_attributeBased_noDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_desiredCapacityTypeAttributeBased(rName, "vcpu", 4, 4, 8, 1000, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity_type", "vcpu"),
+				),
+			},
+			{
+				Config:             testAccGroupConfig_desiredCapacityTypeAttributeBased(rName, "vcpu", 4, 4, 8, 1000, 2),
+				ExpectNonEmptyPlan: false,
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
+// Field omitted from the start — API returns nil, field is absent from state and plan must stay clean.
+
+func TestAccAutoScalingGroup_desiredCapacityType_omitted_noDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_desiredCapacityTypeNonAttributeBasedOmitted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckNoResourceAttr(resourceName, "desired_capacity_type"),
+				),
+			},
+			{
+				Config:             testAccGroupConfig_desiredCapacityTypeNonAttributeBasedOmitted(rName),
+				ExpectNonEmptyPlan: false,
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_capacityReservationSpecificationBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.AutoScalingGroup
