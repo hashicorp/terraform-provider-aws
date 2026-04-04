@@ -265,6 +265,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  resourceProxyPolicyAttachment,
+			TypeName: "aws_db_proxy_policy_attachment",
+			Name:     "DB Proxy Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  resourceProxySecret,
+			TypeName: "aws_db_proxy_secret",
+			Name:     "DB Proxy Secret",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceProxyTarget,
 			TypeName: "aws_db_proxy_target",
 			Name:     "DB Proxy Target",

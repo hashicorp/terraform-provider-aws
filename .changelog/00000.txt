@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_db_proxy_secret
+```
+
+```release-note:new-resource
+aws_db_proxy_policy_attachment
+```
