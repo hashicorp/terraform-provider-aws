@@ -121,6 +121,11 @@ func DataSourceParametersSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: validation.NoZeroValues,
 							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 					ExactlyOneOf: exactlyOneOf,
@@ -684,6 +689,10 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 				ps.Value.WorkGroup = aws.String(v)
 			}
 
+			if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+				ps.Value.RoleArn = aws.String(v)
+			}
+
 			apiObject = ps
 		}
 	}
@@ -1035,7 +1044,8 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 	case *awstypes.DataSourceParametersMemberAthenaParameters:
 		tfMap["athena"] = []any{
 			map[string]any{
-				"work_group": aws.ToString(v.Value.WorkGroup),
+				"work_group":      aws.ToString(v.Value.WorkGroup),
+				names.AttrRoleARN: aws.ToString(v.Value.RoleArn),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberAuroraParameters:
