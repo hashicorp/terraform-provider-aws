@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -184,6 +185,44 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 	})
 }
 
+func TestAccLogsMetricFilter_longPatternInUTF8(t *testing.T) {
+	ctx := acctest.Context(t)
+	var mf types.MetricFilter
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	// 1027 characters in UTF-8, which exceeds 1024-character limit
+	pattern1 := "[(msg = \"*ERROR*\") && (msg != \"*テスト除外パターン０１*\") && (msg != \"*テスト除外パターン０２*\") && (msg != \"*テスト除外パターン０３*\") && (msg != \"*テスト除外パターン０４*\") && (msg != \"*テスト除外パターン０５*\") && (msg != \"*テスト除外パターン０６*\") && (msg != \"*テスト除外パターン０７*\") && (msg != \"*テスト除外パターン０８*\") && (msg != \"*テスト除外パターン０９*\") && (msg != \"*テスト除外パターン１０*\") && (msg != \"*テスト除外パターン１１*\") && (msg != \"*テスト除外パターン１２*\") && (msg != \"*テスト除外パターン１３*\") && (msg != \"*テスト除外パターン１４*\") && (msg != \"*テスト除外パターン１５*\") && (msg != \"*テスト除外パターン１６*\") && (msg != \"*テスト除外パターン１７*\") && (msg != \"*テスト除外パターン１８*\") && (msg != \"*テスト除外パターン１９*\") && (msg != \"*テスト除外パターン２０*\") && (msg != \"*テスト除外パターン２１*\") && (msg != \"*テスト除外パターン２２*\") && (msg != \"*テスト除外パターン２３*\") && (msg != \"*テスト除外パターン２４*\") && (msg != \"*テスト除外パターン２５*\") && (msg != \"*テスト除外パターン２６*\") && (msg != \"*テスト除外パターン２７*\") && (msg != \"*テスト除外パターン２８*\") && (msg != \"*テスト除外パターン２９*\") && (msg != \"*テスト除外パターン３０*\") && (msg != \"*テスト除外パターン３１*\") && (msg != \"*テスト除外パターン３２*\") && (msg != \"*テスト除外パターン３３*\") && (msg != \"*テスト除外パターン３４*\") && (msg != \"*テスト除外パターン３５*\") && (msg != \"*テスト除外パターン３６*\")]"
+	// 806 characters in UTF-8, but exceeds 1024 in bytes
+	pattern2 := "[(msg = \"*ERROR*\") && (msg != \"*テスト除外パターン０１*\") && (msg != \"*テスト除外パターン０２*\") && (msg != \"*テスト除外パターン０３*\") && (msg != \"*テスト除外パターン０４*\") && (msg != \"*テスト除外パターン０５*\") && (msg != \"*テスト除外パターン０６*\") && (msg != \"*テスト除外パターン０７*\") && (msg != \"*テスト除外パターン０８*\") && (msg != \"*テスト除外パターン０９*\") && (msg != \"*テスト除外パターン１０*\") && (msg != \"*テスト除外パターン１１*\") && (msg != \"*テスト除外パターン１２*\") && (msg != \"*テスト除外パターン１３*\") && (msg != \"*テスト除外パターン１４*\") && (msg != \"*テスト除外パターン１５*\") && (msg != \"*テスト除外パターン１６*\") && (msg != \"*テスト除外パターン１７*\") && (msg != \"*テスト除外パターン１８*\") && (msg != \"*テスト除外パターン１９*\") && (msg != \"*テスト除外パターン２０*\") && (msg != \"*テスト除外パターン２１*\") && (msg != \"*テスト除外パターン２２*\") && (msg != \"*テスト除外パターン２３*\") && (msg != \"*テスト除外パターン２４*\") && (msg != \"*テスト除外パターン２５*\") && (msg != \"*テスト除外パターン２６*\") && (msg != \"*テスト除外パターン２７*\") && (msg != \"*テスト除外パターン２８*\")]"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricFilterConfig_pattern(rName, pattern1),
+				ExpectError: regexache.MustCompile(`Error: Invalid character length`),
+			},
+			{
+				Config: testAccMetricFilterConfig_pattern(rName, pattern2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "pattern", pattern2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccMetricFilterImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -352,4 +391,24 @@ EOS
   }
 }
 `, rName)
+}
+
+func testAccMetricFilterConfig_pattern(rName, pattern string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_metric_filter" "test" {
+  name           = %[1]q
+  pattern        = %[2]q
+  log_group_name = aws_cloudwatch_log_group.test.name
+
+  metric_transformation {
+    name      = "metric1"
+    namespace = "ns1"
+    value     = "1"
+  }
+}
+`, rName, pattern)
 }
