@@ -23,7 +23,7 @@ func DataSourceCredentialsSchema() *schema.Schema {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ValidateFunc:  verify.ValidARN,
-					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.secret_arn"},
+					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.key_pair_credentials", "credentials.0.secret_arn"},
 				},
 				"credential_pair": {
 					Type:     schema.TypeList,
@@ -51,12 +51,44 @@ func DataSourceCredentialsSchema() *schema.Schema {
 							},
 						},
 					},
-					ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
+					ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.key_pair_credentials", "credentials.0.secret_arn"},
+				},
+				"key_pair_credentials": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key_pair_username": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.NoZeroValues,
+									validation.StringLenBetween(1, 64),
+								),
+							},
+							names.AttrPrivateKey: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.NoZeroValues,
+									validation.StringLenBetween(1600, 8000),
+								),
+								Sensitive: true,
+							},
+							"private_key_passphrase": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+					},
+					ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.credential_pair", "credentials.0.secret_arn"},
 				},
 				"secret_arn": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
+					ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn", "credentials.0.key_pair_credentials"},
 				},
 			},
 		},
@@ -458,6 +490,10 @@ func DataSourceParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"authentication_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 							names.AttrDatabase: {
 								Type:         schema.TypeString,
 								Required:     true,
@@ -622,6 +658,10 @@ func ExpandDataSourceCredentials(tfList []any) *awstypes.DataSourceCredentials {
 		apiObject.CredentialPair = expandCredentialPair(v)
 	}
 
+	if v, ok := tfMap["key_pair_credentials"].([]any); ok && len(v) > 0 {
+		apiObject.KeyPairCredentials = expandKeyPairCredentials(v)
+	}
+
 	if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
 		apiObject.SecretArn = aws.String(v)
 	}
@@ -647,6 +687,33 @@ func expandCredentialPair(tfList []any) *awstypes.CredentialPair {
 
 	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandKeyPairCredentials(tfList []any) *awstypes.KeyPairCredentials {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.KeyPairCredentials{}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	if v, ok := tfMap["key_pair_username"].(string); ok && v != "" {
+		apiObject.KeyPairUsername = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey].(string); ok && v != "" {
+		apiObject.PrivateKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_key_passphrase"].(string); ok && v != "" {
+		apiObject.PrivateKeyPassphrase = aws.String(v)
 	}
 
 	return apiObject
@@ -935,6 +1002,9 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberSnowflakeParameters{}
 
+			if v, ok := tfMap["authentication_type"].(string); ok && v != "" {
+				ps.Value.AuthenticationType = awstypes.AuthenticationType(v)
+			}
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
@@ -1151,9 +1221,10 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 	case *awstypes.DataSourceParametersMemberSnowflakeParameters:
 		tfMap["snowflake"] = []any{
 			map[string]any{
-				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
-				"warehouse":        aws.ToString(v.Value.Warehouse),
+				"authentication_type": string(v.Value.AuthenticationType),
+				names.AttrDatabase:    aws.ToString(v.Value.Database),
+				"host":                aws.ToString(v.Value.Host),
+				"warehouse":           aws.ToString(v.Value.Warehouse),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberSparkParameters:
