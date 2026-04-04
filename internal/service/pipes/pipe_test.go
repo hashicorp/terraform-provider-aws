@@ -3577,3 +3577,123 @@ resource "aws_pipes_pipe" "test" {
 }
 `, rName))
 }
+
+func TestAccPipesPipe_sqsSourceTimestreamTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basicSQSSourceTimestreamTarget(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, t, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_sqs_queue.source", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.time_value", "$.timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.version_value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.time_field_type", "TIMESTAMP_FORMAT"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.timestamp_format", "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.dimension_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.dimension_mapping.0.dimension_name", "dim"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.dimension_mapping.0.dimension_value", "$.dim"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.dimension_mapping.0.dimension_value_type", "VARCHAR"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.single_measure_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.single_measure_mapping.0.measure_name", "cpu"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.single_measure_mapping.0.measure_value", "$.cpu"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.timestream_parameters.0.single_measure_mapping.0.measure_value_type", "DOUBLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccPipeConfig_baseTimestreamTarget(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role_policy" "target" {
+  role = aws_iam_role.test.id
+  name = "%[1]s-target"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "timestream:WriteRecords",
+          "timestream:DescribeEndpoints",
+        ],
+        Resource = [
+          "*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_timestreamwrite_database" "target" {
+  database_name = %[1]q
+}
+
+resource "aws_timestreamwrite_table" "target" {
+  database_name = aws_timestreamwrite_database.target.database_name
+  table_name    = %[1]q
+}
+`, rName)
+}
+
+func testAccPipeConfig_basicSQSSourceTimestreamTarget(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseTimestreamTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_timestreamwrite_table.target.arn
+
+  target_parameters {
+    timestream_parameters {
+      time_value       = "$.timestamp"
+      version_value    = "1"
+      time_field_type  = "TIMESTAMP_FORMAT"
+      timestamp_format = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+
+      dimension_mapping {
+        dimension_name       = "dim"
+        dimension_value      = "$.dim"
+        dimension_value_type = "VARCHAR"
+      }
+
+      single_measure_mapping {
+        measure_name       = "cpu"
+        measure_value      = "$.cpu"
+        measure_value_type = "DOUBLE"
+      }
+    }
+  }
+}
+`, rName))
+}
