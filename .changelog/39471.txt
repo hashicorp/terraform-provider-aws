@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Add `skip_arn_validation` attribute to skip static ARN format validation in provider configuration, enabling use with S3-compatible services that use non-standard ARN formats
+```
