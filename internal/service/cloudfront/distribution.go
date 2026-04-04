@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -202,10 +204,11 @@ func resourceDistribution() *schema.Resource {
 										Required: true,
 									},
 									"query_string_cache_keys": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Type:             schema.TypeList,
+										Optional:         true,
+										Computed:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										DiffSuppressFunc: suppressStringListOrderDiff,
 									},
 								},
 							},
@@ -300,16 +303,18 @@ func resourceDistribution() *schema.Resource {
 							Required: true,
 						},
 						"trusted_key_groups": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:             schema.TypeList,
+							Optional:         true,
+							Computed:         true,
+							Elem:             &schema.Schema{Type: schema.TypeString},
+							DiffSuppressFunc: suppressStringListOrderDiff,
 						},
 						"trusted_signers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:             schema.TypeList,
+							Optional:         true,
+							Computed:         true,
+							Elem:             &schema.Schema{Type: schema.TypeString},
+							DiffSuppressFunc: suppressStringListOrderDiff,
 						},
 						"viewer_protocol_policy": {
 							Type:             schema.TypeString,
@@ -454,10 +459,11 @@ func resourceDistribution() *schema.Resource {
 										Required: true,
 									},
 									"query_string_cache_keys": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Type:             schema.TypeList,
+										Optional:         true,
+										Computed:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										DiffSuppressFunc: suppressStringListOrderDiff,
 									},
 								},
 							},
@@ -556,14 +562,16 @@ func resourceDistribution() *schema.Resource {
 							Required: true,
 						},
 						"trusted_key_groups": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:             schema.TypeList,
+							Optional:         true,
+							Elem:             &schema.Schema{Type: schema.TypeString},
+							DiffSuppressFunc: suppressStringListOrderDiff,
 						},
 						"trusted_signers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:             schema.TypeList,
+							Optional:         true,
+							Elem:             &schema.Schema{Type: schema.TypeString},
+							DiffSuppressFunc: suppressStringListOrderDiff,
 						},
 						"viewer_protocol_policy": {
 							Type:             schema.TypeString,
@@ -1814,9 +1822,38 @@ func expandTrustedKeyGroups(tfList []any) *awstypes.TrustedKeyGroups {
 	return apiObject
 }
 
+func suppressStringListOrderDiff(k, oldValue, newValue string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, ".#") {
+		return oldValue == newValue
+	}
+
+	listKey := k[:strings.LastIndex(k, ".")]
+	o, n := d.GetChange(listKey)
+	oldList := o.([]any)
+	newList := n.([]any)
+
+	if len(oldList) != len(newList) {
+		return false
+	}
+
+	oldSet := make(map[string]bool, len(oldList))
+	for _, v := range oldList {
+		oldSet[v.(string)] = true
+	}
+	for _, v := range newList {
+		if !oldSet[v.(string)] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func flattenTrustedKeyGroups(apiObject *awstypes.TrustedKeyGroups) []any {
 	if apiObject.Items != nil {
-		return flex.FlattenStringValueList(apiObject.Items)
+		items := slices.Clone(apiObject.Items)
+		slices.Sort(items)
+		return flex.FlattenStringValueList(items)
 	}
 
 	return []any{}
@@ -1839,7 +1876,9 @@ func expandTrustedSigners(tfList []any) *awstypes.TrustedSigners {
 
 func flattenTrustedSigners(apiObject *awstypes.TrustedSigners) []any {
 	if apiObject.Items != nil {
-		return flex.FlattenStringValueList(apiObject.Items)
+		items := slices.Clone(apiObject.Items)
+		slices.Sort(items)
+		return flex.FlattenStringValueList(items)
 	}
 
 	return []any{}
@@ -2072,7 +2111,9 @@ func expandQueryStringCacheKeys(tfList []any) *awstypes.QueryStringCacheKeys {
 
 func flattenQueryStringCacheKeys(apiObject *awstypes.QueryStringCacheKeys) []any {
 	if apiObject.Items != nil {
-		return flex.FlattenStringValueList(apiObject.Items)
+		items := slices.Clone(apiObject.Items)
+		slices.Sort(items)
+		return flex.FlattenStringValueList(items)
 	}
 
 	return []any{}
