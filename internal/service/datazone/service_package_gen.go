@@ -91,6 +91,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newPolicyGrantResource,
+			TypeName: "aws_datazone_policy_grant",
+			Name:     "Policy Grant",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute("entity_type", true),
+				inttypes.StringIdentityAttribute("entity_identifier", true),
+				inttypes.StringIdentityAttribute("policy_type", true),
+				inttypes.StringIdentityAttribute("grant_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      policyGrantImportID{},
+			},
+		},
+		{
 			Factory:  newProjectResource,
 			TypeName: "aws_datazone_project",
 			Name:     "Project",
