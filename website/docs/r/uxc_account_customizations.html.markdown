@@ -22,7 +22,7 @@ Manages UXC Account Customizations for an AWS Account. This resource controls th
 
 ```terraform
 resource "aws_uxc_account_customizations" "example" {
-  account_color = "blue"
+  account_color = "lightBlue"
 }
 ```
 
@@ -40,7 +40,7 @@ resource "aws_uxc_account_customizations" "example" {
 
 This resource supports the following arguments:
 
-* `account_color` - (Optional) Color used to identify the account in the AWS Management Console. Valid values are `none`, `red`, `blue`, `green`, `yellow`, `orange`, `pink`, `purple`, and `teal`. Defaults to `none`.
+* `account_color` - (Optional) Color used to identify the account in the AWS Management Console. Valid values are `none`, `red`, `darkBlue`, `lightBlue`, `green`, `yellow`, `orange`, `pink`, `purple`, and `teal`. Defaults to `none`.
 * `visible_regions` - (Optional) Set of AWS region codes to display in the console. When omitted or empty, all regions are visible.
 * `visible_services` - (Optional) Set of AWS service identifiers to display in the console. When omitted or empty, all services are visible.
 
