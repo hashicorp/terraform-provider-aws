@@ -296,6 +296,37 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupIngressRule_cidrIPv4ICMP(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.SecurityGroupRule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4ICMP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "icmp"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.SecurityGroupRule
@@ -738,6 +769,19 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   }
 }
 `, tagKey1, tagValue1))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4ICMP(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  cidr_ipv4   = "10.0.0.0/16"
+  from_port   = -1
+  ip_protocol = "icmp"
+  to_port     = -1
+}
+`)
 }
 
 func testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName string) string {
