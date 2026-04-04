@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc_security_group_ingress_rule: Fix `from_port` and `to_port` being lost during import when value is -1
+```
+
+```release-note:bug
+resource/aws_vpc_security_group_egress_rule: Fix `from_port` and `to_port` being lost during import when value is -1
+```
