@@ -20,6 +20,18 @@ func arnForNewRegion(rn string, newRegion string) (string, error) {
 	return parsedARN.String(), nil
 }
 
+func arnForNewRegionAndAccount(rn string, newRegion string, newAccountID string) (string, error) {
+	parsedARN, err := arn.Parse(rn)
+	if err != nil {
+		return "", err
+	}
+
+	parsedARN.Region = newRegion
+	parsedARN.AccountID = newAccountID
+
+	return parsedARN.String(), nil
+}
+
 func regionFromARN(rn string) (string, error) {
 	parsedARN, err := arn.Parse(rn)
 	if err != nil {
