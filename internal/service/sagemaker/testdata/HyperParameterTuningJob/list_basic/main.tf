@@ -167,7 +167,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "${var.rName}"
+  bucket        = var.rName
   force_destroy = true
 }
 
