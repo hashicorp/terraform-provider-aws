@@ -20,6 +20,16 @@ resource "aws_controltower_landing_zone" "example" {
 }
 ```
 
+### With Automatic Enrollment
+
+```terraform
+resource "aws_controltower_landing_zone" "example" {
+  manifest_json     = file("${path.module}/LandingZoneManifest.json")
+  version           = "3.3"
+  remediation_types = ["INHERITANCE_DRIFT"]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -27,6 +37,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `manifest_json` - (Required) The manifest JSON file is a text file that describes your AWS resources. For examples, review [Launch your landing zone](https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-launch).
 * `version` - (Required) The landing zone version.
+* `remediation_types` - (Optional) The types of remediation actions to apply to the landing zone, such as automatic drift correction. Valid values: `INHERITANCE_DRIFT`. See [Configure automatic enrollment](https://docs.aws.amazon.com/controltower/latest/userguide/configure-auto-enroll.html) for more information.
 * `tags` - (Optional) Tags to apply to the landing zone. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
