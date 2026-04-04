@@ -4,7 +4,7 @@
 resource "aws_sagemaker_hyper_parameter_tuning_job" "test" {
   count = var.resource_count
 
-  name = "hptj-${substr(var.rName, 0, 20)}-${count.index}"
+  name = "${substr(var.rName, 0, 20)}-${count.index}"
 
   config {
     strategy = "Bayesian"
@@ -167,7 +167,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "${var.rName}-hptj"
+  bucket        = "${var.rName}"
   force_destroy = true
 }
 
