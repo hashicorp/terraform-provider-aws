@@ -45,8 +45,9 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
 		"ConfigurationPolicyAssociation": {
-			acctest.CtBasic:      testAccConfigurationPolicyAssociation_basic,
-			acctest.CtDisappears: testAccConfigurationPolicyAssociation_disappears,
+			acctest.CtBasic:          testAccConfigurationPolicyAssociation_basic,
+			acctest.CtDisappears:     testAccConfigurationPolicyAssociation_disappears,
+			"SelfManagedSecurityHub": testAccConfigurationPolicyAssociation_selfManagedSecurityHub,
 		},
 		"FindingAggregator": {
 			acctest.CtBasic:      testAccFindingAggregator_basic,
