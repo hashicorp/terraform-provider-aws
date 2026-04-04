@@ -22,6 +22,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_workload_identity", sweepWorkloadIdentities)
 	awsv2.Register("aws_bedrockagentcore_code_interpreter", sweepCodeInterpreters)
 	awsv2.Register("aws_bedrockagentcore_browser", sweepBrowsers)
+	awsv2.Register("aws_bedrockagentcore_browser_profile", sweepBrowserProfiles)
 	awsv2.Register("aws_bedrockagentcore_api_key_credential_provider", sweepAPIKeyCredentialProviders)
 	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders)
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
@@ -165,6 +166,28 @@ func sweepBrowsers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		for _, v := range page.BrowserSummaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newBrowserResource, client,
 				framework.NewAttribute("browser_id", aws.ToString(v.BrowserId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepBrowserProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListBrowserProfilesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListBrowserProfilesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.ProfileSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newBrowserProfileResource, client,
+				framework.NewAttribute("profile_id", aws.ToString(v.ProfileId))),
 			)
 		}
 	}
