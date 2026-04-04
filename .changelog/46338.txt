@@ -1,0 +1,3 @@
+```
+resource/aws_dynamodb_table: Prevent validation error when `range_key` is set to empty string in `global_secondary_index`
+```
