@@ -15,6 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	logstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
+	xraytypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -284,6 +288,19 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					},
 				},
 			},
+			"observability": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[observabilityConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"enabled": schema.BoolAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -463,10 +480,45 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	if !data.Observability.IsNull() {
+		obsConfig, d := data.Observability.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if obsConfig != nil && obsConfig.Enabled.ValueBool() {
+			if err := r.ensureXRayResourcePolicy(ctx); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+				return
+			}
+			if err := r.waitForXRayResourcePolicy(ctx, propagationTimeout); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("waiting for X-Ray resource policy: %w", err), smerr.ID, agentRuntimeID)
+				return
+			}
+			if err := configureObservability(ctx, conn, r.Meta().XRayClient(ctx), runtime, data.EnvironmentVariables); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+				return
+			}
+			runtime, err = findAgentRuntimeByID(ctx, conn, agentRuntimeID)
+			if err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+				return
+			}
+		}
+	}
+
 	// Set values for unknowns.
+	userEnvVars := data.EnvironmentVariables
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
+	}
+	if !data.Observability.IsNull() {
+		obsConfig, d := data.Observability.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if !response.Diagnostics.HasError() && obsConfig != nil && obsConfig.Enabled.ValueBool() {
+			data.EnvironmentVariables = userEnvVars
+		}
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
@@ -493,9 +545,18 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
+	userEnvVars := data.EnvironmentVariables
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if !data.Observability.IsNull() {
+		obsConfig, d := data.Observability.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if !response.Diagnostics.HasError() && obsConfig != nil && obsConfig.Enabled.ValueBool() {
+			data.EnvironmentVariables = userEnvVars
+		}
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
@@ -528,20 +589,61 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 
-		out, err := conn.UpdateAgentRuntime(ctx, &input)
+		_, err := conn.UpdateAgentRuntime(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
-			return
-		}
-
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
-		if response.Diagnostics.HasError() {
 			return
 		}
 
 		if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 			return
+		}
+
+		if !new.Observability.IsNull() {
+			obsConfig, d := new.Observability.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &response.Diagnostics, d)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			if obsConfig != nil && obsConfig.Enabled.ValueBool() {
+				runtime, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
+				if err != nil {
+					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+					return
+				}
+				if err := r.ensureXRayResourcePolicy(ctx); err != nil {
+					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+					return
+				}
+				if err := configureObservability(ctx, conn, r.Meta().XRayClient(ctx), runtime, new.EnvironmentVariables); err != nil {
+					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+					return
+				}
+				if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+					return
+				}
+			}
+		}
+
+		runtime, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+			return
+		}
+
+		userEnvVars := new.EnvironmentVariables
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if !new.Observability.IsNull() {
+			obsConfig, d := new.Observability.ToPtr(ctx)
+			smerr.AddEnrich(ctx, &response.Diagnostics, d)
+			if !response.Diagnostics.HasError() && obsConfig != nil && obsConfig.Enabled.ValueBool() {
+				new.EnvironmentVariables = userEnvVars
+			}
 		}
 	} else {
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
@@ -678,23 +780,24 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 
 type agentRuntimeResourceModel struct {
 	framework.WithRegionModel
-	AgentRuntimeARN            types.String                                                     `tfsdk:"agent_runtime_arn"`
-	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]       `tfsdk:"agent_runtime_artifact"`
-	AgentRuntimeID             types.String                                                     `tfsdk:"agent_runtime_id"`
-	AgentRuntimeName           types.String                                                     `tfsdk:"agent_runtime_name"`
-	AgentRuntimeVersion        types.String                                                     `tfsdk:"agent_runtime_version"`
-	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
-	Description                types.String                                                     `tfsdk:"description"`
-	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
-	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
-	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
-	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
-	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
-	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
-	Tags                       tftags.Map                                                       `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
-	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]    `tfsdk:"workload_identity_details"`
+	AgentRuntimeARN            types.String                                                       `tfsdk:"agent_runtime_arn"`
+	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]         `tfsdk:"agent_runtime_artifact"`
+	AgentRuntimeID             types.String                                                       `tfsdk:"agent_runtime_id"`
+	AgentRuntimeName           types.String                                                       `tfsdk:"agent_runtime_name"`
+	AgentRuntimeVersion        types.String                                                       `tfsdk:"agent_runtime_version"`
+	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]      `tfsdk:"authorizer_configuration"`
+	Description                types.String                                                       `tfsdk:"description"`
+	EnvironmentVariables       fwtypes.MapOfString                                                `tfsdk:"environment_variables"`
+	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]       `tfsdk:"lifecycle_configuration"`
+	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]         `tfsdk:"network_configuration"`
+	Observability              fwtypes.ListNestedObjectValueOf[observabilityConfigurationModel]   `tfsdk:"observability"`
+	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]        `tfsdk:"protocol_configuration"`
+	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel]   `tfsdk:"request_header_configuration"`
+	RoleARN                    fwtypes.ARN                                                        `tfsdk:"role_arn"`
+	Tags                       tftags.Map                                                         `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                         `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                                                     `tfsdk:"timeouts"`
+	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]      `tfsdk:"workload_identity_details"`
 }
 
 type agentRuntimeArtifactModel struct {
@@ -995,4 +1098,153 @@ func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (any, diag.
 
 type workloadIdentityDetailsModel struct {
 	WorkloadIdentityARN types.String `tfsdk:"workload_identity_arn"`
+}
+
+type observabilityConfigurationModel struct {
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
+const xrayResourcePolicyName = "BedrockAgentCoreXRayPolicy"
+
+func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.Client, xrayConn *xray.Client, runtime *bedrockagentcorecontrol.GetAgentRuntimeOutput, existingEnvVars fwtypes.MapOfString) error {
+	runtimeID := aws.ToString(runtime.AgentRuntimeId)
+	runtimeName := aws.ToString(runtime.AgentRuntimeName)
+	logGroup := fmt.Sprintf("/aws/bedrock-agentcore/runtimes/%s", runtimeID)
+
+	obsEnvVars := map[string]string{
+		"AGENT_OBSERVABILITY_ENABLED":     "true",
+		"OTEL_EXPORTER_OTLP_LOGS_HEADERS": fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
+		"OTEL_EXPORTER_OTLP_PROTOCOL":     "http/protobuf",
+		"OTEL_RESOURCE_ATTRIBUTES":        fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
+		"OTEL_TRACES_EXPORTER":            "otlp",
+	}
+
+	mergedEnvVars := make(map[string]string)
+	if !existingEnvVars.IsNull() {
+		for k, v := range existingEnvVars.Elements() {
+			if strVal, ok := v.(types.String); ok {
+				mergedEnvVars[k] = strVal.ValueString()
+			}
+		}
+	}
+	for k, v := range obsEnvVars {
+		mergedEnvVars[k] = v
+	}
+
+	updateInput := &bedrockagentcorecontrol.UpdateAgentRuntimeInput{
+		AgentRuntimeId:          aws.String(runtimeID),
+		AgentRuntimeArtifact:    runtime.AgentRuntimeArtifact,
+		AuthorizerConfiguration: runtime.AuthorizerConfiguration,
+		Description:             runtime.Description,
+		EnvironmentVariables:    mergedEnvVars,
+		NetworkConfiguration:    runtime.NetworkConfiguration,
+		ProtocolConfiguration:   runtime.ProtocolConfiguration,
+		RoleArn:                 runtime.RoleArn,
+	}
+
+	if _, err := conn.UpdateAgentRuntime(ctx, updateInput); err != nil {
+		return fmt.Errorf("updating agent runtime with observability environment variables: %w", err)
+	}
+
+	if err := configureXRayForObservability(ctx, xrayConn); err != nil {
+		return fmt.Errorf("configuring X-Ray for observability: %w", err)
+	}
+
+	return nil
+}
+
+func configureXRayForObservability(ctx context.Context, xrayConn *xray.Client) error {
+	out, err := xrayConn.GetTraceSegmentDestination(ctx, &xray.GetTraceSegmentDestinationInput{})
+	if err != nil {
+		return fmt.Errorf("getting X-Ray trace segment destination: %w", err)
+	}
+
+	if out.Destination != xraytypes.TraceSegmentDestinationCloudWatchLogs {
+		if _, err := xrayConn.UpdateTraceSegmentDestination(ctx, &xray.UpdateTraceSegmentDestinationInput{
+			Destination: xraytypes.TraceSegmentDestinationCloudWatchLogs,
+		}); err != nil {
+			return fmt.Errorf("updating X-Ray trace segment destination: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *agentRuntimeResource) ensureXRayResourcePolicy(ctx context.Context) error {
+	meta := r.Meta()
+	logsConn := meta.LogsClient(ctx)
+	region := meta.Region(ctx)
+	accountID := meta.AccountID(ctx)
+
+	policyDocument := fmt.Sprintf(`{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Sid": "TransactionSearchXRayAccess",
+				"Effect": "Allow",
+				"Principal": {
+					"Service": "xray.amazonaws.com"
+				},
+				"Action": "logs:PutLogEvents",
+				"Resource": [
+					"arn:aws:logs:%[1]s:%[2]s:log-group:aws/spans:*",
+					"arn:aws:logs:%[1]s:%[2]s:log-group:/aws/application-signals/data:*"
+				],
+				"Condition": {
+					"ArnLike": {
+						"aws:SourceArn": "arn:aws:xray:%[1]s:%[2]s:*"
+					},
+					"StringEquals": {
+						"aws:SourceAccount": "%[2]s"
+					}
+				}
+			}
+		]
+	}`, region, accountID)
+
+	_, err := logsConn.PutResourcePolicy(ctx, &cloudwatchlogs.PutResourcePolicyInput{
+		PolicyName:     aws.String(xrayResourcePolicyName),
+		PolicyDocument: aws.String(policyDocument),
+	})
+	if errs.IsA[*logstypes.ResourceAlreadyExistsException](err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("putting CloudWatch Logs resource policy for X-Ray: %w", err)
+	}
+
+	return nil
+}
+
+func (r *agentRuntimeResource) waitForXRayResourcePolicy(ctx context.Context, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"notfound"},
+		Target:  []string{"found"},
+		Timeout: timeout,
+		Refresh: func(ctx context.Context) (any, string, error) {
+			logsConn := r.Meta().LogsClient(ctx)
+			var nextToken *string
+			for {
+				out, err := logsConn.DescribeResourcePolicies(ctx, &cloudwatchlogs.DescribeResourcePoliciesInput{
+					Limit:     aws.Int32(50),
+					NextToken: nextToken,
+				})
+				if err != nil {
+					return nil, "", err
+				}
+				for _, policy := range out.ResourcePolicies {
+					if aws.ToString(policy.PolicyName) == xrayResourcePolicyName {
+						return policy, "found", nil
+					}
+				}
+				if out.NextToken == nil {
+					break
+				}
+				nextToken = out.NextToken
+			}
+			return nil, "notfound", nil
+		},
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
