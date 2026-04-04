@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_group: Add `force_destroy` argument to enable reliable deletion of log groups with retention policies
+```
