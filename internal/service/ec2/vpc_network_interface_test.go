@@ -87,6 +87,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 					testAccCheckENIExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "public_dns_names_ipv6.#", "1"),
 				),
 			},
 			{
@@ -101,6 +102,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 					testAccCheckENIExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "public_dns_names_ipv6.#", "2"),
 				),
 			},
 			{
@@ -109,6 +111,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 					testAccCheckENIExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "public_dns_names_ipv6.#", "1"),
 				),
 			},
 		},
