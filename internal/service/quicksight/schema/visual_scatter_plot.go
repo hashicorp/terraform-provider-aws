@@ -43,6 +43,7 @@ func scatterPlotVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"category":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"label":        dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrSize: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 													"x_axis":       measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 													"y_axis":       measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
@@ -197,6 +198,9 @@ func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []any) *awstypes.
 	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
+	if v, ok := tfMap["label"].([]any); ok && len(v) > 0 {
+		apiObject.Label = expandDimensionFields(v)
+	}
 	if v, ok := tfMap[names.AttrSize].([]any); ok && len(v) > 0 {
 		apiObject.Size = expandMeasureFields(v)
 	}
@@ -326,6 +330,9 @@ func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *awstypes.Sca
 
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+	}
+	if apiObject.Label != nil {
+		tfMap["label"] = flattenDimensionFields(apiObject.Label)
 	}
 	if apiObject.Size != nil {
 		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)
