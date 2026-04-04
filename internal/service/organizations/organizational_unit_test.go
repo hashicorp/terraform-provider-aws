@@ -41,6 +41,7 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("ou/"+organizationIDRegexPattern+"/ou-[0-9a-z]{4}-[0-9a-z]{8}$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPath),
 				),
 			},
 			{

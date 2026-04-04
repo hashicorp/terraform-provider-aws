@@ -87,6 +87,11 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"paths": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						names.AttrStatus: {
 							Type:       schema.TypeString,
 							Computed:   true,
@@ -166,6 +171,11 @@ func resourceOrganization() *schema.Resource {
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						"paths": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						names.AttrStatus: {
 							Type:       schema.TypeString,
@@ -626,6 +636,7 @@ func flattenAccounts(apiObjects []awstypes.Account) []any {
 			"joined_method":    apiObject.JoinedMethod,
 			"joined_timestamp": aws.ToTime(apiObject.JoinedTimestamp).Format(time.RFC3339),
 			names.AttrName:     aws.ToString(apiObject.Name),
+			"paths":            apiObject.Paths,
 			names.AttrStatus:   apiObject.Status,
 			names.AttrState:    apiObject.State,
 		})
