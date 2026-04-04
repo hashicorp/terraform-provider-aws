@@ -173,7 +173,7 @@ resource "aws_budgets_budget" "cost" {
 }
 ```
 
-Create a budget with a simple dimension filter
+Create a budget with a simple dimension filter for unblended costs
 
 ```terraform
 resource "aws_budgets_budget" "simple" {
@@ -183,6 +183,7 @@ resource "aws_budgets_budget" "simple" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
+  metrics = ["UnblendedCost"]
   filter_expression {
     dimensions {
       key    = "SERVICE"
@@ -192,7 +193,7 @@ resource "aws_budgets_budget" "simple" {
 }
 ```
 
-Create a budget with AND filter
+Create a budget with AND filter for unblended costs
 
 ```terraform
 resource "aws_budgets_budget" "and_example" {
@@ -202,6 +203,7 @@ resource "aws_budgets_budget" "and_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
+  metrics = ["UnblendedCost"]
   # Each `and` block is one operand. AND requires at least 2 operands.
   filter_expression {
     and {
@@ -220,7 +222,7 @@ resource "aws_budgets_budget" "and_example" {
 }
 ```
 
-Create a budget with OR filter
+Create a budget with OR filter for unblended costs
 
 ```terraform
 resource "aws_budgets_budget" "or_example" {
@@ -230,6 +232,7 @@ resource "aws_budgets_budget" "or_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
+  metrics = ["UnblendedCost"]
   # Each `or` block is one operand. OR requires at least 2 operands.
   filter_expression {
     or {
@@ -248,7 +251,7 @@ resource "aws_budgets_budget" "or_example" {
 }
 ```
 
-Create a budget with NOT filter
+Create a budget with NOT filter for unblended costs
 
 ```terraform
 resource "aws_budgets_budget" "not_example" {
@@ -258,6 +261,7 @@ resource "aws_budgets_budget" "not_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
+  metrics = ["UnblendedCost"]
   filter_expression {
     not {
       dimensions {
@@ -269,7 +273,7 @@ resource "aws_budgets_budget" "not_example" {
 }
 ```
 
-Create a budget with a compound filter
+Create a budget with a compound filter for unblended costs
 
 ```terraform
 resource "aws_budgets_budget" "compound_example" {
@@ -279,6 +283,7 @@ resource "aws_budgets_budget" "compound_example" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
+  metrics = ["UnblendedCost"]
   filter_expression {
     # First OR operand: an AND expression
     or {
@@ -336,7 +341,8 @@ The following arguments are optional:
 * `billing_view_arn` - (Optional) ARN of the billing view.
 * `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget. Conflicts with `filter_expression`.
 * `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
-* `filter_expression` - (Optional) Object containing [Filter Expression](#filter-expression) to apply to budget. Conflicts with `cost_filter`.
+* `filter_expression` - (Optional) Object containing [Filter Expression](#filter-expression) to apply to budget. Conflicts with `cost_filter` and requires `metrics`.
+* `metrics` - (Optional) List containing definition for how the budget data is aggregated. Conflicts with `cost_types` and requires `filter_expression`.
 * `limit_amount` - (Optional) The amount of cost or usage being measured for a budget.
 * `limit_unit` - (Optional) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `name` - (Optional) The name of a budget. Unique within accounts.
@@ -449,6 +455,10 @@ The `filter_expression` block maps directly to the [AWS Expression](https://docs
 * `values` - (Optional) A list of cost category values to match. At least one value is required.
 
 Refer to [AWS Expression documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Expression.html) for further detail.
+
+#### Metrics
+
+`filter_expression` requires `metrics` to be set as well. Value is list type and can have only one element. Possible values: "UnblendedCost", "BlendedCost", "AmortizedCost", "NetUnblendedCost", "NetAmortizedCost", "UsageQuantity", "NormalizedUsageAmount", "Hours".
 
 ## Import
 
