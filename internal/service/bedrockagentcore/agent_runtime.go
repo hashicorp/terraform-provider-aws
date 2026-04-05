@@ -299,6 +299,12 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 						"enabled": schema.BoolAttribute{
 							Required: true,
 						},
+						"runtime_language": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("python"),
+							},
+						},
 					},
 					Blocks: map[string]schema.Block{
 						"cloudwatch_logs": schema.ListNestedBlock{
@@ -1241,9 +1247,10 @@ type workloadIdentityDetailsModel struct {
 }
 
 type observabilityConfigurationModel struct {
-	CloudwatchLogs fwtypes.ListNestedObjectValueOf[cloudwatchLogsConfigurationModel] `tfsdk:"cloudwatch_logs"`
-	Enabled        types.Bool                                                         `tfsdk:"enabled"`
-	Xray           fwtypes.ListNestedObjectValueOf[xrayConfigurationModel]            `tfsdk:"xray"`
+	CloudwatchLogs  fwtypes.ListNestedObjectValueOf[cloudwatchLogsConfigurationModel] `tfsdk:"cloudwatch_logs"`
+	Enabled         types.Bool                                                         `tfsdk:"enabled"`
+	RuntimeLanguage types.String                                                      `tfsdk:"runtime_language"`
+	Xray            fwtypes.ListNestedObjectValueOf[xrayConfigurationModel]            `tfsdk:"xray"`
 }
 
 type xrayConfigurationModel struct {
@@ -1290,6 +1297,13 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 		"OTEL_EXPORTER_OTLP_PROTOCOL":     "http/protobuf",
 		"OTEL_RESOURCE_ATTRIBUTES":        fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
 		"OTEL_TRACES_EXPORTER":            "otlp",
+	}
+
+	// Inject language-specific OTEL env vars.
+	switch obsConfig.RuntimeLanguage.ValueString() {
+	case "python":
+		obsEnvVars["OTEL_PYTHON_DISTRO"] = "aws_distro"
+		obsEnvVars["OTEL_PYTHON_CONFIGURATOR"] = "aws_configurator"
 	}
 
 	mergedEnvVars := make(map[string]string)
