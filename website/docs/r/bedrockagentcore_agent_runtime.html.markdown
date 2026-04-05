@@ -133,6 +133,46 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 }
 ```
 
+### Agent runtime with Observability
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example_with_observability" {
+  agent_runtime_name = "example_agent_runtime_with_observability"
+  role_arn           = aws_iam_role.example.arn
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = "example-bucket"
+          prefix = "example-agent-runtime-code.zip"
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  observability {
+    enabled            = true
+    runtime_language   = "python"
+
+    cloudwatch_logs {
+      log_group_name     = "/aws/bedrock-agentcore/example-runtime"
+      retention_in_days  = 30
+    }
+
+    xray {
+      sampling_percentage = 10
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -149,6 +189,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating incoming requests. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration) below.
+* `observability` - (Optional) Observability configuration for the agent runtime. See [`observability`](#observability) below.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration) below.
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -233,6 +274,28 @@ The `lifecycle_configuration` block supports the following:
 * `idle_runtime_session_timeout` - (Optional) Timeout in seconds for idle runtime sessions.
 * `max_lifetime` - (Optional) Maximum lifetime for the instance in seconds.
 
+### `observability`
+
+The `observability` block supports the following:
+
+* `enabled` - (Required) Whether observability is enabled for the agent runtime.
+* `runtime_language` - (Optional) Programming language of the agent runtime. Used to inject language-specific OpenTelemetry configuration. Currently only `"python"` is supported. When set to `"python"`, injects `OTEL_PYTHON_DISTRO=aws_distro` and `OTEL_PYTHON_CONFIGURATOR=aws_configurator`.
+* `cloudwatch_logs` - (Optional) CloudWatch Logs configuration. See [`cloudwatch_logs`](#cloudwatch_logs) below.
+* `xray` - (Optional) X-Ray tracing configuration. See [`xray`](#xray) below.
+
+### `cloudwatch_logs`
+
+The `cloudwatch_logs` block supports the following:
+
+* `log_group_name` - (Optional, Computed) Name of the CloudWatch Logs log group. If not specified, defaults to `/aws/bedrock-agentcore/runtimes/<runtime_id>`.
+* `retention_in_days` - (Optional) Number of days to retain log events. Valid values: `1`, `3`, `5`, `7`, `14`, `30`, `60`, `90`, `120`, `150`, `180`, `365`, `400`, `545`, `731`, `1096`, `1827`, `2192`, `2557`, `2922`, `3288`, `3653`.
+
+### `xray`
+
+The `xray` block supports the following:
+
+* `sampling_percentage` - (Optional) Percentage of requests to sample with X-Ray. Valid values: `0` to `100`. Creates or updates an X-Ray sampling rule named `bedrock-agentcore-<runtime_id>`.
+
 ### `network_configuration`
 
 The `network_configuration` block supports the following:
@@ -274,6 +337,27 @@ This resource exports the following attributes in addition to the arguments abov
 The `workload_identity_details` block contains the following:
 
 * `workload_identity_arn` - ARN of the workload identity.
+
+## Observability IAM Permissions
+
+When `observability` is enabled, the IAM role must have the following permissions:
+
+* `logs:CreateLogGroup` - Create CloudWatch Logs log groups
+* `logs:CreateLogStream` - Create CloudWatch Logs log streams
+* `logs:PutLogEvents` - Put log events to CloudWatch Logs
+* `logs:PutResourcePolicy` - Put resource policy for X-Ray integration
+* `xray:PutTraceSegments` - Put X-Ray trace segments
+* `xray:PutTelemetryRecords` - Put X-Ray telemetry records
+* `xray:GetSamplingRules` - Get X-Ray sampling rules
+* `xray:GetSamplingTargets` - Get X-Ray sampling targets
+
+Ensure these permissions are scoped to the appropriate log group and resources.
+
+## Observability Behavior Notes
+
+* When `enabled` changes from `true` to `false`, the provider removes the injected OpenTelemetry environment variables and deletes the X-Ray sampling rule.
+* The X-Ray trace segment destination is set to CloudWatch Logs account-wide when observability is first enabled.
+* `log_group_name` is computed and persisted in state when not explicitly specified. The computed value defaults to `/aws/bedrock-agentcore/runtimes/<runtime_id>`.
 
 ## Timeouts
 
