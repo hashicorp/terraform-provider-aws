@@ -755,6 +755,27 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 					return
 				}
+			} else if obsConfig != nil && !obsConfig.Enabled.ValueBool() {
+				oldObsConfig, d := old.Observability.ToPtr(ctx)
+				smerr.AddEnrich(ctx, &response.Diagnostics, d)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				if oldObsConfig != nil && oldObsConfig.Enabled.ValueBool() {
+					runtime, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
+					if err != nil {
+						smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+						return
+					}
+					if err := disableObservability(ctx, conn, r.Meta().XRayClient(ctx), runtime, agentRuntimeID); err != nil {
+						smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+						return
+					}
+					if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+						smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+						return
+					}
+				}
 			}
 		}
 
@@ -926,24 +947,24 @@ func findAgentRuntime(ctx context.Context, conn *bedrockagentcorecontrol.Client,
 
 type agentRuntimeResourceModel struct {
 	framework.WithRegionModel
-	AgentRuntimeARN            types.String                                                       `tfsdk:"agent_runtime_arn"`
-	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]         `tfsdk:"agent_runtime_artifact"`
-	AgentRuntimeID             types.String                                                       `tfsdk:"agent_runtime_id"`
-	AgentRuntimeName           types.String                                                       `tfsdk:"agent_runtime_name"`
-	AgentRuntimeVersion        types.String                                                       `tfsdk:"agent_runtime_version"`
-	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]      `tfsdk:"authorizer_configuration"`
-	Description                types.String                                                       `tfsdk:"description"`
-	EnvironmentVariables       fwtypes.MapOfString                                                `tfsdk:"environment_variables"`
-	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]       `tfsdk:"lifecycle_configuration"`
-	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]         `tfsdk:"network_configuration"`
-	Observability              fwtypes.ListNestedObjectValueOf[observabilityConfigurationModel]   `tfsdk:"observability"`
-	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]        `tfsdk:"protocol_configuration"`
-	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel]   `tfsdk:"request_header_configuration"`
-	RoleARN                    fwtypes.ARN                                                        `tfsdk:"role_arn"`
-	Tags                       tftags.Map                                                         `tfsdk:"tags"`
-	TagsAll                    tftags.Map                                                         `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value                                                     `tfsdk:"timeouts"`
-	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]      `tfsdk:"workload_identity_details"`
+	AgentRuntimeARN            types.String                                                     `tfsdk:"agent_runtime_arn"`
+	AgentRuntimeArtifact       fwtypes.ListNestedObjectValueOf[agentRuntimeArtifactModel]       `tfsdk:"agent_runtime_artifact"`
+	AgentRuntimeID             types.String                                                     `tfsdk:"agent_runtime_id"`
+	AgentRuntimeName           types.String                                                     `tfsdk:"agent_runtime_name"`
+	AgentRuntimeVersion        types.String                                                     `tfsdk:"agent_runtime_version"`
+	AuthorizerConfiguration    fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]    `tfsdk:"authorizer_configuration"`
+	Description                types.String                                                     `tfsdk:"description"`
+	EnvironmentVariables       fwtypes.MapOfString                                              `tfsdk:"environment_variables"`
+	LifecycleConfiguration     fwtypes.ListNestedObjectValueOf[lifecycleConfigurationModel]     `tfsdk:"lifecycle_configuration"`
+	NetworkConfiguration       fwtypes.ListNestedObjectValueOf[networkConfigurationModel]       `tfsdk:"network_configuration"`
+	Observability              fwtypes.ListNestedObjectValueOf[observabilityConfigurationModel] `tfsdk:"observability"`
+	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
+	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
+	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
+	Tags                       tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
+	WorkloadIdentityDetails    fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]    `tfsdk:"workload_identity_details"`
 }
 
 type agentRuntimeArtifactModel struct {
@@ -1248,9 +1269,9 @@ type workloadIdentityDetailsModel struct {
 
 type observabilityConfigurationModel struct {
 	CloudwatchLogs  fwtypes.ListNestedObjectValueOf[cloudwatchLogsConfigurationModel] `tfsdk:"cloudwatch_logs"`
-	Enabled         types.Bool                                                         `tfsdk:"enabled"`
+	Enabled         types.Bool                                                        `tfsdk:"enabled"`
 	RuntimeLanguage types.String                                                      `tfsdk:"runtime_language"`
-	Xray            fwtypes.ListNestedObjectValueOf[xrayConfigurationModel]            `tfsdk:"xray"`
+	Xray            fwtypes.ListNestedObjectValueOf[xrayConfigurationModel]           `tfsdk:"xray"`
 }
 
 type xrayConfigurationModel struct {
@@ -1292,7 +1313,7 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 	}
 
 	obsEnvVars := map[string]string{
-		"AGENT_OBSERVABILITY_ENABLED":      "true",
+		"AGENT_OBSERVABILITY_ENABLED":     "true",
 		"OTEL_EXPORTER_OTLP_LOGS_HEADERS": fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
 		"OTEL_EXPORTER_OTLP_PROTOCOL":     "http/protobuf",
 		"OTEL_RESOURCE_ATTRIBUTES":        fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
@@ -1473,20 +1494,27 @@ func applyLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client
 // or 0 if no retention policy is set (never expire).
 // Returns an error only for API failures; a missing log group is treated as 0, no error.
 func readLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client, logGroupName string) (int32, error) {
-	out, err := logsConn.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: aws.String(logGroupName),
-		Limit:              aws.Int32(1),
-	})
-	if err != nil {
-		return 0, fmt.Errorf("describing log group %q: %w", logGroupName, err)
-	}
-	for _, lg := range out.LogGroups {
-		if aws.ToString(lg.LogGroupName) == logGroupName {
-			if lg.RetentionInDays != nil {
-				return *lg.RetentionInDays, nil
-			}
-			return 0, nil
+	var nextToken *string
+	for {
+		out, err := logsConn.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
+			LogGroupNamePrefix: aws.String(logGroupName),
+			NextToken:          nextToken,
+		})
+		if err != nil {
+			return 0, fmt.Errorf("describing log group %q: %w", logGroupName, err)
 		}
+		for _, lg := range out.LogGroups {
+			if aws.ToString(lg.LogGroupName) == logGroupName {
+				if lg.RetentionInDays != nil {
+					return *lg.RetentionInDays, nil
+				}
+				return 0, nil
+			}
+		}
+		if out.NextToken == nil {
+			break
+		}
+		nextToken = out.NextToken
 	}
 	// Log group does not exist yet (first log event hasn't arrived).
 	return 0, nil
@@ -1594,4 +1622,46 @@ func deleteXRaySamplingRule(ctx context.Context, xrayConn *xray.Client, runtimeI
 		return fmt.Errorf("deleting X-Ray sampling rule %q: %w", ruleName, err)
 	}
 	return nil
+}
+
+// disableObservability removes OTEL environment variables injected during observability
+// configuration and deletes the per-runtime X-Ray sampling rule.
+func disableObservability(ctx context.Context, conn *bedrockagentcorecontrol.Client, xrayConn *xray.Client, runtime *bedrockagentcorecontrol.GetAgentRuntimeOutput, runtimeID string) error {
+	cleaned := make(map[string]string, len(runtime.EnvironmentVariables))
+	for k, v := range runtime.EnvironmentVariables {
+		if !isOtelEnvVar(k) {
+			cleaned[k] = v
+		}
+	}
+
+	updateInput := &bedrockagentcorecontrol.UpdateAgentRuntimeInput{
+		AgentRuntimeId:          aws.String(runtimeID),
+		AgentRuntimeArtifact:    runtime.AgentRuntimeArtifact,
+		AuthorizerConfiguration: runtime.AuthorizerConfiguration,
+		Description:             runtime.Description,
+		EnvironmentVariables:    cleaned,
+		NetworkConfiguration:    runtime.NetworkConfiguration,
+		ProtocolConfiguration:   runtime.ProtocolConfiguration,
+		RoleArn:                 runtime.RoleArn,
+	}
+	if _, err := conn.UpdateAgentRuntime(ctx, updateInput); err != nil {
+		return fmt.Errorf("removing observability environment variables from agent runtime: %w", err)
+	}
+
+	return deleteXRaySamplingRule(ctx, xrayConn, runtimeID)
+}
+
+// isOtelEnvVar reports whether key is an OTEL env var injected by configureObservability.
+func isOtelEnvVar(key string) bool {
+	switch key {
+	case "AGENT_OBSERVABILITY_ENABLED",
+		"OTEL_EXPORTER_OTLP_LOGS_HEADERS",
+		"OTEL_EXPORTER_OTLP_PROTOCOL",
+		"OTEL_RESOURCE_ATTRIBUTES",
+		"OTEL_TRACES_EXPORTER",
+		"OTEL_PYTHON_DISTRO",
+		"OTEL_PYTHON_CONFIGURATOR":
+		return true
+	}
+	return false
 }
