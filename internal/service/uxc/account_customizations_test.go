@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -147,8 +148,12 @@ func testAccAccountCustomizations_visibleRegionsEmpty(t *testing.T) {
 			},
 			{
 				// Confirm no diff on subsequent plan.
-				Config:   testAccAccountCustomizationsConfig_visibleRegionsEmpty(),
-				PlanOnly: true,
+				Config: testAccAccountCustomizationsConfig_visibleRegionsEmpty(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -224,8 +229,12 @@ func testAccAccountCustomizations_visibleServicesEmpty(t *testing.T) {
 			},
 			{
 				// Confirm no diff on subsequent plan.
-				Config:   testAccAccountCustomizationsConfig_visibleServicesEmpty(),
-				PlanOnly: true,
+				Config: testAccAccountCustomizationsConfig_visibleServicesEmpty(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
