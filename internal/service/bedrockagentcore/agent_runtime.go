@@ -21,6 +21,7 @@ import (
 	xraytypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -299,6 +300,31 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 							Required: true,
 						},
 					},
+					Blocks: map[string]schema.Block{
+						"cloudwatch_logs": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudwatchLogsConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"log_group_name": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 512),
+										},
+									},
+									"retention_in_days": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.OneOf(1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653),
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -495,10 +521,24 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("waiting for X-Ray resource policy: %w", err), smerr.ID, agentRuntimeID)
 				return
 			}
-			if err := configureObservability(ctx, conn, r.Meta().XRayClient(ctx), runtime, data.EnvironmentVariables); err != nil {
+			resolvedLogGroup, err := configureObservability(ctx, conn, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), runtime, obsConfig, data.EnvironmentVariables)
+			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 				return
 			}
+			// Persist computed log_group_name when the user did not explicitly set one.
+			if !obsConfig.CloudwatchLogs.IsNull() {
+				cwConfig, d := obsConfig.CloudwatchLogs.ToPtr(ctx)
+				smerr.AddEnrich(ctx, &response.Diagnostics, d)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				if cwConfig != nil && (cwConfig.LogGroupName.IsNull() || cwConfig.LogGroupName.IsUnknown()) {
+					cwConfig.LogGroupName = types.StringValue(resolvedLogGroup)
+					obsConfig.CloudwatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, cwConfig)
+				}
+			}
+			data.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
 			runtime, err = findAgentRuntimeByID(ctx, conn, agentRuntimeID)
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
@@ -508,11 +548,14 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	// Set values for unknowns.
+	savedObservability := data.Observability
 	userEnvVars := data.EnvironmentVariables
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+	// fwflex.Flatten operates on API fields only; restore Terraform-managed fields.
+	data.Observability = savedObservability
 	if !data.Observability.IsNull() {
 		obsConfig, d := data.Observability.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
@@ -545,17 +588,46 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
+	savedObservability := data.Observability
 	userEnvVars := data.EnvironmentVariables
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
+	// fwflex.Flatten operates on API fields only; restore Terraform-managed fields.
+	data.Observability = savedObservability
 
 	if !data.Observability.IsNull() {
 		obsConfig, d := data.Observability.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if !response.Diagnostics.HasError() && obsConfig != nil && obsConfig.Enabled.ValueBool() {
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if obsConfig != nil && obsConfig.Enabled.ValueBool() {
 			data.EnvironmentVariables = userEnvVars
+
+			// Drift detection: sync retention_in_days from CloudWatch Logs.
+			if !obsConfig.CloudwatchLogs.IsNull() {
+				cwConfig, d := obsConfig.CloudwatchLogs.ToPtr(ctx)
+				smerr.AddEnrich(ctx, &response.Diagnostics, d)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				if cwConfig != nil && !cwConfig.LogGroupName.IsNull() && !cwConfig.RetentionInDays.IsNull() {
+					retention, err := readLogGroupRetention(ctx, r.Meta().LogsClient(ctx), cwConfig.LogGroupName.ValueString())
+					if err != nil {
+						smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+						return
+					}
+					if retention > 0 {
+						cwConfig.RetentionInDays = types.Int32Value(retention)
+					} else {
+						cwConfig.RetentionInDays = types.Int32Null()
+					}
+					obsConfig.CloudwatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, cwConfig)
+					data.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
+				}
+			}
 		}
 	}
 
@@ -616,10 +688,24 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 					return
 				}
-				if err := configureObservability(ctx, conn, r.Meta().XRayClient(ctx), runtime, new.EnvironmentVariables); err != nil {
+				resolvedLogGroup, err := configureObservability(ctx, conn, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), runtime, obsConfig, new.EnvironmentVariables)
+				if err != nil {
 					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 					return
 				}
+				// Persist computed log_group_name when the user did not explicitly set one.
+				if !obsConfig.CloudwatchLogs.IsNull() {
+					cwConfig, d := obsConfig.CloudwatchLogs.ToPtr(ctx)
+					smerr.AddEnrich(ctx, &response.Diagnostics, d)
+					if response.Diagnostics.HasError() {
+						return
+					}
+					if cwConfig != nil && (cwConfig.LogGroupName.IsNull() || cwConfig.LogGroupName.IsUnknown()) {
+						cwConfig.LogGroupName = types.StringValue(resolvedLogGroup)
+						obsConfig.CloudwatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, cwConfig)
+					}
+				}
+				new.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
 				if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 					return
@@ -633,11 +719,14 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
+		savedObservability := new.Observability
 		userEnvVars := new.EnvironmentVariables
 		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
 		}
+		// fwflex.Flatten operates on API fields only; restore Terraform-managed fields.
+		new.Observability = savedObservability
 		if !new.Observability.IsNull() {
 			obsConfig, d := new.Observability.ToPtr(ctx)
 			smerr.AddEnrich(ctx, &response.Diagnostics, d)
@@ -1101,18 +1190,46 @@ type workloadIdentityDetailsModel struct {
 }
 
 type observabilityConfigurationModel struct {
-	Enabled types.Bool `tfsdk:"enabled"`
+	CloudwatchLogs fwtypes.ListNestedObjectValueOf[cloudwatchLogsConfigurationModel] `tfsdk:"cloudwatch_logs"`
+	Enabled        types.Bool                                                         `tfsdk:"enabled"`
+}
+
+type cloudwatchLogsConfigurationModel struct {
+	LogGroupName    types.String `tfsdk:"log_group_name"`
+	RetentionInDays types.Int32  `tfsdk:"retention_in_days"`
 }
 
 const xrayResourcePolicyName = "BedrockAgentCoreXRayPolicy"
 
-func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.Client, xrayConn *xray.Client, runtime *bedrockagentcorecontrol.GetAgentRuntimeOutput, existingEnvVars fwtypes.MapOfString) error {
+// configureObservability injects OTEL environment variables, configures X-Ray, and applies
+// any CloudWatch Logs settings. It returns the resolved log group name so callers can
+// persist it as a computed value in state.
+func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.Client, logsConn *cloudwatchlogs.Client, xrayConn *xray.Client, runtime *bedrockagentcorecontrol.GetAgentRuntimeOutput, obsConfig *observabilityConfigurationModel, existingEnvVars fwtypes.MapOfString) (string, error) {
 	runtimeID := aws.ToString(runtime.AgentRuntimeId)
 	runtimeName := aws.ToString(runtime.AgentRuntimeName)
+
+	// Resolve log group name: use user-provided value if set, otherwise derive from runtime ID.
 	logGroup := fmt.Sprintf("/aws/bedrock-agentcore/runtimes/%s", runtimeID)
+	var retentionInDays *int32
+
+	if !obsConfig.CloudwatchLogs.IsNull() {
+		cwConfig, d := obsConfig.CloudwatchLogs.ToPtr(ctx)
+		if d.HasError() {
+			return "", fmt.Errorf("reading cloudwatch_logs configuration: %s", d)
+		}
+		if cwConfig != nil {
+			if !cwConfig.LogGroupName.IsNull() && !cwConfig.LogGroupName.IsUnknown() {
+				logGroup = cwConfig.LogGroupName.ValueString()
+			}
+			if !cwConfig.RetentionInDays.IsNull() {
+				v := cwConfig.RetentionInDays.ValueInt32()
+				retentionInDays = &v
+			}
+		}
+	}
 
 	obsEnvVars := map[string]string{
-		"AGENT_OBSERVABILITY_ENABLED":     "true",
+		"AGENT_OBSERVABILITY_ENABLED":      "true",
 		"OTEL_EXPORTER_OTLP_LOGS_HEADERS": fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
 		"OTEL_EXPORTER_OTLP_PROTOCOL":     "http/protobuf",
 		"OTEL_RESOURCE_ATTRIBUTES":        fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
@@ -1143,14 +1260,20 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 	}
 
 	if _, err := conn.UpdateAgentRuntime(ctx, updateInput); err != nil {
-		return fmt.Errorf("updating agent runtime with observability environment variables: %w", err)
+		return "", fmt.Errorf("updating agent runtime with observability environment variables: %w", err)
 	}
 
 	if err := configureXRayForObservability(ctx, xrayConn); err != nil {
-		return fmt.Errorf("configuring X-Ray for observability: %w", err)
+		return "", fmt.Errorf("configuring X-Ray for observability: %w", err)
 	}
 
-	return nil
+	if retentionInDays != nil {
+		if err := applyLogGroupRetention(ctx, logsConn, logGroup, *retentionInDays); err != nil {
+			return "", err
+		}
+	}
+
+	return logGroup, nil
 }
 
 func configureXRayForObservability(ctx context.Context, xrayConn *xray.Client) error {
@@ -1247,4 +1370,42 @@ func (r *agentRuntimeResource) waitForXRayResourcePolicy(ctx context.Context, ti
 	}
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
+}
+
+// applyLogGroupRetention sets the retention policy on a CloudWatch Logs log group.
+// The log group is created automatically by CloudWatch when the first log event arrives,
+// so this call may fail if the group does not yet exist; callers should decide whether
+// to treat that as a hard error or to retry later.
+func applyLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client, logGroupName string, retentionInDays int32) error {
+	_, err := logsConn.PutRetentionPolicy(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
+		LogGroupName:    aws.String(logGroupName),
+		RetentionInDays: aws.Int32(retentionInDays),
+	})
+	if err != nil {
+		return fmt.Errorf("setting retention policy on log group %q: %w", logGroupName, err)
+	}
+	return nil
+}
+
+// readLogGroupRetention returns the current retention-in-days for the given log group,
+// or 0 if no retention policy is set (never expire).
+// Returns an error only for API failures; a missing log group is treated as 0, no error.
+func readLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client, logGroupName string) (int32, error) {
+	out, err := logsConn.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
+		LogGroupNamePrefix: aws.String(logGroupName),
+		Limit:              aws.Int32(1),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("describing log group %q: %w", logGroupName, err)
+	}
+	for _, lg := range out.LogGroups {
+		if aws.ToString(lg.LogGroupName) == logGroupName {
+			if lg.RetentionInDays != nil {
+				return *lg.RetentionInDays, nil
+			}
+			return 0, nil
+		}
+	}
+	// Log group does not exist yet (first log event hasn't arrived).
+	return 0, nil
 }
