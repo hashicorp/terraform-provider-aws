@@ -324,6 +324,22 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 								},
 							},
 						},
+						"xray": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[xrayConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"sampling_percentage": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(0, 100),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -628,6 +644,29 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 					data.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
 				}
 			}
+
+			// Drift detection: sync sampling_percentage from X-Ray.
+			if !obsConfig.Xray.IsNull() {
+				xrayConfig, d := obsConfig.Xray.ToPtr(ctx)
+				smerr.AddEnrich(ctx, &response.Diagnostics, d)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				if xrayConfig != nil && !xrayConfig.SamplingPercentage.IsNull() {
+					percentage, found, err := readXRaySamplingPercentage(ctx, r.Meta().XRayClient(ctx), agentRuntimeID)
+					if err != nil {
+						smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+						return
+					}
+					if found {
+						xrayConfig.SamplingPercentage = types.Int32Value(percentage)
+					} else {
+						xrayConfig.SamplingPercentage = types.Int32Null()
+					}
+					obsConfig.Xray = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, xrayConfig)
+					data.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
+				}
+			}
 		}
 	}
 
@@ -767,6 +806,18 @@ func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.Dele
 	if _, err := waitAgentRuntimeDeleted(ctx, conn, agentRuntimeID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 		return
+	}
+
+	// Clean up X-Ray sampling rule if observability was configured with xray.
+	if !data.Observability.IsNull() {
+		obsConfig, d := data.Observability.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if !response.Diagnostics.HasError() && obsConfig != nil && !obsConfig.Xray.IsNull() {
+			if err := deleteXRaySamplingRule(ctx, r.Meta().XRayClient(ctx), agentRuntimeID); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+				return
+			}
+		}
 	}
 }
 
@@ -1192,6 +1243,11 @@ type workloadIdentityDetailsModel struct {
 type observabilityConfigurationModel struct {
 	CloudwatchLogs fwtypes.ListNestedObjectValueOf[cloudwatchLogsConfigurationModel] `tfsdk:"cloudwatch_logs"`
 	Enabled        types.Bool                                                         `tfsdk:"enabled"`
+	Xray           fwtypes.ListNestedObjectValueOf[xrayConfigurationModel]            `tfsdk:"xray"`
+}
+
+type xrayConfigurationModel struct {
+	SamplingPercentage types.Int32 `tfsdk:"sampling_percentage"`
 }
 
 type cloudwatchLogsConfigurationModel struct {
@@ -1265,6 +1321,18 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 
 	if err := configureXRayForObservability(ctx, xrayConn); err != nil {
 		return "", fmt.Errorf("configuring X-Ray for observability: %w", err)
+	}
+
+	if !obsConfig.Xray.IsNull() {
+		xrayConfig, d := obsConfig.Xray.ToPtr(ctx)
+		if d.HasError() {
+			return "", fmt.Errorf("reading xray configuration: %s", d)
+		}
+		if xrayConfig != nil && !xrayConfig.SamplingPercentage.IsNull() {
+			if err := applyXRaySamplingRule(ctx, xrayConn, runtimeID, xrayConfig.SamplingPercentage.ValueInt32()); err != nil {
+				return "", fmt.Errorf("configuring X-Ray sampling rule: %w", err)
+			}
+		}
 	}
 
 	if retentionInDays != nil {
@@ -1408,4 +1476,108 @@ func readLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client,
 	}
 	// Log group does not exist yet (first log event hasn't arrived).
 	return 0, nil
+}
+
+const xraySamplingRulePrefix = "bedrock-agentcore-"
+
+func xraySamplingRuleName(runtimeID string) string {
+	return xraySamplingRulePrefix + runtimeID
+}
+
+// applyXRaySamplingRule creates or updates an X-Ray sampling rule for the given runtime,
+// setting the fixed sampling rate to samplingPercentage/100.
+func applyXRaySamplingRule(ctx context.Context, xrayConn *xray.Client, runtimeID string, samplingPercentage int32) error {
+	ruleName := xraySamplingRuleName(runtimeID)
+	fixedRate := float64(samplingPercentage) / 100.0
+
+	// Check whether the rule already exists.
+	var nextToken *string
+	for {
+		out, err := xrayConn.GetSamplingRules(ctx, &xray.GetSamplingRulesInput{
+			NextToken: nextToken,
+		})
+		if err != nil {
+			return fmt.Errorf("getting X-Ray sampling rules: %w", err)
+		}
+		for _, record := range out.SamplingRuleRecords {
+			if record.SamplingRule != nil && aws.ToString(record.SamplingRule.RuleName) == ruleName {
+				// Rule exists — update the fixed rate.
+				if _, err := xrayConn.UpdateSamplingRule(ctx, &xray.UpdateSamplingRuleInput{
+					SamplingRuleUpdate: &xraytypes.SamplingRuleUpdate{
+						RuleName:  aws.String(ruleName),
+						FixedRate: aws.Float64(fixedRate),
+					},
+				}); err != nil {
+					return fmt.Errorf("updating X-Ray sampling rule %q: %w", ruleName, err)
+				}
+				return nil
+			}
+		}
+		if out.NextToken == nil {
+			break
+		}
+		nextToken = out.NextToken
+	}
+
+	// Rule does not exist — create it.
+	if _, err := xrayConn.CreateSamplingRule(ctx, &xray.CreateSamplingRuleInput{
+		SamplingRule: &xraytypes.SamplingRule{
+			RuleName:      aws.String(ruleName),
+			FixedRate:     fixedRate,
+			HTTPMethod:    aws.String("*"),
+			Host:          aws.String("*"),
+			Priority:      aws.Int32(9000),
+			ReservoirSize: 5,
+			ResourceARN:   aws.String("*"),
+			ServiceName:   aws.String("*"),
+			ServiceType:   aws.String("*"),
+			URLPath:       aws.String("*"),
+			Version:       aws.Int32(1),
+		},
+	}); err != nil {
+		return fmt.Errorf("creating X-Ray sampling rule %q: %w", ruleName, err)
+	}
+	return nil
+}
+
+// readXRaySamplingPercentage returns the current sampling percentage (0–100) for the
+// per-runtime sampling rule, and whether the rule was found. Returns an error only for
+// API failures; a missing rule is treated as (0, false, nil).
+func readXRaySamplingPercentage(ctx context.Context, xrayConn *xray.Client, runtimeID string) (int32, bool, error) {
+	ruleName := xraySamplingRuleName(runtimeID)
+	var nextToken *string
+	for {
+		out, err := xrayConn.GetSamplingRules(ctx, &xray.GetSamplingRulesInput{
+			NextToken: nextToken,
+		})
+		if err != nil {
+			return 0, false, fmt.Errorf("getting X-Ray sampling rules: %w", err)
+		}
+		for _, record := range out.SamplingRuleRecords {
+			if record.SamplingRule != nil && aws.ToString(record.SamplingRule.RuleName) == ruleName {
+				percentage := int32(record.SamplingRule.FixedRate * 100)
+				return percentage, true, nil
+			}
+		}
+		if out.NextToken == nil {
+			break
+		}
+		nextToken = out.NextToken
+	}
+	return 0, false, nil
+}
+
+// deleteXRaySamplingRule removes the per-runtime X-Ray sampling rule. A missing rule is
+// treated as a no-op so that deletes remain idempotent.
+func deleteXRaySamplingRule(ctx context.Context, xrayConn *xray.Client, runtimeID string) error {
+	ruleName := xraySamplingRuleName(runtimeID)
+	if _, err := xrayConn.DeleteSamplingRule(ctx, &xray.DeleteSamplingRuleInput{
+		RuleName: aws.String(ruleName),
+	}); err != nil {
+		if tfawserr.ErrCodeEquals(err, "InvalidRequestException") {
+			return nil // rule does not exist
+		}
+		return fmt.Errorf("deleting X-Ray sampling rule %q: %w", ruleName, err)
+	}
+	return nil
 }
