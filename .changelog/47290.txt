@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_uxc_account_customizations: Fix inconsistent result error when `visible_regions` or `visible_services` is set to an explicit empty set (`[]`)
+```
