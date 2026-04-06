@@ -192,6 +192,7 @@ func (r *pipelineEndpointResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+    // This is being set directly to be stored in the resource model because VPC options aren't returned in the OSIS API responses.
 	data.VPCOptions = vpcOptions
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -246,7 +247,7 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 		for _, e := range page.PipelineEndpoints {
 			if aws.ToString(e.EndpointId) == endpointID {
 				endpoint = &e
-				break
+				return endpoint, nil
 			}
 		}
 	}
