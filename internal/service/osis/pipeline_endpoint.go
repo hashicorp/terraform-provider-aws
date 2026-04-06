@@ -198,9 +198,6 @@ func (r *pipelineEndpointResource) Read(ctx context.Context, request resource.Re
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *pipelineEndpointResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-
-}
 
 func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data pipelineEndpointResourceModel
