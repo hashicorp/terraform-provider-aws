@@ -73,6 +73,9 @@ func (r *pipelineEndpointResource) Schema(ctx context.Context, request resource.
 			},
 			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
