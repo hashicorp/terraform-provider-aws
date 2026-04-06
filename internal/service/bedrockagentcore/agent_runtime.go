@@ -8,6 +8,7 @@ package bedrockagentcore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -691,9 +693,79 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 				}
 			}
 		}
+	} else if out.EnvironmentVariables["AGENT_OBSERVABILITY_ENABLED"] == "true" {
+		// Import path: observability was enabled but no prior Terraform state exists.
+		// Reconstruct the observability block from OTEL environment variables injected
+		// by configureObservability.
+		obsConfig, err := reconstructObservabilityFromEnvVars(ctx, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), out.EnvironmentVariables, agentRuntimeID)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
+			return
+		}
+		data.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
+
+		// Strip OTEL env vars so environment_variables reflects the user-managed set only.
+		filteredAttrs := make(map[string]attr.Value)
+		for k, v := range data.EnvironmentVariables.Elements() {
+			if !isOtelEnvVar(k) {
+				filteredAttrs[k] = v
+			}
+		}
+		data.EnvironmentVariables = fwtypes.NewMapValueOfMust[types.String](ctx, filteredAttrs)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func reconstructObservabilityFromEnvVars(ctx context.Context, logsConn *cloudwatchlogs.Client, xrayConn *xray.Client, apiEnvVars map[string]string, runtimeID string) (*observabilityConfigurationModel, error) {
+	// Detect runtime language from language-specific env vars.
+	runtimeLanguage := ""
+	if _, ok := apiEnvVars["OTEL_PYTHON_DISTRO"]; ok {
+		runtimeLanguage = "python"
+	}
+
+	// Extract log group from OTEL_EXPORTER_OTLP_LOGS_HEADERS.
+	logGroup := ""
+	if headers, ok := apiEnvVars["OTEL_EXPORTER_OTLP_LOGS_HEADERS"]; ok {
+		for _, part := range strings.Split(headers, ",") {
+			if strings.HasPrefix(part, "x-aws-log-group=") {
+				logGroup = strings.TrimPrefix(part, "x-aws-log-group=")
+				break
+			}
+		}
+	}
+
+	// Build cloudwatch_logs config, reading retention from the API.
+	cwConfig := &cloudwatchLogsConfigurationModel{
+		LogGroupName:    types.StringValue(logGroup),
+		RetentionInDays: types.Int32Null(),
+	}
+	if logGroup != "" {
+		retention, err := readLogGroupRetention(ctx, logsConn, logGroup)
+		if err != nil {
+			return nil, fmt.Errorf("reading log group retention during import: %w", err)
+		}
+		if retention > 0 {
+			cwConfig.RetentionInDays = types.Int32Value(retention)
+		}
+	}
+
+	// Build xray config, reading sampling percentage from the API.
+	xrayConfig := &xrayConfigurationModel{SamplingPercentage: types.Int32Null()}
+	percentage, found, err := readXRaySamplingPercentage(ctx, xrayConn, runtimeID)
+	if err != nil {
+		return nil, fmt.Errorf("reading X-Ray sampling percentage during import: %w", err)
+	}
+	if found {
+		xrayConfig.SamplingPercentage = types.Int32Value(percentage)
+	}
+
+	return &observabilityConfigurationModel{
+		Enabled:         types.BoolValue(true),
+		RuntimeLanguage: types.StringValue(runtimeLanguage),
+		CloudwatchLogs:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, cwConfig),
+		Xray:            fwtypes.NewListNestedObjectValueOfPtrMust(ctx, xrayConfig),
+	}, nil
 }
 
 func (r *agentRuntimeResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -791,6 +863,27 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 					if _, err := waitAgentRuntimeUpdated(ctx, conn, agentRuntimeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 						smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 						return
+					}
+				}
+				// Resolve computed log_group_name: preserve from old state or derive from runtime ID.
+				if !obsConfig.CloudwatchLogs.IsNull() {
+					cwConfig, d := obsConfig.CloudwatchLogs.ToPtr(ctx)
+					smerr.AddEnrich(ctx, &response.Diagnostics, d)
+					if response.Diagnostics.HasError() {
+						return
+					}
+					if cwConfig != nil && (cwConfig.LogGroupName.IsNull() || cwConfig.LogGroupName.IsUnknown()) {
+						resolvedName := fmt.Sprintf("/aws/bedrock-agentcore/runtimes/%s", agentRuntimeID)
+						if oldObsConfig != nil && !oldObsConfig.CloudwatchLogs.IsNull() {
+							oldCwConfig, d := oldObsConfig.CloudwatchLogs.ToPtr(ctx)
+							smerr.AddEnrich(ctx, &response.Diagnostics, d)
+							if !response.Diagnostics.HasError() && oldCwConfig != nil && !oldCwConfig.LogGroupName.IsNull() && !oldCwConfig.LogGroupName.IsUnknown() {
+								resolvedName = oldCwConfig.LogGroupName.ValueString()
+							}
+						}
+						cwConfig.LogGroupName = types.StringValue(resolvedName)
+						obsConfig.CloudwatchLogs = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, cwConfig)
+						new.Observability = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, obsConfig)
 					}
 				}
 			}

@@ -1347,3 +1347,150 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
 }
 `, rName, s3Bucket, s3Key))
 }
+
+func TestAccBedrockAgentCoreAgentRuntime_observability(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_observability(rName, rImageUri, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("observability").AtSliceIndex(0).AtMapKey("enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("observability").AtSliceIndex(0).AtMapKey("runtime_language"), knownvalue.StringExact("python")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("observability").AtSliceIndex(0).AtMapKey("cloudwatch_logs").AtSliceIndex(0).AtMapKey("log_group_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("observability").AtSliceIndex(0).AtMapKey("cloudwatch_logs").AtSliceIndex(0).AtMapKey("retention_in_days"), knownvalue.Int32Exact(7)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("observability").AtSliceIndex(0).AtMapKey("xray").AtSliceIndex(0).AtMapKey("sampling_percentage"), knownvalue.Int32Exact(10)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			// Disable observability — verifies OTEL env var cleanup.
+			{
+				Config: testAccAgentRuntimeConfig_observability(rName, rImageUri, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("observability").AtSliceIndex(0).AtMapKey("enabled"), knownvalue.Bool(false)),
+				},
+			},
+		},
+	})
+}
+
+func testAccAgentRuntimeConfig_observability(rName, imageUri string, enabled bool) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_observabilityIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test_observability.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  observability {
+    enabled          = %[3]t
+    runtime_language = "python"
+
+    cloudwatch_logs {
+      retention_in_days = 7
+    }
+
+    xray {
+      sampling_percentage = 10
+    }
+  }
+}
+`, rName, imageUri, enabled))
+}
+
+// testAccAgentRuntimeConfig_observabilityIAMRole creates an IAM role with permissions
+// required by the runtime container to emit logs and traces when observability is enabled.
+func testAccAgentRuntimeConfig_observabilityIAMRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "test_obs_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "test_obs" {
+  # Container image access.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+
+  # CloudWatch Logs: runtime emits logs via OTEL.
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogGroups",
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+
+  # X-Ray: runtime sends traces via OTEL.
+  statement {
+    actions = [
+      "xray:PutTraceSegments",
+      "xray:PutTelemetryRecords",
+      "xray:GetSamplingRules",
+      "xray:GetSamplingTargets",
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "test_observability" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_obs_assume.json
+}
+
+resource "aws_iam_role_policy" "test_observability" {
+  role   = aws_iam_role.test_observability.id
+  policy = data.aws_iam_policy_document.test_obs.json
+}
+`, rName)
+}
