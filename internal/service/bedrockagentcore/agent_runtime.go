@@ -1423,13 +1423,13 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 	}
 
 	obsEnvVars := map[string]string{
-		"AGENT_OBSERVABILITY_ENABLED":          "true",
-		"OTEL_EXPORTER_OTLP_LOGS_ENDPOINT":     fmt.Sprintf("https://logs.%s.amazonaws.com/v1/logs", region),
-		"OTEL_EXPORTER_OTLP_LOGS_HEADERS":      fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
-		"OTEL_EXPORTER_OTLP_PROTOCOL":          "http/protobuf",
-		"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT":   fmt.Sprintf("https://xray.%s.amazonaws.com/v1/traces", region),
-		"OTEL_RESOURCE_ATTRIBUTES":             fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
-		"OTEL_TRACES_EXPORTER":                 "otlp",
+		"AGENT_OBSERVABILITY_ENABLED":        "true",
+		"OTEL_EXPORTER_OTLP_LOGS_ENDPOINT":   fmt.Sprintf("https://logs.%s.amazonaws.com/v1/logs", region),
+		"OTEL_EXPORTER_OTLP_LOGS_HEADERS":    fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
+		"OTEL_EXPORTER_OTLP_PROTOCOL":        "http/protobuf",
+		"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT": fmt.Sprintf("https://xray.%s.amazonaws.com/v1/traces", region),
+		"OTEL_RESOURCE_ATTRIBUTES":           fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
+		"OTEL_TRACES_EXPORTER":               "otlp",
 	}
 
 	// Inject language-specific OTEL env vars.
@@ -1647,8 +1647,8 @@ func readLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client,
 }
 
 const (
-	xraySamplingRulePrefix  = "bedrock-agentcore-"
-	xraySamplingRuleMaxLen  = 32
+	xraySamplingRulePrefix = "bedrock-agentcore-"
+	xraySamplingRuleMaxLen = 32
 )
 
 func xraySamplingRuleName(runtimeID string) string {
