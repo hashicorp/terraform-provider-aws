@@ -149,7 +149,7 @@ resource "aws_osis_pipeline_endpoint" "test" {
 `, rName))
 }
 
-func testAccPipelineEndpointConfig_vpc(rName string) string {
+func testAccPipelineEndpointConfig_pipeline(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
