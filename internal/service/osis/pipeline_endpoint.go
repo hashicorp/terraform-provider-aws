@@ -48,6 +48,7 @@ type pipelineEndpointResource struct {
 	framework.ResourceWithModel[pipelineEndpointResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
+	framework.WithNoUpdate
 }
 
 func (r *pipelineEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
