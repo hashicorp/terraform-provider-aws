@@ -340,12 +340,14 @@ The `workload_identity_details` block contains the following:
 
 ## Observability IAM Permissions
 
-When `observability` is enabled, the IAM role must have the following permissions:
+### Runtime Execution Role (`role_arn`)
+
+When `observability` is enabled, the IAM role specified in `role_arn` must have the following permissions to allow the runtime container to export traces and logs via OpenTelemetry:
 
 * `logs:CreateLogGroup` - Create CloudWatch Logs log groups
 * `logs:CreateLogStream` - Create CloudWatch Logs log streams
 * `logs:PutLogEvents` - Put log events to CloudWatch Logs
-* `logs:PutResourcePolicy` - Put resource policy for X-Ray integration
+* `logs:DescribeLogGroups` - Describe CloudWatch Logs log groups
 * `xray:PutTraceSegments` - Put X-Ray trace segments
 * `xray:PutTelemetryRecords` - Put X-Ray telemetry records
 * `xray:GetSamplingRules` - Get X-Ray sampling rules
