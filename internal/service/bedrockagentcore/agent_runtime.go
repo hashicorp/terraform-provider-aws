@@ -321,6 +321,10 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 										Computed: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 512),
+											stringvalidator.RegexMatches(
+												regexache.MustCompile(`^[a-zA-Z0-9._/\-#]+$`),
+												"must contain only alphanumeric characters, periods, hyphens, underscores, forward slashes, and hash signs",
+											),
 										},
 									},
 									"retention_in_days": schema.Int32Attribute{
