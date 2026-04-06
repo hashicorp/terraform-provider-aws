@@ -279,7 +279,7 @@ The `lifecycle_configuration` block supports the following:
 The `observability` block supports the following:
 
 * `enabled` - (Required) Whether observability is enabled for the agent runtime.
-* `runtime_language` - (Optional) Programming language of the agent runtime. Used to inject language-specific OpenTelemetry configuration. Currently only `"python"` is supported. When set to `"python"`, injects `OTEL_PYTHON_DISTRO=aws_distro` and `OTEL_PYTHON_CONFIGURATOR=aws_configurator`.
+* `runtime_language` - (Optional) Programming language of the agent runtime. Used to inject language-specific OpenTelemetry configuration. Currently only `"python"` is supported. When set to `"python"`, injects `OTEL_PYTHON_DISTRO=aws_distro`, `OTEL_PYTHON_CONFIGURATOR=aws_configurator`, and `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true`.
 * `cloudwatch_logs` - (Optional) CloudWatch Logs configuration. See [`cloudwatch_logs`](#cloudwatch_logs) below.
 * `xray` - (Optional) X-Ray tracing configuration. See [`xray`](#xray) below.
 
@@ -355,9 +355,16 @@ Ensure these permissions are scoped to the appropriate log group and resources.
 
 ## Observability Behavior Notes
 
+* When `enabled` is `true`, the provider automatically injects the following OpenTelemetry environment variables into the runtime:
+  * `AGENT_OBSERVABILITY_ENABLED=true`
+  * `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` — regional X-Ray OTLP endpoint (`https://xray.<region>.amazonaws.com/v1/traces`)
+  * `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` — regional CloudWatch Logs OTLP endpoint (`https://logs.<region>.amazonaws.com/v1/logs`)
+  * `OTEL_EXPORTER_OTLP_LOGS_HEADERS`, `OTEL_EXPORTER_OTLP_PROTOCOL`, `OTEL_RESOURCE_ATTRIBUTES`, `OTEL_TRACES_EXPORTER`
+  * Language-specific variables when `runtime_language` is set (see above)
 * When `enabled` changes from `true` to `false`, the provider removes the injected OpenTelemetry environment variables and deletes the X-Ray sampling rule.
 * The X-Ray trace segment destination is set to CloudWatch Logs account-wide when observability is first enabled.
 * `log_group_name` is computed and persisted in state when not explicitly specified. The computed value defaults to `/aws/bedrock-agentcore/runtimes/<runtime_id>`.
+* When importing a runtime that has observability enabled, the provider reconstructs the `observability` block automatically from the injected environment variables.
 
 ## Timeouts
 
