@@ -41,7 +41,6 @@ func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineEndpointExists(ctx, resourceName, &pipelineEndpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_arn", pipelineResourceName, "pipeline_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),

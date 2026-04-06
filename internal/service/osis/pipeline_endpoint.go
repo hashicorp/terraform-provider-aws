@@ -39,7 +39,6 @@ func newPipelineEndpointResource(_ context.Context) (resource.ResourceWithConfig
 	r := &pipelineEndpointResource{}
 
 	r.SetDefaultCreateTimeout(45 * time.Minute)
-	r.SetDefaultUpdateTimeout(45 * time.Minute)
 	r.SetDefaultDeleteTimeout(45 * time.Minute)
 	return r, nil
 }
@@ -60,12 +59,6 @@ func (r *pipelineEndpointResource) Schema(ctx context.Context, request resource.
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"endpoint_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -150,7 +143,6 @@ func (r *pipelineEndpointResource) Create(ctx context.Context, request resource.
 	}
 
 	data.ID = fwflex.StringValueToFramework(ctx, aws.ToString(output.EndpointId))
-	data.EndpointID = fwflex.StringValueToFramework(ctx, aws.ToString(output.EndpointId))
 
 	endpoint, err := waitPipelineEndpointCreated(ctx, conn, aws.ToString(output.EndpointId), r.CreateTimeout(ctx, data.Timeouts))
 
@@ -215,7 +207,7 @@ func (r *pipelineEndpointResource) Delete(ctx context.Context, request resource.
 
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	endpointID := data.EndpointID.ValueString()
+	endpointID := data.ID.ValueString()
 	input := &osis.DeletePipelineEndpointInput{
 		EndpointId: aws.String(endpointID),
 	}
@@ -326,7 +318,6 @@ type pipelineEndpointResourceModel struct {
 	framework.WithRegionModel
 	ID          types.String                                                     `tfsdk:"id"`
 	PipelineARN fwtypes.ARN                                                      `tfsdk:"pipeline_arn"`
-	EndpointID  types.String                                                     `tfsdk:"endpoint_id"`
 	Status      types.String                                                     `tfsdk:"status"`
 	VPCID       types.String                                                     `tfsdk:"vpc_id"`
 	VPCOptions  fwtypes.ListNestedObjectValueOf[pipelineEndpointVPCOptionsModel] `tfsdk:"vpc_options"`
