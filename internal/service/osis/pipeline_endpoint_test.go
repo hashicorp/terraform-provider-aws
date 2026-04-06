@@ -112,8 +112,6 @@ func testAccCheckPipelineEndpointExists(ctx context.Context, n string, v *awstyp
 
 func testAccPipelineEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccPipelineEndpointConfig_vpc(rName), fmt.Sprintf(`
-
-
 data "aws_availability_zones" "available" {
   state = "available"
 }
