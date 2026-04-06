@@ -528,6 +528,22 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	// Persist the created runtime to state immediately so that a subsequent destroy
+	// can remove it even if post-create observability configuration fails.
+	// Save with null observability to avoid unknown computed values (e.g. log_group_name).
+	userEnvVars := data.EnvironmentVariables
+	configObservability := data.Observability
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Observability = fwtypes.NewListNestedObjectValueOfNull[observabilityConfigurationModel](ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Observability = configObservability
+
 	if !data.Observability.IsNull() {
 		obsConfig, d := data.Observability.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
@@ -543,7 +559,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("waiting for X-Ray resource policy: %w", err), smerr.ID, agentRuntimeID)
 				return
 			}
-			resolvedLogGroup, err := configureObservability(ctx, conn, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), runtime, obsConfig, data.EnvironmentVariables)
+			resolvedLogGroup, err := configureObservability(ctx, conn, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), r.Meta().Region(ctx), runtime, obsConfig, data.EnvironmentVariables)
 			if err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 				return
@@ -569,15 +585,16 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		}
 	}
 
-	// Set values for unknowns.
-	savedObservability := data.Observability
-	userEnvVars := data.EnvironmentVariables
+	// resolvedObservability holds the fully resolved observability block (known log_group_name).
+	resolvedObservability := data.Observability
+
+	// Re-flatten after observability to pick up any updated API fields.
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, runtime, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 	// fwflex.Flatten operates on API fields only; restore Terraform-managed fields.
-	data.Observability = savedObservability
+	data.Observability = resolvedObservability
 	if !data.Observability.IsNull() {
 		obsConfig, d := data.Observability.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
@@ -733,7 +750,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 					return
 				}
-				resolvedLogGroup, err := configureObservability(ctx, conn, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), runtime, obsConfig, new.EnvironmentVariables)
+				resolvedLogGroup, err := configureObservability(ctx, conn, r.Meta().LogsClient(ctx), r.Meta().XRayClient(ctx), r.Meta().Region(ctx), runtime, obsConfig, new.EnvironmentVariables)
 				if err != nil {
 					smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, agentRuntimeID)
 					return
@@ -1288,7 +1305,7 @@ const xrayResourcePolicyName = "BedrockAgentCoreXRayPolicy"
 // configureObservability injects OTEL environment variables, configures X-Ray, and applies
 // any CloudWatch Logs settings. It returns the resolved log group name so callers can
 // persist it as a computed value in state.
-func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.Client, logsConn *cloudwatchlogs.Client, xrayConn *xray.Client, runtime *bedrockagentcorecontrol.GetAgentRuntimeOutput, obsConfig *observabilityConfigurationModel, existingEnvVars fwtypes.MapOfString) (string, error) {
+func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.Client, logsConn *cloudwatchlogs.Client, xrayConn *xray.Client, region string, runtime *bedrockagentcorecontrol.GetAgentRuntimeOutput, obsConfig *observabilityConfigurationModel, existingEnvVars fwtypes.MapOfString) (string, error) {
 	runtimeID := aws.ToString(runtime.AgentRuntimeId)
 	runtimeName := aws.ToString(runtime.AgentRuntimeName)
 
@@ -1313,11 +1330,13 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 	}
 
 	obsEnvVars := map[string]string{
-		"AGENT_OBSERVABILITY_ENABLED":     "true",
-		"OTEL_EXPORTER_OTLP_LOGS_HEADERS": fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
-		"OTEL_EXPORTER_OTLP_PROTOCOL":     "http/protobuf",
-		"OTEL_RESOURCE_ATTRIBUTES":        fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
-		"OTEL_TRACES_EXPORTER":            "otlp",
+		"AGENT_OBSERVABILITY_ENABLED":          "true",
+		"OTEL_EXPORTER_OTLP_LOGS_ENDPOINT":     fmt.Sprintf("https://logs.%s.amazonaws.com/v1/logs", region),
+		"OTEL_EXPORTER_OTLP_LOGS_HEADERS":      fmt.Sprintf("x-aws-log-group=%s,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore", logGroup),
+		"OTEL_EXPORTER_OTLP_PROTOCOL":          "http/protobuf",
+		"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT":   fmt.Sprintf("https://xray.%s.amazonaws.com/v1/traces", region),
+		"OTEL_RESOURCE_ATTRIBUTES":             fmt.Sprintf("service.name=%s,aws.log.group.names=%s", runtimeName, logGroup),
+		"OTEL_TRACES_EXPORTER":                 "otlp",
 	}
 
 	// Inject language-specific OTEL env vars.
@@ -1325,6 +1344,7 @@ func configureObservability(ctx context.Context, conn *bedrockagentcorecontrol.C
 	case "python":
 		obsEnvVars["OTEL_PYTHON_DISTRO"] = "aws_distro"
 		obsEnvVars["OTEL_PYTHON_CONFIGURATOR"] = "aws_configurator"
+		obsEnvVars["OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"] = "true"
 	}
 
 	mergedEnvVars := make(map[string]string)
@@ -1476,15 +1496,28 @@ func (r *agentRuntimeResource) waitForXRayResourcePolicy(ctx context.Context, ti
 }
 
 // applyLogGroupRetention sets the retention policy on a CloudWatch Logs log group.
-// The log group is created automatically by CloudWatch when the first log event arrives,
-// so this call may fail if the group does not yet exist; callers should decide whether
-// to treat that as a hard error or to retry later.
+// If the log group does not yet exist it is created first, then the retention policy is applied.
 func applyLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client, logGroupName string, retentionInDays int32) error {
 	_, err := logsConn.PutRetentionPolicy(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
 		LogGroupName:    aws.String(logGroupName),
 		RetentionInDays: aws.Int32(retentionInDays),
 	})
-	if err != nil {
+	if err == nil {
+		return nil
+	}
+	if !errs.IsA[*logstypes.ResourceNotFoundException](err) {
+		return fmt.Errorf("setting retention policy on log group %q: %w", logGroupName, err)
+	}
+	// Log group does not exist yet — create it, then apply the retention policy.
+	if _, cerr := logsConn.CreateLogGroup(ctx, &cloudwatchlogs.CreateLogGroupInput{
+		LogGroupName: aws.String(logGroupName),
+	}); cerr != nil && !errs.IsA[*logstypes.ResourceAlreadyExistsException](cerr) {
+		return fmt.Errorf("creating log group %q: %w", logGroupName, cerr)
+	}
+	if _, err := logsConn.PutRetentionPolicy(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
+		LogGroupName:    aws.String(logGroupName),
+		RetentionInDays: aws.Int32(retentionInDays),
+	}); err != nil {
 		return fmt.Errorf("setting retention policy on log group %q: %w", logGroupName, err)
 	}
 	return nil
@@ -1520,10 +1553,17 @@ func readLogGroupRetention(ctx context.Context, logsConn *cloudwatchlogs.Client,
 	return 0, nil
 }
 
-const xraySamplingRulePrefix = "bedrock-agentcore-"
+const (
+	xraySamplingRulePrefix  = "bedrock-agentcore-"
+	xraySamplingRuleMaxLen  = 32
+)
 
 func xraySamplingRuleName(runtimeID string) string {
-	return xraySamplingRulePrefix + runtimeID
+	name := xraySamplingRulePrefix + runtimeID
+	if len(name) > xraySamplingRuleMaxLen {
+		name = name[:xraySamplingRuleMaxLen]
+	}
+	return name
 }
 
 // applyXRaySamplingRule creates or updates an X-Ray sampling rule for the given runtime,
@@ -1655,12 +1695,15 @@ func disableObservability(ctx context.Context, conn *bedrockagentcorecontrol.Cli
 func isOtelEnvVar(key string) bool {
 	switch key {
 	case "AGENT_OBSERVABILITY_ENABLED",
+		"OTEL_EXPORTER_OTLP_LOGS_ENDPOINT",
 		"OTEL_EXPORTER_OTLP_LOGS_HEADERS",
 		"OTEL_EXPORTER_OTLP_PROTOCOL",
+		"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
 		"OTEL_RESOURCE_ATTRIBUTES",
 		"OTEL_TRACES_EXPORTER",
 		"OTEL_PYTHON_DISTRO",
-		"OTEL_PYTHON_CONFIGURATOR":
+		"OTEL_PYTHON_CONFIGURATOR",
+		"OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED":
 		return true
 	}
 	return false
