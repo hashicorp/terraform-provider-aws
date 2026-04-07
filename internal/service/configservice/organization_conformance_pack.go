@@ -34,16 +34,18 @@ import (
 )
 
 // @SDKResource("aws_config_organization_conformance_pack", name="Organization Conformance Pack")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.OrganizationConformancePack")
+// @Testing(preIdentityVersion="v6.39.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
+// @Testing(importIgnore="template_body")
 func resourceOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConformancePackCreate,
 		ReadWithoutTimeout:   resourceOrganizationConformancePackRead,
 		UpdateWithoutTimeout: resourceOrganizationConformancePackUpdate,
 		DeleteWithoutTimeout: resourceOrganizationConformancePackDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

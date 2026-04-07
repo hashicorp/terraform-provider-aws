@@ -1615,6 +1615,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route_table_association",
 			Name:     "Route Table Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID,
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceSecurityGroup,
@@ -2007,6 +2013,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrID,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  newRouteTableAssociationResourceAsListResource,
+			TypeName: "aws_route_table_association",
+			Name:     "Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID,
+				inttypes.WithMutableIdentity(),
+			),
 		},
 		{
 			Factory:  newSecurityGroupResourceAsListResource,

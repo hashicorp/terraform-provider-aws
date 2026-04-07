@@ -1,3 +1,46 @@
+## 6.40.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_config_config_rule` ([#47319](https://github.com/hashicorp/terraform-provider-aws/issues/47319))
+* **New List Resource:** `aws_glue_job` ([#47266](https://github.com/hashicorp/terraform-provider-aws/issues/47266))
+* **New Resource:** `aws_servicequotas_auto_management` ([#45968](https://github.com/hashicorp/terraform-provider-aws/issues/45968))
+
+ENHANCEMENTS:
+
+* data-source/aws_msk_cluster: Add `broker_node_group_info.connectivity_info.network_type` attribute ([#47279](https://github.com/hashicorp/terraform-provider-aws/issues/47279))
+* resource/aws_cloudformation_stack_set: Add `depends_on_stack_sets` to `auto_deployment` configuration block ([#47269](https://github.com/hashicorp/terraform-provider-aws/issues/47269))
+* resource/aws_config_config_rule: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_configuration_aggregator: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_configuration_recorder: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_configuration_recorder_status: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_conformance_pack: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_delivery_channel: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_organization_conformance_pack: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_organization_custom_policy_rule: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_organization_custom_rule: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_organization_managed_rule: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_remediation_configuration: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_config_retention_configuration: Add Resource Identity support ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_glue_job: Add Resource Identity support ([#47266](https://github.com/hashicorp/terraform-provider-aws/issues/47266))
+* resource/aws_kinesisanalyticsv2_application: Support `FLINK-2_2` as a valid value for `runtime_environment` ([#47207](https://github.com/hashicorp/terraform-provider-aws/issues/47207))
+* resource/aws_msk_cluster: Add `broker_node_group_info.connectivity_info.network_type` argument ([#47279](https://github.com/hashicorp/terraform-provider-aws/issues/47279))
+* resource/aws_opensearchserverless_access_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_lifecycle_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_security_config: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_security_policy: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_opensearchserverless_vpc_endpoint: Add Resource Identity support ([#47262](https://github.com/hashicorp/terraform-provider-aws/issues/47262))
+* resource/aws_s3control_storage_lens_configuration: Add `storage_lens_configuration.data_export.storage_lens_table_destination` argument ([#47152](https://github.com/hashicorp/terraform-provider-aws/issues/47152))
+* resource/aws_ssm_patch_group: Add resource identity support ([#47318](https://github.com/hashicorp/terraform-provider-aws/issues/47318))
+
+BUG FIXES:
+
+* resource/aws_bcmdataexports_export: Allows empty values in `export.data_query.table_configurations` ([#47261](https://github.com/hashicorp/terraform-provider-aws/issues/47261))
+* resource/aws_cloudwatch_log_metric_filter: Fix validation to count `pattern` length in UTF-8 characters ([#47287](https://github.com/hashicorp/terraform-provider-aws/issues/47287))
+* resource/aws_config_configuration_recorder_status: Mark `name` as as `ForceNew` ([#47286](https://github.com/hashicorp/terraform-provider-aws/issues/47286))
+* resource/aws_organizations_account: Fix `AccountAlreadyClosedException` error when deleting an account that has already been closed with `close_on_deletion` set to `true` ([#46627](https://github.com/hashicorp/terraform-provider-aws/issues/46627))
+* resource/aws_uxc_account_customizations: Fix inconsistent result error when `visible_regions` or `visible_services` is set to an explicit empty set (`[]`) ([#47290](https://github.com/hashicorp/terraform-provider-aws/issues/47290))
+
 ## 6.39.0 (April 1, 2026)
 
 NOTES:

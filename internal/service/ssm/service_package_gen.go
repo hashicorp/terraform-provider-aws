@@ -207,6 +207,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ssm_patch_group",
 			Name:     "Patch Group",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("patch_group", true),
+				inttypes.StringIdentityAttribute("baseline_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      patchGroupImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourceDataSync,

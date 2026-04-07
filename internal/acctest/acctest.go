@@ -1591,6 +1591,11 @@ func NamedProvider(name string, providers map[string]*schema.Provider) *schema.P
 	return p
 }
 
+// NewTestResourceContext bootstaps the testing context for a given resource type
+func NewTestResourceContext(ctx context.Context, rType, region string) context.Context {
+	return conns.NewResourceContext(ctx, "", "", rType, region)
+}
+
 func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
@@ -1639,6 +1644,9 @@ func checkSDKResourceDisappears(ctx context.Context, providerMetaF providerMetaF
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
+
+		// Bootstrap context for resource type
+		ctx = NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 
 		var state terraformsdk.InstanceState
 		err := mapstructure.Decode(rs.Primary, &state)
