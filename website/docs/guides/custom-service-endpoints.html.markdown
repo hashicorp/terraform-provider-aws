@@ -297,6 +297,7 @@ provider "aws" {
 |CloudWatch RUM|`rum`(or `cloudwatchrum`)|`AWS_ENDPOINT_URL_RUM`|`rum`|
 |S3 (Simple Storage)|`s3`(or `s3api`)|`AWS_ENDPOINT_URL_S3`|`s3`|
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
+|S3 Files|`s3files`|`AWS_ENDPOINT_URL_S3FILES`|`s3files`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
 |S3 Vectors|`s3vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3vectors`|

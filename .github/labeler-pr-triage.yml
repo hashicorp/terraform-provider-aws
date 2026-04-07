@@ -1978,6 +1978,12 @@ service/s3control:
               - 'website/**/s3control*'
               - 'website/**/s3_account_*'
               - 'website/**/s3_access_*'
+service/s3files:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3files/**/*'
+              - 'website/**/s3files_*'
 service/s3outposts:
   - any:
       - changed-files:
