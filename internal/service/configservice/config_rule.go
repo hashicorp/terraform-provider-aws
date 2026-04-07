@@ -8,6 +8,7 @@ package configservice
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -352,26 +354,36 @@ func findConfigRule(ctx context.Context, conn *configservice.Client, input *conf
 }
 
 func findConfigRules(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigRulesInput) ([]types.ConfigRule, error) {
-	var output []types.ConfigRule
+	output, err := tfslices.CollectAndConcatWithError(listConfigRulePages(ctx, conn, input))
 
-	pages := configservice.NewDescribeConfigRulesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.NoSuchConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsA[*types.NoSuchConfigRuleException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.ConfigRules...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
+}
+
+func listConfigRulePages(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigRulesInput, optFns ...func(*configservice.Options)) iter.Seq2[[]types.ConfigRule, error] {
+	return func(yield func([]types.ConfigRule, error) bool) {
+		pages := configservice.NewDescribeConfigRulesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing ConfigService Config Rules: %w", err))
+				return
+			}
+
+			if !yield(page.ConfigRules, nil) {
+				return
+			}
+		}
+	}
 }
 
 func statusConfigRule(conn *configservice.Client, name string) retry.StateRefreshFunc {
