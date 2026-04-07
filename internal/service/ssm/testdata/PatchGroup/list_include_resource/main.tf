@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ssm_patch_group" "test" {
+  count       = var.resource_count
   baseline_id = aws_ssm_patch_baseline.test.id
-  patch_group = var.rName
+  patch_group = "${var.rName}-${count.index}"
 }
 
 resource "aws_ssm_patch_baseline" "test" {
@@ -12,7 +13,9 @@ resource "aws_ssm_patch_baseline" "test" {
 }
 
 variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
+  type = string
+}
+
+variable "resource_count" {
+  type = number
 }
