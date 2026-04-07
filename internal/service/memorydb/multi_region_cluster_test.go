@@ -449,6 +449,8 @@ func TestAccMemoryDBMultiRegionCluster_3Regions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
 					testAccCheckMultiRegionClusterRegionalClusterExists(ctx, t, resourceName, "aws_memorydb_cluster.primary"),
+					testAccCheckClusterNotExists(ctx, t, "aws_memorydb_cluster.alternate"),
+					testAccCheckClusterNotExists(ctx, t, "aws_memorydb_cluster.third"),
 				),
 			},
 			{
@@ -459,6 +461,29 @@ func TestAccMemoryDBMultiRegionCluster_3Regions(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckClusterNotExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return nil
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
+
+		_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+
+		if retry.NotFound(err) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("MemoryDB Cluster %s still exists", rs.Primary.ID)
+	}
 }
 
 func testAccCheckMultiRegionClusterRegionalClusterExists(ctx context.Context, t *testing.T, n string, m string) resource.TestCheckFunc {
