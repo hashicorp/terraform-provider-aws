@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.14
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.21
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.12
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.12
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.12
@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.12
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.15
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.16
-	github.com/aws/aws-sdk-go-v2/service/dlm v1.35.16
+	github.com/aws/aws-sdk-go-v2/service/dlm v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.13
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.13
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.13
@@ -135,7 +135,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.21
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.4
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.2
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.13
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.7
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.5
@@ -162,7 +162,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.60.2
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.10
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.52.0
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.14
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.13
@@ -266,7 +266,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.14
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.20
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.4
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.69.5
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/uxc v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.11
