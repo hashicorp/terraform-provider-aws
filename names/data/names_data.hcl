@@ -7552,6 +7552,29 @@ service "s3control" {
   brand                    = "AWS"
 }
 
+service "s3files" {
+  sdk {
+    id            = "S3Files"
+    arn_namespace = "s3files"
+  }
+
+  names {
+    provider_name_upper = "S3Files"
+    human_friendly      = "S3 Files"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListFileSystems"
+  }
+
+  resource_prefix {
+    correct = "aws_s3files_"
+  }
+
+  doc_prefix = ["s3files_"]
+  brand      = "Amazon"
+}
+
 service "s3tables" {
   sdk {
     id            = "S3Tables"

@@ -213,6 +213,7 @@ Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
+S3 Files
 S3 Glacier
 S3 Tables
 S3 Vectors
