@@ -162,6 +162,7 @@ The `data_export` block supports the following:
 
 * `cloud_watch_metrics` (Optional) Amazon CloudWatch publishing for S3 Storage Lens metrics. See [Cloud Watch Metrics](#cloud-watch-metrics) below for more details.
 * `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens metrics export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
+* `storage_lens_table_destination` (Optional) S3 table bucket where the S3 Storage Lens metrics export will be located. See [Storage Lens Table Destination](#storage-lens-table-destination) below for more details.
 
 ### Cloud Watch Metrics
 
@@ -179,6 +180,13 @@ The `s3_bucket_destination` block supports the following:
 * `format` (Required) The export format. Valid values: `CSV`, `Parquet`.
 * `output_schema_version` (Required) The schema version of the export file. Valid values: `V_1`.
 * `prefix` (Optional) The prefix of the destination bucket where the metrics export will be delivered.
+
+### Storage Lens Table Destination
+
+The `storage_lens_table_destination` block supports the following:
+
+* `enabled` (Required) Whether S3 Storage Lens export to S3 tables is enabled.
+* `encryption` (Optional) Encryption of the metrics exports in this S3 tables bucket. See [Encryption](#encryption) below for more details.
 
 ### Encryption
 

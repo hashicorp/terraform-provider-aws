@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +23,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	connectionID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_CONNECTION_ID")
 	ownerAccountID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_OWNER_ACCOUNT_ID")
 
-	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
+	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(t, 5))
 	resourceName := "aws_dx_hosted_connection.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

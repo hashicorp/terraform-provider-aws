@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +23,7 @@ import (
 func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_provider_principal_tag.test"
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -47,7 +46,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_provider_principal_tag.test"
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -84,7 +83,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_provider_principal_tag.test"
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -107,7 +106,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cognito_identity_pool_provider_principal_tag.test"
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

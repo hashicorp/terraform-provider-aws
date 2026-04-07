@@ -75,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceClusterSnapshot,
+			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_docdb_cluster_snapshot",
 			Name:     "Cluster Snapshot",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

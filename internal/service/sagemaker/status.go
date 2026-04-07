@@ -254,3 +254,48 @@ func statusHub(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
 		return output, string(output.HubStatus), nil
 	}
 }
+
+func statusMlflowApp(conn *sagemaker.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findMlflowAppByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func statusAlgorithm(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findAlgorithmByName(ctx, conn, name)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.AlgorithmStatus), nil
+	}
+}
+
+func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findTrainingJobByName(ctx, conn, id)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.TrainingJobStatus), nil
+	}
+}

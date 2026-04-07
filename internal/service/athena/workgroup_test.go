@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1224,8 +1223,8 @@ func TestAccAthenaWorkGroup_description(t *testing.T) {
 	var workgroup1, workgroup2 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
-	rDescription := sdkacctest.RandString(20)
-	rDescriptionUpdate := sdkacctest.RandString(20)
+	rDescription := acctest.RandString(t, 20)
+	rDescriptionUpdate := acctest.RandString(t, 20)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1304,7 +1303,7 @@ func TestAccAthenaWorkGroup_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(5)
+	dbName := acctest.RandString(t, 5)
 	queryName1 := acctest.RandomWithPrefix(t, "tf-athena-named-query-")
 	queryName2 := acctest.RandomWithPrefix(t, "tf-athena-named-query-")
 	resourceName := "aws_athena_workgroup.test"

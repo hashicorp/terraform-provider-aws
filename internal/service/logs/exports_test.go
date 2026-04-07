@@ -38,6 +38,7 @@ var (
 	FindMetricFilterByTwoPartKey                           = findMetricFilterByTwoPartKey
 	FindQueryDefinitionByTwoPartKey                        = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName                               = findResourcePolicyByName
+	FindResourcePolicyByResourceARN                        = findResourcePolicyByResourceARN
 	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
 	FindTransformerByLogGroupIdentifier                    = findTransformerByLogGroupIdentifier
 

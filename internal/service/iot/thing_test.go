@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iot"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func TestAccIoTThing_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var thing iot.DescribeThingOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	thingName := fmt.Sprintf("tf_acc_thing_%s", rString)
 	resourceName := "aws_iot_thing.test"
 
@@ -56,7 +55,7 @@ func TestAccIoTThing_basic(t *testing.T) {
 func TestAccIoTThing_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var thing iot.DescribeThingOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	thingName := fmt.Sprintf("tf_acc_thing_%s", rString)
 	typeName := fmt.Sprintf("tf_acc_type_%s", rString)
 	resourceName := "aws_iot_thing.test"

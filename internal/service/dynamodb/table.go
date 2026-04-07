@@ -108,6 +108,9 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			customdiff.ForceNewIfChange("restore_backup_arn", func(_ context.Context, old, new, meta any) bool {
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
 			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
 				// warm_throughput can only be increased, not decreased
 				// i.e., "api error ValidationException: One or more parameter values were invalid: Requested ReadUnitsPerSecond for WarmThroughput for table is lower than current WarmThroughput, decreasing WarmThroughput is not supported"
@@ -270,7 +273,7 @@ func resourceTable() *schema.Resource {
 					Type:          schema.TypeList,
 					Optional:      true,
 					MaxItems:      1,
-					ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
+					ConflictsWith: []string{"restore_backup_arn", "restore_source_name", "restore_source_table_arn"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"input_compression_type": {
@@ -466,16 +469,22 @@ func resourceTable() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidUTCTimestamp,
 				},
+				"restore_backup_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"import_table", "restore_source_name", "restore_source_table_arn"},
+				},
 				"restore_source_table_arn": {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ValidateFunc:  verify.ValidARN,
-					ConflictsWith: []string{"import_table", "restore_source_name"},
+					ConflictsWith: []string{"import_table", "restore_backup_arn", "restore_source_name"},
 				},
 				"restore_source_name": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ConflictsWith: []string{"import_table", "restore_source_table_arn"},
+					ConflictsWith: []string{"import_table", "restore_backup_arn", "restore_source_table_arn"},
 				},
 				"restore_to_latest_time": {
 					Type:     schema.TypeBool,
@@ -709,6 +718,72 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreTableToPointInTime(ctx, input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
+		})
+
+		if err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, tableName, err)
+		}
+	} else if backupARN, ok := d.GetOk("restore_backup_arn"); ok {
+		input := &dynamodb.RestoreTableFromBackupInput{
+			TargetTableName: aws.String(tableName),
+			BackupArn:       aws.String(backupARN.(string)),
+		}
+
+		billingModeOverride := awstypes.BillingMode(d.Get("billing_mode").(string))
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []awstypes.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]any)
+				if err := validateGSIProvisionedThroughput(gsi, billingModeOverride); err != nil {
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Get(names.AttrName).(string), err)
+				}
+
+				gsiObject := expandGlobalSecondaryIndex(gsi, billingModeOverride)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, *gsiObject)
+			}
+			input.GlobalSecondaryIndexOverride = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+		}
+
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.OnDemandThroughputOverride = expandOnDemandThroughput(v.([]any)[0].(map[string]any))
+		}
+
+		if _, ok := d.GetOk("write_capacity"); ok {
+			if _, ok := d.GetOk("read_capacity"); ok {
+				capacityMap := map[string]any{
+					"write_capacity": d.Get("write_capacity"),
+					"read_capacity":  d.Get("read_capacity"),
+				}
+				input.ProvisionedThroughputOverride = expandProvisionedThroughput(capacityMap, billingModeOverride)
+			}
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]any))
+		}
+
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
+			return conn.RestoreTableFromBackup(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
 				return true, err
@@ -2207,11 +2282,26 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
 
 	newAttributes := stripGSIUpdatableAttributes(newMap)
 
+	// Config uses either hash_key or key_schema syntax, but not both.
+	// If hash_key matches, key_schema is redundant, remove it.
 	oHk, oOk := oldAttributes["hash_key"]
 	nHk, nOk := newAttributes["hash_key"]
 	if oOk && nOk && oHk == nHk && oHk != "" {
 		delete(oldAttributes, "key_schema")
 		delete(newAttributes, "key_schema")
+	}
+
+	// If key_schema matches, hash_key/range_key are redundant, remove them.
+	// Only when key_schema is a non-empty list, to avoid matching on nil/empty defaults.
+	oKs, oKsOk := oldAttributes["key_schema"]
+	nKs, nKsOk := newAttributes["key_schema"]
+	oKsList, _ := oKs.([]any)
+	nKsList, _ := nKs.([]any)
+	if oKsOk && nKsOk && len(oKsList) > 0 && len(nKsList) > 0 && reflect.DeepEqual(oKs, nKs) {
+		delete(oldAttributes, "hash_key")
+		delete(newAttributes, "hash_key")
+		delete(oldAttributes, "range_key")
+		delete(newAttributes, "range_key")
 	}
 
 	return !reflect.DeepEqual(oldAttributes, newAttributes)

@@ -13,7 +13,7 @@ import (
 
 func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -21,7 +21,7 @@ func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEBSDefaultKMSKeyDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSDefaultKMSKey(ctx, "data.aws_ebs_default_kms_key.current"),
+					testAccCheckEBSDefaultKMSKey(ctx, t, "data.aws_ebs_default_kms_key.current"),
 				),
 			},
 		},

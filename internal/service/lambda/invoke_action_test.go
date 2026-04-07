@@ -41,7 +41,7 @@ func TestAccLambdaInvokeAction_basic(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_basic(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult),
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, ""),
 				),
 			},
 		},
@@ -202,7 +202,7 @@ func TestAccLambdaInvokeAction_complexPayload(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_basic(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult),
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, ""),
 				),
 			},
 		},
@@ -231,7 +231,7 @@ func TestAccLambdaInvokeAction_tenantId(t *testing.T) {
 			{
 				Config: testAccInvokeActionConfig_tenantId(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult),
+					testAccCheckInvokeAction(ctx, t, rName, inputJSON, expectedResult, "tenant-1"),
 				),
 			},
 		},
@@ -241,7 +241,7 @@ func TestAccLambdaInvokeAction_tenantId(t *testing.T) {
 // Test helper functions
 
 // testAccCheckInvokeAction verifies that the action can successfully invoke a Lambda function
-func testAccCheckInvokeAction(ctx context.Context, t *testing.T, functionName, inputJSON, expectedResult string) resource.TestCheckFunc {
+func testAccCheckInvokeAction(ctx context.Context, t *testing.T, functionName, inputJSON, expectedResult, tenantID string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
@@ -250,6 +250,10 @@ func testAccCheckInvokeAction(ctx context.Context, t *testing.T, functionName, i
 			FunctionName:   &functionName,
 			InvocationType: awstypes.InvocationTypeRequestResponse,
 			Payload:        []byte(inputJSON),
+		}
+
+		if tenantID != "" {
+			input.TenantId = &tenantID
 		}
 
 		output, err := conn.Invoke(ctx, input)

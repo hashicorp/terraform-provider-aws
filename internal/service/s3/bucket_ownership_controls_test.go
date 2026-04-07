@@ -163,7 +163,7 @@ func testAccCheckBucketOwnershipControlsDestroy(ctx context.Context, t *testing.
 				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 			}
 
-			_, err := tfs3.FindOwnershipControls(ctx, conn, rs.Primary.ID)
+			_, err := tfs3.FindBucketOwnershipControls(ctx, conn, rs.Primary.ID)
 
 			if retry.NotFound(err) {
 				continue
@@ -192,7 +192,7 @@ func testAccCheckBucketOwnershipControlsExists(ctx context.Context, t *testing.T
 			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 		}
 
-		_, err := tfs3.FindOwnershipControls(ctx, conn, rs.Primary.ID)
+		_, err := tfs3.FindBucketOwnershipControls(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

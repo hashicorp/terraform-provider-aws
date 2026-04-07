@@ -95,7 +95,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(sdkid.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(create.UniqueId(ctx))
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -156,7 +156,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(sdkid.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(create.UniqueId(ctx))
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {

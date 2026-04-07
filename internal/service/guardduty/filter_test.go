@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -200,55 +200,41 @@ func testAccCheckFilterDestroy(ctx context.Context, t *testing.T) resource.TestC
 				continue
 			}
 
-			detectorID, filterName, err := tfguardduty.FilterParseID(rs.Primary.ID)
+			_, err := tfguardduty.FindFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrName])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			input := &guardduty.GetFilterInput{
-				DetectorId: aws.String(detectorID),
-				FilterName: aws.String(filterName),
-			}
-
-			_, err = conn.GetFilter(ctx, input)
-			if err != nil {
-				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-					return nil
-				}
-				return err
-			}
-
-			return fmt.Errorf("Expected GuardDuty Filter to be destroyed, %s found", rs.Primary.Attributes["filter_name"])
+			return fmt.Errorf("GuardDuty Filter %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFilterExists(ctx context.Context, t *testing.T, name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
+func testAccCheckFilterExists(ctx context.Context, t *testing.T, n string, v *guardduty.GetFilterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No GuardDuty filter is set")
-		}
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
-		detectorID, name, err := tfguardduty.FilterParseID(rs.Primary.ID)
+		output, err := tfguardduty.FindFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrName])
+
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
-		input := guardduty.GetFilterInput{
-			DetectorId: aws.String(detectorID),
-			FilterName: aws.String(name),
-		}
-		filter, err = conn.GetFilter(ctx, &input)
+		*v = *output
 
-		return err
+		return nil
 	}
 }
 

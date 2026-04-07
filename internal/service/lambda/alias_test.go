@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -27,7 +26,7 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetAliasOutput
 	resourceName := "aws_lambda_alias.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
@@ -84,7 +83,7 @@ func TestAccLambdaAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetAliasOutput
 	resourceName := "aws_lambda_alias.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
@@ -145,13 +144,13 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetAliasOutput
 	resourceName := "aws_lambda_alias.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", rString)
-	aliasNameUpdate := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", sdkacctest.RandString(8))
+	aliasNameUpdate := fmt.Sprintf("tf_acc_lambda_alias_basic_%s", acctest.RandString(t, 8))
 	functionArnResourcePart := fmt.Sprintf("function:%s:%s", funcName, aliasName)
 	functionArnResourcePartUpdate := fmt.Sprintf("function:%s:%s", funcName, aliasNameUpdate)
 
@@ -191,7 +190,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetAliasOutput
 	resourceName := "aws_lambda_alias.test"
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_alias_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_alias_basic_%s", rString)
 	attachmentName := fmt.Sprintf("tf_acc_attachment_%s", rString)

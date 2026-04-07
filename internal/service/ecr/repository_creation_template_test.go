@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,7 @@ import (
 
 func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -64,7 +63,7 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -87,7 +86,7 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -105,7 +104,7 @@ func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -142,7 +141,7 @@ func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T
 
 func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -199,7 +198,7 @@ func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
 
 func TestAccECRRepositoryCreationTemplate_mutabilityWithExclusion(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

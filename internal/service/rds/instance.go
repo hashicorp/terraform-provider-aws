@@ -1211,7 +1211,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
 			switch engine {
-			case InstanceEngineMySQL, InstanceEnginePostgres, InstanceEngineMariaDB:
+			case instanceEngineMySQL, instanceEnginePostgres, instanceEngineMariaDB:
 				// skip
 			default:
 				input.DBName = aws.String(v.(string))
@@ -2754,11 +2754,11 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 	}
 
 	switch allocatedStorage, engine := d.Get(names.AttrAllocatedStorage).(int), d.Get(names.AttrEngine).(string); engine {
-	case InstanceEngineDB2Advanced, InstanceEngineDB2Standard:
+	case instanceEngineDB2Advanced, instanceEngineDB2Standard:
 		return allocatedStorage < 100
-	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
+	case instanceEngineMariaDB, instanceEngineMySQL, instanceEnginePostgres:
 		return allocatedStorage < 400
-	case InstanceEngineOracleEnterprise, InstanceEngineOracleEnterpriseCDB, InstanceEngineOracleStandard2, InstanceEngineOracleStandard2CDB:
+	case instanceEngineOracleEnterprise, instanceEngineOracleEnterpriseCDB, instanceEngineOracleStandard2, instanceEngineOracleStandard2CDB:
 		return allocatedStorage < 200
 	}
 
@@ -3172,9 +3172,9 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id st
 
 func dbInstanceValidBlueGreenEngines() []string {
 	return []string{
-		InstanceEngineMariaDB,
-		InstanceEngineMySQL,
-		InstanceEnginePostgres,
+		instanceEngineMariaDB,
+		instanceEngineMySQL,
+		instanceEnginePostgres,
 	}
 }
 

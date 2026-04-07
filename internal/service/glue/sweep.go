@@ -14,14 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
 	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases,
 		"aws_datazone_environment",
 	)
-
 	awsv2.Register("aws_glue_classifier", sweepClassifiers)
 	awsv2.Register("aws_glue_connection", sweepConnections)
 	awsv2.Register("aws_glue_crawler", sweepCrawlers)
@@ -49,11 +47,10 @@ func sweepCatalogDatabases(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, v := range page.DatabaseList {
+			catalogID, name := aws.ToString(v.CatalogId), aws.ToString(v.Name)
 			r := resourceCatalogDatabase()
 			d := r.Data(nil)
-			d.SetId("unused")
-			d.Set(names.AttrCatalogID, v.CatalogId)
-			d.Set(names.AttrName, v.Name)
+			d.SetId(catalogDatabaseCreateResourceID(catalogID, name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

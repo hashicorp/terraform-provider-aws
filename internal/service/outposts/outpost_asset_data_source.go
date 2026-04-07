@@ -42,6 +42,11 @@ func dataSourceOutpostAsset() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"instance_families": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"rack_elevation": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -91,6 +96,7 @@ func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("asset_id", asset.AssetId)
 	d.Set("asset_type", asset.AssetType)
 	d.Set("host_id", asset.ComputeAttributes.HostId)
+	d.Set("instance_families", asset.ComputeAttributes.InstanceFamilies)
 	d.Set("rack_elevation", asset.AssetLocation.RackElevation)
 	d.Set("rack_id", asset.RackId)
 	return diags

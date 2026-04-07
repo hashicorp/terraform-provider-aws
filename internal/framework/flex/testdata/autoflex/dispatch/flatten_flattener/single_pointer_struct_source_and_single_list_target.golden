@@ -49,7 +49,7 @@
     "@message": "Target implements flex.Flattener",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
     "autoflex.target.path": "Field1",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer"
   }

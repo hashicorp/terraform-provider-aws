@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +25,7 @@ import (
 func TestAccCodePipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 	codestarConnectionResourceName := "aws_codestarconnections_connection.test"
 
@@ -126,7 +125,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 func TestAccCodePipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,7 +153,7 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -197,7 +196,7 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -231,7 +230,7 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 func TestAccCodePipeline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -286,7 +285,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -326,7 +325,7 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -379,7 +378,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -445,7 +444,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 func TestAccCodePipeline_withNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -479,7 +478,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	githubToken := acctest.SkipIfEnvVarNotSet(t, envvar.GithubToken)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -550,7 +549,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 func TestAccCodePipeline_ecr(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -599,7 +598,7 @@ func TestAccCodePipeline_ecr(t *testing.T) {
 func TestAccCodePipeline_pipelineType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 	codestarConnectionResourceName := "aws_codestarconnections_connection.test"
 
@@ -982,7 +981,7 @@ func TestAccCodePipeline_pipelineType(t *testing.T) {
 func TestAccCodePipeline_manualApprovalTimeoutInMinutes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1049,7 +1048,7 @@ func TestAccCodePipeline_manualApprovalTimeoutInMinutes(t *testing.T) {
 func TestAccCodePipeline_conditions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1218,7 +1217,7 @@ func TestAccCodePipeline_conditions(t *testing.T) {
 func TestAccCodePipeline_trigger(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 	resourceName := "aws_codepipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

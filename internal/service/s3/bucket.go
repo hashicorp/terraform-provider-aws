@@ -40,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,6 +49,13 @@ const (
 	// General timeout for S3 bucket changes to propagate.
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
 	bucketPropagationTimeout = 2 * time.Minute
+)
+
+var (
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+	// e.g. example-123456789012-us-west-2-an.
+	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
 )
 
 func isGeneralPurposeBucket(bucket string) bool {
@@ -120,6 +128,13 @@ func resourceBucket() *schema.Resource {
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"bucket_namespace": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
 			},
 			names.AttrBucketPrefix: {
 				Type:          schema.TypeString,
@@ -727,9 +742,15 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(ctx, d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	ns := types.BucketNamespace(d.Get("bucket_namespace").(string))
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrBucket).(string)), create.WithConfiguredPrefix(d.Get(names.AttrBucketPrefix).(string))}
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		optFns = append(optFns, create.WithSuffix(fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
+	}
+	bucket := create.NewNameGenerator(optFns...).Generate(ctx)
 	region := c.Region(ctx)
-	if err := validBucketName(bucket, region); err != nil {
+	if err := validBucketName(bucket, region, ns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
 
@@ -753,6 +774,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		// Use default value previously available in v3.x of the provider.
 		input.ACL = types.BucketCannedACLPrivate
+	}
+
+	if v, ok := d.GetOk("bucket_namespace"); ok {
+		input.BucketNamespace = types.BucketNamespace(v.(string))
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
@@ -837,10 +862,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
-	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
-	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+	resourceBucketFlatten(ctx, c, d.Id(), d)
 
 	//
 	// Bucket Policy.
@@ -1175,6 +1197,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
+	//
+	// Bucket Website
+	//
 	if _, ok := d.GetOk("website"); ok {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
@@ -1630,6 +1655,26 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
+func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) {
+	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set(names.AttrBucket, bucketName)
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
+
+	bucketNamespace := bucketNamespace(bucketName)
+	d.Set("bucket_namespace", bucketNamespace)
+	if bucketNamespace == types.BucketNamespaceAccountRegional {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(bucketName, fmt.Sprintf("-%s-%s-an", awsClient.AccountID(ctx), awsClient.Region(ctx))))
+	} else {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(bucketName))
+	}
+
+	region := awsClient.Region(ctx)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+}
+
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
 	input := s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
@@ -1731,6 +1776,13 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	}
 
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
+}
+
+func bucketNamespace(bucket string) types.BucketNamespace {
+	if accountRegionalBucketNameRegex.MatchString(bucket) {
+		return types.BucketNamespaceAccountRegional
+	}
+	return types.BucketNamespaceGlobal
 }
 
 //
@@ -2991,34 +3043,46 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 // validBucketName validates any S3 bucket name that is not inside the us-east-1 region.
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
-func validBucketName(value string, region string) error {
+func validBucketName(bucket, region string, ns types.BucketNamespace) error {
 	if region != endpoints.UsEast1RegionID {
-		if (len(value) < 3) || (len(value) > 63) {
-			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
+		if (len(bucket) < 3) || (len(bucket) > 63) {
+			return fmt.Errorf("%q must contain from 3 to 63 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
-			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(bucket) {
+			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", bucket)
 		}
-		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
-			return fmt.Errorf("%q must not be formatted as an IP address", value)
+		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(bucket) {
+			return fmt.Errorf("%q must not be formatted as an IP address", bucket)
 		}
-		if strings.HasPrefix(value, `.`) {
-			return fmt.Errorf("%q cannot start with a period", value)
+		if strings.HasPrefix(bucket, `.`) {
+			return fmt.Errorf("%q cannot start with a period", bucket)
 		}
-		if strings.HasSuffix(value, `.`) {
-			return fmt.Errorf("%q cannot end with a period", value)
+		if strings.HasSuffix(bucket, `.`) {
+			return fmt.Errorf("%q cannot end with a period", bucket)
 		}
-		if strings.Contains(value, `..`) {
-			return fmt.Errorf("%q can be only one period between labels", value)
+		if strings.Contains(bucket, `..`) {
+			return fmt.Errorf("%q can be only one period between labels", bucket)
 		}
 	} else {
-		if len(value) > 255 {
-			return fmt.Errorf("%q must contain less than 256 characters", value)
+		if len(bucket) > 255 {
+			return fmt.Errorf("%q must contain less than 256 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(value) {
-			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(bucket) {
+			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", bucket)
 		}
 	}
+
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
+		}
+	default:
+		if accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
+		}
+	}
+
 	return nil
 }
 

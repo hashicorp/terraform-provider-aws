@@ -28,16 +28,16 @@ import (
 )
 
 // @SDKResource("aws_config_remediation_configuration", name="Remediation Configuration")
+// @IdentityAttribute("config_rule_name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.RemediationConfiguration")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRemediationConfigurationPut,
 		ReadWithoutTimeout:   resourceRemediationConfigurationRead,
 		UpdateWithoutTimeout: resourceRemediationConfigurationPut,
 		DeleteWithoutTimeout: resourceRemediationConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -242,7 +242,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	input := &configservice.DeleteRemediationConfigurationInput{
+	input := configservice.DeleteRemediationConfigurationInput{
 		ConfigRuleName: aws.String(d.Id()),
 	}
 
@@ -255,7 +255,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Remediation Configuration: %s", d.Id())
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteRemediationConfiguration(ctx, input)
+		return conn.DeleteRemediationConfiguration(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchRemediationConfigurationException](err) {
@@ -270,11 +270,11 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 }
 
 func findRemediationConfigurationByConfigRuleName(ctx context.Context, conn *configservice.Client, name string) (*types.RemediationConfiguration, error) {
-	input := &configservice.DescribeRemediationConfigurationsInput{
+	input := configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []string{name},
 	}
 
-	return findRemediationConfiguration(ctx, conn, input)
+	return findRemediationConfiguration(ctx, conn, &input)
 }
 
 func findRemediationConfiguration(ctx context.Context, conn *configservice.Client, input *configservice.DescribeRemediationConfigurationsInput) (*types.RemediationConfiguration, error) {

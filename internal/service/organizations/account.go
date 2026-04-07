@@ -40,6 +40,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Account")
 // @Testing(serialize=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsEnabled")
+// @Testing(preIdentityVersion="v5.100.0")
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -328,7 +329,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 		})
 	}
 
-	if errs.IsA[*awstypes.AccountNotFoundException](err) {
+	if errs.IsA[*awstypes.AccountNotFoundException](err) || errs.IsA[*awstypes.AccountAlreadyClosedException](err) {
 		return diags
 	}
 

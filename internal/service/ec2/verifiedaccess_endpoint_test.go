@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -26,9 +24,9 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -36,12 +34,12 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_basic(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "example"),
@@ -77,9 +75,9 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -87,12 +85,12 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_networkInterface(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "example"),
@@ -124,9 +122,9 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -134,12 +132,12 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_tags1(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -155,7 +153,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 			{
 				Config: testAccVerifiedAccessEndpointConfig_tags2(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -164,7 +162,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 			{
 				Config: testAccVerifiedAccessEndpointConfig_tags1(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -179,9 +177,9 @@ func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Sem
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -189,12 +187,12 @@ func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Sem
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_basic(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -209,10 +207,10 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -220,12 +218,12 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_policyBase(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -239,14 +237,14 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 			{
 				Config: testAccVerifiedAccessEndpointConfig_policyUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate), policyDoc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
 			{
 				Config: testAccVerifiedAccessEndpointConfig_policyBase(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
@@ -261,9 +259,9 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -271,12 +269,12 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_subnetIDs(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
 				),
@@ -292,7 +290,7 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 			{
 				Config: testAccVerifiedAccessEndpointConfig_subnetIDsUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "2"),
 				),
@@ -307,9 +305,9 @@ func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -317,12 +315,12 @@ func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_cidr(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.port_range.#", "1"),
 				),
@@ -338,7 +336,7 @@ func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore
 			{
 				Config: testAccVerifiedAccessEndpointConfig_cidrUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.port_range.#", "2"),
 				),
@@ -353,9 +351,9 @@ func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore)
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -363,12 +361,12 @@ func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_rds(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rds_options.0.port", "3306"),
 				),
@@ -384,7 +382,7 @@ func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore)
 			{
 				Config: testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rds_options.0.port", "6033"),
 				),
@@ -397,9 +395,9 @@ func testAccVerifiedAccessEndpoint_portRangeTCP(t *testing.T, semaphore tfsync.S
 	ctx := acctest.Context(t)
 	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -407,12 +405,12 @@ func testAccVerifiedAccessEndpoint_portRangeTCP(t *testing.T, semaphore tfsync.S
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_portRangeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
@@ -434,9 +432,9 @@ func testAccVerifiedAccessEndpoint_portTCP(t *testing.T, semaphore tfsync.Semaph
 	ctx := acctest.Context(t)
 	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -444,12 +442,12 @@ func testAccVerifiedAccessEndpoint_portTCP(t *testing.T, semaphore tfsync.Semaph
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_portTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
@@ -471,10 +469,10 @@ func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semap
 	ctx := acctest.Context(t)
 	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -482,7 +480,7 @@ func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semap
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_portHTTP(
@@ -491,7 +489,7 @@ func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semap
 					acctest.TLSPEMEscapeNewlines(cert),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "http"),
@@ -513,9 +511,9 @@ func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Sema
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -523,7 +521,7 @@ func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Sema
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessEndpointConfig_portHTTPS(
@@ -532,7 +530,7 @@ func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Sema
 					acctest.TLSPEMEscapeNewlines(cert),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
@@ -548,9 +546,9 @@ func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Sema
 	})
 }
 
-func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedaccess_endpoint" {
@@ -573,14 +571,14 @@ func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *awstypes.VerifiedAccessEndpoint) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, t *testing.T, n string, v *awstypes.VerifiedAccessEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVerifiedAccessEndpointByID(ctx, conn, rs.Primary.ID)
 

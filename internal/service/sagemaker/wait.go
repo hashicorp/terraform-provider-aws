@@ -701,3 +701,136 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 
 	return nil, err
 }
+
+func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MlflowAppStatusCreating),
+		Target:  enum.Slice(awstypes.MlflowAppStatusCreated),
+		Refresh: statusMlflowApp(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MlflowAppStatusUpdating),
+		Target: enum.Slice(
+			awstypes.MlflowAppStatusCreated, // Created is a valid status following tag-only updates
+			awstypes.MlflowAppStatusUpdated,
+		),
+		Refresh: statusMlflowApp(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MlflowAppStatusCreated, awstypes.MlflowAppStatusDeleting),
+		Target:  []string{},
+		Refresh: statusMlflowApp(conn, arn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitAlgorithmCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeAlgorithmOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AlgorithmStatusPending),
+		Target:  enum.Slice(awstypes.AlgorithmStatusInProgress, awstypes.AlgorithmStatusCompleted),
+		Refresh: statusAlgorithm(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*sagemaker.DescribeAlgorithmOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAlgorithmDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.AlgorithmStatusDeleting,
+			awstypes.AlgorithmStatusPending,
+			awstypes.AlgorithmStatusInProgress,
+			awstypes.AlgorithmStatusCompleted,
+		),
+		Target:  []string{},
+		Refresh: statusAlgorithm(conn, name),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    enum.Slice(awstypes.TrainingJobStatusInProgress),
+		Refresh:                   statusTrainingJob(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrainingJobStatusDeleting, awstypes.TrainingJobStatusInProgress, awstypes.TrainingJobStatusStopping),
+		Target:  []string{},
+		Refresh: statusTrainingJob(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitTrainingJobStopped(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.TrainingJobStatusInProgress, awstypes.TrainingJobStatusStopping),
+		Target:                    enum.Slice(awstypes.TrainingJobStatusCompleted, awstypes.TrainingJobStatusFailed, awstypes.TrainingJobStatusStopped),
+		Refresh:                   statusTrainingJob(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}

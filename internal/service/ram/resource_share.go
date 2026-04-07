@@ -35,6 +35,7 @@ const (
 
 // @SDKResource("aws_ram_resource_share", name="Resource Share")
 // @Tags(identifierAttribute="arn", resourceType="ResourceShare")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShare")
 func resourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareCreate,
@@ -75,6 +76,24 @@ func resourceResourceShare() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"resource_share_configuration": {
+				Type:     schema.TypeList,
+				MinItems: 1,
+				MaxItems: 1,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"retain_sharing_on_account_leave_organization": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -94,6 +113,10 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("permission_arns"); ok && v.(*schema.Set).Len() > 0 {
 		input.PermissionArns = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("resource_share_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ResourceShareConfiguration = expandResourceShareConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateResourceShare(ctx, &input)
@@ -138,6 +161,9 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
 	d.Set(names.AttrARN, resourceShare.ResourceShareArn)
 	d.Set(names.AttrName, resourceShare.Name)
+	if err := d.Set("resource_share_configuration", flattenResourceShareConfiguration(resourceShare)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resource_share_configuration: %s", err)
+	}
 
 	setTagsOut(ctx, resourceShare.Tags)
 
@@ -316,4 +342,26 @@ func waitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.Client, 
 	}
 
 	return nil, err
+}
+
+func expandResourceShareConfiguration(config map[string]any) *awstypes.ResourceShareConfiguration {
+	if retain, ok := config["retain_sharing_on_account_leave_organization"]; ok {
+		return &awstypes.ResourceShareConfiguration{
+			RetainSharingOnAccountLeaveOrganization: aws.Bool(retain.(bool)),
+		}
+	}
+
+	return nil
+}
+
+func flattenResourceShareConfiguration(resourceShare *awstypes.ResourceShare) []any {
+	if resourceShare == nil || resourceShare.ResourceShareConfiguration == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"retain_sharing_on_account_leave_organization": resourceShare.ResourceShareConfiguration.RetainSharingOnAccountLeaveOrganization,
+		},
+	}
 }

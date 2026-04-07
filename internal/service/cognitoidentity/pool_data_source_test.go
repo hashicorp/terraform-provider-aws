@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -91,7 +90,7 @@ func TestAccCognitoIdentityPoolDataSource_cognitoIdentityProviders(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
@@ -125,7 +124,7 @@ func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
@@ -160,7 +159,7 @@ func TestAccCognitoIdentityPoolDataSource_supportedLoginProviders(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"

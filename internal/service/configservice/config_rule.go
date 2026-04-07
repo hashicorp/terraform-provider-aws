@@ -23,26 +23,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_config_rule", name="Config Rule")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigRule")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,
 		ReadWithoutTimeout:   resourceConfigRuleRead,
 		UpdateWithoutTimeout: resourceConfigRulePut,
 		DeleteWithoutTimeout: resourceConfigRuleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -108,7 +105,6 @@ func resourceConfigRule() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 256),
 							},
-							Set: schema.HashString,
 						},
 						"tag_key": {
 							Type:         schema.TypeString,
@@ -185,7 +181,6 @@ func resourceConfigRule() *schema.Resource {
 									},
 								},
 							},
-							Set: sdkv2.SimpleSchemaSetFunc("message_type", "event_source", "maximum_execution_frequency"),
 						},
 						"source_identifier": {
 							Type:         schema.TypeString,
@@ -235,13 +230,13 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta any
 			configRule.Source = expandSource(v.([]any)[0].(map[string]any))
 		}
 
-		input := &configservice.PutConfigRuleInput{
+		input := configservice.PutConfigRuleInput{
 			ConfigRule: configRule,
 			Tags:       getTagsIn(ctx),
 		}
 
 		_, err := tfresource.RetryWhenIsA[any, *types.InsufficientPermissionsException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.PutConfigRule(ctx, input)
+			return conn.PutConfigRule(ctx, &input)
 		})
 
 		if err != nil {
@@ -303,14 +298,15 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	log.Printf("[DEBUG] Deleting ConfigService Config Rule: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	log.Printf("[DEBUG] Deleting ConfigService Config Rule: %s", d.Id())
+	input := configservice.DeleteConfigRuleInput{
+		ConfigRuleName: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.DeleteConfigRule(ctx, &configservice.DeleteConfigRuleInput{
-			ConfigRuleName: aws.String(d.Id()),
-		})
+		return conn.DeleteConfigRule(ctx, &input)
 	})
 
 	if errs.IsA[*types.NoSuchConfigRuleException](err) {
@@ -329,11 +325,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func findConfigRuleByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigRule, error) {
-	input := &configservice.DescribeConfigRulesInput{
+	input := configservice.DescribeConfigRulesInput{
 		ConfigRuleNames: []string{name},
 	}
 
-	return findConfigRule(ctx, conn, input)
+	return findConfigRule(ctx, conn, &input)
 }
 
 func findConfigRule(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigRulesInput) (*types.ConfigRule, error) {

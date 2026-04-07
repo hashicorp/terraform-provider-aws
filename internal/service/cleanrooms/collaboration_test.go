@@ -14,11 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,16 +28,16 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 	var collaboration cleanrooms.GetCollaborationOutput
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
@@ -50,8 +48,8 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 						"preserve_nulls": acctest.CtFalse,
 					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cleanrooms", regexache.MustCompile(`collaboration:*`)),
-					testCheckCreatorMember(ctx, resourceName),
-					testAccCollaborationTags(ctx, resourceName, map[string]string{
+					testCheckCreatorMember(ctx, t, resourceName),
+					testAccCollaborationTags(ctx, t, resourceName, map[string]string{
 						"Project": TEST_TAG,
 					}),
 				),
@@ -71,16 +69,16 @@ func TestAccCleanRoomsCollaboration_disappears(t *testing.T) {
 	var collaboration cleanrooms.GetCollaborationOutput
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceCollaboration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,19 +91,19 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var collaboration cleanrooms.GetCollaborationOutput
-	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 				),
 			},
 			{
@@ -114,7 +112,7 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 					testAccCheckCollaborationIsTheSame(resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated Description"),
-					testAccCollaborationTags(ctx, resourceName, map[string]string{
+					testAccCollaborationTags(ctx, t, resourceName, map[string]string{
 						"Project": "Not Terraform",
 					}),
 				),
@@ -134,16 +132,16 @@ func TestAccCleanRoomsCollaboration_updateCreatorDisplayName(t *testing.T) {
 	var collaboration cleanrooms.GetCollaborationOutput
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 				),
 			},
 			{
@@ -167,16 +165,16 @@ func TestAccCleanRoomsCollaboration_updateQueryLogStatus(t *testing.T) {
 	var collaboration cleanrooms.GetCollaborationOutput
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 				),
 			},
 			{
@@ -200,16 +198,16 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 	var collaboration cleanrooms.GetCollaborationOutput
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 				),
 			},
 			{
@@ -246,16 +244,16 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 	var collaboration cleanrooms.GetCollaborationOutput
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_additionalMember(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "member.0.account_id", acctest.Ct12Digit),
 					resource.TestCheckResourceAttr(resourceName, "member.0.display_name", "OtherMember"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.status", "INVITED"),
@@ -287,16 +285,16 @@ func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
 	engine := string(types.AnalyticsEngineSpark)
 	resourceName := "aws_cleanrooms_collaboration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollaborationConfig_analyticsEngine(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationExists(ctx, t, resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "analytics_engine", engine),
 				),
 			},
@@ -309,9 +307,9 @@ func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
 	})
 }
 
-func testAccCheckCollaborationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCollaborationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cleanrooms_collaboration" {
@@ -338,7 +336,7 @@ func testAccCheckCollaborationDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckCollaborationExists(ctx context.Context, name string, collaboration *cleanrooms.GetCollaborationOutput) resource.TestCheckFunc {
+func testAccCheckCollaborationExists(ctx context.Context, t *testing.T, name string, collaboration *cleanrooms.GetCollaborationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -349,7 +347,7 @@ func testAccCheckCollaborationExists(ctx context.Context, name string, collabora
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameCollaboration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 		input := cleanrooms.GetCollaborationInput{
 			CollaborationIdentifier: aws.String(rs.Primary.ID),
 		}
@@ -397,7 +395,7 @@ func checkCollaborationIsSame(name string, collaboration *cleanrooms.GetCollabor
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 
 	input := &cleanrooms.ListCollaborationsInput{}
 	_, err := conn.ListCollaborations(ctx, input)
@@ -411,9 +409,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheckFunc {
+func testCheckCreatorMember(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 		collaboration, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
@@ -447,9 +445,9 @@ func testCheckCreatorMember(ctx context.Context, name string) resource.TestCheck
 	}
 }
 
-func testAccCollaborationTags(ctx context.Context, name string, expectedTags map[string]string) resource.TestCheckFunc {
+func testAccCollaborationTags(ctx context.Context, t *testing.T, name string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CleanRoomsClient(ctx)
 		collaboration, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
