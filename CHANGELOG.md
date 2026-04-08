@@ -1,4 +1,4 @@
-## 6.40.0 (Unreleased)
+## 6.40.0 (April 8, 2026)
 
 FEATURES:
 
