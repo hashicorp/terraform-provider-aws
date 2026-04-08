@@ -82,12 +82,12 @@ const (
 )
 
 const (
-	expectedCallRegion = "us-west-2" //lintignore:AWSAT003
+	expectedCallRegion = "us-west-2" // lintignore:AWSAT003
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	ctx := t.Context()
-	const providerRegion = "us-west-2" //lintignore:AWSAT003
+	const providerRegion = "us-west-2" // lintignore:AWSAT003
 	const expectedEndpointRegion = providerRegion
 
 	testcases := map[string]endpointTestCase{
