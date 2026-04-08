@@ -6,7 +6,6 @@ package route53_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -1673,7 +1672,7 @@ func TestAccRoute53Record_TXT_CharacterStringTooLong(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRecordConfig_txtCharacterStringTooLong(),
-				ExpectError: regexp.MustCompile(`individual TXT/SPF quoted string segment must be 255 characters or fewer`),
+				ExpectError: regexache.MustCompile(`individual TXT/SPF quoted string segment must be 255 characters or fewer`),
 			},
 		},
 	})

@@ -329,7 +329,7 @@ func resourceRecord() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
-				recordType := diff.Get("type").(string)
+				recordType := diff.Get(names.AttrType).(string)
 				if recordType != string(awstypes.RRTypeTxt) && recordType != string(awstypes.RRTypeSpf) {
 					return nil
 				}
