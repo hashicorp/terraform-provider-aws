@@ -147,6 +147,12 @@ func resourceStream() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"shard_count_step_scaling": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "When true, scale shard count by iteratively doubling or halving to respect UpdateShardCount API limits.",
+			},
 			"shard_level_metrics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -350,20 +356,51 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if streamMode := getStreamMode(d); streamMode == types.StreamModeProvisioned && d.HasChange("shard_count") {
-		input := kinesis.UpdateShardCountInput{
-			ScalingType:      types.ScalingTypeUniformScaling,
-			StreamName:       aws.String(name),
-			TargetShardCount: aws.Int32(int32(d.Get("shard_count").(int))),
-		}
+		target := int32(d.Get("shard_count").(int))
 
-		_, err := conn.UpdateShardCount(ctx, &input)
+		if d.Get("shard_count_step_scaling").(bool) {
+			old, _ := d.GetChange("shard_count")
+			current := int32(old.(int))
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Kinesis Stream (%s) shard count: %s", name, err)
-		}
+			for current != target {
+				next := nextShardStep(current, target)
 
-		if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateShardCount): %s", name, err)
+				log.Printf("[DEBUG] Kinesis Stream (%s) stepping shard count: %d -> %d (target: %d)", name, current, next, target)
+
+				input := kinesis.UpdateShardCountInput{
+					ScalingType:      types.ScalingTypeUniformScaling,
+					StreamName:       aws.String(name),
+					TargetShardCount: aws.Int32(next),
+				}
+
+				_, err := conn.UpdateShardCount(ctx, &input)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating Kinesis Stream (%s) shard count (%d -> %d): %s", name, current, next, err)
+				}
+
+				if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateShardCount %d -> %d): %s", name, current, next, err)
+				}
+
+				current = next
+			}
+		} else {
+			input := kinesis.UpdateShardCountInput{
+				ScalingType:      types.ScalingTypeUniformScaling,
+				StreamName:       aws.String(name),
+				TargetShardCount: aws.Int32(target),
+			}
+
+			_, err := conn.UpdateShardCount(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Stream (%s) shard count: %s", name, err)
+			}
+
+			if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateShardCount): %s", name, err)
+			}
 		}
 	}
 
@@ -666,6 +703,25 @@ func waitStreamUpdated(ctx context.Context, conn *kinesis.Client, name string, t
 	}
 
 	return nil, err
+}
+
+// nextShardStep computes the next intermediate shard count when stepping toward
+// a target. AWS UpdateShardCount limits each call to at most doubling or halving.
+func nextShardStep(current, target int32) int32 {
+	if target > current {
+		// Scale up: double, but don't overshoot.
+		next := current * 2
+		if next > target {
+			next = target
+		}
+		return next
+	}
+	// Scale down: halve, but don't undershoot.
+	next := current / 2
+	if next < target {
+		next = target
+	}
+	return next
 }
 
 func getStreamMode(d sdkv2.ResourceDiffer) types.StreamMode {
