@@ -10,6 +10,8 @@ import (
 	"errors"
 	"time"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
@@ -382,6 +384,17 @@ func (r *recordsExclusiveResource) Read(ctx context.Context, req resource.ReadRe
 			err.Error(),
 		)
 		return
+	}
+
+	// The Route53 API returns wildcard record names with the asterisk encoded
+	// as octal \052 (e.g., \052.example.com.). Normalize to the canonical
+	// form (*.example.com.) to match user-provided configuration values and
+	// avoid spurious diffs on import.
+	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47343
+	for i, rrs := range output {
+		if v := aws.ToString(rrs.Name); strings.HasPrefix(v, `\052.`) {
+			output[i].Name = aws.String(`*.` + strings.TrimPrefix(v, `\052.`))
+		}
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(
