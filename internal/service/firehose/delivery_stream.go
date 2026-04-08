@@ -2502,12 +2502,14 @@ func expandCloudWatchLoggingOptions(s3 map[string]any) *types.CloudWatchLoggingO
 		Enabled: aws.Bool(loggingConfig[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := loggingConfig[names.AttrLogGroupName]; ok {
-		loggingOptions.LogGroupName = aws.String(v.(string))
-	}
+	if aws.ToBool(loggingOptions.Enabled) {
+		if v, ok := loggingConfig[names.AttrLogGroupName]; ok {
+			loggingOptions.LogGroupName = aws.String(v.(string))
+		}
 
-	if v, ok := loggingConfig["log_stream_name"]; ok {
-		loggingOptions.LogStreamName = aws.String(v.(string))
+		if v, ok := loggingConfig["log_stream_name"]; ok {
+			loggingOptions.LogStreamName = aws.String(v.(string))
+		}
 	}
 
 	return loggingOptions
