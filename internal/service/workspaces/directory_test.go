@@ -1523,3 +1523,83 @@ data "aws_iam_role" "workspaces-default" {
 `, rName),
 	)
 }
+
+func testAccDirectory_poolsStreamingProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := acctest.RandString(t, 8)
+
+	resourceName := "aws_workspaces_directory.pool"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_poolsStreamingProperties(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.streaming_experience_preferred_protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.user_settings.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.user_settings.0.action", "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.user_settings.0.permission", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.user_settings.1.action", "PRINTING_TO_LOCAL_DEVICE"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.user_settings.1.permission", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.storage_connectors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.storage_connectors.0.connector_type", "HOME_FOLDER"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_properties.0.storage_connectors.0.status", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDirectoryConfig_poolsStreamingProperties(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_basePools(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "pool" {
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+  user_identity_type              = "CUSTOMER_MANAGED"
+
+  streaming_properties {
+    streaming_experience_preferred_protocol = "TCP"
+
+    user_settings {
+      action     = "CLIPBOARD_COPY_FROM_LOCAL_DEVICE"
+      permission = "ENABLED"
+    }
+
+    user_settings {
+      action     = "PRINTING_TO_LOCAL_DEVICE"
+      permission = "DISABLED"
+    }
+
+    storage_connectors {
+      connector_type = "HOME_FOLDER"
+      status         = "ENABLED"
+    }
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
