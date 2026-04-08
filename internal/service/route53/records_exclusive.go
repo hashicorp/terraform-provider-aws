@@ -391,6 +391,7 @@ func (r *recordsExclusiveResource) Read(ctx context.Context, req resource.ReadRe
 	// form (*.example.com.) to match user-provided configuration values and
 	// avoid spurious diffs on import.
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47343
+	// Ref: https://github.com/hashicorp/terraform-provider-aws/commit/d8859d8fbba817af7420235a2b2acdeb93dc6ef1
 	for i, rrs := range output {
 		if v := aws.ToString(rrs.Name); strings.HasPrefix(v, `\052.`) {
 			output[i].Name = aws.String(`*.` + strings.TrimPrefix(v, `\052.`))
