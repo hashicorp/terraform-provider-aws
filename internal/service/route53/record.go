@@ -336,8 +336,7 @@ func resourceRecord() *schema.Resource {
 				if v, ok := diff.GetOk("records"); ok {
 					for _, record := range v.(*schema.Set).List() {
 						value := record.(string)
-						segments := strings.Split(value, "\" \"")
-						for _, seg := range segments {
+						for seg := range strings.SplitSeq(value, "\" \"") {
 							if len(seg) > 255 {
 								return fmt.Errorf("individual TXT/SPF quoted string segment must be 255 characters or fewer, got %d characters", len(seg))
 							}

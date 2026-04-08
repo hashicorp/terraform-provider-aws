@@ -6,6 +6,7 @@ package route53_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -1671,7 +1672,7 @@ func TestAccRoute53Record_TXT_CharacterStringTooLong(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRecordConfig_txtCharacterStringTooLong,
+				Config:      testAccRecordConfig_txtCharacterStringTooLong(),
 				ExpectError: regexp.MustCompile(`individual TXT/SPF quoted string segment must be 255 characters or fewer`),
 			},
 		},
@@ -3462,7 +3463,8 @@ resource "aws_route53_record" "long_txt" {
 }
 `
 
-var testAccRecordConfig_txtCharacterStringTooLong = `
+func testAccRecordConfig_txtCharacterStringTooLong() string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test."
 }
@@ -3473,10 +3475,11 @@ resource "aws_route53_record" "long_txt" {
   type    = "TXT"
   ttl     = "30"
   records = [
-    "` + strings.Repeat("A", 256) + `"
+    "%s"
   ]
 }
-`
+`, strings.Repeat("A", 256))
+}
 
 const testAccRecordConfig_underscoreInName = `
 resource "aws_route53_zone" "main" {
