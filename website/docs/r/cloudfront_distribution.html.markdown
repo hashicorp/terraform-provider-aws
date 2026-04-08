@@ -614,6 +614,7 @@ argument should not be specified.
 * `origin_id` (Required) - Unique identifier for the origin group.
 * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin.
 * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. You must specify two members.
+* `selection_criteria` (Optional) - The selection criteria for the origin group. Valid values: `default`, `media-quality-based`. When set to `media-quality-based`, CloudFront routes requests to the origin with the highest media quality score. Only supported with MediaPackage v2 origins. See [Media quality-aware resiliency](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/media-quality-score.html).
 
 ##### Failover Criteria Arguments
 
