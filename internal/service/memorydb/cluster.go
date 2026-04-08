@@ -390,6 +390,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SubnetGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
+		multiRegionClusterName := v.(string)
+		conns.GlobalMutexKV.Lock("memorydb-multi-region-cluster-" + multiRegionClusterName)
+		defer conns.GlobalMutexKV.Unlock("memorydb-multi-region-cluster-" + multiRegionClusterName)
+
+		if _, err := waitMultiRegionClusterAvailable(ctx, conn, multiRegionClusterName, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) available: %s", multiRegionClusterName, err)
+		}
+	}
+
 	_, err := conn.CreateCluster(ctx, &input)
 
 	if err != nil {
@@ -398,17 +408,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(name)
 
-	// If a multi-region cluster name is set, ensure the `aws_memorydb_multi_region_cluster`
-	// is created and available before proceeding with cluster creation.
-	// Otherwise, the cluster creation will fail.
-	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
-		if _, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) create: %s", v.(string), err)
-		}
-	}
-
 	if _, err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) create: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
+		if _, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) available: %s", v.(string), err)
+		}
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
