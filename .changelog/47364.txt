@@ -1,0 +1,1 @@
+resource/aws_workspaces_directory: Add streaming_properties support for Pools
