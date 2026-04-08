@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/tags/main.go -ListTags -ListTagsOp=ListTagsForResource -ListTagsInIDElem=ResourceId -UpdateTags -TagOp=TagResource -TagInIDElem=ResourceId -UntagOp=UntagResource -UntagInTagsElem=TagKeys -ServiceTagsSlice
 //go:generate go run ../../generate/tagstests/main.go
 //go:generate go run ../../generate/identitytests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
