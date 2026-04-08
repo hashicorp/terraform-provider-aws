@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_custom_endpoint: Add new `custom_endpoint_type` value: "WRITER"
+```
