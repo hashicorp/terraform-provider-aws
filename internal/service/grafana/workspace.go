@@ -588,11 +588,11 @@ func expandNetworkAccessControl(tfList []any) *awstypes.NetworkAccessConfigurati
 	tfMap := tfList[0].(map[string]any)
 	apiObject := awstypes.NetworkAccessConfiguration{}
 
-	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok {
 		apiObject.PrefixListIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["vpce_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["vpce_ids"].(*schema.Set); ok {
 		apiObject.VpceIds = flex.ExpandStringValueSet(v)
 	}
 
