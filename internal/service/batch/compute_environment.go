@@ -202,6 +202,23 @@ func resourceComputeEnvironment() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"scaling_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_scale_down_delay_minutes": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ValidateFunc: validation.Any(
+											validation.IntInSlice([]int{0}),
+											validation.IntBetween(20, 10080),
+										),
+									},
+								},
+							},
+						},
 						names.AttrTags: tftags.TagsSchema(),
 						names.AttrType: {
 							Type:             schema.TypeString,
@@ -514,6 +531,15 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 				if d.HasChange("compute_resources.0.launch_template") {
 					launchTemplate := d.Get("compute_resources.0.launch_template").([]any)
 					computeResourceUpdate.LaunchTemplate = expandLaunchTemplateSpecificationUpdate(launchTemplate)
+				}
+
+				if d.HasChange("compute_resources.0.scaling_policy") {
+					if v, ok := d.GetOk("compute_resources.0.scaling_policy"); ok {
+						scalingPolicy := v.([]any)
+						if len(scalingPolicy) > 0 && scalingPolicy[0] != nil {
+							computeResourceUpdate.ScalingPolicy = expandComputeScalingPolicy(scalingPolicy[0].(map[string]any))
+						}
+					}
 				}
 
 				if d.HasChange("compute_resources.0.tags") {
@@ -964,6 +990,10 @@ func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.
 		apiObject.PlacementGroup = aws.String(v)
 	}
 
+	if v, ok := tfMap["scaling_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ScalingPolicy = expandComputeScalingPolicy(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
@@ -1185,6 +1215,10 @@ func flattenComputeResource(ctx context.Context, apiObject *awstypes.ComputeReso
 		tfMap["placement_group"] = aws.ToString(v)
 	}
 
+	if v := apiObject.ScalingPolicy; v != nil {
+		tfMap["scaling_policy"] = flattenComputeScalingPolicy(v)
+	}
+
 	if v := apiObject.SecurityGroupIds; v != nil {
 		tfMap[names.AttrSecurityGroupIDs] = v
 	}
@@ -1303,6 +1337,34 @@ func flattenComputeEnvironmentUpdatePolicy(apiObject *awstypes.UpdatePolicy) []a
 	m := map[string]any{
 		"job_execution_timeout_minutes": aws.ToInt64(apiObject.JobExecutionTimeoutMinutes),
 		"terminate_jobs_on_update":      aws.ToBool(apiObject.TerminateJobsOnUpdate),
+	}
+
+	return []any{m}
+}
+
+func expandComputeScalingPolicy(tfMap map[string]any) *awstypes.ComputeScalingPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ComputeScalingPolicy{}
+
+	if v, ok := tfMap["min_scale_down_delay_minutes"].(int); ok {
+		apiObject.MinScaleDownDelayMinutes = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenComputeScalingPolicy(apiObject *awstypes.ComputeScalingPolicy) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.MinScaleDownDelayMinutes; v != nil {
+		m["min_scale_down_delay_minutes"] = aws.ToInt32(v)
 	}
 
 	return []any{m}

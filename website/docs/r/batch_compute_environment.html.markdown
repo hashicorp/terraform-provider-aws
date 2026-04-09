@@ -214,6 +214,7 @@ This resource supports the following arguments:
 * `max_vcpus` - (Required) The maximum number of EC2 vCPUs that an environment can reach.
 * `min_vcpus` - (Optional) The minimum number of EC2 vCPUs that an environment should maintain. For `EC2` or `SPOT` compute environments, if the parameter is not explicitly defined, a `0` default value will be set. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `placement_group` - (Optional) The Amazon EC2 placement group to associate with your compute resources.
+* `scaling_policy` - (Optional) The scaling policy for the compute environment. See details below. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `security_group_ids` - (Optional) A list of EC2 security group that are associated with instances launched in the compute environment. This parameter is required for Fargate compute environments.
 * `spot_iam_fleet_role` - (Optional) The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied to a SPOT compute environment. This parameter is required for SPOT compute environments. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
@@ -235,6 +236,12 @@ This resource supports the following arguments:
 * `launch_template_id` - (Optional) ID of the launch template. You must specify either the launch template ID or launch template name in the request, but not both.
 * `launch_template_name` - (Optional) Name of the launch template.
 * `version` - (Optional) The version number of the launch template. Default: The default version of the launch template.
+
+### scaling_policy
+
+`scaling_policy` supports the following:
+
+* `min_scale_down_delay_minutes` - (Required) The minimum time (in minutes) that AWS Batch keeps instances running in the compute environment after their jobs complete. For each instance, the delay period begins when the last job finishes. If no new jobs are placed on the instance during this delay, AWS Batch terminates the instance once the delay expires. Valid values are between `20` and `10080`. Use `0` to disable the scale down delay.
 
 ### eks_configuration
 

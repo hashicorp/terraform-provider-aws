@@ -3429,3 +3429,130 @@ resource "aws_batch_compute_environment" "test" {
 }
 `, rName, instanceType))
 }
+
+func TestAccBatchComputeEnvironment_ComputeResources_scalingPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_ec2ScalingPolicy(rName, 20),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.0.min_scale_down_delay_minutes", "20"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ec2ScalingPolicy(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.0.min_scale_down_delay_minutes", "60"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_ComputeResources_scalingPolicyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_ec2ScalingPolicyOmitted(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ec2ScalingPolicy(rName, 30),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.scaling_policy.0.min_scale_down_delay_minutes", "30"),
+				),
+			},
+		},
+	})
+}
+
+func testAccComputeEnvironmentConfig_ec2ScalingPolicy(rName string, minScaleDownDelayMinutes int) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+
+    scaling_policy {
+      min_scale_down_delay_minutes = %[2]d
+    }
+  }
+
+  type = "MANAGED"
+}
+`, rName, minScaleDownDelayMinutes))
+}
+
+func testAccComputeEnvironmentConfig_ec2ScalingPolicyOmitted(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  type = "MANAGED"
+}
+`, rName))
+}
