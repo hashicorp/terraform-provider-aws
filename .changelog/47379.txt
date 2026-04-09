@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_grafana_workspace: Fix issue where `network_access_control` requires non-epmpty list in `prefix_list_ids` or `vpce_ids`
+```
