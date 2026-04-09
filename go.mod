@@ -41,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.12
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.14
-	github.com/aws/aws-sdk-go-v2/service/backup v1.54.11
+	github.com/aws/aws-sdk-go-v2/service/backup v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.63.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.59.0
@@ -102,11 +102,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.13
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.13
-	github.com/aws/aws-sdk-go-v2/service/drs v1.36.13
+	github.com/aws/aws-sdk-go-v2/service/drs v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.56.2
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.13
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.14
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.94.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.21
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.21
@@ -194,7 +194,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.14
-	github.com/aws/aws-sdk-go-v2/service/outposts v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/outposts v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.21
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.17.1
