@@ -390,6 +390,11 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
+	if config.RefreshTokenRotation.IsNull() && isDefaultRefreshTokenRotation(poolClient.RefreshTokenRotation) {
+		config.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	} else {
+		config.RefreshTokenRotation = flattenRefreshTokenRotation(ctx, poolClient.RefreshTokenRotation, &response.Diagnostics)
+	}
 	config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
@@ -532,8 +537,14 @@ func (r *managedUserPoolClientResource) Read(ctx context.Context, request resour
 	}
 
 	tokenValidityUnitsNull := state.TokenValidityUnits.IsNull()
+	refreshTokenRotationNull := state.RefreshTokenRotation.IsNull()
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &state, fwflex.WithFieldNamePrefix("Client"))...)
+	if refreshTokenRotationNull && isDefaultRefreshTokenRotation(poolClient.RefreshTokenRotation) {
+		state.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	} else {
+		state.RefreshTokenRotation = flattenRefreshTokenRotation(ctx, poolClient.RefreshTokenRotation, &response.Diagnostics)
+	}
 	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
 		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
@@ -583,6 +594,13 @@ func (r *managedUserPoolClientResource) Update(ctx context.Context, request reso
 		}
 	}
 
+	// If removing `refresh_token_rotation`, reset to the API default.
+	if !state.RefreshTokenRotation.IsNull() && plan.RefreshTokenRotation.IsNull() {
+		input.RefreshTokenRotation = &awstypes.RefreshTokenRotationType{
+			Feature: awstypes.FeatureTypeDisabled,
+		}
+	}
+
 	const (
 		timeout = 2 * time.Minute
 	)
@@ -600,6 +618,11 @@ func (r *managedUserPoolClientResource) Update(ctx context.Context, request reso
 	poolClient := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
+	if plan.RefreshTokenRotation.IsNull() && isDefaultRefreshTokenRotation(poolClient.RefreshTokenRotation) {
+		config.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	} else {
+		config.RefreshTokenRotation = flattenRefreshTokenRotation(ctx, poolClient.RefreshTokenRotation, &response.Diagnostics)
+	}
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
 		config.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
