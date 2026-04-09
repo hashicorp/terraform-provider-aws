@@ -381,6 +381,11 @@ func (r *userPoolClientResource) Create(ctx context.Context, request resource.Cr
 	poolClient := resp.UserPoolClient
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
+	if config.RefreshTokenRotation.IsNull() && isDefaultRefreshTokenRotation(poolClient.RefreshTokenRotation) {
+		config.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	} else {
+		config.RefreshTokenRotation = flattenRefreshTokenRotation(ctx, poolClient.RefreshTokenRotation, &response.Diagnostics)
+	}
 	config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
@@ -412,8 +417,14 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 	}
 
 	tokenValidityUnitsNull := state.TokenValidityUnits.IsNull()
+	refreshTokenRotationNull := state.RefreshTokenRotation.IsNull()
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &state, fwflex.WithFieldNamePrefix("Client"))...)
+	if refreshTokenRotationNull && isDefaultRefreshTokenRotation(poolClient.RefreshTokenRotation) {
+		state.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	} else {
+		state.RefreshTokenRotation = flattenRefreshTokenRotation(ctx, poolClient.RefreshTokenRotation, &response.Diagnostics)
+	}
 	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
 		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
@@ -462,6 +473,13 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 		}
 	}
 
+	// If removing `refresh_token_rotation`, reset to the API default.
+	if !state.RefreshTokenRotation.IsNull() && plan.RefreshTokenRotation.IsNull() {
+		input.RefreshTokenRotation = &awstypes.RefreshTokenRotationType{
+			Feature: awstypes.FeatureTypeDisabled,
+		}
+	}
+
 	const (
 		timeout = 2 * time.Minute
 	)
@@ -479,6 +497,11 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	poolClient := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
+	if plan.RefreshTokenRotation.IsNull() && isDefaultRefreshTokenRotation(poolClient.RefreshTokenRotation) {
+		config.RefreshTokenRotation = fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	} else {
+		config.RefreshTokenRotation = flattenRefreshTokenRotation(ctx, poolClient.RefreshTokenRotation, &response.Diagnostics)
+	}
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
 		config.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
@@ -651,6 +674,14 @@ func isDefaultTokenValidityUnits(tvu *awstypes.TokenValidityUnitsType) bool {
 		tvu.RefreshToken == awstypes.TimeUnitsTypeDays
 }
 
+func isDefaultRefreshTokenRotation(rtr *awstypes.RefreshTokenRotationType) bool {
+	if rtr == nil {
+		return false
+	}
+
+	return (rtr.Feature == "" || rtr.Feature == awstypes.FeatureTypeDisabled) && aws.ToInt32(rtr.RetryGracePeriodSeconds) == 0
+}
+
 func resolveTokenValidityUnits(ctx context.Context, list fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel], diags *diag.Diagnostics) *tokenValidityUnitsModel {
 	var units []tokenValidityUnitsModel
 	diags.Append(list.ElementsAs(ctx, &units, false)...)
@@ -671,6 +702,17 @@ func flattenTokenValidityUnits(ctx context.Context, tvu *awstypes.TokenValidityU
 
 	var result tokenValidityUnitsModel
 	diags.Append(fwflex.Flatten(ctx, tvu, &result)...)
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result)
+}
+
+func flattenRefreshTokenRotation(ctx context.Context, rtr *awstypes.RefreshTokenRotationType, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[refreshTokenRotationModel] {
+	if rtr == nil || (rtr.Feature == "" && rtr.RetryGracePeriodSeconds == nil) {
+		return fwtypes.NewListNestedObjectValueOfNull[refreshTokenRotationModel](ctx)
+	}
+
+	var result refreshTokenRotationModel
+	diags.Append(fwflex.Flatten(ctx, rtr, &result)...)
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result)
 }

@@ -107,6 +107,7 @@ func TestAccCognitoIDPUserPoolClient_enableRevocation(t *testing.T) {
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.#", "0"),
 				),
 			},
 			{
@@ -121,6 +122,7 @@ func TestAccCognitoIDPUserPoolClient_enableRevocation(t *testing.T) {
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.#", "0"),
 				),
 			},
 			{
