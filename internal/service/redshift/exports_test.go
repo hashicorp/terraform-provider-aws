@@ -9,6 +9,7 @@ var (
 	ResourceCluster                      = resourceCluster
 	ResourceClusterIAMRoles              = resourceClusterIAMRoles
 	ResourceClusterSnapshot              = resourceClusterSnapshot
+	ResourceCustomDomainAssociation      = newCustomDomainAssociationResource
 	ResourceDataShareAuthorization       = newDataShareAuthorizationResource
 	ResourceDataShareConsumerAssociation = newDataShareConsumerAssociationResource
 	ResourceEndpointAccess               = resourceEndpointAccess
@@ -33,6 +34,7 @@ var (
 	FindAuthenticationProfileByID                 = findAuthenticationProfileByID
 	FindClusterByID                               = findClusterByID
 	FindClusterSnapshotByID                       = findClusterSnapshotByID
+	FindCustomDomainAssociationByTwoPartKey       = findCustomDomainAssociationByTwoPartKey
 	FindDataShareAuthorizationByTwoPartKey        = findDataShareAuthorizationByTwoPartKey
 	FindDataShareConsumerAssociationByFourPartKey = findDataShareConsumerAssociationByFourPartKey
 	FindEndpointAccessByName                      = findEndpointAccessByName

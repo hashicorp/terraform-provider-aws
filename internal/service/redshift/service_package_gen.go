@@ -40,6 +40,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newCustomDomainAssociationResource,
+			TypeName: "aws_redshift_custom_domain_association",
+			Name:     "Custom Domain Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataShareAuthorizationResource,
 			TypeName: "aws_redshift_data_share_authorization",
 			Name:     "Data Share Authorization",
