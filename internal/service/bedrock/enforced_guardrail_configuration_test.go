@@ -37,7 +37,7 @@ func testAccEnforcedGuardrailConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "config_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "guardrail_arn", guardrailResourceName, "guardrail_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_id"),
-					resource.TestCheckResourceAttr(resourceName, "guardrail_version", "DRAFT"),
+					resource.TestCheckResourceAttrSet(resourceName, "guardrail_version"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
@@ -231,6 +231,11 @@ resource "aws_bedrock_guardrail" "test" {
     }
   }
 }
+
+resource "aws_bedrock_guardrail_version" "test" {
+  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+  description   = "Test guardrail version"
+}
 `, rName)
 }
 
@@ -238,7 +243,7 @@ func testAccEnforcedGuardrailConfigurationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEnforcedGuardrailConfigurationConfig_base(rName), `
 resource "aws_bedrock_enforced_guardrail_configuration" "test" {
   guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = "DRAFT"
+  guardrail_version    = aws_bedrock_guardrail_version.test.version
 }
 `)
 }
@@ -247,7 +252,7 @@ func testAccEnforcedGuardrailConfigurationConfig_selectiveContentGuarding(rName 
 	return acctest.ConfigCompose(testAccEnforcedGuardrailConfigurationConfig_base(rName), `
 resource "aws_bedrock_enforced_guardrail_configuration" "test" {
   guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = "DRAFT"
+  guardrail_version    = aws_bedrock_guardrail_version.test.version
 
   selective_content_guarding {
     messages = "COMPREHENSIVE"
@@ -261,7 +266,7 @@ func testAccEnforcedGuardrailConfigurationConfig_modelEnforcement(rName string) 
 	return acctest.ConfigCompose(testAccEnforcedGuardrailConfigurationConfig_base(rName), `
 resource "aws_bedrock_enforced_guardrail_configuration" "test" {
   guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = "DRAFT"
+  guardrail_version    = aws_bedrock_guardrail_version.test.version
 
   model_enforcement {
     included_models = ["ALL"]
