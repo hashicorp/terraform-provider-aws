@@ -18,6 +18,10 @@ import (
 )
 
 func TestAccRedshiftCustomDomainAssociation_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_custom_domain_association.test"
@@ -27,7 +31,6 @@ func TestAccRedshiftCustomDomainAssociation_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 			testAccPreCheckCustomDomainAssociation(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
@@ -54,6 +57,10 @@ func TestAccRedshiftCustomDomainAssociation_basic(t *testing.T) {
 }
 
 func TestAccRedshiftCustomDomainAssociation_certificateARN(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_custom_domain_association.test"
@@ -63,7 +70,6 @@ func TestAccRedshiftCustomDomainAssociation_certificateARN(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 			testAccPreCheckCustomDomainAssociation(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
@@ -94,6 +100,10 @@ func TestAccRedshiftCustomDomainAssociation_certificateARN(t *testing.T) {
 }
 
 func TestAccRedshiftCustomDomainAssociation_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_custom_domain_association.test"
@@ -103,7 +113,6 @@ func TestAccRedshiftCustomDomainAssociation_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 			testAccPreCheckCustomDomainAssociation(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
@@ -168,6 +177,8 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, t *testing.T
 }
 
 func testAccPreCheckCustomDomainAssociation(ctx context.Context, t *testing.T) {
+	acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
+
 	conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 	_, err := conn.DescribeCustomDomainAssociations(ctx, &redshift.DescribeCustomDomainAssociationsInput{})
@@ -189,10 +200,11 @@ resource "aws_redshift_subnet_group" "test" {
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                   = %[1]q
+  cluster_subnet_group_name            = aws_redshift_subnet_group.test.name
   database_name                        = "mydb"
   master_username                      = "foo_test"
   master_password                      = "Mustbe8characters"
-  node_type                            = "ra3.xlplus"
+  node_type                            = "ra3.large"
   automated_snapshot_retention_period  = 1
   allow_version_upgrade                = false
   skip_final_snapshot                  = true

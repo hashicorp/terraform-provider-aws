@@ -16,11 +16,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -29,19 +31,27 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var errCustomDomainAssociationNotUpdated = errors.New("redshift custom domain association not updated yet")
 
 // @FrameworkResource("aws_redshift_custom_domain_association", name="Custom Domain Association")
+// @IdentityAttribute("cluster_identifier")
+// @IdentityAttribute("custom_domain_name")
+// @ImportIDHandler("customDomainAssociationImportID", setIDAttribute=true)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheckCustomDomainAssociation")
+// @Testing(requireEnvVarValue="ACM_CERTIFICATE_ROOT_DOMAIN")
+// @Testing(importStateIdAttributes="cluster_identifier;custom_domain_name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &customDomainAssociationResource{}, nil
 }
 
 type customDomainAssociationResource struct {
 	framework.ResourceWithModel[customDomainAssociationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *customDomainAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -292,6 +302,41 @@ type customDomainAssociationResourceModel struct {
 const (
 	customDomainAssociationResourceIDPartCount = 2
 )
+
+var (
+	_ inttypes.ImportIDParser           = customDomainAssociationImportID{}
+	_ inttypes.FrameworkImportIDCreator = customDomainAssociationImportID{}
+)
+
+type customDomainAssociationImportID struct{}
+
+func (customDomainAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := flex.ExpandResourceId(id, customDomainAssociationResourceIDPartCount, false)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrClusterIdentifier: parts[0],
+		"custom_domain_name":        parts[1],
+	}
+
+	return id, result, nil
+}
+
+func (customDomainAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	parts := make([]string, 0, customDomainAssociationResourceIDPartCount)
+
+	var attrVal types.String
+
+	state.GetAttribute(ctx, path.Root(names.AttrClusterIdentifier), &attrVal)
+	parts = append(parts, attrVal.ValueString())
+
+	state.GetAttribute(ctx, path.Root("custom_domain_name"), &attrVal)
+	parts = append(parts, attrVal.ValueString())
+
+	return fmt.Sprintf("%s%s%s", parts[0], flex.ResourceIdSeparator, parts[1])
+}
 
 func (data *customDomainAssociationResourceModel) InitFromID() error {
 	parts, err := flex.ExpandResourceId(data.ID.ValueString(), customDomainAssociationResourceIDPartCount, false)
