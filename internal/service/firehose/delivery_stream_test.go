@@ -238,8 +238,12 @@ func TestAccFirehoseDeliveryStream_s3WithCloudWatchLoggingDisabled(t *testing.T)
 			},
 			{
 				// Re-apply the same config to verify no perpetual drift
-				Config:   testAccDeliveryStreamConfig_s3CloudWatchLoggingDisabled(rName),
-				PlanOnly: true,
+				Config: testAccDeliveryStreamConfig_s3CloudWatchLoggingDisabled(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
