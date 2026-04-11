@@ -32,9 +32,14 @@ resource "aws_bedrock_guardrail" "example" {
   }
 }
 
+resource "aws_bedrock_guardrail_version" "example" {
+  guardrail_arn = aws_bedrock_guardrail.example.guardrail_arn
+  description   = "Example version"
+}
+
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
   guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
-  guardrail_version    = "DRAFT"
+  guardrail_version    = aws_bedrock_guardrail_version.example.version
 }
 ```
 
@@ -56,7 +61,7 @@ resource "aws_bedrock_guardrail" "example" {
 
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
   guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
-  guardrail_version    = "DRAFT"
+  guardrail_version    = aws_bedrock_guardrail_version.example.version
 
   selective_content_guarding {
     messages = "COMPREHENSIVE"
@@ -83,7 +88,7 @@ resource "aws_bedrock_guardrail" "example" {
 
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
   guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
-  guardrail_version    = "DRAFT"
+  guardrail_version    = aws_bedrock_guardrail_version.example.version
 
   model_enforcement {
     included_models = ["ALL"]
@@ -97,7 +102,7 @@ resource "aws_bedrock_enforced_guardrail_configuration" "example" {
 The following arguments are required:
 
 * `guardrail_identifier` - (Required) Identifier for the guardrail, can be the guardrail ID or the guardrail ARN.
-* `guardrail_version` - (Required) Numerical guardrail version or `DRAFT`.
+* `guardrail_version` - (Required) Numerical guardrail version. Must be a published version number (e.g., `1`, `2`). `DRAFT` is not supported.
 
 The following arguments are optional:
 
