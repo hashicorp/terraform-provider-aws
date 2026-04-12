@@ -42,13 +42,13 @@ func testAccEnforcedGuardrailConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_by"),
-					resource.TestCheckResourceAttr(resourceName, "owner", "ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "ACCOUNT"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -102,9 +102,9 @@ func testAccEnforcedGuardrailConfiguration_selectiveContentGuarding(t *testing.T
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -131,9 +131,9 @@ func testAccEnforcedGuardrailConfiguration_modelEnforcement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -165,9 +165,16 @@ func testAccEnforcedGuardrailConfiguration_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				Config: testAccEnforcedGuardrailConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "selective_content_guarding.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
