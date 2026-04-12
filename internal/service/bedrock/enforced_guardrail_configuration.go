@@ -312,6 +312,11 @@ func (r *enforcedGuardrailConfigurationResource) flattenOutput(ctx context.Conte
 	data.GuardrailArn = types.StringPointerValue(output.GuardrailArn)
 	data.GuardrailId = types.StringPointerValue(output.GuardrailId)
 	data.GuardrailVersion = types.StringPointerValue(output.GuardrailVersion)
+
+	// Populate guardrail_identifier from guardrail_arn on read so that import works correctly.
+	if data.GuardrailIdentifier.IsNull() || data.GuardrailIdentifier.ValueString() == "" {
+		data.GuardrailIdentifier = types.StringPointerValue(output.GuardrailArn)
+	}
 	data.CreatedAt = fwflex.TimeToFramework(ctx, output.CreatedAt)
 	data.CreatedBy = types.StringPointerValue(output.CreatedBy)
 	data.UpdatedAt = fwflex.TimeToFramework(ctx, output.UpdatedAt)

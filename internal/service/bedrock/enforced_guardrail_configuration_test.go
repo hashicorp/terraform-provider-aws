@@ -49,7 +49,6 @@ func testAccEnforcedGuardrailConfiguration_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"guardrail_identifier"},
 			},
 		},
 	})
@@ -106,7 +105,6 @@ func testAccEnforcedGuardrailConfiguration_selectiveContentGuarding(t *testing.T
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"guardrail_identifier"},
 			},
 		},
 	})
@@ -136,7 +134,6 @@ func testAccEnforcedGuardrailConfiguration_modelEnforcement(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"guardrail_identifier"},
 			},
 		},
 	})
@@ -171,7 +168,6 @@ func testAccEnforcedGuardrailConfiguration_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"guardrail_identifier"},
 			},
 		},
 	})
