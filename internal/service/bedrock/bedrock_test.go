@@ -32,6 +32,7 @@ func TestAccBedrock_serial(t *testing.T) {
 			"modelEnforcement":         testAccEnforcedGuardrailConfiguration_modelEnforcement,
 			"selectiveContentGuarding": testAccEnforcedGuardrailConfiguration_selectiveContentGuarding,
 			"update":                   testAccEnforcedGuardrailConfiguration_update,
+			"Identity":                testAccBedrockEnforcedGuardrailConfiguration_identitySerial,
 		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,

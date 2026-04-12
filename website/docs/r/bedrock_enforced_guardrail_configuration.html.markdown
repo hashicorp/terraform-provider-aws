@@ -59,6 +59,11 @@ resource "aws_bedrock_guardrail" "example" {
   }
 }
 
+resource "aws_bedrock_guardrail_version" "example" {
+  guardrail_arn = aws_bedrock_guardrail.example.guardrail_arn
+  description   = "Example version"
+}
+
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
   guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
   guardrail_version    = aws_bedrock_guardrail_version.example.version
@@ -84,6 +89,11 @@ resource "aws_bedrock_guardrail" "example" {
       text = "deny"
     }
   }
+}
+
+resource "aws_bedrock_guardrail_version" "example" {
+  guardrail_arn = aws_bedrock_guardrail.example.guardrail_arn
+  description   = "Example version"
 }
 
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
