@@ -10,9 +10,9 @@ description: |-
 
 Terraform resource for managing an Amazon Bedrock Enforced Guardrail Configuration.
 
-This resource configures an account-level enforced guardrail that is applied across all Bedrock inference calls in an account.
+This resource configures an enforced guardrail that is applied across all Bedrock inference calls in the configured region.
 
-~> **NOTE:** Only one enforced guardrail configuration can exist per account. Importing or creating this resource will manage the single account-level configuration.
+~> Enforced guardrail configuration is configured per AWS region. To avoid overwriting settings, this resource should not be defined in multiple configurations.
 
 ## Example Usage
 
@@ -117,6 +117,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `model_enforcement` - (Optional) Model-specific information for the enforced guardrail configuration. If not present, the configuration is enforced on all models. See [`model_enforcement`](#model_enforcement) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `selective_content_guarding` - (Optional) Selective content guarding controls for enforced guardrails. See [`selective_content_guarding`](#selective_content_guarding) below.
 
 ### `model_enforcement`

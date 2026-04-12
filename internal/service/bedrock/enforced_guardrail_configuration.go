@@ -83,7 +83,7 @@ func (r *enforcedGuardrailConfigurationResource) Schema(ctx context.Context, req
 			"updated_by": schema.StringAttribute{
 				Computed: true,
 			},
-			"owner": schema.StringAttribute{
+			names.AttrOwner: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ConfigurationOwner](),
 				Computed:   true,
 			},
@@ -231,9 +231,11 @@ func (r *enforcedGuardrailConfigurationResource) Delete(ctx context.Context, req
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteEnforcedGuardrailConfiguration(ctx, &bedrock.DeleteEnforcedGuardrailConfigurationInput{
+	input := bedrock.DeleteEnforcedGuardrailConfigurationInput{
 		ConfigId: data.ConfigID.ValueStringPointer(),
-	})
+	}
+
+	_, err := conn.DeleteEnforcedGuardrailConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
