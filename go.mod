@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.21
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.8
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.1
-	github.com/aws/aws-sdk-go-v2/service/connect v1.168.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.169.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.13
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.13
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.77.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.14
 	github.com/aws/aws-sdk-go-v2/service/eks v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.52.0
@@ -139,7 +139,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.13
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.7
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.5
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.4
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.20
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.14
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.14
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.48.0
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.89.1
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.21
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.36.1
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.20
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.23
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.15
-	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.1
@@ -232,7 +232,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.239.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.240.0
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.12
