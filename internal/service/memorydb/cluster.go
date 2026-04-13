@@ -639,6 +639,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 		input.FinalSnapshotName = aws.String(v.(string))
 	}
 
+	if _, err := findClusterByName(ctx, conn, d.Id()); err != nil {
+		if retry.NotFound(err) {
+			return diags
+		}
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB Cluster (%s): %s", d.Id(), err)
+	}
+
 	if _, err := waitClusterAvailable(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) update: %s", d.Id(), err)
 	}
