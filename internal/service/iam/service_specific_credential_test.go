@@ -39,6 +39,7 @@ func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_user_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_specific_credential_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_password"),
 				),
 			},
 			{
