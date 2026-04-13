@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -44,6 +45,12 @@ func main() {
 
 	td := TemplateData{
 		PackageName: packageName,
+		BuildTags:   "!core",
+	}
+
+	coreTd := TemplateData{
+		PackageName: packageName,
+		BuildTags:   "core",
 	}
 
 	for _, l := range data {
@@ -61,6 +68,10 @@ func main() {
 		}
 
 		td.Services = append(td.Services, s)
+
+		if common.IsCoreService(p) {
+			coreTd.Services = append(coreTd.Services, s)
+		}
 	}
 
 	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
@@ -76,6 +87,21 @@ func main() {
 	if err := d.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
+
+	slices.SortStableFunc(coreTd.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
+	})
+
+	coreFilename := strings.ReplaceAll(filename, `_gen`, `_core_gen`)
+	coreD := g.NewGoFileDestination(coreFilename)
+
+	if err := coreD.BufferTemplate("servicepackages", tmpl, coreTd); err != nil {
+		g.Fatalf("error generating core service packages list: %s", err)
+	}
+
+	if err := coreD.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", coreFilename, err)
+	}
 }
 
 type ServiceDatum struct {
@@ -84,6 +110,7 @@ type ServiceDatum struct {
 
 type TemplateData struct {
 	PackageName string
+	BuildTags   string
 	Services    []ServiceDatum
 }
 

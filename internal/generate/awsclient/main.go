@@ -9,6 +9,7 @@ import (
 	"cmp"
 	_ "embed"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -20,7 +21,8 @@ type ServiceDatum struct {
 }
 
 type TemplateData struct {
-	Services []ServiceDatum
+	BuildTags string
+	Services  []ServiceDatum
 }
 
 func main() {
@@ -36,7 +38,13 @@ func main() {
 		g.Fatalf("error reading service data: %s", err)
 	}
 
-	td := TemplateData{}
+	td := TemplateData{
+		BuildTags: "!core",
+	}
+
+	coreTd := TemplateData{
+		BuildTags: "core",
+	}
 
 	for _, l := range data {
 		if l.Exclude() {
@@ -57,6 +65,10 @@ func main() {
 		}
 
 		td.Services = append(td.Services, s)
+
+		if common.IsCoreService(l.ProviderPackage()) {
+			coreTd.Services = append(coreTd.Services, s)
+		}
 	}
 
 	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
@@ -71,6 +83,21 @@ func main() {
 
 	if err := d.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
+	slices.SortStableFunc(coreTd.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
+	})
+
+	coreFilename := strings.ReplaceAll(filename, `_gen`, `_core_gen`)
+	coreD := g.NewGoFileDestination(coreFilename)
+
+	if err := coreD.BufferTemplate("awsclient", tmpl, coreTd); err != nil {
+		g.Fatalf("generating file (%s): %s", coreFilename, err)
+	}
+
+	if err := coreD.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", coreFilename, err)
 	}
 }
 

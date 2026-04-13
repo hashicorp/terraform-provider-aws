@@ -31,7 +31,7 @@ package-lock.json
 package.json
 skaff/skaff
 sweeper-bin
-terraform-provider-aws
+terraform-provider-aws*
 terraform-providers-schema/
 terraform.tfplan
 terraform.tfstate
