@@ -128,6 +128,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `automated_snapshot_retention_period` - The backup retention period
 * `preferred_maintenance_window` - The backup window
 * `endpoint` - The connection endpoint
+* `vpc_endpoints` - Redshift-managed VPC endpoints for the cluster. See details below.
 * `encrypted` - Whether the data in the cluster is encrypted
 * `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
 * `dns_name` - The DNS name of the cluster
@@ -147,6 +148,19 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 * `node_role` - Whether the node is a leader node or a compute node
 * `private_ip_address` - The private IP address of a node within a cluster
 * `public_ip_address` - The public IP address of a node within a cluster
+
+### VPC Endpoint
+
+* `network_interface` - One or more network interfaces of the endpoint. See details below.
+* `vpc_endpoint_id` - The Redshift-managed VPC endpoint ID.
+* `vpc_id` - The VPC identifier that the endpoint is associated with.
+
+### Network Interface
+
+* `availability_zone` - The Availability Zone.
+* `network_interface_id` - The network interface identifier.
+* `private_ip_address` - The IPv4 address of the network interface within the subnet.
+* `subnet_id` - The subnet identifier.
 
 ## Timeouts
 

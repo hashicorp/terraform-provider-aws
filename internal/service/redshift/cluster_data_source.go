@@ -132,6 +132,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"vpc_endpoints": redshiftVPCEndpointSchema(),
 			"enhanced_vpc_routing": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -256,9 +257,15 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
 	}
 	d.Set(names.AttrEncrypted, rsc.Encrypted)
+	if err := d.Set("vpc_endpoints", nil); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoints: %s", err)
+	}
 	if rsc.Endpoint != nil {
 		d.Set(names.AttrEndpoint, rsc.Endpoint.Address)
 		d.Set(names.AttrPort, rsc.Endpoint.Port)
+		if err := d.Set("vpc_endpoints", flattenVPCEndpoints(rsc.Endpoint.VpcEndpoints)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_endpoints: %s", err)
+		}
 	}
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v awstypes.ClusterIamRole) string {

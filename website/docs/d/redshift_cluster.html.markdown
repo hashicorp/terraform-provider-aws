@@ -73,6 +73,7 @@ This data source exports the following attributes in addition to the arguments a
 * `enable_logging` - Whether cluster logging is enabled
 * `encrypted` - Whether the cluster data is encrypted
 * `endpoint` - Cluster endpoint
+* `vpc_endpoints` - Redshift-managed VPC endpoints for the cluster. See details below.
 * `enhanced_vpc_routing` - Whether enhanced VPC routing is enabled
 * `iam_roles` - IAM roles associated to the cluster
 * `kms_key_id` - KMS encryption key associated to the cluster
@@ -97,3 +98,16 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 * `node_role` - Whether the node is a leader node or a compute node
 * `private_ip_address` - Private IP address of a node within a cluster
 * `public_ip_address` - Public IP address of a node within a cluster
+
+### VPC Endpoint
+
+* `network_interface` - One or more network interfaces of the endpoint. See details below.
+* `vpc_endpoint_id` - The Redshift-managed VPC endpoint ID.
+* `vpc_id` - The VPC identifier that the endpoint is associated with.
+
+### Network Interface
+
+* `availability_zone` - The Availability Zone.
+* `network_interface_id` - The network interface identifier.
+* `private_ip_address` - The IPv4 address of the network interface within the subnet.
+* `subnet_id` - The subnet identifier.

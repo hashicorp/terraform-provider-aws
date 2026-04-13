@@ -70,46 +70,7 @@ func resourceEndpointAccess() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"vpc_endpoint": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"network_interface": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAvailabilityZone: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrNetworkInterfaceID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"private_ip_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrSubnetID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"vpc_endpoint": redshiftVPCEndpointSchema(),
 			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -250,11 +211,72 @@ func vpcSgsIdsToSlice(vpsSgsIds []awstypes.VpcSecurityGroupMembership) []string 
 	return VpcSgsSlice
 }
 
+func redshiftVPCEndpointSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"network_interface": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrNetworkInterfaceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				names.AttrVPCEndpointID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
 func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []any {
 	if apiObject == nil {
 		return nil
 	}
 
+	return []any{flattenVPCEndpointMap(*apiObject)}
+}
+
+func flattenVPCEndpoints(apiObjects []awstypes.VpcEndpoint) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenVPCEndpointMap(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenVPCEndpointMap(apiObject awstypes.VpcEndpoint) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.NetworkInterfaces; v != nil {
@@ -269,7 +291,7 @@ func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []any {
 		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
-	return []any{tfMap}
+	return tfMap
 }
 
 func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any {

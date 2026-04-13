@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -62,6 +63,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test"
 	subnetGroupResourceName := "aws_redshift_subnet_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -77,6 +79,16 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "multi-node"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_subnet_group_name", subnetGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoints.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "vpc_endpoints.0.network_interface.#", regexache.MustCompile(`^[1-9][0-9]*$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "vpc_endpoints.0.network_interface.#", regexache.MustCompile(`^[1-9][0-9]*$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoints.0.vpc_endpoint_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_endpoints.0.vpc_endpoint_id", resourceName, "vpc_endpoints.0.vpc_endpoint_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_endpoints.0.vpc_id", resourceName, "vpc_endpoints.0.vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoints.0.network_interface.0.network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_endpoints.0.network_interface.0.private_ip_address"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "vpc_endpoints.0.network_interface.0.private_ip_address"),
 				),
 			},
 		},

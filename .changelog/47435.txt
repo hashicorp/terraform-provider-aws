@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `vpc_endpoints` attribute
+data-source/aws_redshift_cluster: Add `vpc_endpoints` attribute
+```
