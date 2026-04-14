@@ -7,6 +7,8 @@ package apigatewayv2
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -161,6 +163,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newRouteResourceAsListResource,
+			TypeName: "aws_apigatewayv2_route",
+			Name:     "Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

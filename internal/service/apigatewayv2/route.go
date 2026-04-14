@@ -192,19 +192,9 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Route (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_key_required", output.ApiKeyRequired)
-	d.Set("authorization_scopes", output.AuthorizationScopes)
-	d.Set("authorization_type", output.AuthorizationType)
-	d.Set("authorizer_id", output.AuthorizerId)
-	d.Set("model_selection_expression", output.ModelSelectionExpression)
-	d.Set("operation_name", output.OperationName)
-	d.Set("request_models", output.RequestModels)
-	if err := d.Set("request_parameter", flattenRouteRequestParameters(output.RequestParameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting request_parameter: %s", err)
+	if err := flattenRoute(d, output); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening API Gateway v2 Route (%s): %s", d.Id(), err)
 	}
-	d.Set("route_key", output.RouteKey)
-	d.Set("route_response_selection_expression", output.RouteResponseSelectionExpression)
-	d.Set(names.AttrTarget, output.Target)
 
 	return diags
 }
@@ -434,6 +424,24 @@ func findRoutes(ctx context.Context, conn *apigatewayv2.Client, input *apigatewa
 	}
 
 	return output, nil
+}
+
+func flattenRoute(d *schema.ResourceData, output *apigatewayv2.GetRouteOutput) error {
+	d.Set("api_key_required", output.ApiKeyRequired)
+	d.Set("authorization_scopes", output.AuthorizationScopes)
+	d.Set("authorization_type", output.AuthorizationType)
+	d.Set("authorizer_id", output.AuthorizerId)
+	d.Set("model_selection_expression", output.ModelSelectionExpression)
+	d.Set("operation_name", output.OperationName)
+	d.Set("request_models", output.RequestModels)
+	if err := d.Set("request_parameter", flattenRouteRequestParameters(output.RequestParameters)); err != nil {
+		return fmt.Errorf("setting request_parameter: %w", err)
+	}
+	d.Set("route_key", output.RouteKey)
+	d.Set("route_response_selection_expression", output.RouteResponseSelectionExpression)
+	d.Set(names.AttrTarget, output.Target)
+
+	return nil
 }
 
 func expandRouteRequestParameters(tfList []any) map[string]awstypes.ParameterConstraints {
