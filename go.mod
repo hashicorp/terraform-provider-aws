@@ -86,7 +86,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.13
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.6
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.8
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.57.2
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.14
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.41.0
@@ -131,7 +131,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.16
-	github.com/aws/aws-sdk-go-v2/service/glue v1.139.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.139.2
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.21
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.4
@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.14
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.8
-	github.com/aws/aws-sdk-go-v2/service/iot v1.72.5
+	github.com/aws/aws-sdk-go-v2/service/iot v1.72.6
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.14
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.20
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.49.2
@@ -165,7 +165,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.14
-	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.13
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.95.0
@@ -237,7 +237,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.13
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.12
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.12
