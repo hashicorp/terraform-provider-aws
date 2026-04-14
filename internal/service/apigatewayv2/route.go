@@ -22,12 +22,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_route", name="Route")
+// @IdentityAttribute("api_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("routeImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetRouteOutput")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importStateIdFunc="testAccRouteImportStateIdFunc")
+// @CustomImport
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -324,14 +333,18 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id'", d.Id())
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
 	}
 
-	apiID := parts[0]
-	routeID := parts[1]
+	apiID := d.Get("api_id").(string)
+	routeID := d.Id()
 
+	// Region may be overridden in the import block.
+	// Ensure the appropriate value is in context before initializing the client.
+	if v, ok := d.GetOk(names.AttrRegion); ok {
+		ctx = conns.NewResourceContext(ctx, names.APIGatewayV2, "aws_apigatewayv2_route", "Route", v.(string))
+	}
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findRouteByTwoPartKey(ctx, conn, apiID, routeID)
@@ -344,10 +357,28 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) 
 		return nil, fmt.Errorf("API Gateway v2 Route (%s) was created via quick create", routeID)
 	}
 
-	d.SetId(routeID)
-	d.Set("api_id", apiID)
-
 	return []*schema.ResourceData{d}, nil
+}
+
+var _ inttypes.SDKv2ImportID = routeImportID{}
+
+type routeImportID struct{}
+
+func (routeImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (routeImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id'", id)
+	}
+
+	result := map[string]any{
+		"api_id": parts[0],
+	}
+
+	return parts[1], result, nil
 }
 
 func findRouteByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, routeID string) (*apigatewayv2.GetRouteOutput, error) {

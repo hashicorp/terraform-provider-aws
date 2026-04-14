@@ -127,6 +127,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_apigatewayv2_route",
 			Name:     "Route",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("api_id", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+				ImportID:     routeImportID{},
+			},
 		},
 		{
 			Factory:  resourceRouteResponse,
