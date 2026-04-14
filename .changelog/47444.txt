@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshift_cluster: Fix restore-from-snapshot encryption changes failing while streaming restore is in progress
+```
