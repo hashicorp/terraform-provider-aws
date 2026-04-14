@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.57.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.58.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.41.0 // indirect
@@ -143,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.139.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.139.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.4 // indirect
@@ -161,7 +161,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iot v1.72.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iot v1.72.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.49.2 // indirect
@@ -182,7 +182,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.53.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.90.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.95.0 // indirect
@@ -254,7 +254,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.69.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.12 // indirect
