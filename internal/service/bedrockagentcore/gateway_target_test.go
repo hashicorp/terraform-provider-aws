@@ -985,6 +985,14 @@ func TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer(t
 					resource.TestCheckResourceAttrPair(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", "data.aws_region.current", "name"),
 				),
 			},
+			{
+				Config:                               testAccGatewayTargetConfig_gatewayIAMRoleMCPServer(rName, endpoint),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
 		},
 	})
 }

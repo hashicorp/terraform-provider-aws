@@ -194,7 +194,7 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
     oauth {
       provider_arn       = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
       scopes             = ["read", "write"]
-      grant_type         = "authorization_code"
+      grant_type         = "AUTHORIZATION_CODE"
       default_return_url = "https://myapp.example.com/callback"
 
       custom_parameters = {
@@ -399,7 +399,7 @@ The `oauth` block supports the following:
 * `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
 * `grant_type` - (Optional) The OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
 * `default_return_url` - (Optional) The URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
-* `scopes` - (Optional) Set of OAuth scopes to request.
+* `scopes` - (Required) Set of OAuth scopes to request.
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
 
 ### `metadata_configuration`
@@ -456,7 +456,7 @@ The `tool_override` block supports the following:
 
 * `description` - (Optional) Description of the tool. Provides information about the purpose and usage of the tool. If not provided, uses the description from the API's OpenAPI specification.
 * `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
-* `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
+* `name` - (Required) Name of tool. Identifies the tool in the Model Context Protocol.
 * `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
 ### `lambda`
