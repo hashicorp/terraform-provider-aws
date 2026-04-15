@@ -33,18 +33,16 @@ import (
 )
 
 // @SDKResource("aws_apigatewayv2_api", name="API")
+// @IdentityAttribute("id")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetApiOutput")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,
 		ReadWithoutTimeout:   resourceAPIRead,
 		UpdateWithoutTimeout: resourceAPIUpdate,
 		DeleteWithoutTimeout: resourceAPIDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"api_endpoint": {
