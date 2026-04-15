@@ -1554,6 +1554,31 @@ func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natG
 	return nil, err
 }
 
+func waitNATGatewaySecondaryPrivateIPAddressCount(ctx context.Context, conn *ec2.Client, natGatewayID string, expectedCount int, timeout time.Duration) (*awstypes.NatGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"pending"},
+		Target:                    []string{"ready"},
+		Refresh:                   statusNATGatewaySecondaryPrivateIPAddressCount(conn, natGatewayID, expectedCount),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 4,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
+		for _, natGatewayAddress := range output.NatGatewayAddresses {
+			if !aws.ToBool(natGatewayAddress.IsPrimary) && natGatewayAddress.Status == awstypes.NatGatewayAddressStatusFailed {
+				retry.SetLastError(err, errors.New(aws.ToString(natGatewayAddress.FailureMessage)))
+				break
+			}
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitNATGatewayCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NatGateway, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NatGatewayStatePending),
