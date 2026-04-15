@@ -448,7 +448,16 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 								),
 							},
 							NestedObject: schema.NestedBlockObject{
-								// Empty block - no attributes needed for Gateway IAM Role
+								Attributes: map[string]schema.Attribute{
+									"region": schema.StringAttribute{
+										Optional:    true,
+										Description: "AWS Region used for SigV4 signing when authenticating to the target. If not set, the gateway's Region is used.",
+									},
+									"service": schema.StringAttribute{
+										Optional:    true,
+										Description: "AWS service name used for SigV4 signing when authenticating to the target (for example, `bedrock-agentcore` for Agent Core MCP servers). Required for MCP server targets that use IAM outbound authentication. For Lambda, API Gateway, and Smithy targets, omit `service` and `region`; only `credentialProviderType` is sent.",
+									},
+								},
 							},
 						},
 					},
@@ -749,6 +758,95 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 			}),
 		},
 	}
+}
+
+func (r *gatewayTargetResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data gatewayTargetResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(validateGatewayIAMRoleCredentialConfiguration(ctx, &data)...)
+}
+
+// validateGatewayIAMRoleCredentialConfiguration enforces IamCredentialProvider rules from the AWS API and
+// https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-building-adding-targets-authorization.html :
+//   - service is required when region is set (partial IamCredentialProvider is invalid).
+//   - MCP server targets that use gateway_iam_role must set service (iamCredentialProvider.service).
+func validateGatewayIAMRoleCredentialConfiguration(ctx context.Context, data *gatewayTargetResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	credCfg := data.CredentialProviderConfiguration
+	if credCfg.IsNull() || credCfg.IsUnknown() {
+		return diags
+	}
+	cred, d := credCfg.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	if cred.GatewayIAMRole.IsNull() || cred.GatewayIAMRole.IsUnknown() {
+		return diags
+	}
+	gwIAM, d := cred.GatewayIAMRole.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	servicePath := path.Root("credential_provider_configuration").AtListIndex(0).AtName("gateway_iam_role").AtListIndex(0).AtName("service")
+
+	regionSet := !gwIAM.Region.IsNull() && !gwIAM.Region.IsUnknown() && strings.TrimSpace(gwIAM.Region.ValueString()) != ""
+	serviceEmpty := gwIAM.Service.IsNull() || (!gwIAM.Service.IsUnknown() && strings.TrimSpace(gwIAM.Service.ValueString()) == "")
+
+	if regionSet && !gwIAM.Service.IsUnknown() && serviceEmpty {
+		diags.AddAttributeError(
+			servicePath,
+			"Invalid Configuration",
+			"The service argument is required when region is set. IamCredentialProvider requires an AWS service name for SigV4 signing.",
+		)
+	}
+
+	if gwIAM.Service.IsUnknown() {
+		return diags
+	}
+
+	isMCPServer, skip := gatewayTargetIsMCPServerTarget(ctx, data)
+	if skip || !isMCPServer {
+		return diags
+	}
+
+	if serviceEmpty {
+		diags.AddAttributeError(
+			servicePath,
+			"Invalid Configuration",
+			"The service argument is required for MCP server targets that use gateway_iam_role (IAM SigV4). For example, use service = \"bedrock-agentcore\" for Agent Core Runtime MCP endpoints. For Lambda, API Gateway, and Smithy model targets, use gateway_iam_role {} without service or region.",
+		)
+	}
+
+	return diags
+}
+
+func gatewayTargetIsMCPServerTarget(ctx context.Context, data *gatewayTargetResourceModel) (isMCPServer bool, skip bool) {
+	if data.TargetConfiguration.IsNull() || data.TargetConfiguration.IsUnknown() {
+		return false, true
+	}
+	tc, d := data.TargetConfiguration.ToPtr(ctx)
+	if d.HasError() {
+		return false, true
+	}
+	if tc.MCP.IsNull() || tc.MCP.IsUnknown() {
+		return false, false
+	}
+	mcp, d := tc.MCP.ToPtr(ctx)
+	if d.HasError() {
+		return false, true
+	}
+	if mcp.MCPServer.IsUnknown() {
+		return false, true
+	}
+	return !mcp.MCPServer.IsNull(), false
 }
 
 func (r *gatewayTargetResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -1095,7 +1193,21 @@ func (m *credentialProviderConfigurationModel) Flatten(ctx context.Context, v an
 			}
 
 		case awstypes.CredentialProviderTypeGatewayIamRole:
-			m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &gatewayIAMRoleProviderModel{})
+			model := gatewayIAMRoleProviderModel{
+				Service: types.StringNull(),
+				Region:  types.StringNull(),
+			}
+			if t.CredentialProvider != nil {
+				if iamMember, ok := t.CredentialProvider.(*awstypes.CredentialProviderMemberIamCredentialProvider); ok {
+					if iamMember.Value.Service != nil {
+						model.Service = types.StringValue(aws.ToString(iamMember.Value.Service))
+					}
+					if iamMember.Value.Region != nil {
+						model.Region = types.StringValue(aws.ToString(iamMember.Value.Region))
+					}
+				}
+			}
+			m.GatewayIAMRole = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		default:
 			diags.AddError(
@@ -1150,8 +1262,32 @@ func (m credentialProviderConfigurationModel) Expand(ctx context.Context) (any, 
 		return &c, diags
 
 	case !m.GatewayIAMRole.IsNull():
+		gwIAMData, d := m.GatewayIAMRole.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
 		c.CredentialProviderType = awstypes.CredentialProviderTypeGatewayIamRole
-		c.CredentialProvider = nil
+
+		var iam awstypes.IamCredentialProvider
+		if !gwIAMData.Service.IsNull() {
+			if s := strings.TrimSpace(gwIAMData.Service.ValueString()); s != "" {
+				iam.Service = aws.String(s)
+			}
+		}
+		if !gwIAMData.Region.IsNull() {
+			if r := strings.TrimSpace(gwIAMData.Region.ValueString()); r != "" {
+				iam.Region = aws.String(r)
+			}
+		}
+
+		if iam.Service == nil && iam.Region == nil {
+			c.CredentialProvider = nil
+			return &c, diags
+		}
+
+		c.CredentialProvider = &awstypes.CredentialProviderMemberIamCredentialProvider{Value: iam}
 		return &c, diags
 
 	default:
@@ -1385,7 +1521,8 @@ type oauthCredentialProviderModel struct {
 }
 
 type gatewayIAMRoleProviderModel struct {
-	// Empty struct - Gateway IAM Role provider requires no configuration
+	Region  types.String `tfsdk:"region"`
+	Service types.String `tfsdk:"service"`
 }
 
 type mcpApiGatewayConfigurationModel struct {

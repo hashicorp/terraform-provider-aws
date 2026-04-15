@@ -314,6 +314,34 @@ resource "aws_bedrockagentcore_gateway_target" "mcp_with_headers" {
 }
 ```
 
+### MCP Server Target with IAM (SigV4) to Agent Core
+
+For MCP server targets that require IAM authentication using the gateway role, set `service` (and optionally `region`) inside `gateway_iam_role`. See the [AWS documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-building-adding-targets-authorization.html).
+
+```terraform
+data "aws_region" "current" {}
+
+resource "aws_bedrockagentcore_gateway_target" "mcp_iam" {
+  name               = "example-mcp-iam"
+  gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "bedrock-agentcore"
+      region  = data.aws_region.current.id
+    }
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://example.runtime.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -324,7 +352,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
+* `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. For `mcp_server` targets that use IAM outbound authentication, use `gateway_iam_role` with `service` (and optionally `region`). See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
 * `metadata_configuration` - (Optional) Configuration for HTTP header and query parameter propagation between the gateway and target servers. See [`metadata_configuration`](#metadata_configuration) below.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
@@ -333,9 +361,18 @@ The following arguments are optional:
 
 The `credential_provider_configuration` block supports exactly one of the following:
 
-* `gateway_iam_role` - (Optional) Use the gateway's IAM role for authentication. This is an empty configuration block.
+* `gateway_iam_role` - (Optional) Use the gateway's IAM role for SigV4 authentication to the target. See [`gateway_iam_role`](#gateway_iam_role) below.
 * `api_key` - (Optional) API key-based authentication configuration. See [`api_key`](#api_key) below.
 * `oauth` - (Optional) OAuth-based authentication configuration. See [`oauth`](#oauth) below.
+
+### `gateway_iam_role`
+
+The `gateway_iam_role` block supports the following:
+
+* `service` - (Optional) AWS service name to use for SigV4 signing (for example, `bedrock-agentcore` for MCP servers on Amazon Bedrock Agent Core, `execute-api` for API Gateway, or `lambda` for Lambda function URLs). Required for many [MCP server targets that use IAM](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-building-adding-targets-authorization.html). For Lambda, API Gateway, and Smithy model targets, omit `service` and `region` so only the credential provider type is sent.
+* `region` - (Optional) AWS Region used for SigV4 signing. Defaults to the gateway's Region when omitted.
+
+~> **Note:** At plan time, Terraform requires `service` whenever `region` is set (the AWS API requires a service name for SigV4 when `IamCredentialProvider` is populated). Terraform also requires `service` when this block is used with an [`mcp_server`](#mcp_server) target, per AWS guidance for MCP IAM outbound authentication.
 
 ### `api_key`
 

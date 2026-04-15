@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `service` and `region` arguments to the `credential_provider_configuration.gateway_iam_role` configuration block for IAM SigV4 outbound authentication to gateway targets, including MCP server targets. The resource validates at plan time that `service` is set when `region` is set, and that `service` is set for `mcp_server` targets that use `gateway_iam_role`
+```
