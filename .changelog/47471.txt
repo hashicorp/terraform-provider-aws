@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_capacity_provider: Add `capacity_reservations` configuration block and `RESERVED` value for `capacity_option_type` to support On-Demand Capacity Reservations (ODCR) for managed instances
+```
