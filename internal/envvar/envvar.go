@@ -79,16 +79,14 @@ const (
 	// An inline assume role policy is then used to deny actions for the test
 	AccAssumeRoleARN = "TF_ACC_ASSUME_ROLE_ARN"
 
-	// For TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer: HTTPS URL of an Agent Core Runtime MCP
-	// endpoint in the test account. Use the regional invocations URL, for example:
+	// TF_ACC MCP IAM acceptance test: HTTPS URL of an Agent Core Runtime MCP endpoint in the account under test. Prefer the regional invocations URL, for example:
 	//   https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT
 	// not the public *.runtime.bedrock-agentcore.../mcp hostname; the latter commonly fails gateway tool sync with a misleading
 	// "not authorized to assume the execution role" error even when the gateway IAM role trust policy is correct.
-	// The acceptance test applies PutResourcePolicy after creating aws_iam_role.test (two-step apply) so the gateway
-	// execution role ARN is a valid Principal; it uses one IAM-style statement per principal (role + account root).
+	// The acceptance test applies PutResourcePolicy after the gateway IAM role exists (two-step apply) so the execution role ARN is valid in the resource policy; one statement per principal (role + account root).
 	BedrockAgentCoreGatewayTargetMCPIAMEndpoint = "TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENDPOINT"
 
-	// When set to "1", TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer overwrites the AgentCore Runtime
+	// When set to "1", the MCP IAM acceptance test overwrites the AgentCore Runtime
 	// resource-based policy (and the DEFAULT agent endpoint policy when bedrock-agentcore:PutResourcePolicy is allowed on that ARN).
 	// Endpoint puts are skipped on AccessDenied because some org identity policies scope bedrock-agentcore:PutResourcePolicy to
 	// runtime ARNs only (e.g. ...:runtime/*) and omit agent endpoint ARNs. Endpoint ARNs are discovered via
