@@ -98,6 +98,23 @@ func resourceDeliveryStream() *schema.Resource {
 		MigrateState:  MigrateState,
 		SchemaFunc: func() map[string]*schema.Schema {
 			cloudWatchLoggingOptionsSchema := func() *schema.Schema {
+				// diffSuppressCloudWatchLoggingOptionsDisabled suppresses diffs for
+				// log_group_name and log_stream_name when cloudwatch_logging_options
+				// is disabled (enabled = false). The AWS API returns empty strings for
+				// these fields when logging is disabled, causing a perpetual diff
+				// against user-specified values.
+				diffSuppressCloudWatchLoggingOptionsDisabled := func(k, old, new string, d *schema.ResourceData) bool {
+					// Derive the enabled key from the current attribute key path.
+					// k is like "...cloudwatch_logging_options.0.log_group_name",
+					// so we find the last dot and replace the field name with "enabled".
+					enabledKey := k[:strings.LastIndex(k, ".")] + "." + names.AttrEnabled
+					enabled, ok := d.GetOk(enabledKey)
+					if ok && enabled.(bool) {
+						return false
+					}
+					return true
+				}
+
 				return &schema.Schema{
 					Type:     schema.TypeList,
 					MaxItems: 1,
@@ -111,12 +128,14 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:  false,
 							},
 							names.AttrLogGroupName: {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: diffSuppressCloudWatchLoggingOptionsDisabled,
 							},
 							"log_stream_name": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: diffSuppressCloudWatchLoggingOptionsDisabled,
 							},
 						},
 					},
