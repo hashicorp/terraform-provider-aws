@@ -335,7 +335,10 @@ resource "aws_bedrockagentcore_gateway_target" "mcp_iam" {
   target_configuration {
     mcp {
       mcp_server {
-        endpoint = "https://example.runtime.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+        # For Agent Core Runtime MCP with gateway IAM (SigV4), use the regional invocations URL with a URL-encoded
+        # runtime ARN (see Amazon Bedrock AgentCore gateway + VPC egress docs). The public *.runtime.bedrock-agentcore.../mcp
+        # hostname is for other clients and commonly fails gateway tool sync with a misleading execution-role error.
+        endpoint = "https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT"
       }
     }
   }
@@ -484,7 +487,7 @@ The `s3` block supports the following:
 
 The `mcp_server` block supports the following:
 
-* `endpoint` - (Required) Endpoint for the MCP server target configuration.
+* `endpoint` - (Required) HTTPS MCP server endpoint. For **Amazon Bedrock AgentCore Runtime**, use the regional **invocations** URL with a **URL-encoded runtime ARN** in the path (for example `https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT`), not the public `*.runtime.bedrock-agentcore.<region>.amazonaws.com/mcp` hostname; the latter is a different entry point and often breaks gateway tool discovery.
 
 ### `api_schema_configuration`
 

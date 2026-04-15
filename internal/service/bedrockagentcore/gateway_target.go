@@ -620,7 +620,8 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrEndpoint: schema.StringAttribute{
-													Required: true,
+													Required:    true,
+													Description: "HTTPS MCP endpoint URL. For Amazon Bedrock AgentCore Runtime, use the regional invocations URL with a URL-encoded runtime ARN, e.g. `https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT`. The `*.runtime.bedrock-agentcore.<region>.amazonaws.com/mcp` host is a different entry point and can fail gateway tool discovery with misleading IAM errors.",
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(
 															regexache.MustCompile(`https://.*`),

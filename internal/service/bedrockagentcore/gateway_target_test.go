@@ -5,19 +5,467 @@ package bedrockagentcore_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/url"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// gatewayTargetRuntimeMCPPublicHostPattern matches the public AgentCore Runtime MCP URL
+// (https://<runtimeId>.runtime.bedrock-agentcore.<region>.amazonaws.com/mcp). Gateway MCP targets with IAM
+// outbound auth require the regional invocations URL instead; see normalizeGatewayTargetMCPIAMEndpointIfRuntimePublicHost.
+var gatewayTargetRuntimeMCPPublicHostPattern = regexache.MustCompile(
+	`^https://([A-Za-z0-9_-]+)\.runtime\.bedrock-agentcore\.([a-z0-9-]+)\.amazonaws\.com/mcp$`,
+)
+
+// normalizeGatewayTargetMCPIAMEndpointIfRuntimePublicHost converts a public-runtime MCP host URL to the
+// bedrock-agentcore.<region>.amazonaws.com/runtimes/<url-encoded-arn>/invocations?qualifier=DEFAULT form that
+// CreateGatewayTarget uses for implicit tool sync. Other URLs are returned unchanged.
+func normalizeGatewayTargetMCPIAMEndpointIfRuntimePublicHost(ctx context.Context, t *testing.T, endpoint string) string {
+	t.Helper()
+
+	m := gatewayTargetRuntimeMCPPublicHostPattern.FindStringSubmatch(endpoint)
+	if m == nil {
+		return endpoint
+	}
+
+	runtimeID, region := m[1], m[2]
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	if err != nil {
+		t.Fatalf("loading AWS config to normalize MCP endpoint: %s", err)
+	}
+
+	out, err := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, nil)
+	if err != nil {
+		t.Fatalf("calling sts:GetCallerIdentity to normalize MCP endpoint: %s", err)
+	}
+
+	accountID := aws.ToString(out.Account)
+	if accountID == "" {
+		t.Fatal("sts:GetCallerIdentity returned an empty account id")
+	}
+
+	partition := "aws"
+	if a := aws.ToString(out.Arn); strings.HasPrefix(a, "arn:") {
+		segs := strings.SplitN(a, ":", 3)
+		if len(segs) > 1 && segs[1] != "" {
+			partition = segs[1]
+		}
+	}
+
+	rawARN := fmt.Sprintf("arn:%s:bedrock-agentcore:%s:%s:runtime/%s", partition, region, accountID, runtimeID)
+	encoded := strings.ReplaceAll(strings.ReplaceAll(rawARN, ":", "%3A"), "/", "%2F")
+	normalized := fmt.Sprintf("https://bedrock-agentcore.%s.amazonaws.com/runtimes/%s/invocations?qualifier=DEFAULT", region, encoded)
+
+	t.Logf("normalized %s from public *.runtime.bedrock-agentcore host to invocations URL (required for gateway MCP + IAM tool sync)", envvar.BedrockAgentCoreGatewayTargetMCPIAMEndpoint)
+
+	return normalized
+}
+
+// parseBedrockAgentCoreInvocationsRuntimeARN extracts the AgentCore Runtime ARN from a regional invocations URL
+// (encoded full ARN in the path, or runtime id + accountId query parameter per AWS docs).
+func parseBedrockAgentCoreInvocationsRuntimeARN(endpoint string) (region string, runtimeARN string, err error) {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return "", "", fmt.Errorf("parsing URL: %w", err)
+	}
+
+	host := u.Hostname()
+	const pfx = "bedrock-agentcore."
+	const sfx = ".amazonaws.com"
+	if !strings.HasPrefix(host, pfx) || !strings.HasSuffix(host, sfx) {
+		return "", "", fmt.Errorf("expected host bedrock-agentcore.<region>.amazonaws.com, got %q", host)
+	}
+
+	region = strings.TrimSuffix(strings.TrimPrefix(host, pfx), sfx)
+	path := u.Path
+	const marker = "/runtimes/"
+	i := strings.Index(path, marker)
+	if i < 0 {
+		return "", "", fmt.Errorf("path %q missing %s", path, marker)
+	}
+
+	rest := path[i+len(marker):]
+	j := strings.Index(rest, "/invocations")
+	if j < 0 {
+		return "", "", fmt.Errorf("path %q missing /invocations", path)
+	}
+
+	seg := rest[:j]
+	decoded, err := url.PathUnescape(seg)
+	if err != nil {
+		return "", "", fmt.Errorf("path segment decode: %w", err)
+	}
+
+	if strings.HasPrefix(decoded, "arn:") {
+		return region, decoded, nil
+	}
+
+	acct := u.Query().Get("accountId")
+	if acct == "" {
+		return "", "", fmt.Errorf("runtime path %q is not a full ARN; add accountId= to the invocations URL", decoded)
+	}
+
+	// Commercial default; short form is rare in this test.
+	runtimeARN = fmt.Sprintf("arn:aws:bedrock-agentcore:%s:%s:runtime/%s", region, acct, decoded)
+	return region, runtimeARN, nil
+}
+
+func iamRootPrincipalForBedrockRuntimeARN(runtimeARN string) (string, error) {
+	parts := strings.SplitN(runtimeARN, ":", 6)
+	if len(parts) < 6 || parts[0] != "arn" {
+		return "", fmt.Errorf("invalid runtime ARN %q", runtimeARN)
+	}
+
+	partition, acct := parts[1], parts[4]
+	return fmt.Sprintf("arn:%s:iam::%s:root", partition, acct), nil
+}
+
+// iamGatewayExecutionRoleARN returns the IAM ARN for a role name in the given partition and account (default path).
+func iamGatewayExecutionRoleARN(partition, accountID, roleName string) string {
+	return fmt.Sprintf("arn:%s:iam::%s:role/%s", partition, accountID, roleName)
+}
+
+func awsPartitionFromSTSIdentityARN(identityARN string) (partition string) {
+	partition = "aws"
+	if identityARN == "" || !strings.HasPrefix(identityARN, "arn:") {
+		return partition
+	}
+	segs := strings.SplitN(identityARN, ":", 3)
+	if len(segs) > 1 && segs[1] != "" {
+		partition = segs[1]
+	}
+	return partition
+}
+
+// bedrockAgentCoreRuntimeIDFromARN returns the runtime identifier segment from
+// arn:partition:bedrock-agentcore:region:account:runtime/<id>[/...].
+func bedrockAgentCoreRuntimeIDFromARN(runtimeARN string) (string, error) {
+	const marker = ":runtime/"
+	i := strings.Index(runtimeARN, marker)
+	if i < 0 {
+		return "", fmt.Errorf("no %q in runtime ARN %q", marker, runtimeARN)
+	}
+	rest := runtimeARN[i+len(marker):]
+	if j := strings.Index(rest, "/"); j >= 0 {
+		rest = rest[:j]
+	}
+	if rest == "" {
+		return "", fmt.Errorf("empty runtime id in %q", runtimeARN)
+	}
+	return rest, nil
+}
+
+// listAgentRuntimeEndpointResourceARNs returns AgentRuntimeEndpointArn values from ListAgentRuntimeEndpoints.
+// Callers should fall back to a guessed .../endpoint/DEFAULT ARN if this returns an error or empty slice.
+func listAgentRuntimeEndpointResourceARNs(ctx context.Context, conn *bedrockagentcorecontrol.Client, runtimeARN string) ([]string, error) {
+	rid, err := bedrockAgentCoreRuntimeIDFromARN(runtimeARN)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		outARNs []string
+		token   *string
+	)
+	for {
+		out, err := conn.ListAgentRuntimeEndpoints(ctx, &bedrockagentcorecontrol.ListAgentRuntimeEndpointsInput{
+			AgentRuntimeId: aws.String(rid),
+			NextToken:      token,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, e := range out.RuntimeEndpoints {
+			if e.AgentRuntimeEndpointArn != nil {
+				outARNs = append(outARNs, aws.ToString(e.AgentRuntimeEndpointArn))
+			}
+		}
+		if out.NextToken == nil || aws.ToString(out.NextToken) == "" {
+			break
+		}
+		token = out.NextToken
+	}
+
+	return outARNs, nil
+}
+
+// invokeAllowResourcePolicyJSON builds a SigV4-oriented resource policy. AWS documents that for IAM-based
+// outbound auth the Principal should include the gateway service role ARN, not only the account root; account
+// root is included as a secondary allow. One statement per principal avoids Bedrock rejecting Principal.AWS as
+// a JSON array in some cases.
+func invokeAllowResourcePolicyJSON(resARN string, principalAWSARNs []string) ([]byte, error) {
+	if len(principalAWSARNs) == 0 {
+		return nil, fmt.Errorf("principalAWSARNs required")
+	}
+	statements := make([]any, 0, len(principalAWSARNs))
+	for i, arn := range principalAWSARNs {
+		statements = append(statements, map[string]any{
+			"Sid":       fmt.Sprintf("TfAccAllowInvokeRuntimePrincipal%d", i),
+			"Effect":    "Allow",
+			"Principal": map[string]any{"AWS": arn},
+			"Action": []string{
+				"bedrock-agentcore:InvokeAgentRuntime",
+				"bedrock-agentcore:InvokeAgentRuntimeForUser",
+			},
+			"Resource": resARN,
+		})
+	}
+	return json.Marshal(map[string]any{
+		"Version":   "2012-10-17",
+		"Statement": statements,
+	})
+}
+
+// maybeEnsureBedrockAgentCoreRuntimeInvokesForGatewayIAM updates (or creates) resource-based policies on the AgentCore
+// Runtime and, when permitted, each agent runtime endpoint (from ListAgentRuntimeEndpoints) so IAM principals in the
+// account can InvokeAgentRuntime. If listing endpoints fails, we fall back to the guessed .../endpoint/DEFAULT ARN.
+// Some IAM policies allow PutResourcePolicy only on runtime ARNs, not endpoints; endpoint puts then log and skip.
+//
+// gatewayIAMRoleName must match aws_iam_role.test's name in testAccGatewayTargetConfig_infra (the gateway execution role).
+func maybeEnsureBedrockAgentCoreRuntimeInvokesForGatewayIAM(ctx context.Context, t *testing.T, invocationsEndpoint, gatewayIAMRoleName string) {
+	t.Helper()
+
+	region, runtimeARN, err := parseBedrockAgentCoreInvocationsRuntimeARN(invocationsEndpoint)
+	if err != nil {
+		t.Logf("skipping AgentCore runtime resource policy setup: %s", err)
+		return
+	}
+
+	force := os.Getenv(envvar.BedrockAgentCoreGatewayTargetMCPIAMEnsureRuntimeResourcePolicy) == "1"
+
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	if err != nil {
+		t.Fatalf("loading AWS config for runtime resource policy: %s", err)
+	}
+
+	conn := bedrockagentcorecontrol.NewFromConfig(cfg)
+	rootARN, err := iamRootPrincipalForBedrockRuntimeARN(runtimeARN)
+	if err != nil {
+		t.Fatalf("deriving IAM account root ARN: %s", err)
+	}
+
+	stsOut, err := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, nil)
+	if err != nil {
+		t.Fatalf("sts:GetCallerIdentity for gateway execution role ARN: %s", err)
+	}
+	acct := aws.ToString(stsOut.Account)
+	if strings.TrimSpace(acct) == "" {
+		t.Fatal("sts:GetCallerIdentity returned an empty account id")
+	}
+	partition := awsPartitionFromSTSIdentityARN(aws.ToString(stsOut.Arn))
+	execRoleARN := iamGatewayExecutionRoleARN(partition, acct, gatewayIAMRoleName)
+	principalARNs := []string{execRoleARN, rootARN}
+
+	endpointARNs, listErr := listAgentRuntimeEndpointResourceARNs(ctx, conn, runtimeARN)
+	if listErr != nil {
+		t.Logf("warning: ListAgentRuntimeEndpoints: %s (falling back to guessed .../endpoint/DEFAULT for resource policy)", listErr)
+	}
+	if len(endpointARNs) == 0 {
+		fallback := runtimeARN + "/endpoint/DEFAULT"
+		t.Logf("using fallback endpoint resource ARN %s (ListAgentRuntimeEndpoints returned none or was skipped)", fallback)
+		endpointARNs = []string{fallback}
+	} else {
+		t.Logf("discovered %d agent runtime endpoint ARN(s) for resource policy", len(endpointARNs))
+	}
+
+	resourceARNs := append([]string{runtimeARN}, endpointARNs...)
+
+	var runtimeSkippedDueToExistingPolicy bool
+	endpointPutDenied := false
+	guessedDefaultARN := runtimeARN + "/endpoint/DEFAULT"
+	var lastPolicyStr string
+
+	for _, resARN := range resourceARNs {
+		needPut := force
+		if !needPut {
+			gpo, gerr := conn.GetResourcePolicy(ctx, &bedrockagentcorecontrol.GetResourcePolicyInput{
+				ResourceArn: aws.String(resARN),
+			})
+			switch {
+			case errs.IsA[*awstypes.ResourceNotFoundException](gerr):
+				needPut = true
+			case gerr == nil && (gpo.Policy == nil || strings.TrimSpace(aws.ToString(gpo.Policy)) == ""):
+				needPut = true
+			case gerr != nil:
+				t.Logf("warning: GetResourcePolicy(%s): %s", resARN, gerr)
+				continue
+			default:
+				if resARN == runtimeARN {
+					runtimeSkippedDueToExistingPolicy = true
+				}
+				continue
+			}
+		}
+
+		if !needPut {
+			continue
+		}
+
+		policyDoc, err := invokeAllowResourcePolicyJSON(resARN, principalARNs)
+		if err != nil {
+			t.Fatalf("marshaling resource policy: %s", err)
+		}
+		policyStr := string(policyDoc)
+		lastPolicyStr = policyStr
+
+		_, err = conn.PutResourcePolicy(ctx, &bedrockagentcorecontrol.PutResourcePolicyInput{
+			ResourceArn: aws.String(resARN),
+			Policy:      aws.String(policyStr),
+		})
+		if err != nil {
+			isEndpoint := strings.Contains(resARN, "/endpoint/")
+			switch {
+			case isEndpoint &&
+				(errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+					errs.IsA[*awstypes.ValidationException](err) ||
+					errs.IsA[*awstypes.AccessDeniedException](err)):
+				if errs.IsA[*awstypes.AccessDeniedException](err) {
+					endpointPutDenied = true
+				}
+				t.Logf("skipping resource policy on %s: %s", resARN, err)
+				continue
+			case errs.IsA[*awstypes.AccessDeniedException](err) && resARN == runtimeARN:
+				t.Logf("skipping PutResourcePolicy on runtime %s (access denied); grant bedrock-agentcore:PutResourcePolicy on this runtime or attach an InvokeAgentRuntime allow manually: %s", resARN, err)
+				return
+			default:
+				t.Fatalf("PutResourcePolicy(%s): %s", resARN, err)
+			}
+		}
+
+		t.Logf("PutResourcePolicy on %s to allow principals %v for InvokeAgentRuntime (IAM MCP acceptance)", resARN, principalARNs)
+	}
+
+	if runtimeSkippedDueToExistingPolicy && !force {
+		t.Logf("runtime %s already has a resource policy; if CreateGatewayTarget fails with execution-role errors, allow InvokeAgentRuntime for your gateway execution role %s (and account root if needed) on the runtime and each endpoint, or set %s=1 to replace (destructive)",
+			runtimeARN, execRoleARN, envvar.BedrockAgentCoreGatewayTargetMCPIAMEnsureRuntimeResourcePolicy)
+	}
+
+	if endpointPutDenied {
+		primary := guessedDefaultARN
+		if len(endpointARNs) > 0 {
+			primary = endpointARNs[0]
+		}
+		remediationJSON := policyStrForEndpointRemediation(primary, principalARNs)
+		if remediationJSON == "" && lastPolicyStr != "" {
+			remediationJSON = lastPolicyStr
+		}
+		logAgentCoreRuntimeEndpointResourcePolicyRemediation(ctx, t, conn, region, endpointARNs, primary, execRoleARN, remediationJSON)
+	}
+}
+
+// policyStrForEndpointRemediation returns the same JSON shape used for PutResourcePolicy on the endpoint ARN.
+func policyStrForEndpointRemediation(endpointARN string, principalAWSARNs []string) string {
+	b, err := invokeAllowResourcePolicyJSON(endpointARN, principalAWSARNs)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
+func logAgentCoreRuntimeEndpointResourcePolicyRemediation(ctx context.Context, t *testing.T, conn *bedrockagentcorecontrol.Client, region string, endpointARNs []string, exampleEndpointARN, gatewayExecutionRoleARN, policyJSON string) {
+	t.Helper()
+
+	t.Logf("REMEDIATION: Implicit MCP tool sync requires resource policies on agent runtime endpoint(s), not only the runtime. Include the gateway execution role %s as Principal.AWS alongside the account root. Discovered endpoint ARN(s): %v. Your identity could not PutResourcePolicy on at least one (org IAM often scopes to ...:runtime/* and omits endpoint ARNs).", gatewayExecutionRoleARN, endpointARNs)
+	t.Logf("Widen the tester SSO/role identity policy Resource list; see envvar comment on %s.", envvar.BedrockAgentCoreGatewayTargetMCPIAMEnsureRuntimeResourcePolicy)
+	t.Logf("Grant bedrock-agentcore:ListAgentRuntimeEndpoints, GetResourcePolicy, and PutResourcePolicy on runtime and endpoint ARNs (or use an admin role). Apply the same InvokeAgentRuntime allow Resource-by-resource for each endpoint ARN.")
+
+	if exampleEndpointARN != "" {
+		if gpo, err := conn.GetResourcePolicy(ctx, &bedrockagentcorecontrol.GetResourcePolicyInput{
+			ResourceArn: aws.String(exampleEndpointARN),
+		}); err == nil && gpo.Policy != nil {
+			t.Logf("GetResourcePolicy(%s): policy present (length %d chars)", exampleEndpointARN, len(strings.TrimSpace(aws.ToString(gpo.Policy))))
+		} else if err != nil {
+			t.Logf("GetResourcePolicy(%s): %s", exampleEndpointARN, err)
+		}
+
+		t.Logf("Example (save JSON to a file, then use file://): aws bedrock-agentcore-control put-resource-policy --region %s --resource-arn %s --policy file://endpoint-policy.json", region, exampleEndpointARN)
+	}
+	t.Logf("Policy document for one endpoint (Resource must match that endpoint's ARN exactly): %s", policyJSON)
+}
+
+// testAccEnsureBedrockAgentCoreRuntimePoliciesFunc returns a check that runs after Terraform has created
+// aws_iam_role.test so PutResourcePolicy can include a valid gateway execution role ARN (Principal must refer to
+// an existing IAM principal).
+func testAccEnsureBedrockAgentCoreRuntimePoliciesFunc(ctx context.Context, t *testing.T, invocationsEndpoint, gatewayIAMRoleName string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		t.Helper()
+		maybeEnsureBedrockAgentCoreRuntimeInvokesForGatewayIAM(ctx, t, invocationsEndpoint, gatewayIAMRoleName)
+		return nil
+	}
+}
+
+func TestBedrockAgentCoreRuntimeIDFromARN(t *testing.T) {
+	t.Parallel()
+	const arn = "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/example-aBcDeF1234"
+	id, err := bedrockAgentCoreRuntimeIDFromARN(arn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id != "example-aBcDeF1234" {
+		t.Fatalf("id: got %s", id)
+	}
+	withSuffix, err := bedrockAgentCoreRuntimeIDFromARN(arn + "/endpoint/DEFAULT")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if withSuffix != "example-aBcDeF1234" {
+		t.Fatalf("id with suffix: got %s", withSuffix)
+	}
+}
+
+func TestPolicyStrForEndpointRemediation(t *testing.T) {
+	t.Parallel()
+	ep := "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/example-aBcDeF1234/endpoint/DEFAULT"
+	execRole := "arn:aws:iam::123456789012:role/tf-acc-gateway"
+	root := "arn:aws:iam::123456789012:root"
+	s := policyStrForEndpointRemediation(ep, []string{execRole, root})
+	if !strings.Contains(s, ep) || !strings.Contains(s, execRole) || !strings.Contains(s, root) {
+		t.Fatalf("policy JSON: %s", s)
+	}
+}
+
+func TestParseBedrockAgentCoreInvocationsRuntimeARN(t *testing.T) {
+	t.Parallel()
+
+	const u = "https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT"
+	region, runtimeARN, err := parseBedrockAgentCoreInvocationsRuntimeARN(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if region != "us-east-1" {
+		t.Fatalf("region: got %s", region)
+	}
+	const want = "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/example-aBcDeF1234"
+	if runtimeARN != want {
+		t.Fatalf("runtime ARN: got %s want %s", runtimeARN, want)
+	}
+	root, err := iamRootPrincipalForBedrockRuntimeARN(runtimeARN)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if root != "arn:aws:iam::123456789012:root" {
+		t.Fatalf("iam root: got %s", root)
+	}
+}
 
 func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -495,6 +943,65 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 	})
 }
 
+// TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer creates an MCP server target with
+// gateway_iam_role { service = "bedrock-agentcore", region = data.aws_region.current } when
+// TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENDPOINT is set to the HTTPS **invocations** URL for the Agent Core
+// Runtime MCP endpoint (same account/region as the test), URL-encoded runtime ARN in the path, for example:
+//
+//	https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT
+//
+// The public host https://<runtime-id>.runtime.bedrock-agentcore.<region>.amazonaws.com/mcp is accepted for
+// convenience: the test normalizes it to the invocations URL using sts:GetCallerIdentity (same credentials/region).
+// Prefer setting the invocations URL directly. The public host alone typically fails implicit tool sync with:
+// "Gateway service is not authorized to assume the execution role" even when the gateway role trust policy is valid.
+// If unset, the test is skipped (including in default CI). SigV4 MCP to AgentCore Runtime also requires resource-based
+// policies on the **runtime** and on each **agent runtime endpoint** (ARNs from ListAgentRuntimeEndpoints; not always
+// .../endpoint/DEFAULT) so InvokeAgentRuntime is allowed; otherwise CreateGatewayTarget can fail with a misleading
+// execution-role assume error. The test uses two apply steps: first testAccGatewayTargetConfig_infra creates
+// aws_iam_role.test so the execution role ARN exists, then a check calls PutResourcePolicy (gateway role ARN + account root).
+// A second apply adds the gateway target. PutResourcePolicy before the role exists returns ValidationException: Invalid principal.
+// If a policy already exists on the runtime, set
+// TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENSURE_RUNTIME_POLICY=1 to replace it (destructive) or edit the policy per
+// https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security.html#resource-based-policies
+func TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+	endpoint := envvar.SkipIfEmpty(t, envvar.BedrockAgentCoreGatewayTargetMCPIAMEndpoint,
+		"set to the bedrock-agentcore.<region>.amazonaws.com/runtimes/.../invocations?qualifier=... MCP URL (see test godoc); or the *.runtime.bedrock-agentcore.../mcp host (auto-normalized)")
+	endpoint = normalizeGatewayTargetMCPIAMEndpointIfRuntimePublicHost(ctx, t, endpoint)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_infra(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccEnsureBedrockAgentCoreRuntimePoliciesFunc(ctx, t, endpoint, rName),
+				),
+			},
+			{
+				Config: testAccGatewayTargetConfig_gatewayIAMRoleMCPServer(rName, endpoint),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.service", "bedrock-agentcore"),
+					resource.TestCheckResourceAttrPair(resourceName, "credential_provider_configuration.0.gateway_iam_role.0.region", "data.aws_region.current", "name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -687,13 +1194,37 @@ func testAccGatewayTargetConfig_infra(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "infra" {}
+
+# Match production gateway execution role trust: both Bedrock and AgentCore service
+# principals may assume this role when the gateway connects to targets (including
+# MCP server targets on AgentCore Runtime with IAM / SigV4). See
+# https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-prerequisites-permissions.html
+#
+# Do not add aws:SourceAccount / aws:SourceArn conditions here: some gateway → MCP
+# flows omit those STS context keys, and StringEquals then fails the trust policy
+# with "Gateway service is not authorized to assume the execution role".
+# Use one statement per service principal (matches AWS doc examples).
 data "aws_iam_policy_document" "test" {
   statement {
+    sid     = "AllowBedrockAgentCoreAssumeGatewayExecutionRole"
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
       identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid     = "AllowBedrockAssumeGatewayExecutionRole"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock.amazonaws.com"]
     }
   }
 }
@@ -707,16 +1238,40 @@ resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.name
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "lambda:*",
-    "Resource": "*"
-  }
-}
-  EOF
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "lambda:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AgentCoreGatewayRuntimeMCP"
+        Effect = "Allow"
+        Action = [
+          "bedrock-agentcore:InvokeAgentRuntime",
+          "bedrock-agentcore:InvokeAgentRuntimeForUser",
+          "bedrock-agentcore:InvokeGateway",
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AgentCoreWorkloadIdentityAndOutboundAuth"
+        Effect = "Allow"
+        Action = [
+          "bedrock-agentcore:GetWorkloadAccessToken",
+          "bedrock-agentcore:GetResourceOauth2Token",
+          "bedrock-agentcore:GetResourceApiKey",
+        ]
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.infra.id}:${data.aws_caller_identity.current.account_id}:workload-identity-directory/default",
+          "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.infra.id}:${data.aws_caller_identity.current.account_id}:workload-identity-directory/default/workload-identity/*",
+          "arn:${data.aws_partition.current.partition}:bedrock-agentcore:${data.aws_region.infra.id}:${data.aws_caller_identity.current.account_id}:token-vault/*",
+        ]
+      },
+    ]
+  })
 }
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -840,6 +1395,32 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
   }
 }
 `, rName, credentialProviderContent))
+}
+
+func testAccGatewayTargetConfig_gatewayIAMRoleMCPServer(rName, endpoint string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  credential_provider_configuration {
+    gateway_iam_role {
+      service = "bedrock-agentcore"
+      region  = data.aws_region.current.name
+    }
+  }
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = %[2]q
+      }
+    }
+  }
+}
+`, rName, endpoint))
 }
 
 func testAccGatewayTargetConfig_credentialProviderNonLambda(rName, credentialProviderContent string) string {

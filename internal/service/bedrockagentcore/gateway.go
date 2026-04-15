@@ -358,6 +358,15 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	// DeleteGateway rejects while targets still exist. Remove targets first so destroy succeeds after a failed
+	// gateway_target apply (e.g. target left in FAILED) or drifted state.
+	if err := deleteAllGatewayTargets(ctx, conn, gatewayID, deleteTimeout); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
+		return
+	}
+
 	input := bedrockagentcorecontrol.DeleteGatewayInput{
 		GatewayIdentifier: aws.String(gatewayID),
 	}
@@ -370,10 +379,50 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitGatewayDeleted(ctx, conn, gatewayID, deleteTimeout); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
 	}
+}
+
+// deleteAllGatewayTargets lists and deletes every target on the gateway, waiting for each to finish deleting.
+func deleteAllGatewayTargets(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayID string, targetDeleteTimeout time.Duration) error {
+	var nextToken *string
+	for {
+		out, err := conn.ListGatewayTargets(ctx, &bedrockagentcorecontrol.ListGatewayTargetsInput{
+			GatewayIdentifier: aws.String(gatewayID),
+			NextToken:         nextToken,
+		})
+		if err != nil {
+			return fmt.Errorf("listing gateway targets: %w", err)
+		}
+
+		for _, item := range out.Items {
+			tid := aws.ToString(item.TargetId)
+			if tid == "" {
+				continue
+			}
+
+			_, err := conn.DeleteGatewayTarget(ctx, &bedrockagentcorecontrol.DeleteGatewayTargetInput{
+				GatewayIdentifier: aws.String(gatewayID),
+				TargetId:          aws.String(tid),
+			})
+			if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return fmt.Errorf("deleting gateway target %s: %w", tid, err)
+			}
+
+			if _, err := waitGatewayTargetDeleted(ctx, conn, gatewayID, tid, targetDeleteTimeout); err != nil {
+				return fmt.Errorf("waiting for gateway target %s deleted: %w", tid, err)
+			}
+		}
+
+		if out.NextToken == nil || aws.ToString(out.NextToken) == "" {
+			break
+		}
+		nextToken = out.NextToken
+	}
+
+	return nil
 }
 
 func (r *gatewayResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {

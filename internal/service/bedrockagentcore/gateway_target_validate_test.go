@@ -12,6 +12,19 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+// testAccAgentCoreRuntimeInvocationsMCPURL returns the regional bedrock-agentcore invocations URL shape used for
+// Agent Core Runtime MCP gateway targets (URL-encoded runtime ARN in the path). Matches AWS docs / PR guidance;
+// not used against real AWS in these unit tests.
+func testAccAgentCoreRuntimeInvocationsMCPURL() string {
+	const accountID = "123456789012"
+
+	r := testRegion("us", "east", "1")
+	rawARN := "arn:aws:bedrock-agentcore:" + r + ":" + accountID + ":runtime/example-aBcDeF1234"
+	encoded := strings.ReplaceAll(strings.ReplaceAll(rawARN, ":", "%3A"), "/", "%2F")
+
+	return "https://bedrock-agentcore." + r + ".amazonaws.com/runtimes/" + encoded + "/invocations?qualifier=DEFAULT"
+}
+
 func TestValidateGatewayIAMRoleCredentialConfiguration_regionWithoutService(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -51,7 +64,7 @@ func TestValidateGatewayIAMRoleCredentialConfiguration_mcpServerRequiresService(
 				SmithyModel:   fwtypes.NewListNestedObjectValueOfNull[apiSchemaConfigurationModel](ctx),
 				OpenApiSchema: fwtypes.NewListNestedObjectValueOfNull[apiSchemaConfigurationModel](ctx),
 				MCPServer: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &mcpServerConfigurationModel{
-					Endpoint: types.StringValue("https://example.runtime.bedrock-agentcore." + testRegion("us", "east", "1") + ".amazonaws.com/mcp"),
+					Endpoint: types.StringValue(testAccAgentCoreRuntimeInvocationsMCPURL()),
 				}),
 			}),
 		}),
@@ -86,7 +99,7 @@ func TestValidateGatewayIAMRoleCredentialConfiguration_mcpServerWithService(t *t
 				SmithyModel:   fwtypes.NewListNestedObjectValueOfNull[apiSchemaConfigurationModel](ctx),
 				OpenApiSchema: fwtypes.NewListNestedObjectValueOfNull[apiSchemaConfigurationModel](ctx),
 				MCPServer: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &mcpServerConfigurationModel{
-					Endpoint: types.StringValue("https://example.runtime.bedrock-agentcore." + testRegion("us", "east", "1") + ".amazonaws.com/mcp"),
+					Endpoint: types.StringValue(testAccAgentCoreRuntimeInvocationsMCPURL()),
 				}),
 			}),
 		}),

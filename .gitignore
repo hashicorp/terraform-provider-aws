@@ -22,6 +22,8 @@
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
 bin/
 changelog.tmp
+# Local AgentCore acc-test helper (account-specific; do not commit)
+endpoint-policy.json
 dist/
 example.tf
 log.txt
