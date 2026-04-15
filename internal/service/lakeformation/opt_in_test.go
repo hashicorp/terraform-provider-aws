@@ -75,7 +75,7 @@ func testAccOptIn_table(t *testing.T) {
 		CheckDestroy:             testAccCheckOptInDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptInConfig_Table(rName),
+				Config: testAccOptInConfig_table(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
@@ -87,7 +87,7 @@ func testAccOptIn_table(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOptInConfig_Table_wildcard(rName),
+				Config: testAccOptInConfig_tableWithWildcard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
@@ -404,7 +404,7 @@ resource "aws_lakeformation_opt_in" "test" {
 `, rName))
 }
 
-func testAccOptInConfig_Table(rName string) string {
+func testAccOptInConfig_table(rName string) string {
 	return acctest.ConfigCompose(testAccOptInConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
@@ -453,7 +453,7 @@ resource "aws_lakeformation_opt_in" "test" {
 `, rName))
 }
 
-func testAccOptInConfig_Table_wildcard(rName string) string {
+func testAccOptInConfig_tableWithWildcard(rName string) string {
 	return acctest.ConfigCompose(testAccOptInConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {

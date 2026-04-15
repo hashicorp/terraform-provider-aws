@@ -15,10 +15,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -219,7 +219,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateVerifiedAccessTrustProviderInput{
-		ClientToken:         aws.String(sdkid.UniqueId()),
+		ClientToken:         aws.String(create.UniqueId(ctx)),
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
 		TagSpecifications:   getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessTrustProvider),
 		TrustProviderType:   awstypes.TrustProviderType(d.Get("trust_provider_type").(string)),
@@ -322,7 +322,7 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := ec2.ModifyVerifiedAccessTrustProviderInput{
-			ClientToken:                   aws.String(sdkid.UniqueId()),
+			ClientToken:                   aws.String(create.UniqueId(ctx)),
 			VerifiedAccessTrustProviderId: aws.String(d.Id()),
 		}
 
@@ -358,7 +358,7 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 
 	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
 	input := ec2.DeleteVerifiedAccessTrustProviderInput{
-		ClientToken:                   aws.String(sdkid.UniqueId()),
+		ClientToken:                   aws.String(create.UniqueId(ctx)),
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &input)

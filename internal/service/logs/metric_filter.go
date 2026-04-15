@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,9 +101,9 @@ func resourceMetricFilter() *schema.Resource {
 				ValidateFunc: validLogMetricFilterName,
 			},
 			"pattern": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
 				StateFunc: func(v any) string {
 					s, ok := v.(string)
 					if !ok {

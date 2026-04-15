@@ -152,7 +152,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateFindingsFilterInput{
 		Action:      awstypes.FindingsFilterAction(d.Get(names.AttrAction).(string)),
-		ClientToken: aws.String(sdkid.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}

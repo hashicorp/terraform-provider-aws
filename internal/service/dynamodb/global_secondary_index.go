@@ -128,6 +128,8 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					},
 				},
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					globalSecondaryIndexKeySchemaListValidator{},
 				},
 				PlanModifiers: []planmodifier.List{

@@ -20,6 +20,8 @@ import (
 )
 
 // @SDKDataSource("aws_eks_access_entry", name="Access Entry")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessEntryRead,
@@ -62,8 +64,14 @@ func dataSourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTagsAll: {
+				Type:       schema.TypeMap,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `tags_all is deprecated.`,
+			},
 		},
 	}
 }

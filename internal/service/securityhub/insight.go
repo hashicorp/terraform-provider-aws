@@ -50,16 +50,21 @@ func resourceInsight() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrAWSAccountID:                        stringFilterSchema(),
-							"company_name":                                stringFilterSchema(),
-							"compliance_status":                           stringFilterSchema(),
-							"confidence":                                  numberFilterSchema(),
-							names.AttrCreatedAt:                           dateFilterSchema(),
-							"criticality":                                 numberFilterSchema(),
-							names.AttrDescription:                         stringFilterSchema(),
-							"finding_provider_fields_confidence":          numberFilterSchema(),
-							"finding_provider_fields_criticality":         numberFilterSchema(),
-							"finding_provider_fields_related_findings_id": stringFilterSchema(),
+							names.AttrAWSAccountID:                                 stringFilterSchema(),
+							"aws_account_name":                                     stringFilterSchema(),
+							"company_name":                                         stringFilterSchema(),
+							"compliance_associated_standards_id":                   stringFilterSchema(),
+							"compliance_security_control_id":                       stringFilterSchema(),
+							"compliance_security_control_parameters_name":          stringFilterSchema(),
+							"compliance_security_control_parameters_value":         stringFilterSchema(),
+							"compliance_status":                                    stringFilterSchema(),
+							"confidence":                                           numberFilterSchema(),
+							names.AttrCreatedAt:                                    dateFilterSchema(),
+							"criticality":                                          numberFilterSchema(),
+							names.AttrDescription:                                  stringFilterSchema(),
+							"finding_provider_fields_confidence":                   numberFilterSchema(),
+							"finding_provider_fields_criticality":                  numberFilterSchema(),
+							"finding_provider_fields_related_findings_id":          stringFilterSchema(),
 							"finding_provider_fields_related_findings_product_arn": stringFilterSchema(),
 							"finding_provider_fields_severity_label":               stringFilterSchema(),
 							"finding_provider_fields_severity_original":            stringFilterSchema(),
@@ -519,8 +524,28 @@ func expandSecurityFindingFilters(l []any) *types.AwsSecurityFindingFilters {
 		filters.AwsAccountId = expandStringFilters(v.List())
 	}
 
+	if v, ok := tfMap["aws_account_name"].(*schema.Set); ok && v.Len() > 0 {
+		filters.AwsAccountName = expandStringFilters(v.List())
+	}
+
 	if v, ok := tfMap["company_name"].(*schema.Set); ok && v.Len() > 0 {
 		filters.CompanyName = expandStringFilters(v.List())
+	}
+
+	if v, ok := tfMap["compliance_associated_standards_id"].(*schema.Set); ok && v.Len() > 0 {
+		filters.ComplianceAssociatedStandardsId = expandStringFilters(v.List())
+	}
+
+	if v, ok := tfMap["compliance_security_control_id"].(*schema.Set); ok && v.Len() > 0 {
+		filters.ComplianceSecurityControlId = expandStringFilters(v.List())
+	}
+
+	if v, ok := tfMap["compliance_security_control_parameters_name"].(*schema.Set); ok && v.Len() > 0 {
+		filters.ComplianceSecurityControlParametersName = expandStringFilters(v.List())
+	}
+
+	if v, ok := tfMap["compliance_security_control_parameters_value"].(*schema.Set); ok && v.Len() > 0 {
+		filters.ComplianceSecurityControlParametersValue = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["compliance_status"].(*schema.Set); ok && v.Len() > 0 {
@@ -1144,16 +1169,21 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []a
 	}
 
 	m := map[string]any{
-		names.AttrAWSAccountID:                        flattenStringFilters(filters.AwsAccountId),
-		"company_name":                                flattenStringFilters(filters.CompanyName),
-		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
-		"confidence":                                  flattenNumberFilters(filters.Confidence),
-		names.AttrCreatedAt:                           flattenDateFilters(filters.CreatedAt),
-		"criticality":                                 flattenNumberFilters(filters.Criticality),
-		names.AttrDescription:                         flattenStringFilters(filters.Description),
-		"finding_provider_fields_confidence":          flattenNumberFilters(filters.FindingProviderFieldsConfidence),
-		"finding_provider_fields_criticality":         flattenNumberFilters(filters.FindingProviderFieldsCriticality),
-		"finding_provider_fields_related_findings_id": flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsId),
+		names.AttrAWSAccountID:                                 flattenStringFilters(filters.AwsAccountId),
+		"aws_account_name":                                     flattenStringFilters(filters.AwsAccountName),
+		"company_name":                                         flattenStringFilters(filters.CompanyName),
+		"compliance_associated_standards_id":                   flattenStringFilters(filters.ComplianceAssociatedStandardsId),
+		"compliance_security_control_id":                       flattenStringFilters(filters.ComplianceSecurityControlId),
+		"compliance_security_control_parameters_name":          flattenStringFilters(filters.ComplianceSecurityControlParametersName),
+		"compliance_security_control_parameters_value":         flattenStringFilters(filters.ComplianceSecurityControlParametersValue),
+		"compliance_status":                                    flattenStringFilters(filters.ComplianceStatus),
+		"confidence":                                           flattenNumberFilters(filters.Confidence),
+		names.AttrCreatedAt:                                    flattenDateFilters(filters.CreatedAt),
+		"criticality":                                          flattenNumberFilters(filters.Criticality),
+		names.AttrDescription:                                  flattenStringFilters(filters.Description),
+		"finding_provider_fields_confidence":                   flattenNumberFilters(filters.FindingProviderFieldsConfidence),
+		"finding_provider_fields_criticality":                  flattenNumberFilters(filters.FindingProviderFieldsCriticality),
+		"finding_provider_fields_related_findings_id":          flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsId),
 		"finding_provider_fields_related_findings_product_arn": flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsProductArn),
 		"finding_provider_fields_severity_label":               flattenStringFilters(filters.FindingProviderFieldsSeverityLabel),
 		"finding_provider_fields_severity_original":            flattenStringFilters(filters.FindingProviderFieldsSeverityOriginal),

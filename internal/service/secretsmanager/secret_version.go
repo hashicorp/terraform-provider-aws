@@ -16,9 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -113,7 +113,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.PutSecretValueInput{
-		ClientRequestToken: aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken: aws.String(create.UniqueId(ctx)), // Needed because we're handling our own retries
 		SecretId:           aws.String(secretID),
 	}
 

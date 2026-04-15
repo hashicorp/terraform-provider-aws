@@ -569,3 +569,18 @@ func CaseInsensitiveMatchDeprecation(valid []string) schema.SchemaValidateDiagFu
 		return diags
 	}
 }
+
+func WarnStringIsNotEmpty(v any, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch s := v.(type) {
+	case string:
+		if s == "" {
+			diags = append(diags, errs.NewInvalidValueAttributeWillBeError(path, "Value must not be an empty string"))
+		}
+	default:
+		diags = append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
+	}
+
+	return diags
+}

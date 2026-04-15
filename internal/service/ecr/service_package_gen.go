@@ -28,7 +28,7 @@ func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAuthorizationTokenEphemeralResource,
 			TypeName: "aws_ecr_authorization_token",
 			Name:     "AuthorizationToken",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -39,19 +39,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newImagesDataSource,
 			TypeName: "aws_ecr_images",
 			Name:     "Images",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newLifecyclePolicyDocumentDataSource,
 			TypeName: "aws_ecr_lifecycle_policy_document",
 			Name:     "Lifecycle Policy Document",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
 			Factory:  newRepositoriesDataSource,
 			TypeName: "aws_ecr_repositories",
 			Name:     "Repositories",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -62,13 +62,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAccountSettingResource,
 			TypeName: "aws_ecr_account_setting",
 			Name:     "Account Setting",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  newPullTimeUpdateExclusionResource,
 			TypeName: "aws_ecr_pull_time_update_exclusion",
 			Name:     "Pull Time Update Exclusion",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -79,19 +79,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceAuthorizationToken,
 			TypeName: "aws_ecr_authorization_token",
 			Name:     "Authorization Token",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceImage,
 			TypeName: "aws_ecr_image",
 			Name:     "Image",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourcePullThroughCacheRule,
 			TypeName: "aws_ecr_pull_through_cache_rule",
 			Name:     "Pull Through Cache Rule",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceRepository,
@@ -100,13 +100,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceRepositoryCreationTemplate,
 			TypeName: "aws_ecr_repository_creation_template",
 			Name:     "Repository Creation Template",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -117,7 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceLifecyclePolicy,
 			TypeName: "aws_ecr_lifecycle_policy",
 			Name:     "Lifecycle Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity("repository"),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -127,25 +127,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourcePullThroughCacheRule,
 			TypeName: "aws_ecr_pull_through_cache_rule",
 			Name:     "Pull Through Cache Rule",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRegistryPolicy,
 			TypeName: "aws_ecr_registry_policy",
 			Name:     "Registry Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRegistryScanningConfiguration,
 			TypeName: "aws_ecr_registry_scanning_configuration",
 			Name:     "Registry Scanning Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceReplicationConfiguration,
 			TypeName: "aws_ecr_replication_configuration",
 			Name:     "Replication Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRepository,
@@ -154,7 +154,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -164,13 +164,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceRepositoryCreationTemplate,
 			TypeName: "aws_ecr_repository_creation_template",
 			Name:     "Repository Creation Template",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  resourceRepositoryPolicy,
 			TypeName: "aws_ecr_repository_policy",
 			Name:     "Repository Policy",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity("repository"),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -185,7 +185,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  repositoryResourceAsListResource,
 			TypeName: "aws_ecr_repository",
 			Name:     "Repository",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),

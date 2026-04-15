@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -33,17 +34,20 @@ import (
 )
 
 // @SDKResource("aws_eks_cluster", name="Cluster")
+// @IdentityAttribute("name")
+// @CustomImport
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eks/types;awstypes;awstypes.Cluster")
+// @Testing(importIgnore="bootstrap_self_managed_addons")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.38.0")
+// @Testing(tagsTest=false)
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
 		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -67,6 +71,16 @@ func resourceCluster() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+				d.Set("bootstrap_self_managed_addons", true)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -618,72 +632,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
 	}
 
-	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
-	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
-	var bootstrapClusterCreatorAdminPermissions *bool
-	if v, ok := d.GetOk("access_config"); ok {
-		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
-			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
-		}
+	if err := resourceClusterFlatten(ctx, cluster, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
-	}
-	d.Set(names.AttrARN, cluster.Arn)
-	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
-	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
-	}
-	// cluster_id is only relevant for clusters on Outposts.
-	if cluster.OutpostConfig != nil {
-		d.Set("cluster_id", cluster.Id)
-	}
-	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
-	}
-	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting control_plane_scaling_config: %s", err)
-	}
-	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
-	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
-	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
-	}
-	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
-	}
-	d.Set(names.AttrEndpoint, cluster.Endpoint)
-	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
-	}
-	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
-	}
-	d.Set(names.AttrName, cluster.Name)
-	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
-	}
-	d.Set("platform_version", cluster.PlatformVersion)
-	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting remote_network_config: %s", err)
-	}
-	d.Set(names.AttrRoleARN, cluster.RoleArn)
-	d.Set(names.AttrStatus, cluster.Status)
-	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
-	}
-	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
-	}
-	d.Set(names.AttrVersion, cluster.Version)
-	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
-	}
-	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting zonal_shift_config: %s", err)
-	}
-
-	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
@@ -971,6 +922,77 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return diags
+}
+
+func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *schema.ResourceData) error {
+	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
+	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
+	var bootstrapClusterCreatorAdminPermissions *bool
+	if v, ok := d.GetOk("access_config"); ok {
+		if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
+			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+		}
+	}
+	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
+		return fmt.Errorf("setting access_config: %w", err)
+	}
+	d.Set(names.AttrARN, cluster.Arn)
+	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
+	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
+		return fmt.Errorf("setting certificate_authority: %w", err)
+	}
+	// cluster_id is only relevant for clusters on Outposts.
+	if cluster.OutpostConfig != nil {
+		d.Set("cluster_id", cluster.Id)
+	}
+	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
+		return fmt.Errorf("setting compute_config: %w", err)
+	}
+	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
+		return fmt.Errorf("setting control_plane_scaling_config: %w", err)
+	}
+	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
+	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
+		return fmt.Errorf("setting enabled_cluster_log_types: %w", err)
+	}
+	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
+		return fmt.Errorf("setting encryption_config: %w", err)
+	}
+	d.Set(names.AttrEndpoint, cluster.Endpoint)
+	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("setting identity: %w", err)
+	}
+	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
+		return fmt.Errorf("setting kubernetes_network_config: %w", err)
+	}
+	d.Set(names.AttrName, cluster.Name)
+	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
+		return fmt.Errorf("setting outpost_config: %w", err)
+	}
+	d.Set("platform_version", cluster.PlatformVersion)
+	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+		return fmt.Errorf("setting remote_network_config: %w", err)
+	}
+	d.Set(names.AttrRoleARN, cluster.RoleArn)
+	d.Set(names.AttrStatus, cluster.Status)
+	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
+		return fmt.Errorf("setting storage_config: %w", err)
+	}
+	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
+		return fmt.Errorf("setting upgrade_policy: %w", err)
+	}
+	d.Set(names.AttrVersion, cluster.Version)
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+		return fmt.Errorf("setting vpc_config: %w", err)
+	}
+	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
+		return fmt.Errorf("setting zonal_shift_config: %w", err)
+	}
+
+	setTagsOut(ctx, cluster.Tags)
+
+	return nil
 }
 
 func findClusterByName(ctx context.Context, conn *eks.Client, name string) (*types.Cluster, error) {

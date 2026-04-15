@@ -81,6 +81,7 @@ var (
 	CreateBucketACLResourceID = createBucketACLResourceID
 	ParseBucketACLResourceID  = parseBucketACLResourceID
 
+	AccountRegionalBucketNameRegex        = accountRegionalBucketNameRegex
 	DirectoryBucketNameSuffixRegexPattern = directoryBucketNameSuffixRegexPattern
 
 	LifecycleConfigEqual = lifecycleConfigEqual

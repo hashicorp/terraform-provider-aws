@@ -64,11 +64,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_instance_profile.example
+  identity = {
+    name = "app-instance-profile-1"
+  }
+}
+
+resource "aws_iam_instance_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the instance profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Instance Profiles using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_iam_instance_profile.test_profile
+  to = aws_iam_instance_profile.example
   id = "app-instance-profile-1"
 }
 ```
@@ -76,5 +101,5 @@ import {
 Using `terraform import`, import Instance Profiles using the `name`. For example:
 
 ```console
-% terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
+% terraform import aws_iam_instance_profile.example app-instance-profile-1
 ```

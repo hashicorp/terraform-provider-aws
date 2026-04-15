@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -286,7 +286,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := servicecatalog.ProvisionProductInput{
-		ProvisionToken:         aws.String(sdkid.UniqueId()),
+		ProvisionToken:         aws.String(create.UniqueId(ctx)),
 		ProvisionedProductName: aws.String(name),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -462,7 +462,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 	input := servicecatalog.UpdateProvisionedProductInput{
 		ProvisionedProductId: aws.String(d.Id()),
-		UpdateToken:          aws.String(sdkid.UniqueId()),
+		UpdateToken:          aws.String(create.UniqueId(ctx)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -552,7 +552,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := servicecatalog.TerminateProvisionedProductInput{
-		TerminateToken:       aws.String(sdkid.UniqueId()),
+		TerminateToken:       aws.String(create.UniqueId(ctx)),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 

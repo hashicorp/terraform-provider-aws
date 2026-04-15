@@ -84,464 +84,521 @@ func resourceTaskDefinition() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceTaskDefinitionMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn_without_revision": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container_definitions": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v any) string {
-					// Sort the lists of environment variables as they are serialized to state, so we won't get
-					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
-					// but they still show in the plan if some other property changes).
-					orderedCDs, err := expandContainerDefinitions(v.(string))
-					if err != nil {
-						// e.g. The value is unknown ("74D93920-ED26-11E3-AC10-0800200C9A66").
-						// Mimic the pre-v5.59.0 behavior.
-						return "[]"
-					}
-					containerDefinitions(orderedCDs).orderContainers()
-					containerDefinitions(orderedCDs).orderEnvironmentVariables()
-					containerDefinitions(orderedCDs).orderSecrets()
-					containerDefinitions(orderedCDs).compactArrays()
-					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
-					json, _ := structure.NormalizeJsonString(unnormalizedJson)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					networkMode, ok := d.GetOk("network_mode")
-					isAWSVPC := ok && networkMode.(string) == string(awstypes.NetworkModeAwsvpc)
-					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
-					return equal
+				"arn_without_revision": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validTaskDefinitionContainerDefinitions,
-			},
-			"cpu": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"enable_fault_injection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"ephemeral_storage": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"size_in_gib": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(21, 200),
-						},
+				"container_definitions": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					StateFunc: func(v any) string {
+						// Sort the lists of environment variables as they are serialized to state, so we won't get
+						// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
+						// but they still show in the plan if some other property changes).
+						orderedCDs, err := expandContainerDefinitions(v.(string))
+						if err != nil {
+							// e.g. The value is unknown ("74D93920-ED26-11E3-AC10-0800200C9A66").
+							// Mimic the pre-v5.59.0 behavior.
+							return "[]"
+						}
+						containerDefinitions(orderedCDs).orderContainers()
+						containerDefinitions(orderedCDs).orderEnvironmentVariables()
+						containerDefinitions(orderedCDs).orderSecrets()
+						containerDefinitions(orderedCDs).compactArrays()
+						unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
+						json, _ := structure.NormalizeJsonString(unnormalizedJson)
+						return json
 					},
-				},
-			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrFamily: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
-				),
-			},
-			"ipc_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpcMode](),
-			},
-			"memory": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"network_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NetworkMode](),
-			},
-			"pid_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PidMode](),
-			},
-			"placement_constraints": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrExpression: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							ForceNew:         true,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TaskDefinitionPlacementConstraintType](),
-						},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						networkMode, ok := d.GetOk("network_mode")
+						isAWSVPC := ok && networkMode.(string) == string(awstypes.NetworkModeAwsvpc)
+						equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
+						return equal
 					},
+					DiffSuppressOnRefresh: true,
+					ValidateFunc:          validTaskDefinitionContainerDefinitions,
 				},
-			},
-			"proxy_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrProperties: {
-							Type:     schema.TypeMap,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Default:          awstypes.ProxyConfigurationTypeAppmesh,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProxyConfigurationType](),
-						},
-					},
+				"cpu": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
 				},
-			},
-			"requires_compatibilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"EC2",
-						"FARGATE",
-						"EXTERNAL",
-						"MANAGED_INSTANCES",
-					}, false),
+				"enable_fault_injection": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
 				},
-			},
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"runtime_platform": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cpu_architecture": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CPUArchitecture](),
-						},
-						"operating_system_family": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OSFamily](),
-						},
-					},
-				},
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"task_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"track_latest": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			"volume": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configure_at_launch": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"docker_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"autoprovision": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										ForceNew: true,
-										Default:  false,
-									},
-									"driver": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
-									"driver_opts": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										Optional: true,
-										ForceNew: true,
-									},
-									"labels": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										Optional: true,
-										ForceNew: true,
-									},
-									names.AttrScope: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.Scope](),
-									},
-								},
+				"ephemeral_storage": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"size_in_gib": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(21, 200),
 							},
 						},
-						"efs_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_point_id": {
-													Type:     schema.TypeString,
-													ForceNew: true,
-													Optional: true,
-												},
-												"iam": {
-													Type:             schema.TypeString,
-													ForceNew:         true,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.EFSAuthorizationConfigIAM](),
-												},
-											},
+					},
+				},
+				names.AttrExecutionRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrFamily: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
+					),
+				},
+				"ipc_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpcMode](),
+				},
+				"memory": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"network_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkMode](),
+				},
+				"pid_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PidMode](),
+				},
+				"placement_constraints": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TaskDefinitionPlacementConstraintType](),
+							},
+						},
+					},
+				},
+				"proxy_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrProperties: {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Default:          awstypes.ProxyConfigurationTypeAppmesh,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProxyConfigurationType](),
+							},
+						},
+					},
+				},
+				"requires_compatibilities": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{
+							"EC2",
+							"FARGATE",
+							"EXTERNAL",
+							"MANAGED_INSTANCES",
+						}, false),
+					},
+				},
+				"revision": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"runtime_platform": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cpu_architecture": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CPUArchitecture](),
+							},
+							"operating_system_family": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OSFamily](),
+							},
+						},
+					},
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"task_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"track_latest": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				"volume": resourceTaskDefinitionVolumeSchema(),
+			}
+		},
+	}
+}
+
+func resourceTaskDefinitionVolumeSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		ForceNew: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"configure_at_launch": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"docker_volume_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"autoprovision": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+								Default:  false,
+							},
+							"driver": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"driver_opts": {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+								ForceNew: true,
+							},
+							"labels": {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrScope: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.Scope](),
+							},
+						},
+					},
+				},
+				"efs_volume_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authorization_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_point_id": {
+											Type:     schema.TypeString,
+											ForceNew: true,
+											Optional: true,
+										},
+										"iam": {
+											Type:             schema.TypeString,
+											ForceNew:         true,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.EFSAuthorizationConfigIAM](),
 										},
 									},
-									names.AttrFileSystemID: {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-										Default:  "/",
-									},
-									"transit_encryption": {
-										Type:             schema.TypeString,
-										ForceNew:         true,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EFSTransitEncryption](),
-									},
-									"transit_encryption_port": {
-										Type:         schema.TypeInt,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validation.IsPortNumberOrZero,
-										Default:      0,
-									},
 								},
 							},
-						},
-						"fsx_windows_file_server_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"credentials_parameter": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												names.AttrDomain: {
-													Type:     schema.TypeString,
-													ForceNew: true,
-													Required: true,
-												},
-											},
-										},
-									},
-									names.AttrFileSystemID: {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-								},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
 							},
-						},
-						"host_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							"root_directory": {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+								Default:  "/",
+							},
+							"transit_encryption": {
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.EFSTransitEncryption](),
+							},
+							"transit_encryption_port": {
+								Type:         schema.TypeInt,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+								Default:      0,
+							},
 						},
 					},
 				},
-				Set: func(v any) int {
-					var str strings.Builder
-					tfMap := v.(map[string]any)
-
-					if v, ok := tfMap["configure_at_launch"].(bool); ok {
-						str.WriteString(strconv.FormatBool(v))
-					}
-					if v, ok := tfMap["docker_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-						tfMap := v.([]any)[0].(map[string]any)
-
-						if v, ok := tfMap["autoprovision"].(bool); ok {
-							str.WriteString(strconv.FormatBool(v))
-						}
-						if v, ok := tfMap["driver"].(string); ok {
-							if v == "" {
-								v = "local"
-							}
-							str.WriteString(v)
-						}
-						if v, ok := tfMap["driver_opts"].(map[string]any); ok && len(v) > 0 {
-							str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
-						}
-						if v, ok := tfMap["labels"].(map[string]any); ok && len(v) > 0 {
-							str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
-						}
-						if v, ok := tfMap[names.AttrScope].(string); ok {
-							if v == "" {
-								v = "task"
-							}
-							str.WriteString(v)
-						}
-					}
-					if v, ok := tfMap["efs_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-						tfMap := v.([]any)[0].(map[string]any)
-
-						if v, ok := tfMap["authorization_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-							tfMap := v.([]any)[0].(map[string]any)
-
-							if v, ok := tfMap["access_point_id"].(string); ok && v != "" {
-								str.WriteString(v)
-							}
-							if v, ok := tfMap["iam"].(string); ok && v != "" {
-								str.WriteString(v)
-							}
-						}
-						if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
-							str.WriteString(v)
-						}
-						if v, ok := tfMap["root_directory"].(string); ok && v != "" {
-							str.WriteString(v)
-						}
-						if v, ok := tfMap["transit_encryption"].(string); ok && v != "" {
-							str.WriteString(v)
-						}
-						if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
-							str.WriteString(strconv.Itoa(v))
-						}
-					}
-					if v, ok := tfMap["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-						tfMap := v.([]any)[0].(map[string]any)
-
-						if v, ok := tfMap["authorization_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-							tfMap := v.([]any)[0].(map[string]any)
-
-							if v, ok := tfMap["credentials_parameter"].(string); ok && v != "" {
-								str.WriteString(v)
-							}
-							if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
-								str.WriteString(v)
-							}
-						}
-						if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
-							str.WriteString(v)
-						}
-						if v, ok := tfMap["root_directory"].(string); ok && v != "" {
-							str.WriteString(v)
-						}
-					}
-					str.WriteString(tfMap["host_path"].(string))
-					str.WriteString(tfMap[names.AttrName].(string))
-
-					return create.StringHashcode(str.String())
+				"fsx_windows_file_server_volume_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authorization_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"credentials_parameter": {
+											Type:         schema.TypeString,
+											ForceNew:     true,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrDomain: {
+											Type:     schema.TypeString,
+											ForceNew: true,
+											Required: true,
+										},
+									},
+								},
+							},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							"root_directory": {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+						},
+					},
+				},
+				"host_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"s3files_volume_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access_point_arn": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"file_system_arn": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"root_directory": {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+								Default:  "/",
+							},
+							"transit_encryption_port": {
+								Type:         schema.TypeInt,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumberOrZero,
+								Default:      0,
+							},
+						},
+					},
 				},
 			},
+		},
+		Set: func(v any) int {
+			var str strings.Builder
+			tfMap := v.(map[string]any)
+
+			if v, ok := tfMap["configure_at_launch"].(bool); ok {
+				str.WriteString(strconv.FormatBool(v))
+			}
+			if v, ok := tfMap["docker_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				if v, ok := tfMap["autoprovision"].(bool); ok {
+					str.WriteString(strconv.FormatBool(v))
+				}
+				if v, ok := tfMap["driver"].(string); ok {
+					if v == "" {
+						v = "local"
+					}
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["driver_opts"].(map[string]any); ok && len(v) > 0 {
+					str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
+				}
+				if v, ok := tfMap["labels"].(map[string]any); ok && len(v) > 0 {
+					str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
+				}
+				if v, ok := tfMap[names.AttrScope].(string); ok {
+					if v == "" {
+						v = "task"
+					}
+					str.WriteString(v)
+				}
+			}
+			if v, ok := tfMap["efs_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				if v, ok := tfMap["authorization_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+					tfMap := v.([]any)[0].(map[string]any)
+
+					if v, ok := tfMap["access_point_id"].(string); ok && v != "" {
+						str.WriteString(v)
+					}
+					if v, ok := tfMap["iam"].(string); ok && v != "" {
+						str.WriteString(v)
+					}
+				}
+				if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["transit_encryption"].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
+					str.WriteString(strconv.Itoa(v))
+				}
+			}
+			if v, ok := tfMap["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				if v, ok := tfMap["authorization_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+					tfMap := v.([]any)[0].(map[string]any)
+
+					if v, ok := tfMap["credentials_parameter"].(string); ok && v != "" {
+						str.WriteString(v)
+					}
+					if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
+						str.WriteString(v)
+					}
+				}
+				if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+			}
+			str.WriteString(tfMap["host_path"].(string))
+			str.WriteString(tfMap[names.AttrName].(string))
+			if v, ok := tfMap["s3files_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				if v, ok := tfMap["access_point_arn"].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["file_system_arn"].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+					str.WriteString(v)
+				}
+				if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
+					str.WriteString(strconv.Itoa(v))
+				}
+			}
+
+			return create.StringHashcode(str.String())
 		},
 	}
 }
@@ -920,6 +977,10 @@ func expandVolumes(tfList []any) []awstypes.Volume {
 			}
 		}
 
+		if v, ok := tfMap["s3files_volume_configuration"].([]any); ok && len(v) > 0 {
+			apiObject.S3filesVolumeConfiguration = expandS3FilesVolumeConfiguration(v)
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
@@ -1057,6 +1118,10 @@ func flattenVolumes(apiObjects []awstypes.Volume) []any {
 
 		if apiObject.Host != nil && apiObject.Host.SourcePath != nil {
 			tfMap["host_path"] = aws.ToString(apiObject.Host.SourcePath)
+		}
+
+		if apiObject.S3filesVolumeConfiguration != nil {
+			tfMap["s3files_volume_configuration"] = flattenS3FilesVolumeConfiguration(apiObject.S3filesVolumeConfiguration)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1199,6 +1264,56 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	tfMap["size_in_gib"] = apiObject.SizeInGiB
 
 	return []any{tfMap}
+}
+
+func expandS3FilesVolumeConfiguration(tfList []any) *awstypes.S3FilesVolumeConfiguration {
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.S3FilesVolumeConfiguration{}
+
+	if v, ok := tfMap["access_point_arn"].(string); ok && v != "" {
+		apiObject.AccessPointArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["file_system_arn"].(string); ok && v != "" {
+		apiObject.FileSystemArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["root_directory"].(string); ok && v != "" {
+		apiObject.RootDirectory = aws.String(v)
+	}
+
+	if v, ok := tfMap["transit_encryption_port"].(int); ok && v != 0 {
+		apiObject.TransitEncryptionPort = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenS3FilesVolumeConfiguration(apiObject *awstypes.S3FilesVolumeConfiguration) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
+
+	if apiObject != nil {
+		if v := apiObject.AccessPointArn; v != nil {
+			tfMap["access_point_arn"] = aws.ToString(v)
+		}
+
+		if v := apiObject.FileSystemArn; v != nil {
+			tfMap["file_system_arn"] = aws.ToString(v)
+		}
+
+		if v := apiObject.RootDirectory; v != nil {
+			tfMap["root_directory"] = aws.ToString(v)
+		}
+
+		if v := apiObject.TransitEncryptionPort; v != nil {
+			tfMap["transit_encryption_port"] = aws.ToInt32(v)
+		}
+	}
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
 }
 
 func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, taskDefinition *awstypes.TaskDefinition, tags []awstypes.Tag) diag.Diagnostics {

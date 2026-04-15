@@ -10,8 +10,11 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -32,9 +35,7 @@ func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_basicRedis(rName),
@@ -77,9 +78,7 @@ func TestAccElastiCacheServerlessCache_basicValkey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_basicValkey(rName),
@@ -121,9 +120,7 @@ func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_full(rName),
@@ -169,9 +166,7 @@ func TestAccElastiCacheServerlessCache_fullRedis(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_fullRedis(rName),
@@ -212,9 +207,7 @@ func TestAccElastiCacheServerlessCache_redisUpdateWithUserGroup(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_redisUpdateWithUserGroup(rName, "test description"),
@@ -257,9 +250,7 @@ func TestAccElastiCacheServerlessCache_updateWithUserGroupRemoval(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_updateWithUserIdUserGroup(rName, "test description", userId, userGroupId, tfelasticache.EngineRedis, tfelasticache.EngineRedis, tfelasticache.EngineRedis),
@@ -353,9 +344,7 @@ func TestAccElastiCacheServerlessCache_fullValkey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_fullValkey(rName),
@@ -398,9 +387,7 @@ func TestAccElastiCacheServerlessCache_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_description(rName, descriptionOld),
@@ -457,8 +444,6 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	descriptionOld := "Memcached Serverless Cluster"
-	descriptionNew := "Memcached Serverless Cluster updated"
 	resourceName := "aws_elasticache_serverless_cache.test"
 	var v awstypes.ServerlessCache
 
@@ -466,26 +451,32 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 1, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 1, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum":      knownvalue.Int64Exact(1),
+									"minimum":      knownvalue.Null(),
+									names.AttrUnit: knownvalue.StringExact("GB"),
+								}),
+							}),
+							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1000),
+									"minimum": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -498,21 +489,29 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionOld, 2, 1000),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 2, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum":      knownvalue.Int64Exact(2),
+									"minimum":      knownvalue.Null(),
+									names.AttrUnit: knownvalue.StringExact("GB"),
+								}),
+							}),
+							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1000),
+									"minimum": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -520,21 +519,14 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionNew, 2, 1000),
+				// Remove cache_usage_limits
+				Config: testAccServerlessCacheConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -542,21 +534,30 @@ func TestAccElastiCacheServerlessCache_cacheUsageLimits(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, descriptionNew, 2, 1010),
+				Config: testAccServerlessCacheConfig_cacheUsageLimits(rName, 2, 1010),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticache", "serverlesscache:{name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_usage_limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_storage": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum":      knownvalue.Int64Exact(2),
+									"minimum":      knownvalue.Null(),
+									names.AttrUnit: knownvalue.StringExact("GB"),
+								}),
+							}),
+							"ecpu_per_second": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"maximum": knownvalue.Int64Exact(1010),
+									"minimum": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -581,9 +582,7 @@ func TestAccElastiCacheServerlessCache_engine(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_engine(rName, tfelasticache.EngineRedis),
@@ -639,9 +638,7 @@ func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_majorEngineVersion(rName, tfelasticache.EngineValkey, "7"),
@@ -701,7 +698,6 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
-
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_basic(rName),
@@ -750,9 +746,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckServerlessCacheDestroy(ctx, t),
-		),
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessCacheConfig_tags(rName, tags1),
@@ -1171,23 +1165,23 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName, desc)
 }
 
-func testAccServerlessCacheConfig_cacheUsageLimits(rName, desc string, d1, d2 int) string {
+func testAccServerlessCacheConfig_cacheUsageLimits(rName string, d1, d2 int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine      = "memcached"
-  name        = %[1]q
-  description = %[2]q
+  engine = "memcached"
+  name   = %[1]q
+
   cache_usage_limits {
     data_storage {
-      maximum = %[3]d
+      maximum = %[2]d
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = %[4]d
+      maximum = %[3]d
     }
   }
 }
-`, rName, desc, d1, d2)
+`, rName, d1, d2)
 }
 
 func testAccServerlessCacheConfig_tags(rName, tags string) string {

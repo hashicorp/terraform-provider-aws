@@ -292,6 +292,7 @@ var (
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
 	NetworkACLRuleImportIDSeparator                             = networkACLRuleImportIDSeparator
+	IanaProtocolIToA                                            = ianaProtocolIToA
 	NewAttributeFilterList                                      = newAttributeFilterList
 	NewCustomFilterList                                         = newCustomFilterList
 	NewTagFilterList                                            = newTagFilterList
