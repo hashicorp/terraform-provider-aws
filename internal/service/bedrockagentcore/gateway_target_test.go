@@ -943,25 +943,12 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 	})
 }
 
-// TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer creates an MCP server target with
-// gateway_iam_role { service = "bedrock-agentcore", region = data.aws_region.current } when
-// TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENDPOINT is set to the HTTPS **invocations** URL for the Agent Core
-// Runtime MCP endpoint (same account/region as the test), URL-encoded runtime ARN in the path, for example:
+// TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer is an integration test for MCP + gateway_iam_role
+// (service bedrock-agentcore and current region). It only runs when TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENDPOINT is set.
 //
-//	https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aus-east-1%3A123456789012%3Aruntime%2Fexample-aBcDeF1234/invocations?qualifier=DEFAULT
-//
-// The public host https://<runtime-id>.runtime.bedrock-agentcore.<region>.amazonaws.com/mcp is accepted for
-// convenience: the test normalizes it to the invocations URL using sts:GetCallerIdentity (same credentials/region).
-// Prefer setting the invocations URL directly. The public host alone typically fails implicit tool sync with:
-// "Gateway service is not authorized to assume the execution role" even when the gateway role trust policy is valid.
-// If unset, the test is skipped (including in default CI). SigV4 MCP to AgentCore Runtime also requires resource-based
-// policies on the **runtime** and on each **agent runtime endpoint** (ARNs from ListAgentRuntimeEndpoints; not always
-// .../endpoint/DEFAULT) so InvokeAgentRuntime is allowed; otherwise CreateGatewayTarget can fail with a misleading
-// execution-role assume error. The test uses two apply steps: first testAccGatewayTargetConfig_infra creates
-// aws_iam_role.test so the execution role ARN exists, then a check calls PutResourcePolicy (gateway role ARN + account root).
-// A second apply adds the gateway target. PutResourcePolicy before the role exists returns ValidationException: Invalid principal.
-// If a policy already exists on the runtime, set
-// TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENSURE_RUNTIME_POLICY=1 to replace it (destructive) or edit the policy per
+// Point the env var at the Agent Core Runtime MCP URL: preferably the regional invocations URL (URL-encoded runtime ARN in the path),
+// or the public *.runtime.bedrock-agentcore.../mcp host (normalized in-test). You need matching resource policies on the runtime
+// and endpoints where required; the test applies them after the gateway IAM role exists. See envvar constants and
 // https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security.html#resource-based-policies
 func TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -969,7 +956,7 @@ func TestAccBedrockAgentCoreGatewayTarget_gatewayIAMRoleServiceRegionMCPServer(t
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 	endpoint := envvar.SkipIfEmpty(t, envvar.BedrockAgentCoreGatewayTargetMCPIAMEndpoint,
-		"set to the bedrock-agentcore.<region>.amazonaws.com/runtimes/.../invocations?qualifier=... MCP URL (see test godoc); or the *.runtime.bedrock-agentcore.../mcp host (auto-normalized)")
+		"set TF_ACC_BEDROCK_AGENTCORE_GATEWAY_TARGET_MCP_IAM_ENDPOINT to the Agent Core Runtime MCP URL (invocations URL or public *.runtime.../mcp host)")
 	endpoint = normalizeGatewayTargetMCPIAMEndpointIfRuntimePublicHost(ctx, t, endpoint)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
