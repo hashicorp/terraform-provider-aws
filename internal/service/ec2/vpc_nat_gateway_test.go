@@ -438,6 +438,62 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddressCountToSpecific(t *testing.T)
 	})
 }
 
+func TestAccVPCNATGateway_secondaryPrivateIPAddressCount_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	countStart := 0
+	countUp := 3
+	countDown := 1
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddressCount(rName, countStart),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, t, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", strconv.Itoa(countStart)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddressCount(rName, countUp),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, t, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", strconv.Itoa(countUp)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddressCount(rName, countDown),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, t, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", strconv.Itoa(countDown)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway awstypes.NatGateway
