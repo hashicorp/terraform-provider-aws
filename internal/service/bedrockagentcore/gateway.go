@@ -360,8 +360,8 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 
-	// DeleteGateway rejects while targets still exist. Remove targets first so destroy succeeds after a failed
-	// gateway_target apply (e.g. target left in FAILED) or drifted state.
+	// DeleteGateway rejects while targets still exist (see Bedrock AgentCore DeleteGateway API). Remove targets first
+	// so destroy succeeds after a failed gateway_target apply (e.g. target left in FAILED), orphaned targets, or drift.
 	if err := deleteAllGatewayTargets(ctx, conn, gatewayID, deleteTimeout); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, gatewayID)
 		return
