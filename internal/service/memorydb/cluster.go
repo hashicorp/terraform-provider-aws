@@ -390,7 +390,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SubnetGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
 		multiRegionClusterName := v.(string)
 		conns.GlobalMutexKV.Lock("memorydb-multi-region-cluster-" + multiRegionClusterName)
 		defer conns.GlobalMutexKV.Unlock("memorydb-multi-region-cluster-" + multiRegionClusterName)
@@ -412,7 +412,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("multi_region_cluster_name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
 		if _, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) available: %s", v.(string), err)
 		}
