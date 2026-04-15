@@ -3,5 +3,9 @@ resource/aws_bedrockagentcore_gateway_target: Add `service` and `region` argumen
 ```
 
 ```release-note:bug-fix
-resource/aws_bedrockagentcore_gateway: Delete gateway targets before deleting the gateway when targets are still present. Adjust gateway target delete waiter pending states to include `FAILED` and `SYNCHRONIZING`
+resource/aws_bedrockagentcore_gateway: Fix `terraform destroy` failing when gateway targets still exist by deleting each target through the control plane before `DeleteGateway`
+```
+
+```release-note:bug-fix
+resource/aws_bedrockagentcore_gateway_target: Fix delete waiter to include `FAILED` and `SYNCHRONIZING` as pending states while a target transitions to `DELETING`
 ```

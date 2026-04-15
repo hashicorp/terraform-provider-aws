@@ -10,6 +10,14 @@ description: |-
 
 Manages an AWS Bedrock AgentCore Gateway. With Gateway, developers can convert APIs, Lambda functions, and existing services into Model Context Protocol (MCP)-compatible tools.
 
+## Destroy behavior
+
+The Bedrock AgentCore control plane does not delete a gateway until all [gateway targets](https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_ListGatewayTargets.html) are gone. If `terraform destroy` only deleted the `aws_bedrockagentcore_gateway` resource, `DeleteGateway` could fail while targets still existed—for example after a partial apply that left a target in `FAILED`, or when targets remained in AWS but were no longer in Terraform state.
+
+This resource deletes every target on the gateway (list, then `DeleteGatewayTarget` for each, with a wait until each is gone) before calling `DeleteGateway`. That matches the API requirement and allows destroy to succeed in those cases. Target deletion can pass through `FAILED` or `SYNCHRONIZING` before `DELETING`; the provider waits for those during the per-target delete wait.
+
+Prefer managing targets with [`aws_bedrockagentcore_gateway_target`](bedrockagentcore_gateway_target.html.markdown) so Terraform destroys targets before the gateway through normal dependency order. The ordering above still applies when the gateway resource is destroyed on its own.
+
 ## Example Usage
 
 ### Gateway with JWT Authorization

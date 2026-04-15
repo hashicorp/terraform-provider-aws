@@ -12,7 +12,9 @@ Manages an AWS Bedrock AgentCore Gateway Target. Gateway targets define the endp
 
 ## Destroy behavior
 
-You cannot delete a gateway while targets still exist. Destroying an `aws_bedrockagentcore_gateway` removes any remaining `aws_bedrockagentcore_gateway_target` resources first, then deletes the gateway. That avoids failed destroys after a partial apply or when AWS still has targets that are not in state.
+You cannot delete a gateway while targets still exist. The [`aws_bedrockagentcore_gateway`](bedrockagentcore_gateway.html.markdown) resource therefore removes any remaining gateway targets before it deletes the gateway (see **Destroy behavior** on that page). That fixes destroys that previously failed with API errors when targets were still attached—for example after a failed target create left a target in `FAILED`, or when state and AWS were out of sync.
+
+When you destroy a gateway target with this resource, deletion can pass through `FAILED` or `SYNCHRONIZING` before the target reaches `DELETING`; the provider waits for those intermediate states.
 
 ## Example Usage
 
