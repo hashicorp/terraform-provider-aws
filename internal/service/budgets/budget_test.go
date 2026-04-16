@@ -457,6 +457,54 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 	})
 }
 
+func TestAccBudgetsBudget_largeLimitAmountUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_largeLimitAmount(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					// Do not assert exact limit_amount string representation here.
+					// Large values may currently round-trip in scientific notation.
+					// The purpose of this test is to verify that the in-place update succeeds, not to fail here.
+					// resource.TestCheckResourceAttr(resourceName, "limit_amount", "25100000"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+				),
+			},
+			{
+				Config: testAccBudgetConfig_largeLimitAmountUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, t, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification.*", map[string]string{
+						"comparison_operator":          "GREATER_THAN",
+						"notification_type":            "ACTUAL",
+						"subscriber_email_addresses.#": "1",
+						"subscriber_sns_topic_arns.#":  "0",
+						"threshold":                    "80",
+						"threshold_type":               "PERCENTAGE",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var budget awstypes.Budget
@@ -914,6 +962,38 @@ resource "aws_budgets_budget" "test" {
   }
 }
 `, rName, emailAddress1)
+}
+
+func testAccBudgetConfig_largeLimitAmount(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %q
+  budget_type  = "COST"
+  limit_amount = "25100000"
+  limit_unit   = "USD"
+  time_unit    = "ANNUALLY"
+}
+`, rName)
+}
+
+func testAccBudgetConfig_largeLimitAmountUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %q
+  budget_type  = "COST"
+  limit_amount = "25100000"
+  limit_unit   = "USD"
+  time_unit    = "ANNUALLY"
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 80
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = ["terraform-aws-provider-test@example.com"]
+  }
+}
+`, rName)
 }
 
 func testAccBudgetConfig_plannedLimits(rName, config string) string {

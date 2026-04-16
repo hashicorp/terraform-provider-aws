@@ -540,7 +540,11 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if budget.BudgetLimit != nil {
-		d.Set("limit_amount", budget.BudgetLimit.Amount)
+		amount := aws.ToString(budget.BudgetLimit.Amount)
+		if d, err := decimal.NewFromString(amount); err == nil {
+			amount = d.String()
+		}
+		d.Set("limit_amount", amount)
 		d.Set("limit_unit", budget.BudgetLimit.Unit)
 	}
 
