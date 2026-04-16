@@ -43,17 +43,45 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter
-  id = "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
+  to = aws_cloudwatch_log_subscription_filter.example
+  identity = {
+    log_group_name = "example-group"
+    name           = "example-filter"
+  }
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+* `name` (String) Name of the subscription filter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Subscription Filters using `log_group_name` and `name` separated by a vertical bar (`|`). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_subscription_filter.example
+  id = "example-group|example-filter"
+}
+```
+
+Using `terraform import`, import Subscription Filters using `log_group_name` and `name` separated by a vertical bar (`|`). For example:
 
 ```console
-% terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
+% terraform import aws_cloudwatch_log_subscription_filter.example example-group|example-filter
 ```

@@ -51,7 +51,9 @@ const (
 
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,10 +61,6 @@ func resourceTable() *schema.Resource {
 		ReadWithoutTimeout:   resourceTableRead,
 		UpdateWithoutTimeout: resourceTableUpdate,
 		DeleteWithoutTimeout: resourceTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(createTableTimeout),
@@ -190,10 +188,11 @@ func resourceTable() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
-								Type:       schema.TypeString,
-								Optional:   true,
-								Computed:   true,
-								Deprecated: "hash_key is deprecated. Use key_schema instead.",
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								Deprecated:   "hash_key is deprecated. Use key_schema instead.",
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 							"key_schema": {
 								Type:     schema.TypeList,
@@ -202,8 +201,9 @@ func resourceTable() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"attribute_name": {
-											Type:     schema.TypeString,
-											Required: true,
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 										"key_type": {
 											Type:             schema.TypeString,
@@ -229,9 +229,10 @@ func resourceTable() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
 							},
 							"range_key": {
-								Type:       schema.TypeString,
-								Optional:   true,
-								Deprecated: "range_key is deprecated. Use key_schema instead.",
+								Type:             schema.TypeString,
+								Optional:         true,
+								Deprecated:       "range_key is deprecated. Use key_schema instead.",
+								ValidateDiagFunc: verify.WarnStringIsNotEmpty,
 							},
 							"read_capacity": {
 								Type:     schema.TypeInt,
@@ -1516,10 +1517,10 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(ctx, conn, d.Id(), replicas, expandGlobalTableWitness(d.Get("global_table_witness")), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
-			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
+			// ValidationException: Cannot add or delete the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
 				!tfawserr.ErrMessageContains(err, errCodeValidationException, "MultiRegionConsistency must be set as STRONG when GlobalTableWitnessUpdates parameter is present") &&
-				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") {
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "the local region through ReplicaUpdates.") {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
 			}
 		}
@@ -3276,7 +3277,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 					indexedAttributes[hashKey.AsString()] = true
 				}
 				rangeKey := v.GetAttr("range_key")
-				if rangeKey.IsKnown() && !rangeKey.IsNull() {
+				if rangeKey.IsKnown() && !rangeKey.IsNull() && rangeKey.AsString() != "" {
 					indexedAttributes[rangeKey.AsString()] = true
 				}
 				keySchema := v.GetAttr("key_schema")
@@ -3293,7 +3294,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
 	remoteGSIAttributes := map[string]bool{}
 	name := planRaw.GetAttr(names.AttrName)
-	if name.IsKnown() {
+	if name.IsKnown() && d.Id() != "" {
 		table, err := findTableByName(ctx, conn, name.AsString())
 		if err != nil && !retry.NotFound(err) {
 			return err

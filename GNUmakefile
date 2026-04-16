@@ -1101,8 +1101,6 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 		-v "$(PWD):/markdown" \
 		avtodev/markdown-lint:v1.5.0 \
 		--config /markdown/.markdownlint.yml \
-		--ignore /markdown/website/docs/cdktf/python/guides \
-		--ignore /markdown/website/docs/cdktf/typescript/guides \
 		/markdown/website/docs
 
 website-misspell: ## [CI] Website Checks / misspell
@@ -1117,7 +1115,7 @@ website-terrafmt-fix: ## [CI] Fix Website / terrafmt
 	@echo "make: Fix Website / terrafmt..."
 	@echo "make: Fixing website/docs root files with terrafmt..."
 	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
-	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs ! -name cdktf | sort); do \
+	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs | sort); do \
 		echo "make: Fixing $$dir with terrafmt..."; \
 		terrafmt fmt $$dir --pattern '*.markdown'; \
 	done
@@ -1165,7 +1163,7 @@ website-tflint: tflint-init ## [CI] Website Checks / tflint
 		set +e ; \
 		./.ci/scripts/validate-terraform-file.sh "$$filename" "$${rules[@]}" || exit_code=1 ; \
 		set -e ; \
-	done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u) ; \
+	done < <(find ./website/docs -type f -name '*.markdown' | sort -u) ; \
 	exit $$exit_code
 
 yamllint: ## [CI] YAML Linting / yamllint

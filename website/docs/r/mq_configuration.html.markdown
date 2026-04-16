@@ -63,6 +63,7 @@ The following arguments are optional:
 * `authentication_strategy` - (Optional) Authentication strategy associated with the configuration. Valid values are `simple` and `ldap`. `ldap` is not supported for RabbitMQ engine type.
 * `description` - (Optional) Description of the configuration.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `skip_destroy` - (Optional) Set to `true` if you do not wish the configuration to be deleted at destroy time, and instead just remove the configuration from the Terraform state. Default is `false`.
 * `tags` - (Optional) Key-value map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

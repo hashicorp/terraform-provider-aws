@@ -21,21 +21,26 @@ func TestAccConfigService_serial(t *testing.T) {
 			"tags":               testAccConfigServiceAggregateAuthorization_tagsSerial,
 		},
 		"ConfigRule": {
-			acctest.CtBasic:      testAccConfigRule_basic,
-			"ownerAws":           testAccConfigRule_ownerAWS,
-			"customlambda":       testAccConfigRule_customlambda,
-			"customPolicy":       testAccConfigRule_ownerPolicy,
-			"evaluationMode":     testAccConfigRule_evaluationMode,
-			"scopeTagKey":        testAccConfigRule_Scope_TagKey,
-			"scopeTagKeyEmpty":   testAccConfigRule_Scope_TagKey_Empty,
-			"scopeTagValue":      testAccConfigRule_Scope_TagValue,
-			"tags":               testAccConfigServiceConfigRule_tagsSerial,
-			acctest.CtDisappears: testAccConfigRule_disappears,
+			acctest.CtBasic:       testAccConfigRule_basic,
+			"ownerAws":            testAccConfigRule_ownerAWS,
+			"customlambda":        testAccConfigRule_customlambda,
+			"customPolicy":        testAccConfigRule_ownerPolicy,
+			"evaluationMode":      testAccConfigRule_evaluationMode,
+			"scopeTagKey":         testAccConfigRule_Scope_TagKey,
+			"scopeTagKeyEmpty":    testAccConfigRule_Scope_TagKey_Empty,
+			"scopeTagValue":       testAccConfigRule_Scope_TagValue,
+			"tags":                testAccConfigServiceConfigRule_tagsSerial,
+			acctest.CtDisappears:  testAccConfigRule_disappears,
+			"Identity":            testAccConfigServiceConfigRule_identitySerial,
+			"ListBasic":           testAccConfigRule_List_basic,
+			"ListIncludeResource": testAccConfigRule_List_includeResource,
+			"ListRegionOverride":  testAccConfigRule_List_regionOverride,
 		},
 		"ConfigurationRecorderStatus": {
 			acctest.CtBasic:      testAccConfigurationRecorderStatus_basic,
 			"startEnabled":       testAccConfigurationRecorderStatus_startEnabled,
 			acctest.CtDisappears: testAccConfigurationRecorderStatus_disappears,
+			"Identity":           testAccConfigServiceConfigurationRecorderStatus_identitySerial,
 		},
 		"ConfigurationRecorder": {
 			acctest.CtBasic:            testAccConfigurationRecorder_basic,
@@ -43,6 +48,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"exclusionsToAllSupported": testAccConfigurationRecorder_exclusionsToAllSupported,
 			"recordStrategy":           testAccConfigurationRecorder_recordStrategy,
 			acctest.CtDisappears:       testAccConfigurationRecorder_disappears,
+			"Import":                   testAccConfigServiceConfigurationRecorder_identitySerial,
 		},
 		"ConformancePack": {
 			acctest.CtBasic:             testAccConformancePack_basic,
@@ -56,11 +62,13 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Delivery":          testAccConformancePack_updateS3Delivery,
 			"updateS3Template":          testAccConformancePack_updateS3Template,
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
+			"Identity":                  testAccConfigServiceConformancePack_identitySerial,
 		},
 		"DeliveryChannel": {
 			acctest.CtBasic:      testAccDeliveryChannel_basic,
 			"allParams":          testAccDeliveryChannel_allParams,
 			acctest.CtDisappears: testAccDeliveryChannel_disappears,
+			"Identity":           testAccConfigServiceDeliveryChannel_identitySerial,
 		},
 		"OrganizationConformancePack": {
 			acctest.CtBasic:          testAccOrganizationConformancePack_basic,
@@ -75,11 +83,13 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Template":       testAccOrganizationConformancePack_updateS3Template,
 			"updateTemplateBody":     testAccOrganizationConformancePack_updateTemplateBody,
 			"delegatedAdministrator": testAccOrganizationConformancePack_delegatedAdministrator,
+			"Identity":               testAccConfigServiceOrganizationConformancePack_identitySerial,
 		},
 		"OrganizationCustomPolicyRule": {
 			acctest.CtBasic:      testAccOrganizationCustomPolicyRule_basic,
 			acctest.CtDisappears: testAccOrganizationCustomPolicyRule_disappears,
 			"policyText":         testAccOrganizationCustomPolicyRule_PolicyText,
+			"Identity":           testAccConfigServiceOrganizationCustomPolicyRule_identitySerial,
 		},
 		"OrganizationCustomRule": {
 			acctest.CtBasic:             testAccOrganizationCustomRule_basic,
@@ -95,6 +105,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"TagKeyScope":               testAccOrganizationCustomRule_TagKeyScope,
 			"TagValueScope":             testAccOrganizationCustomRule_TagValueScope,
 			"TriggerTypes":              testAccOrganizationCustomRule_TriggerTypes,
+			"Identity":                  testAccConfigServiceOrganizationCustomRule_identitySerial,
 		},
 		"OrganizationManagedRule": {
 			acctest.CtBasic:             testAccOrganizationManagedRule_basic,
@@ -109,6 +120,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"RuleIdentifier":            testAccOrganizationManagedRule_RuleIdentifier,
 			"TagKeyScope":               testAccOrganizationManagedRule_TagKeyScope,
 			"TagValueScope":             testAccOrganizationManagedRule_TagValueScope,
+			"Identity":                  testAccConfigServiceOrganizationManagedRule_identitySerial,
 		},
 		"RemediationConfiguration": {
 			acctest.CtBasic:      testAccRemediationConfiguration_basic,
@@ -116,10 +128,12 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtDisappears: testAccRemediationConfiguration_disappears,
 			"updates":            testAccRemediationConfiguration_updates,
 			"values":             testAccRemediationConfiguration_values,
+			"Identity":           testAccConfigServiceRemediationConfiguration_identitySerial,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,
 			acctest.CtDisappears: testAccRetentionConfiguration_disappears,
+			"Identity":           testAccConfigServiceRetentionConfiguration_identitySerial,
 		},
 	}
 

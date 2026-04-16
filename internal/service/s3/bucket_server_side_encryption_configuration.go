@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,7 +34,7 @@ import (
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
-// @Testing(importIgnore="rule.0.bucket_key_enabled")
+// @Testing(importIgnore="rule.0.blocked_encryption_types")
 // @Testing(plannableImportAction="NoOp")
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
@@ -69,6 +70,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 									"kms_master_key_id": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 									"sse_algorithm": {
 										Type:             schema.TypeString,
@@ -81,6 +83,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 						"blocked_encryption_types": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
@@ -89,6 +92,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 						"bucket_key_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -183,7 +187,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set(names.AttrRule, flattenServerSideEncryptionRules(sse.Rules)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
 	return diags
@@ -285,126 +289,116 @@ func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client,
 	return output.ServerSideEncryptionConfiguration, nil
 }
 
-func expandServerSideEncryptionByDefault(l []any) *awstypes.ServerSideEncryptionByDefault {
-	if len(l) == 0 || l[0] == nil {
+func expandServerSideEncryptionByDefault(tfList []any) *awstypes.ServerSideEncryptionByDefault {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]any)
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	sse := &awstypes.ServerSideEncryptionByDefault{}
+	apiObject := &awstypes.ServerSideEncryptionByDefault{}
 
 	if v, ok := tfMap["kms_master_key_id"].(string); ok && v != "" {
-		sse.KMSMasterKeyID = aws.String(v)
+		apiObject.KMSMasterKeyID = aws.String(v)
 	}
 
 	if v, ok := tfMap["sse_algorithm"].(string); ok && v != "" {
-		sse.SSEAlgorithm = awstypes.ServerSideEncryption(v)
+		apiObject.SSEAlgorithm = awstypes.ServerSideEncryption(v)
 	}
 
-	return sse
+	return apiObject
 }
 
-func expandServerSideEncryptionRules(l []any) []awstypes.ServerSideEncryptionRule {
-	var rules []awstypes.ServerSideEncryptionRule
+func expandServerSideEncryptionRules(tfList []any) []awstypes.ServerSideEncryptionRule {
+	var apiObjects []awstypes.ServerSideEncryptionRule
 
-	for _, tfMapRaw := range l {
+	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		rule := awstypes.ServerSideEncryptionRule{}
+		apiObject := awstypes.ServerSideEncryptionRule{}
 
 		if v, ok := tfMap["apply_server_side_encryption_by_default"].([]any); ok && len(v) > 0 && v[0] != nil {
-			rule.ApplyServerSideEncryptionByDefault = expandServerSideEncryptionByDefault(v)
+			apiObject.ApplyServerSideEncryptionByDefault = expandServerSideEncryptionByDefault(v)
 		}
 
 		if v, ok := tfMap["blocked_encryption_types"].([]any); ok && len(v) > 0 {
-			rule.BlockedEncryptionTypes = expandBlockedEncryptionTypes(v)
+			apiObject.BlockedEncryptionTypes = expandBlockedEncryptionTypes(v)
 		}
 
 		if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
-			rule.BucketKeyEnabled = aws.Bool(v)
+			apiObject.BucketKeyEnabled = aws.Bool(v)
 		}
 
-		rules = append(rules, rule)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return rules
+	return apiObjects
 }
 
-func flattenServerSideEncryptionRules(rules []awstypes.ServerSideEncryptionRule) []any {
-	var results []any
+func flattenServerSideEncryptionRules(apiObjects []awstypes.ServerSideEncryptionRule) []any {
+	var tfList []any
 
-	for _, rule := range rules {
-		m := make(map[string]any)
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
 
-		if rule.ApplyServerSideEncryptionByDefault != nil {
-			m["apply_server_side_encryption_by_default"] = flattenServerSideEncryptionByDefault(rule.ApplyServerSideEncryptionByDefault)
+		if apiObject.ApplyServerSideEncryptionByDefault != nil {
+			tfMap["apply_server_side_encryption_by_default"] = flattenServerSideEncryptionByDefault(apiObject.ApplyServerSideEncryptionByDefault)
 		}
 
-		if rule.BlockedEncryptionTypes != nil {
-			if flattened := flattenBlockedEncryptionTypes(rule.BlockedEncryptionTypes); flattened != nil {
-				m["blocked_encryption_types"] = flattened
+		if apiObject.BlockedEncryptionTypes != nil {
+			if v := flattenBlockedEncryptionTypes(apiObject.BlockedEncryptionTypes); v != nil {
+				tfMap["blocked_encryption_types"] = v
 			}
 		}
 
-		if rule.BucketKeyEnabled != nil {
-			m["bucket_key_enabled"] = aws.ToBool(rule.BucketKeyEnabled)
+		if apiObject.BucketKeyEnabled != nil {
+			tfMap["bucket_key_enabled"] = aws.ToBool(apiObject.BucketKeyEnabled)
 		}
 
-		results = append(results, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return results
+	return tfList
 }
 
-func flattenServerSideEncryptionByDefault(sse *awstypes.ServerSideEncryptionByDefault) []any {
-	if sse == nil {
+func flattenServerSideEncryptionByDefault(apiObject *awstypes.ServerSideEncryptionByDefault) []any {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]any{
-		"sse_algorithm": sse.SSEAlgorithm,
+	tfMap := map[string]any{
+		"sse_algorithm": apiObject.SSEAlgorithm,
 	}
 
-	if sse.KMSMasterKeyID != nil {
-		m["kms_master_key_id"] = aws.ToString(sse.KMSMasterKeyID)
+	if apiObject.KMSMasterKeyID != nil {
+		tfMap["kms_master_key_id"] = aws.ToString(apiObject.KMSMasterKeyID)
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func expandBlockedEncryptionTypes(l []any) *awstypes.BlockedEncryptionTypes {
-	if len(l) == 0 {
+func expandBlockedEncryptionTypes(tfList []any) *awstypes.BlockedEncryptionTypes {
+	if len(tfList) == 0 {
 		return nil
-	}
-
-	var encryptionTypes []awstypes.EncryptionType
-	for _, v := range l {
-		encryptionTypes = append(encryptionTypes, awstypes.EncryptionType(v.(string)))
 	}
 
 	return &awstypes.BlockedEncryptionTypes{
-		EncryptionType: encryptionTypes,
+		EncryptionType: flex.ExpandStringyValueList[awstypes.EncryptionType](tfList),
 	}
 }
 
-func flattenBlockedEncryptionTypes(bet *awstypes.BlockedEncryptionTypes) []any {
-	if bet == nil || len(bet.EncryptionType) == 0 {
+func flattenBlockedEncryptionTypes(apiObject *awstypes.BlockedEncryptionTypes) []awstypes.EncryptionType {
+	if apiObject == nil || len(apiObject.EncryptionType) == 0 {
 		return nil
 	}
 
-	var result []any
-	for _, et := range bet.EncryptionType {
-		result = append(result, string(et))
-	}
-
-	return result
+	return apiObject.EncryptionType
 }
 
 func resourceBucketServerSideEncryptionConfigurationFlatten(_ context.Context, sse *awstypes.ServerSideEncryptionConfiguration, d *schema.ResourceData) error {

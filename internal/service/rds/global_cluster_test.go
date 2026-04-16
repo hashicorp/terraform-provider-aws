@@ -304,6 +304,46 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 	})
 }
 
+func TestAccRDSGlobalCluster_EngineVersion_AuroraMySQL_updateMinor(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalCluster1, globalCluster2 types.GlobalCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_primaryMinorEngineVersionDynamic(rName, tfrds.InstanceEngineAuroraMySQL, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+				),
+			},
+			{
+				Config: testAccGlobalClusterConfig_primaryMinorEngineVersionDynamic(rName, tfrds.InstanceEngineAuroraMySQL, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, t, resourceName, &globalCluster2),
+					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

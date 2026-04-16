@@ -189,7 +189,7 @@ The function `Parse` takes the import ID as a parameter and returns:
 1. A `map[string]string` of the resource attributes to be set
 1. Any error
 
-The function `Create` takes the state values and returns a single string value.
+The function `Create` takes the state values and returns a single string value, the `id` attribute value.
 
 The name of this struct is set in the annotation `@ImportIDHandler("<struct name>")`.
 
