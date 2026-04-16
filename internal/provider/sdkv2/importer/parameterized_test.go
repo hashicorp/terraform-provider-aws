@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -21,7 +21,7 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
@@ -544,7 +544,7 @@ var regionalMultipleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 func regionalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identity {

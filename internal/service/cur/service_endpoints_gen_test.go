@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -446,7 +445,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	resolver := &net.Resolver{}
 	_, err = resolver.LookupHost(lookupCtx, hostname)
-	if dnsErr, ok := errs.As[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
+	if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil && errors.Is(err, context.DeadlineExceeded) {
 		return expectDefaultEndpoint(ctx, t, region)

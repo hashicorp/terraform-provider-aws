@@ -26,34 +26,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_integration", name="Integration")
+// @IdAttrFormat("agi-{rest_api_id}-{resource_id}-{http_method}")
+// @IdentityAttribute("rest_api_id")
+// @IdentityAttribute("resource_id")
+// @IdentityAttribute("http_method")
+// @ImportIDHandler("integrationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetIntegrationOutput")
+// @Testing(preIdentityVersion="v6.40.0")
+// @Testing(importStateIdFunc="testAccIntegrationImportStateIdFunc")
+// @Testing(plannableImportAction="NoOp")
 func resourceIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationCreate,
 		ReadWithoutTimeout:   resourceIntegrationRead,
 		UpdateWithoutTimeout: resourceIntegrationUpdate,
 		DeleteWithoutTimeout: resourceIntegrationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
-				}
-				restApiID := idParts[0]
-				resourceID := idParts[1]
-				httpMethod := idParts[2]
-				d.Set("http_method", httpMethod)
-				d.Set(names.AttrResourceID, resourceID)
-				d.Set("rest_api_id", restApiID)
-				d.SetId(fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod))
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"cache_key_parameters": {
@@ -280,7 +273,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
+	d.SetId(resourceIntegrationIDAttr(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
@@ -301,6 +294,12 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration (%s): %s", d.Id(), err)
 	}
 
+	resourceIntegrationFlatten(d, integration)
+
+	return diags
+}
+
+func resourceIntegrationFlatten(d *schema.ResourceData, integration *apigateway.GetIntegrationOutput) {
 	d.Set("cache_key_parameters", integration.CacheKeyParameters)
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set(names.AttrConnectionID, integration.ConnectionId)
@@ -323,12 +322,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
 	d.Set(names.AttrURI, integration.Uri)
-
-	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
-	}
-
-	return diags
+	d.Set("tls_config", flattenTLSConfig(integration.TlsConfig))
 }
 
 func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -753,4 +747,35 @@ func flattenTLSConfig(apiObject *types.TlsConfig) []any {
 	return []any{map[string]any{
 		"insecure_skip_verification": apiObject.InsecureSkipVerification,
 	}}
+}
+
+var _ inttypes.SDKv2ImportID = integrationImportID{}
+
+type integrationImportID struct{}
+
+func integrationCreateImportID(restApiID, resourceID, httpMethod string) string {
+	return restApiID + "/" + resourceID + "/" + httpMethod
+}
+
+func resourceIntegrationIDAttr(restApiID, resourceID, httpMethod string) string {
+	return fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod)
+}
+
+func (integrationImportID) Create(d *schema.ResourceData) string {
+	return integrationCreateImportID(d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string))
+}
+
+func (integrationImportID) Parse(id string) (string, map[string]any, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", nil, fmt.Errorf("id %q should be in the format <rest-api-id>/<resource-id>/<http-method>", id)
+	}
+
+	result := map[string]any{
+		"rest_api_id":        parts[0],
+		names.AttrResourceID: parts[1],
+		"http_method":        parts[2],
+	}
+
+	return resourceIntegrationIDAttr(parts[0], parts[1], parts[2]), result, nil
 }

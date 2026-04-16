@@ -4966,6 +4966,122 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_cpuOptionsCoreCountOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var (
+		originalCoreCount      int32 = 2
+		updatedCoreCount       int32 = 3
+		originalThreadsPerCore int32 = 2
+	)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(originalCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(originalThreadsPerCore),
+					})})),
+				},
+			},
+			{
+				// Update only core_count, keeping threads_per_core the same.
+				// This verifies that the provider sends both CoreCount and ThreadsPerCore
+				// to the AWS API even when only one of them changes.
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, updatedCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(updatedCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(originalThreadsPerCore),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsThreadsPerCoreOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var (
+		originalCoreCount      int32 = 2
+		originalThreadsPerCore int32 = 2
+		updatedThreadsPerCore  int32 = 1
+	)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(originalCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(originalThreadsPerCore),
+					})})),
+				},
+			},
+			{
+				// Update only threads_per_core, keeping core_count the same.
+				// This verifies that the provider sends both CoreCount and ThreadsPerCore
+				// to the AWS API even when only one of them changes.
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, originalCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(originalCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(updatedThreadsPerCore),
+					})})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance

@@ -107,7 +107,7 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 
 			result.DisplayName = arn
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

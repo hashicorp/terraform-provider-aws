@@ -3,14 +3,14 @@ subcategory: "OpenSearch Serverless"
 layout: "aws"
 page_title: "AWS: aws_opensearchserverless_collection"
 description: |-
-  Terraform resource for managing an AWS OpenSearch Collection.
+  Terraform resource for managing an AWS OpenSearch Serverless Collection.
 ---
 
 # Resource: aws_opensearchserverless_collection
 
 Terraform resource for managing an AWS OpenSearch Serverless Collection.
 
-~> **NOTE:** An `aws_opensearchserverless_collection` cannot be created without having an applicable [encryption security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Use the [`depends_on`](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) meta-argument to define this dependency.
+~> **NOTE:** An `aws_opensearchserverless_collection` must have encryption configured either by an applicable [encryption security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy) or by setting `encryption_config` directly on the resource.
 
 ~> **NOTE:** An `aws_opensearchserverless_collection` is not accessible without configuring an applicable [network security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Data cannot be accessed without configuring an applicable [data access policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_access_policy).
 
@@ -42,6 +42,30 @@ resource "aws_opensearchserverless_collection" "example" {
 }
 ```
 
+### With a Collection Group and Direct Encryption Configuration
+
+```terraform
+resource "aws_kms_key" "example" {
+  description             = "example"
+  deletion_window_in_days = 7
+}
+
+resource "aws_opensearchserverless_collection_group" "example" {
+  name             = "example-group"
+  standby_replicas = "ENABLED"
+}
+
+resource "aws_opensearchserverless_collection" "example" {
+  name                  = "example"
+  type                  = "SEARCH"
+  collection_group_name = aws_opensearchserverless_collection_group.example.name
+
+  encryption_config {
+    kms_key_arn = aws_kms_key.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -51,10 +75,19 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `collection_group_name` - (Optional, Forces new resource) Name of the collection group to associate with this collection.
 * `description` - (Optional) Description of the collection.
+* `encryption_config` - (Optional, Forces new resource) Configuration block for direct collection encryption settings. See [`encryption_config`](#encryption_config) below for details.
 * `standby_replicas` - (Optional) Indicates whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.
+
+### `encryption_config`
+
+Specify one of the following:
+
+* `aws_owned_key` - (Optional) Whether to use an AWS owned key for collection encryption.
+* `kms_key_arn` - (Optional) ARN of the AWS KMS key to use for collection encryption.
 
 ## Attribute Reference
 
@@ -65,6 +98,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `id` - Unique identifier for the collection.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -74,6 +108,32 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `20m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_opensearchserverless_collection.example
+  identity = {
+    id = "example"
+  }
+}
+
+resource "aws_opensearchserverless_collection" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Unique identifier for the collection.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Collection using the `id`. For example:
 

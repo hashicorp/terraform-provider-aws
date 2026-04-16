@@ -2618,6 +2618,57 @@ func waitTransitGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, trans
 	return nil, err
 }
 
+func waitTransitGatewayMeteringPolicyCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayMeteringPolicy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayMeteringPolicyStatePending),
+		Target:  enum.Slice(awstypes.TransitGatewayMeteringPolicyStateAvailable),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayMeteringPolicy(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayMeteringPolicy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayMeteringPolicyUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayMeteringPolicy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayMeteringPolicyStateModifying),
+		Target:  enum.Slice(awstypes.TransitGatewayMeteringPolicyStateAvailable),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayMeteringPolicy(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayMeteringPolicy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayMeteringPolicyDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayMeteringPolicy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayMeteringPolicyStateAvailable, awstypes.TransitGatewayMeteringPolicyStateDeleting),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusTransitGatewayMeteringPolicy(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayMeteringPolicy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTransitGatewayPolicyTableCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPolicyTable, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayPolicyTableStatePending),

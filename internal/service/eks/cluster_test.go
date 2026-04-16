@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -241,8 +242,15 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(false)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -252,15 +260,17 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(true)),
+				},
 			},
 		},
 	})
@@ -268,7 +278,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 
 func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -286,18 +296,28 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 				},
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bootstrap_self_managed_addons"), knownvalue.Bool(true)),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -628,7 +648,7 @@ func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
 
 func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -641,10 +661,18 @@ func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 			{
 				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-xl"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "tier-xl"),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_plane_scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"tier": tfknownvalue.StringExact(types.ProvisionedControlPlaneTierTierXl),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -653,13 +681,36 @@ func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
+				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-8xl"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_plane_scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"tier": tfknownvalue.StringExact(types.ProvisionedControlPlaneTierTier8xl),
+					})})),
+				},
+			},
+			{
 				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "standard"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "standard"),
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_plane_scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"tier": tfknownvalue.StringExact(types.ProvisionedControlPlaneTierStandard),
+					})})),
+				},
 			},
 		},
 	})

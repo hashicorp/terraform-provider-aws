@@ -160,7 +160,7 @@ resource "aws_ecs_express_gateway_service" "example" {
 
 The `scaling_target` configuration block supports the following:
 
-* `auto_scaling_metric` - (Optional) Metric to use for auto-scaling. Valid values are `CPU` and `MEMORY`.
+* `auto_scaling_metric` - (Optional) Metric to use for auto-scaling. Valid values are `AVERAGE_CPU`, `AVERAGE_MEMORY` and `REQUEST_COUNT_PER_TARGET`.
 * `auto_scaling_target_value` - (Optional) Target value for the auto-scaling metric (as a percentage). Defaults to `60`.
 * `max_task_count` - (Optional) Maximum number of tasks to run.
 * `min_task_count` - (Optional) Minimum number of tasks to run.

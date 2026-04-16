@@ -988,13 +988,19 @@ var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
 	var interceptors interceptorInvocations
 
-	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
 		interceptors = append(interceptors, listResourceInjectRegionAttribute())
 		// TODO: validate region in partition, needs tweaked error message
 	}
 
 	inner := spec.Factory()
 
+	// Updates SDKv2 schema
 	if v, ok := inner.(framework.WithRegionSpec); ok {
 		v.SetRegionSpec(spec.Region)
 	}
@@ -1004,6 +1010,14 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	}
 
 	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
+		v.AppendResultInterceptor(listresource.SetResourceStateSDK())
+
+		if isRegionOverrideEnabled {
+			v.AppendResultInterceptor(listresource.SetRegionInterceptorSDK())
+		}
+
+		v.AppendResultInterceptor(listresource.IdentityInterceptorSDK(spec.Identity.Attributes))
+
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}

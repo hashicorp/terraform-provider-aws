@@ -900,3 +900,31 @@ func TestCaseInsensitiveMatchDeprecation(t *testing.T) {
 		})
 	}
 }
+
+func TestWarnStringIsNotEmpty(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		value    any
+		wantDiag bool
+	}{
+		"empty string": {
+			value:    "",
+			wantDiag: true,
+		},
+		"non-empty string": {
+			value: "value",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := WarnStringIsNotEmpty(tt.value, cty.Path{})
+			if got, want := len(diags) > 0, tt.wantDiag; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}

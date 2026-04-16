@@ -46,7 +46,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -87,7 +87,7 @@ func TestAccEKSPodIdentityAssociation_crossaccount(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -149,7 +149,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -199,7 +199,7 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -240,7 +240,7 @@ func TestAccEKSPodIdentityAssociation_updateTargetRoleARN(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -302,15 +302,8 @@ func testAccCheckPodIdentityAssociationExists(ctx context.Context, t *testing.T,
 	}
 }
 
-func testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes[names.AttrAssociationID]), nil
-	}
+func testAccCheckPodIdentityAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, names.AttrAssociationID)
 }
 
 func testAccPodIdentityAssociationConfig_clusterBase(rName string) string {

@@ -123,8 +123,6 @@ func TestAccS3BucketLifecycleConfiguration_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_lifecycle_configuration.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_s3_bucket_lifecycle_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_s3_bucket_lifecycle_configuration.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						// TIP: Add checks for _all_ resource attributes, including "region".
-						// If the resource is implemented in Plugin SDK, also include the "id" attribute.
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),

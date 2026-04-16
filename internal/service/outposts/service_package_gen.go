@@ -7,7 +7,6 @@ package outposts
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -34,49 +33,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceOutpostAsset,
 			TypeName: "aws_outposts_asset",
 			Name:     "Asset",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceOutpostAssets,
 			TypeName: "aws_outposts_assets",
 			Name:     "Assets",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceOutpost,
 			TypeName: "aws_outposts_outpost",
 			Name:     "Outpost",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceOutpostInstanceType,
 			TypeName: "aws_outposts_outpost_instance_type",
 			Name:     "Outpost Instance Type",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceOutpostInstanceTypes,
 			TypeName: "aws_outposts_outpost_instance_types",
 			Name:     "Outpost Instance Types",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceOutposts,
 			TypeName: "aws_outposts_outposts",
 			Name:     "Outposts",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceSite,
 			TypeName: "aws_outposts_site",
 			Name:     "Site",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
 			Factory:  dataSourceSites,
 			TypeName: "aws_outposts_sites",
 			Name:     "Sites",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
