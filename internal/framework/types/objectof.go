@@ -134,24 +134,21 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 }
 
 func objectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	t := new(T)
-	diags.Append(NullOutObjectPtrFields(ctx, t)...)
+	t, diags := Nullified[T](ctx)
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	return t, diags
+	return &t, diags
 }
 
 // NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
 func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	var diags diag.Diagnostics
 	val := reflect.ValueOf(t)
-	typ := val.Type().Elem()
 
-	if typ.Kind() != reflect.Struct {
+	if kind := val.Type().Elem().Kind(); kind != reflect.Struct {
+		diags.AddError("NullOutObjectPtrFields", fmt.Sprintf("target must be a pointer to struct, got %T", t))
 		return diags
 	}
 
@@ -178,6 +175,14 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	}
 
 	return diags
+}
+
+// Nullified returns a value for T with all applicable fields nulled.
+// `T` must be a struct.
+func Nullified[T any](ctx context.Context) (T, diag.Diagnostics) {
+	t := inttypes.Zero[T]()
+	diags := NullOutObjectPtrFields(ctx, &t)
+	return t, diags
 }
 
 // ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.

@@ -12,10 +12,10 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.41.5
-	github.com/aws/aws-sdk-go-v2/config v1.32.14
+	github.com/aws/aws-sdk-go-v2/config v1.32.15
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.14
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.21
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.13
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.14
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.38.1
@@ -33,13 +33,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.12
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.14
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.23
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.12
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.14
 	github.com/aws/aws-sdk-go-v2/service/backup v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.63.2
@@ -62,8 +62,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.22
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.12
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.9
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.68.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.56.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.21
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.13
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.12
@@ -76,23 +76,23 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.35.13
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.31.21
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.33.22
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.59.3
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.21
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.8
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.1
-	github.com/aws/aws-sdk-go-v2/service/connect v1.169.0
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.39.1
+	github.com/aws/aws-sdk-go-v2/service/connect v1.170.0
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.13
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.6
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.8
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.14
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.20
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.58.2
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.13
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.8
@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.13
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.13
-	github.com/aws/aws-sdk-go-v2/service/drs v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/drs v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.0
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.14
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.48.0
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.90.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.21
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.36.1
@@ -208,7 +208,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.106.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.9
-	github.com/aws/aws-sdk-go-v2/service/rds v1.117.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.118.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.21
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.5
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.39.0
@@ -337,7 +337,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.21 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.6 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.13 // indirect

@@ -42,6 +42,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newServiceLinkVirtualInterfaceDataSource,
+			TypeName: "aws_ec2_service_link_virtual_interface",
+			Name:     "Service Link Virtual Interface",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newServiceLinkVirtualInterfacesDataSource,
+			TypeName: "aws_ec2_service_link_virtual_interfaces",
+			Name:     "Service Link Virtual Interfaces",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newSpotDataFeedSubscriptionDataSource,
 			TypeName: "aws_spot_datafeed_subscription",
 			Name:     "Spot Data Feed Subscription Data Source",
@@ -95,6 +108,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ebs_fast_snapshot_restore",
 			Name:     "EBS Fast Snapshot Restore",
 			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newEBSVolumeCopyResource,
+			TypeName: "aws_ebs_volume_copy",
+			Name:     "EBS Volume Copy",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newAllowedImagesSettingsResource,

@@ -108,6 +108,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `id` - The identifier issued to this resource by an external identity provider.
     * `issuer` - The issuer for an external identifier.
 * `user_id` - The identifier for this user in the identity store.
+* `user_status` - The current status of the user account.
 
 ## Import
 

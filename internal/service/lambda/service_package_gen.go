@@ -202,6 +202,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_lambda_layer_version",
 			Name:     "Layer Version",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("layer_name", true),
+				inttypes.StringIdentityAttribute(names.AttrVersion, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      layerVersionImportID{},
+			},
 		},
 		{
 			Factory:  resourceLayerVersionPermission,
@@ -244,6 +252,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity("function_name"),
+		},
+		{
+			Factory:  newLayerVersionResourceAsListResource,
+			TypeName: "aws_lambda_layer_version",
+			Name:     "Layer Version",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("layer_name", true),
+				inttypes.StringIdentityAttribute(names.AttrVersion, true),
+			}),
 		},
 		{
 			Factory:  permissionResourceAsListResource,

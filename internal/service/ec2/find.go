@@ -1391,6 +1391,36 @@ func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpo
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func findServiceLinkVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) (*awstypes.ServiceLinkVirtualInterface, error) {
+	output, err := findServiceLinkVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServiceLinkVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeServiceLinkVirtualInterfacesInput) ([]awstypes.ServiceLinkVirtualInterface, error) {
+	var output []awstypes.ServiceLinkVirtualInterface
+
+	err := describeServiceLinkVirtualInterfacesPages(ctx, conn, input, func(page *ec2.DescribeServiceLinkVirtualInterfacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ServiceLinkVirtualInterfaces...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findSubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {
 	input := ec2.DescribeSubnetsInput{
 		SubnetIds: []string{id},

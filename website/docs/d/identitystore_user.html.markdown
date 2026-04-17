@@ -108,4 +108,5 @@ This data source exports the following attributes in addition to the arguments a
 * `timezone` - The user's time zone.
 * `title` - The user's title.
 * `user_name` - User's user name value.
+* `user_status` - The current status of the user account.
 * `user_type` - The user type.

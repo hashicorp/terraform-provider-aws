@@ -842,6 +842,7 @@ service/ec2outposts:
               - 'internal/service/ec2/**/outposts_*'
               - 'website/**/ec2_coip_pool*'
               - 'website/**/ec2_local_gateway*'
+              - 'website/**/ec2_service_link_virtual_interface*'
 service/ecr:
   - any:
       - changed-files:

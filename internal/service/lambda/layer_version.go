@@ -27,21 +27,25 @@ import (
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const mutexLayerKey = `aws_lambda_layer_version`
 
 // @SDKResource("aws_lambda_layer_version", name="Layer Version")
+// @IdentityAttribute("layer_name")
+// @IdentityAttribute("version")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetLayerVersionOutput")
+// @Testing(existsTakesT=true, destroyTakesT=true)
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="filename;skip_destroy", plannableImportAction="NoOp")
+// @ImportIDHandler("layerVersionImportID")
 func resourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayerVersionCreate,
 		ReadWithoutTimeout:   resourceLayerVersionRead,
 		DeleteWithoutTimeout: resourceLayerVersionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -87,6 +91,10 @@ func resourceLayerVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff when importing: filename is never returned by the API.
+					return old == "" && d.Id() != ""
+				},
 			},
 			"layer_arn": {
 				Type:     schema.TypeString,
@@ -108,18 +116,27 @@ func resourceLayerVersion() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && d.Id() != ""
+				},
 			},
 			"s3_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && d.Id() != ""
+				},
 			},
 			"s3_object_version": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"filename"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == "" && d.Id() != ""
+				},
 			},
 			"signing_job_arn": {
 				Type:     schema.TypeString,
@@ -240,7 +257,15 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
+	flattenLayerVersion(d, layerName, output)
+	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
+
+	return diags
+}
+
+func flattenLayerVersion(d *schema.ResourceData, layerName string, output *lambda.GetLayerVersionOutput) {
 	d.Set(names.AttrARN, output.LayerVersionArn)
+	d.SetId(aws.ToString(output.LayerVersionArn))
 	d.Set("code_sha256", output.Content.CodeSha256)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
@@ -253,9 +278,6 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
 	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", output.Content.CodeSize)
-	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
-
-	return diags
 }
 
 func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -286,6 +308,17 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func layerVersionParseResourceID(id string) (layerName string, version int64, err error) {
+	// Support layer_name/version format (used for identity-based import).
+	if !arn.IsARN(id) {
+		parts := strings.SplitN(id, "/", 2)
+		if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+			v, parseErr := strconv.ParseInt(parts[1], 10, 64)
+			if parseErr == nil {
+				return parts[0], v, nil
+			}
+		}
+		return "", 0, fmt.Errorf("lambda_layer ID must be a valid Layer ARN or <layer-name>/<version>")
+	}
 	v, err := arn.Parse(id)
 	if err != nil {
 		return
@@ -328,4 +361,28 @@ func findLayerVersion(ctx context.Context, conn *lambda.Client, input *lambda.Ge
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = layerVersionImportID{}
+
+type layerVersionImportID struct{}
+
+func (layerVersionImportID) Create(d *schema.ResourceData) string {
+	return d.Get("layer_name").(string) + "/" + d.Get(names.AttrVersion).(string)
+}
+
+func (layerVersionImportID) Parse(id string) (string, map[string]any, error) {
+	layerName, version, err := layerVersionParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	normalizedID := layerName + "/" + strconv.FormatInt(version, 10)
+	results := map[string]any{
+		"layer_name":          layerName,
+		names.AttrVersion:     strconv.FormatInt(version, 10),
+		names.AttrSkipDestroy: false,
+	}
+
+	return normalizedID, results, nil
 }

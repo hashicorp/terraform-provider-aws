@@ -26,6 +26,7 @@ var (
 	ResourceEBSSnapshotCopy                               = resourceEBSSnapshotCopy
 	ResourceEBSSnapshotImport                             = resourceEBSSnapshotImport
 	ResourceEBSVolume                                     = resourceEBSVolume
+	ResourceEBSVolumeCopy                                 = newEBSVolumeCopyResource
 	ResourceEIP                                           = resourceEIP
 	ResourceEIPAssociation                                = resourceEIPAssociation
 	ResourceEIPDomainName                                 = newEIPDomainNameResource
