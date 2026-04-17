@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 func testAccWorkteam_cognitoConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -57,7 +55,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_cognitoUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -76,7 +74,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -95,19 +93,19 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 func testAccWorkteam_cognitoOmitWorkforceName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_omitWorkforceName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -127,19 +125,19 @@ func testAccWorkteam_cognitoOmitWorkforceName(t *testing.T) {
 func testAccWorkteam_oidcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "1"),
@@ -157,7 +155,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_oidc2(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "1"),
@@ -170,7 +168,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "1"),
@@ -185,19 +183,19 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 func testAccWorkteam_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -211,7 +209,7 @@ func testAccWorkteam_tags(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -220,7 +218,7 @@ func testAccWorkteam_tags(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -232,19 +230,19 @@ func testAccWorkteam_tags(t *testing.T) {
 func testAccWorkteam_notificationConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -261,7 +259,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -271,7 +269,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -286,19 +284,19 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_workerAccessConfiguration(rName, "Enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -317,7 +315,7 @@ func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
 			{
 				Config: testAccWorkteamConfig_workerAccessConfiguration(rName, "Disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -334,19 +332,19 @@ func testAccWorkteam_workerAccessConfiguration(t *testing.T) {
 func testAccWorkteam_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workteam awstypes.Workteam
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workteam.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkteamDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkteamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
+					testAccCheckWorkteamExists(ctx, t, resourceName, &workteam),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceWorkteam(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -355,9 +353,9 @@ func testAccWorkteam_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkteamDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_workteam" {
@@ -381,7 +379,7 @@ func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *awstypes.Workteam) resource.TestCheckFunc {
+func testAccCheckWorkteamExists(ctx context.Context, t *testing.T, n string, workteam *awstypes.Workteam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -392,7 +390,7 @@ func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *awstype
 			return fmt.Errorf("No SageMaker AI Workteam ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindWorkteamByName(ctx, conn, rs.Primary.ID)
 

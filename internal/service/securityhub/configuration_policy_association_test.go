@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +20,7 @@ import (
 func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_configuration_policy_association.test"
 	accountTarget := "data.aws_caller_identity.member.account_id"
 	ouTarget := "aws_organizations_organizational_unit.test.id"
@@ -30,7 +28,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 	policy1 := "aws_securityhub_configuration_policy.test_1.id"
 	policy2 := "aws_securityhub_configuration_policy.test_2.id"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -38,7 +36,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
@@ -51,7 +49,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				},
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_1", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", names.AttrID),
 				),
@@ -64,7 +62,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", names.AttrID),
 				),
@@ -72,7 +70,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, rootTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "parent_id"),
 				),
@@ -80,7 +78,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, accountTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", names.AttrAccountID),
 				),
@@ -92,12 +90,12 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_configuration_policy_association.test"
 	ouTarget := "aws_organizations_organizational_unit.test.id"
 	policy1 := "aws_securityhub_configuration_policy.test_1.id"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -105,7 +103,7 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				// Run a simple configuration to initialize the alternate providers
@@ -118,7 +116,7 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 				},
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
+					testAccCheckConfigurationPolicyAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -127,14 +125,14 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationPolicyAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckConfigurationPolicyAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		_, err := tfsecurityhub.FindConfigurationPolicyAssociationByID(ctx, conn, rs.Primary.ID)
 
@@ -142,9 +140,9 @@ func testAccCheckConfigurationPolicyAssociationExists(ctx context.Context, n str
 	}
 }
 
-func testAccCheckConfigurationPolicyAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationPolicyAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_configuration_policy_association" {

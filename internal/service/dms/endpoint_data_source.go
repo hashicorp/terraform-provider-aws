@@ -244,6 +244,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"use_update_lookup": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},

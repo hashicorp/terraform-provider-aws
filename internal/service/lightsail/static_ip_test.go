@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 
 func TestAccLightsailStaticIP_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_static_ip.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -47,7 +46,7 @@ func TestAccLightsailStaticIP_basic(t *testing.T) {
 
 func TestAccLightsailStaticIP_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(t, 5))
 
 	staticIpDestroy := func(*terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)

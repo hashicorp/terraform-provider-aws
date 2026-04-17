@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -130,9 +129,8 @@ func findStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Clien
 	}
 
 	if status := output.StandardsStatus; status == types.StandardsStatusFailed {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -157,9 +155,8 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -173,8 +170,8 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 	return output, nil
 }
 
-func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStandardsSubscriptionCreate(conn *securityhub.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -189,8 +186,8 @@ func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Cl
 	}
 }
 
-func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStandardsSubscriptionDelete(conn *securityhub.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -210,10 +207,10 @@ func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Cl
 }
 
 func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusPending),
 		Target:  enum.Slice(types.StandardsStatusReady, types.StandardsStatusIncomplete),
-		Refresh: statusStandardsSubscriptionCreate(ctx, conn, arn),
+		Refresh: statusStandardsSubscriptionCreate(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -231,10 +228,10 @@ func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Cli
 }
 
 func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStandardsSubscriptionDelete(ctx, conn, arn),
+		Refresh: statusStandardsSubscriptionDelete(conn, arn),
 		Timeout: timeout,
 	}
 

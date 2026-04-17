@@ -679,7 +679,7 @@ func statusManagedService(ctx context.Context, conn *odb.Client, id string, mana
 			return nil, "", err
 		}
 
-		if out.ManagedServices == nil {
+		if out == nil || out.ManagedServices == nil {
 			return nil, "", nil
 		}
 
@@ -728,6 +728,10 @@ func statusNetwork(ctx context.Context, conn *odb.Client, id string) sdkretry.St
 
 		if err != nil {
 			return nil, "", err
+		}
+
+		if out == nil {
+			return nil, "", nil
 		}
 
 		return out, string(out.Status), nil

@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
@@ -21,11 +19,11 @@ import (
 
 func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_target_group_attachment.test"
 	instanceResourceName := "aws_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -33,12 +31,12 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
@@ -50,11 +48,11 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 
 func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_target_group_attachment.test"
 	instanceResourceName := "aws_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -62,12 +60,12 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "8080"),
@@ -79,11 +77,11 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 
 func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_target_group_attachment.test"
 	lambdaResourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -91,12 +89,12 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "0"),
@@ -108,11 +106,11 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 
 func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_target_group_attachment.test"
 	albResourceName := "aws_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -120,12 +118,12 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
@@ -137,9 +135,9 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 
 func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_target_group_attachment.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -147,12 +145,12 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					testAccCheckTargetGroupAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -161,9 +159,9 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_target_group_attachment" {
@@ -187,14 +185,14 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTargetGroupAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		_, err := tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], flex.StringValueToInt32Value(rs.Primary.Attributes["target.0.port"]))
 

@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,9 +25,9 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
-	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPasswordUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	orgUnitDN := orgUnitFromDomain("Test", domain)
 
@@ -81,7 +80,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
-	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	orgUnitDN := orgUnitFromDomain("Test", domain)
 
@@ -109,7 +108,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
-	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	orgUnitDN1 := orgUnitFromDomain("One", domain)
 	orgUnitDN2 := orgUnitFromDomain("Two", domain)
@@ -158,9 +157,9 @@ func TestAccAppStreamDirectoryConfig_CertificateBasedAuthParameters(t *testing.T
 	resourceName := "aws_appstream_directory_config.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
-	rUserName := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rUserName := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPassword := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, sdkacctest.RandString(10))
+	rUserNameUpdated := fmt.Sprintf("%s\\%s", domain, acctest.RandString(t, 10))
 	rPasswordUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	orgUnitDN := orgUnitFromDomain("Test", domain)
 

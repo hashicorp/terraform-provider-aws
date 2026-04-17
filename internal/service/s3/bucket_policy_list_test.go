@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -26,7 +25,7 @@ func TestAccS3BucketPolicy_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
 	resourceName2 := "aws_s3_bucket_policy.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -38,13 +37,13 @@ func TestAccS3BucketPolicy_List_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPolicyDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -60,9 +59,8 @@ func TestAccS3BucketPolicy_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -85,7 +83,7 @@ func TestAccS3BucketPolicy_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -96,13 +94,13 @@ func TestAccS3BucketPolicy_List_includeResource(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPolicyDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -115,9 +113,8 @@ func TestAccS3BucketPolicy_List_includeResource(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_include_resource/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(1),
@@ -129,6 +126,7 @@ func TestAccS3BucketPolicy_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					}),
 				},
 			},
@@ -141,7 +139,7 @@ func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
 	resourceName2 := "aws_s3_bucket_policy.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -154,13 +152,13 @@ func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: acctest.CheckDestroyNoop,
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -170,6 +168,7 @@ func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-0")),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+
 					identity2.GetIdentity(resourceName2),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName+"-1")),
 					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -178,9 +177,8 @@ func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -200,7 +198,7 @@ func TestAccS3BucketPolicy_List_directoryBucket(t *testing.T) {
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
 	resourceName2 := "aws_s3_bucket_policy.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -213,13 +211,13 @@ func TestAccS3BucketPolicy_List_directoryBucket(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccDirectoryBucketPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: testAccCheckBucketPolicyDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_directory_bucket/"),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_directory_bucket/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
@@ -235,9 +233,8 @@ func TestAccS3BucketPolicy_List_directoryBucket(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BucketPolicy/list_directory_bucket/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/BucketPolicy/list_directory_bucket/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),

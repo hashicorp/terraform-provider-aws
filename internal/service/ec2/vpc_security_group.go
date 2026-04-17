@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,7 +43,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -94,7 +93,7 @@ func resourceSecurityGroup() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
 					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},

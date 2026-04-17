@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,23 +21,23 @@ import (
 func testAccSSHKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.SshPublicKey
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_ssh_key.test"
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSSHKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckSSHKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
+					testAccCheckSSHKeyExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
 					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "ssh_key_id"),
@@ -57,23 +56,23 @@ func testAccSSHKey_basic(t *testing.T) {
 func testAccSSHKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.SshPublicKey
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_transfer_ssh_key.test"
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSSHKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckSSHKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
+					testAccCheckSSHKeyExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceSSHKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,14 +81,14 @@ func testAccSSHKey_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSSHKeyExists(ctx context.Context, n string, v *awstypes.SshPublicKey) resource.TestCheckFunc {
+func testAccCheckSSHKeyExists(ctx context.Context, t *testing.T, n string, v *awstypes.SshPublicKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		_, output, err := tftransfer.FindUserSSHKeyByThreePartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["ssh_key_id"])
 
@@ -103,9 +102,9 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, v *awstypes.SshPubl
 	}
 }
 
-func testAccCheckSSHKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSSHKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_ssh_key" {

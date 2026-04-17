@@ -10,14 +10,12 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,20 +24,20 @@ import (
 func TestAccSSMActivation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation awstypes.Activation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivationDestroy(ctx),
+		CheckDestroy:             testAccCheckActivationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
+					testAccCheckActivationExists(ctx, t, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
 				),
@@ -63,21 +61,21 @@ func TestAccSSMActivation_basic(t *testing.T) {
 func TestAccSSMActivation_expirationDate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation awstypes.Activation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	expirationDate := time.Now().Add(48 * time.Hour).UTC().Format(time.RFC3339)
 	resourceName := "aws_ssm_activation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivationDestroy(ctx),
+		CheckDestroy:             testAccCheckActivationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationConfig_expirationDate(rName, expirationDate, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
+					testAccCheckActivationExists(ctx, t, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDate),
 				),
 			},
@@ -96,20 +94,20 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 func TestAccSSMActivation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation awstypes.Activation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivationDestroy(ctx),
+		CheckDestroy:             testAccCheckActivationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
+					testAccCheckActivationExists(ctx, t, resourceName, &ssmActivation),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceActivation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -118,14 +116,14 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckActivationExists(ctx context.Context, n string, v *awstypes.Activation) resource.TestCheckFunc {
+func testAccCheckActivationExists(ctx context.Context, t *testing.T, n string, v *awstypes.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		output, err := tfssm.FindActivationByID(ctx, conn, rs.Primary.ID)
 
@@ -139,9 +137,9 @@ func testAccCheckActivationExists(ctx context.Context, n string, v *awstypes.Act
 	}
 }
 
-func testAccCheckActivationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckActivationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_activation" {

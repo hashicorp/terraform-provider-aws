@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,19 +20,19 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "admin_account_id"),
 				),
 			},
@@ -50,19 +49,19 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,7 +76,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 	altResourceName := "aws_securityhub_organization_admin_account.alternate"
 	thirdResourceName := "aws_securityhub_organization_admin_account.third"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
@@ -85,23 +84,23 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_multiRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					testAccCheckOrganizationAdminAccountExists(ctx, altResourceName),
-					testAccCheckOrganizationAdminAccountExists(ctx, thirdResourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, t, resourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, t, altResourceName),
+					testAccCheckOrganizationAdminAccountExists(ctx, t, thirdResourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_organization_admin_account" {
@@ -125,14 +124,14 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		_, err := tfsecurityhub.FindAdminAccountByID(ctx, conn, rs.Primary.ID)
 

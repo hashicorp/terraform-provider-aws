@@ -225,10 +225,11 @@ This resource supports the following arguments:
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently, the only valid value is `DEFAULT`.
 * `connectivity_info` - (Optional) Information about the cluster access configuration. See [broker_node_group_info connectivity_info Argument Reference](#broker_node_group_info-connectivity_info-argument-reference) below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
-* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See [broker_node_group_info storage_info Argument Reference](#broker_node_group_info-storage_info-argument-reference) below.
+* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See [broker_node_group_info storage_info Argument Reference](#broker_node_group_info-storage_info-argument-reference) below. This block must not be specified when an Express instance type is specified for `instance_type`.
 
 ### broker_node_group_info connectivity_info Argument Reference
 
+* `network_type` - (Optional) Network type of the cluster. Valid values are: `IPV4` or `DUAL`. Default value: `IPV4`. Only updating from `IPV4` to `DUAL` is allowed.
 * `public_access` - (Optional) Access control settings for brokers. See [connectivity_info public_access Argument Reference](#connectivity_info-public_access-argument-reference) below.
 * `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [connectivity_info vpc_connectivity Argument Reference](#connectivity_info-vpc_connectivity-argument-reference) below.
 
@@ -376,7 +377,28 @@ Note that the `update` timeout is used separately for `storage_info`, `instance_
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK clusters using the cluster `arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_msk_cluster.example
+  identity = {
+    "arn" = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+  }
+}
+
+resource "aws_msk_cluster" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the MSK cluster.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK cluster using the cluster ARN. For example:
 
 ```terraform
 import {
@@ -385,7 +407,7 @@ import {
 }
 ```
 
-Using `terraform import`, import MSK clusters using the cluster `arn`. For example:
+Using `terraform import`, import MSK cluster using the cluster ARN. For example:
 
 ```console
 % terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3

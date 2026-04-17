@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func TestAccWorkSpacesWebTrustStore_basic(t *testing.T) {
 	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -32,12 +31,12 @@ func TestAccWorkSpacesWebTrustStore_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
@@ -64,7 +63,7 @@ func TestAccWorkSpacesWebTrustStore_multipleCerts(t *testing.T) {
 	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -72,12 +71,12 @@ func TestAccWorkSpacesWebTrustStore_multipleCerts(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_multipleCerts(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "2"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
@@ -110,7 +109,7 @@ func TestAccWorkSpacesWebTrustStore_disappears(t *testing.T) {
 	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -118,12 +117,12 @@ func TestAccWorkSpacesWebTrustStore_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &trustStore),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceTrustStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -137,7 +136,7 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -145,12 +144,12 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
@@ -171,7 +170,7 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 			{
 				Config: testAccTrustStoreConfig_updatedAdd(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "2"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
@@ -198,7 +197,7 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 			{
 				Config: testAccTrustStoreConfig_updatedRemove(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test2", names.AttrCertificate),
@@ -213,9 +212,9 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTrustStoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_trust_store" {
@@ -239,13 +238,13 @@ func testAccCheckTrustStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTrustStoreExists(ctx context.Context, n string, v *awstypes.TrustStore) resource.TestCheckFunc {
+func testAccCheckTrustStoreExists(ctx context.Context, t *testing.T, n string, v *awstypes.TrustStore) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindTrustStoreByARN(ctx, conn, rs.Primary.Attributes["trust_store_arn"])
 

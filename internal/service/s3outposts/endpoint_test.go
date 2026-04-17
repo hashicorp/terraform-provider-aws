@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
@@ -58,7 +57,7 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
@@ -94,7 +93,7 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
@@ -131,7 +130,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },

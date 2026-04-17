@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
@@ -33,22 +31,22 @@ import (
 func TestAccS3VectorsIndex_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Index
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckIndexExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -83,22 +81,22 @@ func TestAccS3VectorsIndex_basic(t *testing.T) {
 func TestAccS3VectorsIndex_encryptionConfigurationAES256(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Index
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_encryptionConfigurationAES256(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckIndexExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -123,22 +121,22 @@ func TestAccS3VectorsIndex_encryptionConfigurationAES256(t *testing.T) {
 func TestAccS3VectorsIndex_encryptionConfigurationCMK(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Index
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_encryptionConfigurationCMK(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckIndexExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -164,22 +162,22 @@ func TestAccS3VectorsIndex_encryptionConfigurationCMK(t *testing.T) {
 func TestAccS3VectorsIndex_metadataConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Index
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_metadataConfiguration(rName, []string{acctest.CtKey1, acctest.CtKey2}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckIndexExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -209,22 +207,22 @@ func TestAccS3VectorsIndex_metadataConfiguration(t *testing.T) {
 func TestAccS3VectorsIndex_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Index
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckIndexExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceIndex, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -241,23 +239,23 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 func TestAccS3VectorsIndex_withVector(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Index
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_index.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
-					testAccCheckIndexAddVector(ctx, resourceName, acctest.CtKey1, []float32{1.0, 2.0}),
+					testAccCheckIndexExists(ctx, t, resourceName, &v),
+					testAccCheckIndexAddVector(ctx, t, resourceName, acctest.CtKey1, []float32{1.0, 2.0}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -269,9 +267,9 @@ func TestAccS3VectorsIndex_withVector(t *testing.T) {
 	})
 }
 
-func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIndexDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3vectors_index" {
@@ -295,14 +293,14 @@ func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIndexExists(ctx context.Context, n string, v *awstypes.Index) resource.TestCheckFunc {
+func testAccCheckIndexExists(ctx context.Context, t *testing.T, n string, v *awstypes.Index) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		output, err := tfs3vectors.FindIndexByARN(ctx, conn, rs.Primary.Attributes["index_arn"])
 
@@ -316,10 +314,10 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *awstypes.Index) r
 	}
 }
 
-func testAccCheckIndexAddVector(ctx context.Context, n string, key string, value []float32) resource.TestCheckFunc {
+func testAccCheckIndexAddVector(ctx context.Context, t *testing.T, n string, key string, value []float32) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		metadata, err := tfsmithy.DocumentFromJSONString(fmt.Sprintf(`{"id": %[1]q}`, key), document.NewLazyDocument)
 		if err != nil {

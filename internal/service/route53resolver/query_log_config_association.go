@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -131,9 +130,8 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	output, err := conn.GetResolverQueryLogConfigAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -148,8 +146,8 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	return output.ResolverQueryLogConfigAssociation, nil
 }
 
-func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQueryLogConfigAssociation(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverQueryLogConfigAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -170,10 +168,10 @@ const (
 )
 
 func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusCreating),
 		Target:  enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusActive),
-		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),
+		Refresh: statusQueryLogConfigAssociation(conn, id),
 		Timeout: queryLogConfigAssociationCreatedTimeout,
 	}
 
@@ -191,10 +189,10 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 }
 
 func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverQueryLogConfigAssociationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),
+		Refresh: statusQueryLogConfigAssociation(conn, id),
 		Timeout: queryLogConfigAssociationDeletedTimeout,
 	}
 

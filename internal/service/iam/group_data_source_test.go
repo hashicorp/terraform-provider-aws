@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,9 +15,9 @@ import (
 
 func TestAccIAMGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
+	groupName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt(t))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,12 +37,12 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 
 func TestAccIAMGroupDataSource_users(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := fmt.Sprintf("test-datasource-group-%d", sdkacctest.RandInt())
-	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
-	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", sdkacctest.RandInt())
+	groupName := fmt.Sprintf("test-datasource-group-%d", acctest.RandInt(t))
+	userName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt(t))
+	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", acctest.RandInt(t))
 	userCount := 101
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

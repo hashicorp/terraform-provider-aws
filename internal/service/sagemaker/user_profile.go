@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,7 +41,6 @@ import (
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeUserProfileOutput")
 // @Testing(preIdentityVersion="6.2.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUserProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserProfileCreate,
@@ -1107,9 +1105,8 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	output, err := conn.DescribeUserProfile(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1124,8 +1121,8 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	return output, nil
 }
 
-func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, userProfileName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusUserProfile(conn *sagemaker.Client, domainID, userProfileName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
 		if retry.NotFound(err) {
@@ -1144,10 +1141,10 @@ func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domai
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusPending, awstypes.UserProfileStatusUpdating),
 		Target:  enum.Slice(awstypes.UserProfileStatusInService),
-		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
+		Refresh: statusUserProfile(conn, domainID, userProfileName),
 		Timeout: timeout,
 	}
 
@@ -1166,10 +1163,10 @@ func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainI
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.UserProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusUserProfile(ctx, conn, domainID, userProfileName),
+		Refresh: statusUserProfile(conn, domainID, userProfileName),
 		Timeout: timeout,
 	}
 
@@ -1190,13 +1187,13 @@ func (userProfileImportID) Create(d *schema.ResourceData) string {
 	return createUserProfileID(d.Get("domain_id").(string), d.Get("user_profile_name").(string))
 }
 
-func (userProfileImportID) Parse(id string) (string, map[string]string, error) {
+func (userProfileImportID) Parse(id string) (string, map[string]any, error) {
 	domainID, userProfileName, err := parseUserProfileID(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"domain_id":         domainID,
 		"user_profile_name": userProfileName,
 	}

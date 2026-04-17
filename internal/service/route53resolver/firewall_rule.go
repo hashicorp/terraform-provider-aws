@@ -16,7 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -130,7 +130,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallRuleInput{
 		Action:              awstypes.Action(d.Get(names.AttrAction).(string)),
-		CreatorRequestId:    aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
+		CreatorRequestId:    aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
 		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
 		Name:                aws.String(name),
 		Priority:            aws.Int32(int32(d.Get(names.AttrPriority).(int))),

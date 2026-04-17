@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -265,10 +263,10 @@ func TestParseBucketACLResourceID(t *testing.T) {
 
 func TestAccS3BucketACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -277,7 +275,7 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "1"),
@@ -308,10 +306,10 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 
 func TestAccS3BucketACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -320,7 +318,7 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					// Bucket ACL cannot be destroyed, but we can verify Bucket deletion
 					// will result in a missing Bucket ACL resource
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
@@ -333,11 +331,11 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 
 func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -346,14 +344,14 @@ func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_acl(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, bucketResourceName),
+					testAccCheckBucketExists(ctx, t, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
@@ -363,11 +361,11 @@ func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 
 func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -376,14 +374,14 @@ func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_acl(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, bucketResourceName),
+					testAccCheckBucketExists(ctx, t, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_basic_withDisabledPublicAccessBlock(bucketName, string(types.BucketCannedACLPublicRead)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPublicRead)),
 				),
 			},
@@ -393,11 +391,11 @@ func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
 
 func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -406,14 +404,14 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_acl(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, bucketResourceName),
+					testAccCheckBucketExists(ctx, t, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_migrateGrantsChange(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -440,10 +438,10 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 
 func TestAccS3BucketACL_updateACL(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -452,14 +450,14 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_basic_withDisabledPublicAccessBlock(bucketName, string(types.BucketCannedACLPublicRead)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPublicRead)),
 				),
 			},
@@ -480,10 +478,10 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 
 func TestAccS3BucketACL_updateGrant(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -492,7 +490,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -529,7 +527,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grantsUpdate(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -571,10 +569,10 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 
 func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -583,7 +581,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 				),
@@ -591,7 +589,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
@@ -630,10 +628,10 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 
 func TestAccS3BucketACL_grantToACL(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -642,7 +640,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
 				),
@@ -650,7 +648,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "1"),
@@ -678,10 +676,13 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 
 func TestAccS3BucketACL_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccDirectoryBucketPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -716,7 +717,7 @@ func TestAccS3BucketACL_Identity_CannedACL(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -809,7 +810,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_CannedACL(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -866,7 +867,7 @@ func TestAccS3BucketACL_Identity_Upgrade_CannedACL(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -903,10 +904,10 @@ func TestAccS3BucketACL_Identity_Upgrade_CannedACL(t *testing.T) {
 
 func TestAccS3BucketACL_cannedACL_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -915,7 +916,7 @@ func TestAccS3BucketACL_cannedACL_expectedBucketOwner(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
@@ -932,10 +933,10 @@ func TestAccS3BucketACL_cannedACL_expectedBucketOwner(t *testing.T) {
 
 func TestAccS3BucketACL_grant_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -944,7 +945,7 @@ func TestAccS3BucketACL_grant_expectedBucketOwner(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grant_expectedBucketOwner(bucketName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
@@ -961,7 +962,7 @@ func TestAccS3BucketACL_grant_expectedBucketOwner(t *testing.T) {
 
 func TestAccS3BucketACL_Identity_grant_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -974,7 +975,7 @@ func TestAccS3BucketACL_Identity_grant_expectedBucketOwner(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
 				),
@@ -1036,7 +1037,7 @@ func TestAccS3BucketACL_Identity_grant_expectedBucketOwner(t *testing.T) {
 // Resource Identity was added after v6.10.0
 func TestAccS3BucketACL_Identity_ExistingResource_grant_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1054,7 +1055,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_grant_expectedBucketOwner(t *t
 				},
 				Config: testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -1066,7 +1067,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_grant_expectedBucketOwner(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
 				),
@@ -1095,7 +1096,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_grant_expectedBucketOwner(t *t
 // Resource Identity version 1 was added in version 6.31.0
 func TestAccS3BucketACL_Identity_Upgrade_grant_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1113,7 +1114,7 @@ func TestAccS3BucketACL_Identity_Upgrade_grant_expectedBucketOwner(t *testing.T)
 				},
 				Config: testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -1125,7 +1126,7 @@ func TestAccS3BucketACL_Identity_Upgrade_grant_expectedBucketOwner(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketACLConfig_grant_expectedBucketOwner(rName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
 				),
@@ -1153,7 +1154,7 @@ func TestAccS3BucketACL_Identity_Upgrade_grant_expectedBucketOwner(t *testing.T)
 
 func TestAccS3BucketACL_Identity_cannedACL_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1166,7 +1167,7 @@ func TestAccS3BucketACL_Identity_cannedACL_expectedBucketOwner(t *testing.T) {
 			{
 				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
 				),
@@ -1228,7 +1229,7 @@ func TestAccS3BucketACL_Identity_cannedACL_expectedBucketOwner(t *testing.T) {
 // Resource Identity was added after v6.10.0
 func TestAccS3BucketACL_Identity_ExistingResource_cannedACL_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1246,7 +1247,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_cannedACL_expectedBucketOwner(
 				},
 				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -1258,7 +1259,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_cannedACL_expectedBucketOwner(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
 				),
@@ -1287,7 +1288,7 @@ func TestAccS3BucketACL_Identity_ExistingResource_cannedACL_expectedBucketOwner(
 // Resource Identity version 1 was added in version 6.31.0
 func TestAccS3BucketACL_Identity_Upgrade_cannedACL_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_acl.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1305,7 +1306,7 @@ func TestAccS3BucketACL_Identity_Upgrade_cannedACL_expectedBucketOwner(t *testin
 				},
 				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -1317,7 +1318,7 @@ func TestAccS3BucketACL_Identity_Upgrade_cannedACL_expectedBucketOwner(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketACLExists(ctx, resourceName),
+					testAccCheckBucketACLExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
 				),
@@ -1343,7 +1344,7 @@ func TestAccS3BucketACL_Identity_Upgrade_cannedACL_expectedBucketOwner(t *testin
 	})
 }
 
-func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckBucketACLExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1355,9 +1356,9 @@ func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestChe
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(bucket) {
-			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 		}
 
 		_, err = tfs3.FindBucketACL(ctx, conn, bucket, expectedBucketOwner)

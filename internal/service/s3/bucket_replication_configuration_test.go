@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,21 +26,21 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -57,7 +56,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassGlacier)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -73,7 +72,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -98,20 +97,20 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketReplicationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -122,22 +121,22 @@ func TestAccS3BucketReplicationConfiguration_disappears(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
@@ -179,22 +178,22 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 
 func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
@@ -242,22 +241,22 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsTwoDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
@@ -290,26 +289,26 @@ func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessControlTranslation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	callerIdentityDataSourceName := "data.aws_caller_identity.current"
 	iamRoleResourceName := "aws_iam_role.test"
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -333,7 +332,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 			{
 				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -366,25 +365,25 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12480
 func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAccessControlTranslation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	callerIdentityDataSourceName := "data.aws_caller_identity.current"
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_rulesDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -406,7 +405,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 			{
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -433,24 +432,24 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 
 func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_rtc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -484,24 +483,24 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 
 func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_replicaMods(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -534,20 +533,20 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_prefixNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
@@ -569,24 +568,24 @@ func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
 // StorageClass issue: https://github.com/hashicorp/terraform/issues/10909
 func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_noStorageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -609,24 +608,24 @@ func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_v2NoTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -653,22 +652,22 @@ func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameDestination := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameDestination := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketReplicationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketReplicationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -697,21 +696,21 @@ func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_schemaV2DestinationMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2DestinationMetricsStatusOnly(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"destination.#":                             "1",
 						"destination.0.metrics.#":                   "1",
@@ -734,21 +733,21 @@ func TestAccS3BucketReplicationConfiguration_existingObjectReplication(t *testin
 
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameDestination := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameDestination := acctest.RandomWithPrefix(t, "tf-acc-test")
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -779,20 +778,20 @@ func TestAccS3BucketReplicationConfiguration_existingObjectReplication(t *testin
 func TestAccS3BucketReplicationConfiguration_filter_emptyConfigurationBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -819,20 +818,20 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyConfigurationBlock(t *t
 func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -863,20 +862,20 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_filter_tagFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterTag(rName, "testkey", "testvalue"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -905,20 +904,20 @@ func TestAccS3BucketReplicationConfiguration_filter_tagFilter(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorPrefixAndTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -945,7 +944,7 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -978,20 +977,20 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
@@ -1015,18 +1014,18 @@ func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_withoutPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_noPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -1040,17 +1039,17 @@ func TestAccS3BucketReplicationConfiguration_withoutPrefix(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 	bucketResourceName := "aws_s3_bucket.source"
 	region := acctest.Region()
 	var providers []*schema.Provider
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx, t), &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
@@ -1067,7 +1066,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 			{
 				Config: testAccBucketReplicationConfigurationConfig_migrateNoChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "1"),
@@ -1081,17 +1080,17 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 	bucketResourceName := "aws_s3_bucket.source"
 	region := acctest.Region()
 	var providers []*schema.Provider
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx, t), &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
@@ -1108,7 +1107,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 			{
 				Config: testAccBucketReplicationConfigurationConfig_migrateChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", "bar"),
@@ -1120,16 +1119,16 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketReplicationConfigurationConfig_directoryBucket(rName, string(types.StorageClassStandard)),
@@ -1142,22 +1141,22 @@ func TestAccS3BucketReplicationConfiguration_directoryBucket(t *testing.T) {
 func TestAccS3BucketReplicationConfiguration_multipleProviders(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var providers []*schema.Provider
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx, t), &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleProviders(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -1166,17 +1165,17 @@ func TestAccS3BucketReplicationConfiguration_multipleProviders(t *testing.T) {
 
 // testAccCheckBucketReplicationConfigurationDestroy is the equivalent of the "WithProvider"
 // version, but for use with "same region" tests requiring only one provider.
-func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+			conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 
 			if rs.Type != "aws_s3_bucket_replication_configuration" {
 				continue
 			}
 
 			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)
@@ -1196,7 +1195,7 @@ func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) reso
 	}
 }
 
-func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.Context, t *testing.T) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
 		for _, rs := range s.RootModule().Resources {
 			conn := provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1206,7 +1205,7 @@ func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.C
 			}
 
 			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)
@@ -1226,19 +1225,19 @@ func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.C
 	}
 }
 
-func testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx context.Context) acctest.TestCheckWithRegionFunc {
+func testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx context.Context, t *testing.T) acctest.TestCheckWithRegionFunc {
 	return func(s *terraform.State, region string) error {
 		// Push region into Context.
 		ctx = conns.NewResourceContext(ctx, "S3", "Bucket Replication Configuration", "aws_s3_bucket_replication_configuration", region)
 		for _, rs := range s.RootModule().Resources {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+			conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 
 			if rs.Type != "aws_s3_bucket_replication_configuration" {
 				continue
 			}
 
 			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)
@@ -1258,16 +1257,16 @@ func testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx context.Con
 	}
 }
 
-func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 		}
 
 		_, err := tfs3.FindReplicationConfiguration(ctx, conn, rs.Primary.ID)

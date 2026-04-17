@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider
+// go test -bench=BenchmarkSDKProviderInitialization -benchmem -run=Bench -v ./internal/provider/sdkv2
 func BenchmarkSDKProviderInitialization(b *testing.B) {
 	ctx := b.Context()
 	for b.Loop() {

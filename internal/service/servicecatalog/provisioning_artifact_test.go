@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,20 +24,20 @@ import (
 func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisioningArtifactExists(ctx, resourceName),
+					testAccCheckProvisioningArtifactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -70,20 +68,20 @@ func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 func TestAccServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisioningArtifactExists(ctx, resourceName),
+					testAccCheckProvisioningArtifactExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProvisioningArtifact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,20 +93,20 @@ func TestAccServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisioningArtifactExists(ctx, resourceName),
+					testAccCheckProvisioningArtifactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -143,20 +141,20 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisioningArtifactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactConfig_physicalID(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisioningArtifactExists(ctx, resourceName),
+					testAccCheckProvisioningArtifactExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
@@ -183,9 +181,9 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 	})
 }
 
-func testAccCheckProvisioningArtifactDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProvisioningArtifactDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_provisioning_artifact" {
@@ -222,7 +220,7 @@ func testAccCheckProvisioningArtifactDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckProvisioningArtifactExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckProvisioningArtifactExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -230,7 +228,7 @@ func testAccCheckProvisioningArtifactExists(ctx context.Context, resourceName st
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(rs.Primary.ID)
 

@@ -411,7 +411,7 @@ func (r *{{ .ResourceLowerCamel }}Resource) Read(ctx context.Context, req resour
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Set the arguments and attributes
 	{{- end }}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -419,6 +419,11 @@ func (r *{{ .ResourceLowerCamel }}Resource) Read(ctx context.Context, req resour
 	// TIP: -- 6. Set the state
 	{{- end }}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *{{ .ResourceLowerCamel }}Resource) flatten(ctx context.Context, {{ .ResourceLowerCamel }} *awstypes.{{ .ResourceAWS }}, data *{{ .ResourceLowerCamel }}ResourceModel) (diags diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, {{ .ResourceLowerCamel }}, data)...)
+	return diags
 }
 
 func (r *{{ .ResourceLowerCamel }}Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

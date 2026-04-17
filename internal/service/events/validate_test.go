@@ -1,12 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package events
+package events_test
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,11 +27,11 @@ func TestValidCustomEventBusSourceName(t *testing.T) {
 			IsValid: false,
 		},
 		{
-			Value:   "aws.partner/example.com/test/" + sdkacctest.RandStringFromCharSet(227, sdkacctest.CharSetAlpha),
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(t, 227, acctest.CharSetAlpha),
 			IsValid: true,
 		},
 		{
-			Value:   "aws.partner/example.com/test/" + sdkacctest.RandStringFromCharSet(228, sdkacctest.CharSetAlpha),
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(t, 228, acctest.CharSetAlpha),
 			IsValid: false,
 		},
 		{
@@ -47,7 +48,7 @@ func TestValidCustomEventBusSourceName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
+		_, errors := tfevents.ValidSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -73,11 +74,11 @@ func TestValidCustomEventBusName(t *testing.T) {
 			IsValid: false,
 		},
 		{
-			Value:   sdkacctest.RandStringFromCharSet(256, sdkacctest.CharSetAlpha),
+			Value:   acctest.RandStringFromCharSet(t, 256, acctest.CharSetAlpha),
 			IsValid: true,
 		},
 		{
-			Value:   sdkacctest.RandStringFromCharSet(257, sdkacctest.CharSetAlpha),
+			Value:   acctest.RandStringFromCharSet(t, 257, acctest.CharSetAlpha),
 			IsValid: false,
 		},
 		{
@@ -94,7 +95,7 @@ func TestValidCustomEventBusName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		_, errors := tfevents.ValidCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -116,7 +117,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/test-bus", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
-		_, errors := validBusNameOrARN(v, names.AttrName)
+		_, errors := tfevents.ValidBusNameOrARN(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CW event bus name: %q", v, errors)
 		}
@@ -127,7 +128,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range invalidNames {
-		_, errors := validBusNameOrARN(v, names.AttrName)
+		_, errors := tfevents.ValidBusNameOrARN(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event bus name", v)
 		}
@@ -145,7 +146,7 @@ func TestEventBusARNPattern(t *testing.T) {
 	}
 
 	for _, arn := range validARNs {
-		if !EventBusARNPattern.MatchString(arn) {
+		if !tfevents.EventBusARNPattern.MatchString(arn) {
 			t.Errorf("Expected %q to match EventBusARNPattern", arn)
 		}
 	}
@@ -158,7 +159,7 @@ func TestEventBusARNPattern(t *testing.T) {
 	}
 
 	for _, arn := range invalidARNs {
-		if EventBusARNPattern.MatchString(arn) {
+		if tfevents.EventBusARNPattern.MatchString(arn) {
 			t.Errorf("Expected %q to NOT match EventBusARNPattern", arn)
 		}
 	}
@@ -174,7 +175,7 @@ func TestPartnerEventBusPattern(t *testing.T) {
 	}
 
 	for _, pattern := range validPatterns {
-		if !PartnerEventBusPattern.MatchString(pattern) {
+		if !tfevents.PartnerEventBusPattern.MatchString(pattern) {
 			t.Errorf("Expected %q to match PartnerEventBusPattern", pattern)
 		}
 	}
@@ -186,7 +187,7 @@ func TestPartnerEventBusPattern(t *testing.T) {
 	}
 
 	for _, pattern := range invalidPatterns {
-		if PartnerEventBusPattern.MatchString(pattern) {
+		if tfevents.PartnerEventBusPattern.MatchString(pattern) {
 			t.Errorf("Expected %q to NOT match PartnerEventBusPattern", pattern)
 		}
 	}
@@ -201,7 +202,7 @@ func TestValidRuleName(t *testing.T) {
 		"hello.World0125",
 	}
 	for _, v := range validNames {
-		_, errors := validateRuleName(v, names.AttrName)
+		_, errors := tfevents.ValidateRuleName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
 		}
@@ -214,7 +215,7 @@ func TestValidRuleName(t *testing.T) {
 		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooooooongName",
 	}
 	for _, v := range invalidNames {
-		_, errors := validateRuleName(v, names.AttrName)
+		_, errors := tfevents.ValidateRuleName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}

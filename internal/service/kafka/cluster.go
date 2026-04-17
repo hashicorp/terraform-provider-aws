@@ -36,16 +36,17 @@ import (
 
 // @SDKResource("aws_msk_cluster", name="Cluster")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.37.0")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kafka/types;awstypes;awstypes.ClusterInfo")
+// @Testing(preCheck="testAccPreCheck")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
 		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(120 * time.Minute),
@@ -136,6 +137,12 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"network_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.NetworkType](),
+									},
 									"vpc_connectivity": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -271,9 +278,10 @@ func resourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sasl": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"iam": {
@@ -288,9 +296,10 @@ func resourceCluster() *schema.Resource {
 							},
 						},
 						"tls": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"certificate_authority_arns": {
@@ -572,12 +581,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	var vpcConnectivity *types.VpcConnectivity
+	var networkType types.NetworkType
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]any)[0].(map[string]any))
 		// "BadRequestException: When creating a cluster, all vpcConnectivity auth schemes must be disabled (‘enabled’ : false). You can enable auth schemes after the cluster is created"
 		if input.BrokerNodeGroupInfo != nil && input.BrokerNodeGroupInfo.ConnectivityInfo != nil {
 			vpcConnectivity = input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity
 			input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
+
+			networkType = input.BrokerNodeGroupInfo.ConnectivityInfo.NetworkType
+			input.BrokerNodeGroupInfo.ConnectivityInfo.NetworkType = types.NetworkTypeIpv4
 		}
 	}
 
@@ -621,10 +634,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(output.ClusterArn))
 
-	cluster, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) create: %s", d.Id(), err)
+	}
+
+	if err := refreshClusterVersion(ctx, d, meta); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if vpcConnectivity != nil {
@@ -633,9 +650,34 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			ConnectivityInfo: &types.ConnectivityInfo{
 				VpcConnectivity: vpcConnectivity,
 			},
-			CurrentVersion: cluster.CurrentVersion,
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if networkType != "" && networkType != types.NetworkTypeIpv4 {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn: aws.String(d.Id()),
+			ConnectivityInfo: &types.ConnectivityInfo{
+				NetworkType: networkType,
+			},
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
 		output, err := conn.UpdateConnectivity(ctx, &input)
 
 		if err != nil {
@@ -668,89 +710,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", d.Id(), err)
 	}
 
-	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
+	outputGBB, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	}
 
-	clusterARN := aws.ToString(cluster.ClusterArn)
-	d.Set(names.AttrARN, clusterARN)
-	d.Set("bootstrap_brokers", sortEndpointsString(aws.ToString(output.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_public_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslIam)))
-	d.Set("bootstrap_brokers_public_sasl_scram", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslScram)))
-	d.Set("bootstrap_brokers_public_tls", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicTls)))
-	d.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringTls)))
-	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslIam)))
-	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
-	d.Set("bootstrap_brokers_vpc_connectivity_tls", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivityTls)))
-	if cluster.BrokerNodeGroupInfo != nil {
-		if err := d.Set("broker_node_group_info", []any{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting broker_node_group_info: %s", err)
-		}
-	} else {
-		d.Set("broker_node_group_info", nil)
+	if err := resourceClusterFlatten(ctx, cluster, outputGBB, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if cluster.ClientAuthentication != nil {
-		if err := d.Set("client_authentication", []any{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
-		}
-	} else {
-		d.Set("client_authentication", nil)
-	}
-	d.Set(names.AttrClusterName, cluster.ClusterName)
-	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
-	d.Set("cluster_uuid", clusterUUID)
-	if cluster.CurrentBrokerSoftwareInfo != nil {
-		if tfMap := flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo); len(tfMap) > 0 {
-			if err := d.Set("configuration_info", []any{tfMap}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting configuration_info: %s", err)
-			}
-		} else {
-			d.Set("configuration_info", nil)
-		}
-	} else {
-		d.Set("configuration_info", nil)
-	}
-	d.Set("current_version", cluster.CurrentVersion)
-	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
-	if cluster.EncryptionInfo != nil {
-		if err := d.Set("encryption_info", []any{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting encryption_info: %s", err)
-		}
-	} else {
-		d.Set("encryption_info", nil)
-	}
-	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
-	if cluster.LoggingInfo != nil {
-		if err := d.Set("logging_info", []any{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_info: %s", err)
-		}
-	} else {
-		d.Set("logging_info", nil)
-	}
-	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
-	if cluster.OpenMonitoring != nil {
-		if err := d.Set("open_monitoring", []any{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting open_monitoring: %s", err)
-		}
-	} else {
-		d.Set("open_monitoring", nil)
-	}
-	if cluster.Rebalancing != nil {
-		if err := d.Set("rebalancing", []any{flattenRebalancing(cluster.Rebalancing)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting rebalancing: %s", err)
-		}
-	} else {
-		d.Set("rebalancing", nil)
-	}
-	d.Set("storage_mode", cluster.StorageMode)
-	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
-	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
-
-	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
@@ -759,15 +727,77 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	if d.HasChange("broker_node_group_info.0.connectivity_info") {
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.vpc_connectivity") {
 		input := kafka.UpdateConnectivityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.ConnectivityInfo = expandConnectivityInfo(v.([]any)[0].(map[string]any))
+		var connectivityInfo types.ConnectivityInfo
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0,vpc_connectivity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			connectivityInfo.VpcConnectivity = expandVPCConnectivity(v.([]any)[0].(map[string]any))
 		}
+		input.ConnectivityInfo = &connectivityInfo
+
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.public_access") {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		var connectivityInfo types.ConnectivityInfo
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.public_access"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			connectivityInfo.PublicAccess = expandPublicAccess(v.([]any)[0].(map[string]any))
+		}
+		input.ConnectivityInfo = &connectivityInfo
+
+		output, err := conn.UpdateConnectivity(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.connectivity_info.0.network_type") {
+		input := kafka.UpdateConnectivityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		var connectivityInfo types.ConnectivityInfo
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.network_type"); ok && v != "" {
+			connectivityInfo.NetworkType = types.NetworkType(v.(string))
+		}
+		input.ConnectivityInfo = &connectivityInfo
 
 		output, err := conn.UpdateConnectivity(ctx, &input)
 
@@ -974,6 +1004,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if v, ok := d.GetOk("client_authentication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.ClientAuthentication = expandClientAuthentication(v.([]any)[0].(map[string]any))
 			}
+
+			if o, n := d.GetChange("client_authentication.0.sasl"); len(o.([]any)) > 0 && len(n.([]any)) == 0 {
+				// Disable when a previously configured sasl block is removed
+				input.ClientAuthentication.Sasl = &types.Sasl{
+					Iam:   &types.Iam{Enabled: aws.Bool(false)},
+					Scram: &types.Scram{Enabled: aws.Bool(false)},
+				}
+			}
+
+			if o, n := d.GetChange("client_authentication.0.tls"); len(o.([]any)) > 0 && len(n.([]any)) == 0 {
+				// Disable when a previously configured tls block is removed
+				input.ClientAuthentication.Tls = &types.Tls{Enabled: aws.Bool(false)}
+			}
 		}
 
 		if d.HasChange("encryption_info") {
@@ -1101,6 +1144,88 @@ func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta any
 	return nil
 }
 
+func resourceClusterFlatten(ctx context.Context, cluster *types.ClusterInfo, outputGBB *kafka.GetBootstrapBrokersOutput, d *schema.ResourceData) error {
+	clusterARN := aws.ToString(cluster.ClusterArn)
+	d.Set(names.AttrARN, clusterARN)
+	d.Set("bootstrap_brokers", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_public_sasl_iam", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringPublicSaslIam)))
+	d.Set("bootstrap_brokers_public_sasl_scram", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringPublicSaslScram)))
+	d.Set("bootstrap_brokers_public_tls", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringPublicTls)))
+	d.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringVpcConnectivitySaslIam)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringVpcConnectivitySaslScram)))
+	d.Set("bootstrap_brokers_vpc_connectivity_tls", sortEndpointsString(aws.ToString(outputGBB.BootstrapBrokerStringVpcConnectivityTls)))
+	if cluster.BrokerNodeGroupInfo != nil {
+		if err := d.Set("broker_node_group_info", []any{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+			return fmt.Errorf("setting broker_node_group_info: %w", err)
+		}
+	} else {
+		d.Set("broker_node_group_info", nil)
+	}
+	if cluster.ClientAuthentication != nil {
+		if err := d.Set("client_authentication", []any{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
+			return fmt.Errorf("setting client_authentication: %w", err)
+		}
+	} else {
+		d.Set("client_authentication", nil)
+	}
+	d.Set(names.AttrClusterName, cluster.ClusterName)
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
+	if cluster.CurrentBrokerSoftwareInfo != nil {
+		if tfMap := flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo); len(tfMap) > 0 {
+			if err := d.Set("configuration_info", []any{tfMap}); err != nil {
+				return fmt.Errorf("setting configuration_info: %w", err)
+			}
+		} else {
+			d.Set("configuration_info", nil)
+		}
+	} else {
+		d.Set("configuration_info", nil)
+	}
+	d.Set("current_version", cluster.CurrentVersion)
+	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
+	if cluster.EncryptionInfo != nil {
+		if err := d.Set("encryption_info", []any{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
+			return fmt.Errorf("setting encryption_info: %w", err)
+		}
+	} else {
+		d.Set("encryption_info", nil)
+	}
+	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
+	if cluster.LoggingInfo != nil {
+		if err := d.Set("logging_info", []any{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
+			return fmt.Errorf("setting logging_info: %w", err)
+		}
+	} else {
+		d.Set("logging_info", nil)
+	}
+	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
+	if cluster.OpenMonitoring != nil {
+		if err := d.Set("open_monitoring", []any{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
+			return fmt.Errorf("setting open_monitoring: %w", err)
+		}
+	} else {
+		d.Set("open_monitoring", nil)
+	}
+	if cluster.Rebalancing != nil {
+		if err := d.Set("rebalancing", []any{flattenRebalancing(cluster.Rebalancing)}); err != nil {
+			return fmt.Errorf("setting rebalancing: %w", err)
+		}
+	} else {
+		d.Set("rebalancing", nil)
+	}
+	d.Set("storage_mode", cluster.StorageMode)
+	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
+
+	setTagsOut(ctx, cluster.Tags)
+
+	return nil
+}
+
 func findClusterByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.ClusterInfo, error) {
 	input := kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
@@ -1213,7 +1338,7 @@ func findBootstrapBrokers(ctx context.Context, conn *kafka.Client, input *kafka.
 	return output, nil
 }
 
-func statusClusterState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+func statusCluster(conn *kafka.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterV2ByARN(ctx, conn, arn)
 
@@ -1229,7 +1354,7 @@ func statusClusterState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
 	}
 }
 
-func statusClusterOperationState(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+func statusClusterOperation(conn *kafka.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterOperationByARN(ctx, conn, arn)
 
@@ -1245,11 +1370,11 @@ func statusClusterOperationState(conn *kafka.Client, arn string) retry.StateRefr
 	}
 }
 
-func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
+func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateCreating),
 		Target:  enum.Slice(types.ClusterStateActive),
-		Refresh: statusClusterState(conn, arn),
+		Refresh: statusCluster(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1270,7 +1395,7 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, tim
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ClusterStateDeleting),
 		Target:  []string{},
-		Refresh: statusClusterState(conn, arn),
+		Refresh: statusCluster(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1291,7 +1416,7 @@ func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Client, arn 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterOperationStatePending, clusterOperationStateUpdateInProgress},
 		Target:  []string{clusterOperationStateUpdateComplete},
-		Refresh: statusClusterOperationState(conn, arn),
+		Refresh: statusClusterOperation(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1375,6 +1500,10 @@ func expandConnectivityInfo(tfMap map[string]any) *types.ConnectivityInfo {
 	}
 
 	apiObject := &types.ConnectivityInfo{}
+
+	if v, ok := tfMap["network_type"].(string); ok && v != "" {
+		apiObject.NetworkType = types.NetworkType(v)
+	}
 
 	if v, ok := tfMap["public_access"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]any))
@@ -1832,6 +1961,10 @@ func flattenConnectivityInfo(apiObject *types.ConnectivityInfo) map[string]any {
 	}
 
 	tfMap := map[string]any{}
+
+	if v := apiObject.NetworkType; v != "" {
+		tfMap["network_type"] = v
+	}
 
 	if v := apiObject.PublicAccess; v != nil {
 		tfMap["public_access"] = []any{flattenPublicAccess(v)}

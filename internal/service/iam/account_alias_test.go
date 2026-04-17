@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,21 +38,21 @@ func TestAccIAMAccountAlias_serial(t *testing.T) {
 func testAccAccountAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_account_alias.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckAccountAlias(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAliasExists(ctx, resourceName),
+					testAccCheckAccountAliasExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -69,21 +67,21 @@ func testAccAccountAlias_basic(t *testing.T) {
 func testAccAccountAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_account_alias.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckAccountAlias(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAccountAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAliasExists(ctx, resourceName),
+					testAccCheckAccountAliasExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccountAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,9 +90,9 @@ func testAccAccountAlias_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccountAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_account_alias" {
@@ -119,14 +117,14 @@ func testAccCheckAccountAliasDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckAccountAliasExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccountAliasExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		var input iam.ListAccountAliasesInput
 		_, err := tfiam.FindAccountAlias(ctx, conn, &input)
@@ -136,10 +134,10 @@ func testAccCheckAccountAliasExists(ctx context.Context, n string) resource.Test
 }
 
 func testAccPreCheckAccountAlias(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 	input := &iam.CreateAccountAliasInput{
-		AccountAlias: aws.String(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+		AccountAlias: aws.String(acctest.RandomWithPrefix(t, acctest.ResourcePrefix)),
 	}
 	_, err := conn.CreateAccountAlias(ctx, input)
 

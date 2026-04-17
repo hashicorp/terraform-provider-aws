@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccXRayGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
 	resourceName := "aws_xray_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
@@ -50,7 +48,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 			{
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
@@ -65,18 +63,18 @@ func TestAccXRayGroup_insights(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
 	resourceName := "aws_xray_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 5", true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      acctest.CtTrue,
@@ -92,7 +90,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 			{
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 10", false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      acctest.CtFalse,
@@ -108,18 +106,18 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
 	resourceName := "aws_xray_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -128,14 +126,14 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupExists(ctx context.Context, n string, v *types.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *types.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 		output, err := tfxray.FindGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -149,14 +147,14 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *types.Group) reso
 	}
 }
 
-func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_xray_group" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 			_, err := tfxray.FindGroupByARN(ctx, conn, rs.Primary.ID)
 

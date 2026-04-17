@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-uuid"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -22,7 +21,7 @@ func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *tes
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	uuid, err := uuid.GenerateUUID()
-	developerProviderName := sdkacctest.RandString(10)
+	developerProviderName := acctest.RandString(t, 10)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	if err != nil {

@@ -35,7 +35,7 @@ func TestAccSecretsManagerSecretRotation_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccSecretsManagerSecretRotation_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecretRotationExists(ctx, resourceName, &v),
+					testAccCheckSecretRotationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("secret_id"), compare.ValuesSame()),
@@ -261,7 +261,7 @@ func TestAccSecretsManagerSecretRotation_Identity_ExistingResource_basic(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy: testAccCheckSecretRotationDestroy(ctx),
+		CheckDestroy: testAccCheckSecretRotationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -270,7 +270,7 @@ func TestAccSecretsManagerSecretRotation_Identity_ExistingResource_basic(t *test
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecretRotationExists(ctx, resourceName, &v),
+					testAccCheckSecretRotationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -317,7 +317,7 @@ func TestAccSecretsManagerSecretRotation_Identity_ExistingResource_noRefreshNoCh
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy: testAccCheckSecretRotationDestroy(ctx),
+		CheckDestroy: testAccCheckSecretRotationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -331,7 +331,7 @@ func TestAccSecretsManagerSecretRotation_Identity_ExistingResource_noRefreshNoCh
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecretRotationExists(ctx, resourceName, &v),
+					testAccCheckSecretRotationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

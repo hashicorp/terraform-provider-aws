@@ -43,7 +43,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_basic(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -67,7 +67,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_basic(t *testing.
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 
@@ -154,7 +154,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_regionOverride(t 
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"rule.0.bucket_key_enabled",
+					"rule.0.blocked_encryption_types",
 				},
 			},
 
@@ -220,7 +220,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -282,7 +282,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -334,7 +334,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_upgrade(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),
@@ -396,7 +396,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Upgrade_noRefresh
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
+					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectHasIdentity(resourceName),

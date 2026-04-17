@@ -9,7 +9,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -19,19 +18,19 @@ import (
 func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image awstypes.Image
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy(ctx),
+		CheckDestroy:             testAccCheckAMIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(ctx, resourceName, &image),
+					testAccCheckAMIExists(ctx, t, resourceName, &image),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Testing Terraform aws_ami_from_instance resource"),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
@@ -49,19 +48,19 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image awstypes.Image
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy(ctx),
+		CheckDestroy:             testAccCheckAMIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(ctx, resourceName, &image),
+					testAccCheckAMIExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -69,7 +68,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 			{
 				Config: testAccAMIFromInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(ctx, resourceName, &image),
+					testAccCheckAMIExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -78,7 +77,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 			{
 				Config: testAccAMIFromInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(ctx, resourceName, &image),
+					testAccCheckAMIExists(ctx, t, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -90,19 +89,19 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var image awstypes.Image
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy(ctx),
+		CheckDestroy:             testAccCheckAMIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(ctx, resourceName, &image),
+					testAccCheckAMIExists(ctx, t, resourceName, &image),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceAMIFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,

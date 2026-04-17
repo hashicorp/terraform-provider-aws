@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +18,19 @@ import (
 
 func testAccAccessGrantsLocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_access_grants_location.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsLocationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
@@ -51,19 +49,19 @@ func testAccAccessGrantsLocation_basic(t *testing.T) {
 
 func testAccAccessGrantsLocation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_access_grants_location.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsLocationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrantsLocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,19 +72,19 @@ func testAccAccessGrantsLocation_disappears(t *testing.T) {
 
 func testAccAccessGrantsLocation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_access_grants_location.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsLocationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -99,7 +97,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 			{
 				Config: testAccAccessGrantsLocationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -108,7 +106,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 			{
 				Config: testAccAccessGrantsLocationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -119,19 +117,19 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 
 func testAccAccessGrantsLocation_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3control_access_grants_location.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsLocationConfig_customLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
@@ -144,7 +142,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 			{
 				Config: testAccAccessGrantsLocationConfig_customLocationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
+					testAccCheckAccessGrantsLocationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
@@ -153,9 +151,9 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessGrantsLocationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessGrantsLocationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_access_grants_location" {
@@ -179,14 +177,14 @@ func testAccCheckAccessGrantsLocationDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckAccessGrantsLocationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccessGrantsLocationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		_, err := tfs3control.FindAccessGrantsLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grants_location_id"])
 

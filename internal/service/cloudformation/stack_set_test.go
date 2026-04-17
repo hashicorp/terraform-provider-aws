@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -279,7 +278,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ExpectError: regexache.MustCompile(`expected length`),
 			},
 			{
-				Config:      testAccStackSetConfig_name(sdkacctest.RandStringFromCharSet(129, sdkacctest.CharSetAlpha)),
+				Config:      testAccStackSetConfig_name(acctest.RandStringFromCharSet(t, 129, acctest.CharSetAlpha)),
 				ExpectError: regexache.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{
@@ -645,6 +644,43 @@ func TestAccCloudFormationStackSet_AutoDeployment_administrationRoleARN(t *testi
 			},
 			{
 				Config: testAccStackSetConfig_permissionModel(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSet_AutoDeployment_dependsOnStackSets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet1 awstypes.StackSet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_autoDeploymentDependsOn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, t, resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.depends_on_stack_sets.#", "1"),
+				),
+			},
+			{
+				Config: testAccStackSetConfig_autoDeploymentDependsOn(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1459,6 +1495,39 @@ resource "aws_cloudformation_stack_set" "test" {
   auto_deployment {
     enabled                          = true
     retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName))
+}
+
+func testAccStackSetConfig_autoDeploymentDependsOn(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "dependency" {
+  name             = "%[1]s-dep"
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false
+    depends_on_stack_sets            = [aws_cloudformation_stack_set.dependency.arn]
   }
 
   template_body = <<TEMPLATE

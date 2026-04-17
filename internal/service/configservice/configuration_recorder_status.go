@@ -23,16 +23,16 @@ import (
 )
 
 // @SDKResource("aws_config_configuration_recorder_status", name="Configuration Recorder Status")
+// @IdentityAttribute("name")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationRecorderStatus")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceConfigurationRecorderStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderStatusPut,
 		ReadWithoutTimeout:   resourceConfigurationRecorderStatusRead,
 		UpdateWithoutTimeout: resourceConfigurationRecorderStatusPut,
 		DeleteWithoutTimeout: resourceConfigurationRecorderStatusDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"is_enabled": {
@@ -42,6 +42,7 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -55,21 +56,21 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 
 	if d.HasChange("is_enabled") {
 		if d.Get("is_enabled").(bool) {
-			input := &configservice.StartConfigurationRecorderInput{
+			input := configservice.StartConfigurationRecorderInput{
 				ConfigurationRecorderName: aws.String(name),
 			}
 
-			_, err := conn.StartConfigurationRecorder(ctx, input)
+			_, err := conn.StartConfigurationRecorder(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "starting ConfigService Configuration Recorder (%s): %s", name, err)
 			}
 		} else {
-			input := &configservice.StopConfigurationRecorderInput{
+			input := configservice.StopConfigurationRecorderInput{
 				ConfigurationRecorderName: aws.String(name),
 			}
 
-			_, err := conn.StopConfigurationRecorder(ctx, input)
+			_, err := conn.StopConfigurationRecorder(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "stopping ConfigService Configuration Recorder (%s): %s", name, err)
@@ -77,7 +78,9 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	d.SetId(name)
+	if d.IsNewResource() {
+		d.SetId(name)
+	}
 
 	return append(diags, resourceConfigurationRecorderStatusRead(ctx, d, meta)...)
 }
@@ -99,7 +102,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("is_enabled", recorderStatus.Recording)
-	d.Set(names.AttrName, d.Id())
+	d.Set(names.AttrName, recorderStatus.Name)
 
 	return diags
 }
@@ -125,11 +128,11 @@ func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.Re
 }
 
 func findConfigurationRecorderStatusByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationRecorderStatus, error) {
-	input := &configservice.DescribeConfigurationRecorderStatusInput{
+	input := configservice.DescribeConfigurationRecorderStatusInput{
 		ConfigurationRecorderNames: []string{name},
 	}
 
-	return findConfigurationRecorderStatus(ctx, conn, input)
+	return findConfigurationRecorderStatus(ctx, conn, &input)
 }
 
 func findConfigurationRecorderStatus(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationRecorderStatusInput) (*types.ConfigurationRecorderStatus, error) {

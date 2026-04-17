@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +20,20 @@ import (
 func TestAccSageMakerHub_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeHubOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hub.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHubDestroy(ctx),
+		CheckDestroy:             testAccCheckHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHubConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "0"),
@@ -52,7 +50,7 @@ func TestAccSageMakerHub_basic(t *testing.T) {
 			{
 				Config: testAccHubConfig_basic(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rNameUpdated),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
@@ -66,19 +64,19 @@ func TestAccSageMakerHub_basic(t *testing.T) {
 func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeHubOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hub.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHubDestroy(ctx),
+		CheckDestroy:             testAccCheckHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHubConfig_searchKeywords(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "1"),
@@ -93,7 +91,7 @@ func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 			{
 				Config: testAccHubConfig_searchKeywordsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "2"),
@@ -104,7 +102,7 @@ func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 			{
 				Config: testAccHubConfig_searchKeywords(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "1"),
@@ -118,19 +116,19 @@ func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 func TestAccSageMakerHub_s3(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeHubOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hub.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHubDestroy(ctx),
+		CheckDestroy:             testAccCheckHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHubConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_config.0.s3_output_path"),
@@ -148,19 +146,19 @@ func TestAccSageMakerHub_s3(t *testing.T) {
 func TestAccSageMakerHub_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeHubOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hub.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHubDestroy(ctx),
+		CheckDestroy:             testAccCheckHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHubConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -173,7 +171,7 @@ func TestAccSageMakerHub_tags(t *testing.T) {
 			{
 				Config: testAccHubConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -182,7 +180,7 @@ func TestAccSageMakerHub_tags(t *testing.T) {
 			{
 				Config: testAccHubConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -194,19 +192,19 @@ func TestAccSageMakerHub_tags(t *testing.T) {
 func TestAccSageMakerHub_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeHubOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_hub.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHubDestroy(ctx),
+		CheckDestroy:             testAccCheckHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHubConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHubExists(ctx, resourceName, &mpg),
+					testAccCheckHubExists(ctx, t, resourceName, &mpg),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHub(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -215,9 +213,9 @@ func TestAccSageMakerHub_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckHubDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHubDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_hub" {
@@ -241,7 +239,7 @@ func testAccCheckHubDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckHubExists(ctx context.Context, n string, mpg *sagemaker.DescribeHubOutput) resource.TestCheckFunc {
+func testAccCheckHubExists(ctx context.Context, t *testing.T, n string, mpg *sagemaker.DescribeHubOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -252,7 +250,7 @@ func testAccCheckHubExists(ctx context.Context, n string, mpg *sagemaker.Describ
 			return fmt.Errorf("No sagmaker Hub ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindHubByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

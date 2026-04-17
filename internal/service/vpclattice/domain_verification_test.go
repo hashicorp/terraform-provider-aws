@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,20 +21,20 @@ import (
 func TestAccVPCLatticeDomainVerification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainVerification vpclattice.GetDomainVerificationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	resourceName := "aws_vpclattice_domain_verification.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainVerificationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainVerificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainVerificationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainVerificationExists(ctx, resourceName, &domainVerification),
+					testAccCheckDomainVerificationExists(ctx, t, resourceName, &domainVerification),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`domainverification/dv-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -58,20 +56,20 @@ func TestAccVPCLatticeDomainVerification_basic(t *testing.T) {
 func TestAccVPCLatticeDomainVerification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domainVerification vpclattice.GetDomainVerificationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	resourceName := "aws_vpclattice_domain_verification.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainVerificationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainVerificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainVerificationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainVerificationExists(ctx, resourceName, &domainVerification),
+					testAccCheckDomainVerificationExists(ctx, t, resourceName, &domainVerification),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceDomainVerification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,9 +78,9 @@ func TestAccVPCLatticeDomainVerification_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainVerificationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainVerificationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_domain_verification" {
@@ -106,14 +104,14 @@ func testAccCheckDomainVerificationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckDomainVerificationExists(ctx context.Context, n string, v *vpclattice.GetDomainVerificationOutput) resource.TestCheckFunc {
+func testAccCheckDomainVerificationExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetDomainVerificationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindDomainVerificationByID(ctx, conn, rs.Primary.ID)
 

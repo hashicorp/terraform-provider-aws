@@ -23,7 +23,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -44,7 +44,7 @@ import (
 
 const (
 	roleNameMaxLen       = 64
-	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
+	roleNamePrefixMaxLen = roleNameMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role", name="Role")
@@ -54,7 +54,6 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 // @Testing(idAttrDuplicates="name")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -649,17 +648,12 @@ func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*
 	return output.Role, nil
 }
 
-const (
-	roleARNIsUniqueIDState = "uniqueid"
-	roleNotFoundState      = "notfound"
-)
-
-func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
+func statusRoleARNValue(conn *iam.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		role, err := findRoleByName(ctx, conn, id)
 
 		if retry.NotFound(err) {
-			return nil, roleNotFoundState, nil
+			return nil, arnStateNotFound, nil
 		}
 
 		if err != nil {
@@ -667,10 +661,10 @@ func statusRoleCreate(conn *iam.Client, id string) retry.StateRefreshFunc {
 		}
 
 		if arn.IsARN(aws.ToString(role.Arn)) {
-			return role, names.AttrARN, nil
+			return role, arnStateIsARN, nil
 		}
 
-		return role, roleARNIsUniqueIDState, nil
+		return role, arnStateIsUniqueID, nil
 	}
 }
 
@@ -680,13 +674,14 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, 
 	}
 
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{roleARNIsUniqueIDState, roleNotFoundState},
-		Target:                    []string{names.AttrARN},
-		Refresh:                   statusRoleCreate(conn, id),
+		Pending:                   []string{arnStateIsUniqueID, arnStateNotFound},
+		Target:                    []string{arnStateIsARN},
+		Refresh:                   statusRoleARNValue(conn, id),
 		Timeout:                   propagationTimeout,
-		NotFoundChecks:            10,
+		NotFoundChecks:            5,
 		ContinuousTargetOccurence: 5,
-		Delay:                     10 * time.Second,
+		Delay:                     5 * time.Second,
+		PollInterval:              1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

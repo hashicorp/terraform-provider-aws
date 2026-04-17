@@ -154,6 +154,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3files"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
@@ -188,6 +189,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
@@ -341,6 +343,7 @@ func registerSweepers() {
 	rum.RegisterSweepers()
 	s3.RegisterSweepers()
 	s3control.RegisterSweepers()
+	s3files.RegisterSweepers()
 	s3tables.RegisterSweepers()
 	s3vectors.RegisterSweepers()
 	sagemaker.RegisterSweepers()
@@ -375,6 +378,7 @@ func registerSweepers() {
 	waf.RegisterSweepers()
 	wafregional.RegisterSweepers()
 	wafv2.RegisterSweepers()
+	workmail.RegisterSweepers()
 	workspaces.RegisterSweepers()
 	xray.RegisterSweepers()
 }

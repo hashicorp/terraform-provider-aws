@@ -24,7 +24,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_report_plan.test"
@@ -84,7 +84,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -144,7 +144,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
@@ -209,7 +209,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
-	rName2 := randomReportPlanName()
+	rName2 := randomReportPlanName(t)
 	resourceName := "aws_backup_report_plan.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

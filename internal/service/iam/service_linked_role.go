@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
@@ -245,10 +243,10 @@ func deleteServiceLinkedRole(ctx context.Context, conn *iam.Client, roleName str
 }
 
 func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id string) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeletionTaskStatusTypeInProgress, awstypes.DeletionTaskStatusTypeNotStarted),
 		Target:  enum.Slice(awstypes.DeletionTaskStatusTypeSucceeded),
-		Refresh: statusServiceLinkedRoleDeletion(ctx, conn, id),
+		Refresh: statusServiceLinkedRoleDeletion(conn, id),
 		Timeout: 5 * time.Minute,
 		Delay:   10 * time.Second,
 	}
@@ -272,8 +270,8 @@ func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id stri
 	return err
 }
 
-func statusServiceLinkedRoleDeletion(ctx context.Context, conn *iam.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServiceLinkedRoleDeletion(conn *iam.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceLinkedRoleDeletionStatusByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -296,9 +294,8 @@ func findServiceLinkedRoleDeletionStatusByID(ctx context.Context, conn *iam.Clie
 	output, err := conn.GetServiceLinkedRoleDeletionStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

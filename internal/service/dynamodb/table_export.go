@@ -268,7 +268,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func expandIncrementalExportSpecification(d any) *awstypes.IncrementalExportSpecification {
-	if d.([]any) == nil || len(d.([]any)) == 0 {
+	if len(d.([]any)) == 0 {
 		return nil
 	}
 

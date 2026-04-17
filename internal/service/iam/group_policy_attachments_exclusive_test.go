@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -27,25 +25,25 @@ import (
 func TestAccIAMGroupPolicyAttachmentsExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	attachmentResourceName := "aws_iam_group_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName, "policy_arn"),
 				),
@@ -64,25 +62,25 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_basic(t *testing.T) {
 func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Group(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	attachmentResourceName := "aws_iam_group_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					// Managed policies must be detached before group can be deleted
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroup(), groupResourceName),
@@ -96,25 +94,25 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Group(t *testing.T) {
 func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	policyResourceName := "aws_iam_policy.test"
 	attachmentResourceName := "aws_iam_group_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					// Managed policy must be detached before it can be deleted
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
@@ -128,29 +126,29 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 func TestAccIAMGroupPolicyAttachmentsExclusive_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	attachmentResourceName := "aws_iam_group_policy_attachment.test"
 	attachmentResourceName2 := "aws_iam_group_policy_attachment.test2"
 	attachmentResourceName3 := "aws_iam_group_policy_attachment.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName2),
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName3),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 3),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName2),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName3),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 3),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName, "policy_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName2, "policy_arn"),
@@ -167,9 +165,9 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName, "policy_arn"),
 				),
@@ -181,22 +179,22 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_multiple(t *testing.T) {
 func TestAccIAMGroupPolicyAttachmentsExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "0"),
 				),
@@ -213,35 +211,35 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var group types.Group
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 	attachmentResourceName := "aws_iam_group_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckGroupPolicyDetachManagedPolicy(ctx, &group, rName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
+					testAccCheckGroupPolicyDetachManagedPolicy(ctx, t, &group, rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
@@ -255,31 +253,31 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var group types.Group
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	oobPolicyName := rName + "-out-of-band"
 	resourceName := "aws_iam_group_policy_attachments_exclusive.test"
 	groupResourceName := "aws_iam_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_outOfBandAddition(rName, oobPolicyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckGroupPolicyAttachManagedPolicy(ctx, &group, oobPolicyName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
+					testAccCheckGroupPolicyAttachManagedPolicy(ctx, t, &group, oobPolicyName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccGroupPolicyAttachmentsExclusiveConfig_outOfBandAddition(rName, oobPolicyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, groupResourceName, &group),
-					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckGroupExists(ctx, t, groupResourceName, &group),
+					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
@@ -288,9 +286,9 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policy_attachments_exclusive" {
@@ -313,7 +311,7 @@ func testAccCheckGroupPolicyAttachmentsExclusiveDestroy(ctx context.Context) res
 	}
 }
 
-func testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -325,7 +323,7 @@ func testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx context.Context, name
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameGroupPolicyAttachmentsExclusive, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 		out, err := tfiam.FindGroupPolicyAttachmentsByName(ctx, conn, groupName)
 		if err != nil {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameGroupPolicyAttachmentsExclusive, groupName, err)
@@ -340,9 +338,9 @@ func testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx context.Context, name
 	}
 }
 
-func testAccCheckGroupPolicyDetachManagedPolicy(ctx context.Context, group *types.Group, policyName string) resource.TestCheckFunc {
+func testAccCheckGroupPolicyDetachManagedPolicy(ctx context.Context, t *testing.T, group *types.Group, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		var managedARN string
 		input := &iam.ListAttachedGroupPoliciesInput{
@@ -382,9 +380,9 @@ func testAccCheckGroupPolicyDetachManagedPolicy(ctx context.Context, group *type
 	}
 }
 
-func testAccCheckGroupPolicyAttachManagedPolicy(ctx context.Context, group *types.Group, policyName string) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachManagedPolicy(ctx context.Context, t *testing.T, group *types.Group, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		var managedARN string
 		input := &iam.ListPoliciesInput{

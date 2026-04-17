@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -211,9 +210,8 @@ func findProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, 
 	output, err := conn.GetProvisionedConcurrencyConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ProvisionedConcurrencyConfigNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -237,8 +235,8 @@ func findProvisionedConcurrencyConfigByTwoPartKey(ctx context.Context, conn *lam
 	return findProvisionedConcurrencyConfig(ctx, conn, input)
 }
 
-func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProvisionedConcurrencyConfig(conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
 		if retry.NotFound(err) {
@@ -254,10 +252,10 @@ func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client
 }
 
 func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Client, functionName, qualifier string, timeout time.Duration) (*lambda.GetProvisionedConcurrencyConfigOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumInProgress),
 		Target:  enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumReady),
-		Refresh: statusProvisionedConcurrencyConfig(ctx, conn, functionName, qualifier),
+		Refresh: statusProvisionedConcurrencyConfig(conn, functionName, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}

@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -25,23 +23,23 @@ import (
 
 func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	groupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyName3 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachment.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentConfig_attach(groupName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, groupName, 1),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, resourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, groupName, 1),
 				),
 			},
 			{
@@ -65,8 +63,8 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccGroupPolicyAttachmentConfig_attachUpdate(groupName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckGroupPolicyAttachmentCount(ctx, groupName, 2),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, resourceName),
+					testAccCheckGroupPolicyAttachmentCount(ctx, t, groupName, 2),
 				),
 			},
 		},
@@ -75,20 +73,20 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 
 func TestAccIAMGroupPolicyAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	groupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_group_policy_attachment.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupPolicyAttachmentConfig_attach(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckGroupPolicyAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,9 +95,9 @@ func TestAccIAMGroupPolicyAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policy_attachment" {
@@ -123,14 +121,14 @@ func testAccCheckGroupPolicyAttachmentDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		_, err := tfiam.FindAttachedGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes["policy_arn"])
 
@@ -138,9 +136,9 @@ func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string) reso
 	}
 }
 
-func testAccCheckGroupPolicyAttachmentCount(ctx context.Context, groupName string, want int) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentCount(ctx context.Context, t *testing.T, groupName string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		input := &iam.ListAttachedGroupPoliciesInput{
 			GroupName: aws.String(groupName),

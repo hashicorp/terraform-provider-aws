@@ -33,16 +33,20 @@ import (
 )
 
 const (
-	vpcCIDRMaxIPv4Netmask  = 28
-	vpcCIDRMinIPv4Netmask  = 16
-	vpcCIDRMaxIPv6Netmask  = 60
-	vpcCIDRMinIPv6Netmask  = 44
-	vpcCIDRIPv6NetmaskStep = 4
+	vpcCIDRMaxIPv4Netmask     = 28
+	vpcCIDRMinIPv4Netmask     = 16
+	vpcCIDRMaxIPv6Netmask     = 60
+	vpcCIDRMinIPv6Netmask     = 44
+	vpcCIDRIPv6NetmaskStep    = 4
+	subnetCIDRMinIPv6Netmask  = 44
+	subnetCIDRMaxIPv6Netmask  = 64
+	subnetCIDRIPv6NetmaskStep = 4
 )
 
 var (
-	vpcCIDRValidIPv6Netmasks = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, vpcCIDRIPv6NetmaskStep)
-	validVPCIPv6CIDRBlock    = validation.All(
+	subnetCIDRValidIPv6Netmasks = tfslices.Range(subnetCIDRMinIPv6Netmask, subnetCIDRMaxIPv6Netmask+1, subnetCIDRIPv6NetmaskStep)
+	vpcCIDRValidIPv6Netmasks    = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, vpcCIDRIPv6NetmaskStep)
+	validVPCIPv6CIDRBlock       = validation.All(
 		verify.ValidIPv6CIDRNetworkAddress,
 		validation.Any(tfslices.ApplyToAll(vpcCIDRValidIPv6Netmasks, func(v int) schema.SchemaValidateFunc {
 			return validation.IsCIDRNetwork(v, v)
@@ -288,6 +292,33 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		diags = sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
+	} else {
+		d.Set("default_network_acl_id", v.NetworkAclId)
+	}
+
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+		d.Set("default_route_table_id", nil)
+		d.Set("main_route_table_id", nil)
+	} else {
+		d.Set("default_route_table_id", v.RouteTableId)
+		d.Set("main_route_table_id", v.RouteTableId)
+	}
+
+	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
+		// e.g. RAM-shared VPC.
+		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
+		d.Set("default_security_group_id", nil)
+	} else {
+		d.Set("default_security_group_id", v.GroupId)
+	}
+
+	setTagsOut(ctx, vpc.Tags)
+
 	return diags
 }
 
@@ -523,7 +554,9 @@ func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, 
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsHostnames)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
@@ -542,7 +575,9 @@ func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v 
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableDnsSupport)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
@@ -561,7 +596,9 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+	if _, err := tfresource.RetryUntilEqual(ctx, ec2PropagationTimeout, v, func(ctx context.Context) (bool, error) {
+		return findVPCAttributeByTwoPartKey(ctx, conn, vpcID, awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
@@ -674,31 +711,6 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 		d.Set("enable_network_address_usage_metrics", v)
 	}
 
-	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
-	} else {
-		d.Set("default_network_acl_id", v.NetworkAclId)
-	}
-
-	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
-		d.Set("default_route_table_id", nil)
-		d.Set("main_route_table_id", nil)
-	} else {
-		d.Set("default_route_table_id", v.RouteTableId)
-		d.Set("main_route_table_id", v.RouteTableId)
-	}
-
-	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
-		// e.g. RAM-shared VPC.
-		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
-		d.Set("default_security_group_id", nil)
-	} else {
-		d.Set("default_security_group_id", v.GroupId)
-	}
-
 	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
 		d.Set("assign_generated_ipv6_cidr_block", nil)
 		d.Set("ipv6_association_id", nil)
@@ -737,8 +749,6 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 			}
 		}
 	}
-
-	setTagsOut(ctx, vpc.Tags)
 
 	return nil
 }

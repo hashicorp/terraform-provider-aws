@@ -645,7 +645,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testTimeStr := "2023-12-08T09:34:01Z"
-	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
 	intentDescribeTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),

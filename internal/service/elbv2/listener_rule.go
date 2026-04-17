@@ -48,11 +48,11 @@ const (
 
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
+// @ArnIdentity
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
 // @Testing(plannableImportAction="NoOp")
-// @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
 func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
@@ -690,17 +690,25 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.RuleArn)
-
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", listenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
+
+	if err := resourceListenerRuleFlatten(ctx, rule, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceListenerRuleFlatten(_ context.Context, rule *awstypes.Rule, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, rule.RuleArn)
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if v := aws.ToString(rule.Priority); v == "default" {
 		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if v, err := strconv.Atoi(v); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return err
 		} else {
 			d.Set(names.AttrPriority, v)
 		}
@@ -709,7 +717,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sortListenerActions(rule.Actions)
 
 	if err := d.Set(names.AttrAction, flattenListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
+		return fmt.Errorf("setting action: %w", err)
 	}
 
 	conditions := make([]any, len(rule.Conditions))
@@ -754,14 +762,14 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		conditions[i] = conditionMap
 	}
 	if err := d.Set(names.AttrCondition, conditions); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
+		return fmt.Errorf("setting condition: %w", err)
 	}
 
 	if err := d.Set("transform", flattenRuleTransforms(rule.Transforms)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting transform: %s", err)
+		return fmt.Errorf("setting transform: %w", err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

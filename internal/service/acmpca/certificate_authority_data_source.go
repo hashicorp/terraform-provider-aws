@@ -73,6 +73,10 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"custom_path": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Computed: true,

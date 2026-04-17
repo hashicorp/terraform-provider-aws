@@ -33,8 +33,12 @@ linters:
     importas:
       no-unaliased: true
       alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/id
+          alias: sdkid
         - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
           alias: sdkretry
+        - pkg: "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+          alias: sdkacctest
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry
@@ -52,6 +56,7 @@ linters:
         - nullable.*
         - tfresource.Retry*
         - tfresource.With*
+        - verify.StringUTF8LenBetween
         # Terraform Plugin SDK
         - retry.RetryContext
         - schema.DefaultTimeout
@@ -60,6 +65,7 @@ linters:
         - intBetweenSchema
         - stringLenBetweenSchema
         # Terraform Plugin Framework
+        - fwactions.TimeoutOr
         - int32validator.*
         - int64validator.*
         - listvalidator.*

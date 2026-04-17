@@ -16,11 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -159,7 +158,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := vpclattice.CreateListenerInput{
-		ClientToken:   aws.String(sdkid.UniqueId()),
+		ClientToken:   aws.String(create.UniqueId(ctx)),
 		Name:          aws.String(name),
 		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),
@@ -323,9 +322,8 @@ func findListener(ctx context.Context, conn *vpclattice.Client, input *vpclattic
 	output, err := conn.GetListener(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

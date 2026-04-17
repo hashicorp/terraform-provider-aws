@@ -64,7 +64,7 @@ func (l *listResourceBucketACL) List(ctx context.Context, request list.ListReque
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// There is always a Bucket ACL associated with a Bucket (1-1)
+			// There is always a Bucket ACL associated with a Bucket (1:1)
 			// So only read it if resource data is requested.
 			if request.IncludeResource {
 				tflog.Info(ctx, "Reading S3 Bucket ACL")
@@ -83,7 +83,7 @@ func (l *listResourceBucketACL) List(ctx context.Context, request list.ListReque
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

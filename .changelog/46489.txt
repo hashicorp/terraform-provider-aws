@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_networkmanager_attachment_routing_policy_label
+```

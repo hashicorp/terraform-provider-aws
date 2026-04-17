@@ -11,11 +11,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -25,25 +23,25 @@ import (
 func TestAccIAMRolePolicyAttachmentsExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	roleResourceName := "aws_iam_role.test"
 	attachmentResourceName := "aws_iam_role_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName, "policy_arn"),
 				),
@@ -62,25 +60,25 @@ func TestAccIAMRolePolicyAttachmentsExclusive_basic(t *testing.T) {
 func TestAccIAMRolePolicyAttachmentsExclusive_disappears_Role(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	roleResourceName := "aws_iam_role.test"
 	attachmentResourceName := "aws_iam_role_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					// Managed policies must be detached before role can be deleted
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), attachmentResourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), roleResourceName),
@@ -94,25 +92,25 @@ func TestAccIAMRolePolicyAttachmentsExclusive_disappears_Role(t *testing.T) {
 func TestAccIAMRolePolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	policyResourceName := "aws_iam_policy.test"
 	attachmentResourceName := "aws_iam_role_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					// Managed policy must be detached before it can be deleted
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), attachmentResourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
@@ -126,29 +124,29 @@ func TestAccIAMRolePolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 func TestAccIAMRolePolicyAttachmentsExclusive_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	roleResourceName := "aws_iam_role.test"
 	attachmentResourceName := "aws_iam_role_policy_attachment.test"
 	attachmentResourceName2 := "aws_iam_role_policy_attachment.test2"
 	attachmentResourceName3 := "aws_iam_role_policy_attachment.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName2),
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName3),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 3),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName2),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName3),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 3),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName, "policy_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName2, "policy_arn"),
@@ -165,9 +163,9 @@ func TestAccIAMRolePolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_arns.*", attachmentResourceName, "policy_arn"),
 				),
@@ -179,22 +177,22 @@ func TestAccIAMRolePolicyAttachmentsExclusive_multiple(t *testing.T) {
 func TestAccIAMRolePolicyAttachmentsExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	roleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "0"),
 				),
@@ -211,35 +209,35 @@ func TestAccIAMRolePolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var role types.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	roleResourceName := "aws_iam_role.test"
 	attachmentResourceName := "aws_iam_role_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, roleResourceName, &role),
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckRolePolicyDetachManagedPolicy(ctx, &role, rName),
+					testAccCheckRoleExists(ctx, t, roleResourceName, &role),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
+					testAccCheckRolePolicyDetachManagedPolicy(ctx, t, &role, rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, roleResourceName, &role),
-					testAccCheckRolePolicyAttachmentExists(ctx, attachmentResourceName),
-					testAccCheckRolePolicyAttachmentCount(ctx, rName, 1),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRoleExists(ctx, t, roleResourceName, &role),
+					testAccCheckRolePolicyAttachmentExists(ctx, t, attachmentResourceName),
+					testAccCheckRolePolicyAttachmentCount(ctx, t, rName, 1),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
@@ -253,31 +251,31 @@ func TestAccIAMRolePolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var role types.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	oobPolicyName := rName + "-out-of-band"
 	resourceName := "aws_iam_role_policy_attachments_exclusive.test"
 	roleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		CheckDestroy:             testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_outOfBandAddition(rName, oobPolicyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, roleResourceName, &role),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, oobPolicyName),
+					testAccCheckRoleExists(ctx, t, roleResourceName, &role),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
+					testAccCheckRolePolicyAttachManagedPolicy(ctx, t, &role, oobPolicyName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccRolePolicyAttachmentsExclusiveConfig_outOfBandAddition(rName, oobPolicyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, roleResourceName, &role),
-					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckRoleExists(ctx, t, roleResourceName, &role),
+					testAccCheckRolePolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_name", roleResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
@@ -286,9 +284,9 @@ func TestAccIAMRolePolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 	})
 }
 
-func testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_role_policy_attachments_exclusive" {
@@ -311,7 +309,7 @@ func testAccCheckRolePolicyAttachmentsExclusiveDestroy(ctx context.Context) reso
 	}
 }
 
-func testAccCheckRolePolicyAttachmentsExclusiveExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckRolePolicyAttachmentsExclusiveExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -323,7 +321,7 @@ func testAccCheckRolePolicyAttachmentsExclusiveExists(ctx context.Context, name 
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameRolePolicyAttachmentsExclusive, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 		out, err := tfiam.FindRolePolicyAttachmentsByName(ctx, conn, roleName)
 		if err != nil {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameRolePolicyAttachmentsExclusive, roleName, err)

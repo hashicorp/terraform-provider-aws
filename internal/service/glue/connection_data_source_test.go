@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,7 +49,7 @@ func TestAccGlueConnectionDataSource_dynamoDB(t *testing.T) {
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	bucketName := "tf-acc-test-" + sdkacctest.RandString(26)
+	bucketName := "tf-acc-test-" + acctest.RandString(t, 26)
 	region := acctest.Region()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

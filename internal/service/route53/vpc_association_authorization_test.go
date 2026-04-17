@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,21 +20,21 @@ import (
 func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_vpc_association_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_region", acctest.Region()),
 				),
 			},
@@ -53,21 +51,21 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_vpc_association_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,9 +79,9 @@ func TestAccRoute53VPCAssociationAuthorization_concurrent(t *testing.T) {
 	resourceNameAlternate := "aws_route53_vpc_association_authorization.alternate"
 	resourceNameThird := "aws_route53_vpc_association_authorization.third"
 	providers := make(map[string]*schema.Provider)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -91,13 +89,13 @@ func TestAccRoute53VPCAssociationAuthorization_concurrent(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
-		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_concurrent(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceNameAlternate),
-					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceNameThird),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, t, resourceNameAlternate),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, t, resourceNameThird),
 				),
 			},
 		},
@@ -107,21 +105,21 @@ func TestAccRoute53VPCAssociationAuthorization_concurrent(t *testing.T) {
 func TestAccRoute53VPCAssociationAuthorization_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_vpc_association_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_crossRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_region", acctest.AlternateRegion()),
 				),
 			},
@@ -135,9 +133,9 @@ func TestAccRoute53VPCAssociationAuthorization_crossRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_vpc_association_authorization" {
@@ -161,14 +159,14 @@ func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID])
 

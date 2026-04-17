@@ -220,31 +220,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(output.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
-	if output.EventPattern != nil {
-		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-		d.Set("event_pattern", pattern)
-	}
-	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
-	switch output.State {
-	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
-		d.Set("is_enabled", true)
-	default:
-		d.Set("is_enabled", false)
-	}
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
-	d.Set(names.AttrState, output.State)
-
-	return diags
+	return append(diags, resourceRuleFlatten(ctx, eventBusName, d, output)...)
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -489,4 +465,34 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 		return
 	}
+}
+
+func resourceRuleFlatten(_ context.Context, eventBusName string, d *schema.ResourceData, output *eventbridge.DescribeRuleOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	arn := aws.ToString(output.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
+	if output.EventPattern != nil {
+		pattern, err := ruleEventPatternJSONDecoder(aws.ToString(output.EventPattern))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		d.Set("event_pattern", pattern)
+	}
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
+	switch output.State {
+	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
+		d.Set("is_enabled", true)
+	default:
+		d.Set("is_enabled", false)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
+	d.Set(names.AttrState, output.State)
+
+	return diags
 }

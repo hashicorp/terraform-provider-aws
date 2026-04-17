@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,22 +15,22 @@ import (
 
 func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_sesv2_dedicated_ip_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDedicatedIPPool(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedIPPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDedicatedIPPoolExists(ctx, dataSourceName),
+					testAccCheckDedicatedIPPoolExists(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "pool_name", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),

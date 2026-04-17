@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -32,23 +31,20 @@ import (
 
 const (
 	instanceProfileNameMaxLen       = 128
-	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - id.UniqueIDSuffixLength
+	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
-// @Tags(identifierAttribute="id", resourceType="InstanceProfile")
+// @Tags(identifierAttribute="name", resourceType="InstanceProfile")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
 		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
 		DeleteWithoutTimeout: resourceInstanceProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -328,9 +324,8 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	output, err := conn.GetInstanceProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -350,8 +345,8 @@ const (
 	instanceProfileInvalidARNState = "InvalidARN"
 )
 
-func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceProfile(conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceProfileByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -371,10 +366,10 @@ func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) s
 }
 
 func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"", instanceProfileInvalidARNState},
 		Target:                    enum.Slice(instanceProfileFoundState),
-		Refresh:                   statusInstanceProfile(ctx, conn, id),
+		Refresh:                   statusInstanceProfile(conn, id),
 		Timeout:                   timeout,
 		Delay:                     5 * time.Second,
 		NotFoundChecks:            5,

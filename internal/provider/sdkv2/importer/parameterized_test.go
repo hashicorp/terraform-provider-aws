@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -21,7 +21,7 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
@@ -544,7 +544,7 @@ var regionalMultipleParameterizedSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
-	"region": attribute.Region(),
+	"region": sdkv2.RegionOptionalComputed(),
 }
 
 func regionalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identity {
@@ -1036,7 +1036,7 @@ func (t testImportID) Create(d *schema.ResourceData) string {
 	return result
 }
 
-func (t testImportID) Parse(id string) (string, map[string]string, error) {
+func (t testImportID) Parse(id string) (string, map[string]any, error) {
 	t.t.Helper()
 
 	parts, err := flex.ExpandResourceId(id, 2, false)
@@ -1044,7 +1044,7 @@ func (t testImportID) Parse(id string) (string, map[string]string, error) {
 		t.t.Fatalf("Parsing test Import ID: %s", err)
 	}
 
-	return id, map[string]string{
+	return id, map[string]any{
 		"name": parts[0],
 		"type": parts[1],
 	}, nil

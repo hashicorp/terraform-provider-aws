@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -40,7 +39,6 @@ import (
 // @ImportIDHandler("customerManagedPolicyAttachmentsExclusiveImportID")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstances")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(existsTakesT=false)
 // @Testing(checkDestroyNoop=true)
 // @Testing(importStateIdAttributes="instance_arn;permission_set_arn", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newCustomerManagedPolicyAttachmentsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -176,13 +174,13 @@ var _ inttypes.ImportIDParser = customerManagedPolicyAttachmentsExclusiveImportI
 
 type customerManagedPolicyAttachmentsExclusiveImportID struct{}
 
-func (customerManagedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]string, error) {
+func (customerManagedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]any, error) {
 	instanceARN, permissionSetARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, smarterr.NewError(fmt.Errorf("id \"%s\" should be in the format <instance-arn>"+intflex.ResourceIdSeparator+"<permission-set-arn>", id))
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"instance_arn":       instanceARN,
 		"permission_set_arn": permissionSetARN,
 	}
@@ -274,9 +272,8 @@ func findCustomerManagedPolicyAttachmentsByTwoPartKey(ctx context.Context, conn 
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil, smarterr.NewError(&sdkretry.NotFoundError{
-					LastError:   err,
-					LastRequest: input,
+				return nil, smarterr.NewError(&retry.NotFoundError{
+					LastError: err,
 				})
 			}
 			return nil, smarterr.NewError(err)

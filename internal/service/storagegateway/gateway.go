@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -779,9 +778,8 @@ func findGateway(ctx context.Context, conn *storagegateway.Client, input *storag
 	output, err := conn.DescribeGatewayInformation(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -847,9 +845,8 @@ func findSMBSettings(ctx context.Context, conn *storagegateway.Client, input *st
 	output, err := conn.DescribeSMBSettings(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -876,9 +873,8 @@ func findBandwidthRateLimit(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeBandwidthRateLimit(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -905,9 +901,8 @@ func findMaintenanceStartTime(ctx context.Context, conn *storagegateway.Client, 
 	output, err := conn.DescribeMaintenanceStartTime(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -927,8 +922,8 @@ const (
 	gatewayStatusNotConnected = "GatewayNotConnected"
 )
 
-func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGatewayConnected(conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGatewayByARN(ctx, conn, gatewayARN)
 
 		if retry.NotFound(err) {
@@ -947,8 +942,8 @@ func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, ga
 	}
 }
 
-func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGatewayJoinDomain(conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSMBSettingsByARN(ctx, conn, gatewayARN)
 
 		if retry.NotFound(err) {
@@ -964,10 +959,10 @@ func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, g
 }
 
 func waitGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{gatewayStatusNotConnected},
 		Target:                    []string{gatewayStatusConnected},
-		Refresh:                   statusGatewayConnected(ctx, conn, gatewayARN),
+		Refresh:                   statusGatewayConnected(conn, gatewayARN),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		ContinuousTargetOccurence: 6, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway.
@@ -986,10 +981,10 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Clien
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ActiveDirectoryStatusJoining),
 		Target:  enum.Slice(awstypes.ActiveDirectoryStatusJoined),
-		Refresh: statusGatewayJoinDomain(ctx, conn, gatewayARN),
+		Refresh: statusGatewayJoinDomain(conn, gatewayARN),
 		Timeout: timeout,
 	}
 

@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,12 +21,12 @@ import (
 func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sessionLogger awstypes.SessionLogger
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspacesweb_session_logger_association.test"
 	sessionLoggerResourceName := "aws_workspacesweb_session_logger.test"
 	portalResourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -36,12 +34,12 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSessionLoggerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSessionLoggerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
+					testAccCheckSessionLoggerAssociationExists(ctx, t, resourceName, &sessionLogger),
 					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName, "session_logger_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
@@ -73,10 +71,10 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 func TestAccWorkSpacesWebSessionLoggerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sessionLogger awstypes.SessionLogger
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workspacesweb_session_logger_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -84,12 +82,12 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSessionLoggerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckSessionLoggerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
+					testAccCheckSessionLoggerAssociationExists(ctx, t, resourceName, &sessionLogger),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceSessionLoggerAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,9 +96,9 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSessionLoggerAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSessionLoggerAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_session_logger_association" {
@@ -128,14 +126,14 @@ func testAccCheckSessionLoggerAssociationDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckSessionLoggerAssociationExists(ctx context.Context, n string, v *awstypes.SessionLogger) resource.TestCheckFunc {
+func testAccCheckSessionLoggerAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.SessionLogger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindSessionLoggerByARN(ctx, conn, rs.Primary.Attributes["session_logger_arn"])
 

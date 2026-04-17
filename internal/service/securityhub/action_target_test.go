@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,16 +20,16 @@ func testAccActionTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActionTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckActionTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActionTargetExists(ctx, resourceName),
+					testAccCheckActionTargetExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "securityhub", "action/custom/testaction"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test custom action"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, "testaction"),
@@ -50,16 +49,16 @@ func testAccActionTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActionTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckActionTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActionTargetExists(ctx, resourceName),
+					testAccCheckActionTargetExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,16 +71,16 @@ func testAccActionTarget_Description(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActionTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckActionTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActionTargetConfig_description("description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActionTargetExists(ctx, resourceName),
+					testAccCheckActionTargetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -93,7 +92,7 @@ func testAccActionTarget_Description(t *testing.T) {
 			{
 				Config: testAccActionTargetConfig_description("description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActionTargetExists(ctx, resourceName),
+					testAccCheckActionTargetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -105,16 +104,16 @@ func testAccActionTarget_Name(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActionTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckActionTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActionTargetConfig_name("name1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActionTargetExists(ctx, resourceName),
+					testAccCheckActionTargetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "name1"),
 				),
 			},
@@ -126,7 +125,7 @@ func testAccActionTarget_Name(t *testing.T) {
 			{
 				Config: testAccActionTargetConfig_name("name2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActionTargetExists(ctx, resourceName),
+					testAccCheckActionTargetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "name2"),
 				),
 			},
@@ -134,14 +133,14 @@ func testAccActionTarget_Name(t *testing.T) {
 	})
 }
 
-func testAccCheckActionTargetExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckActionTargetExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		_, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
 
@@ -149,9 +148,9 @@ func testAccCheckActionTargetExists(ctx context.Context, n string) resource.Test
 	}
 }
 
-func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckActionTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_action_target" {

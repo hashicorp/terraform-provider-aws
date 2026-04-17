@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,18 +20,18 @@ import (
 func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -55,18 +53,18 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
 				),
@@ -123,12 +121,12 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, true),
@@ -169,18 +167,18 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_configParameters(rName, "14400"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
@@ -228,7 +226,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 			{
 				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
@@ -275,18 +273,18 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -307,7 +305,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 			{
 				Config: testAccWorkgroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -319,18 +317,18 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceWorkgroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -342,18 +340,18 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_port(rName, 8191),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8191"),
 				),
 			},
@@ -369,18 +367,18 @@ func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
 func TestAccRedshiftServerlessWorkgroup_trackName(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkgroupConfig_trackName(rName, "current"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
+					testAccCheckWorkgroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "track_name", "current"),
 				),
 			},
@@ -393,9 +391,9 @@ func TestAccRedshiftServerlessWorkgroup_trackName(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkgroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_workgroup" {
@@ -418,7 +416,7 @@ func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWorkgroupExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckWorkgroupExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -429,7 +427,7 @@ func testAccCheckWorkgroupExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Redshift Serverless Workgroup ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindWorkgroupByName(ctx, conn, rs.Primary.ID)
 

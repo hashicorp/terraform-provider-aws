@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,22 +18,22 @@ import (
 
 func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 	localGatewayVirtualInterfaceGroupDataSourceName := "data.aws_ec2_local_gateway_virtual_interface_group.test"
 	resourceName := "aws_ec2_local_gateway_route.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
+					testAccCheckLocalGatewayRouteExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_route_table_id", localGatewayRouteTableDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroupDataSourceName, names.AttrID),
@@ -52,20 +50,20 @@ func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 
 func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandIntRange(0, 255)
+	rInt := acctest.RandIntRange(t, 0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	resourceName := "aws_ec2_local_gateway_route.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckLocalGatewayRouteDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
+					testAccCheckLocalGatewayRouteExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,14 +72,14 @@ func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLocalGatewayRouteExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindLocalGatewayRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["local_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
@@ -89,9 +87,9 @@ func testAccCheckLocalGatewayRouteExists(ctx context.Context, n string) resource
 	}
 }
 
-func testAccCheckLocalGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_local_gateway_route" {

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,7 +18,7 @@ import (
 
 func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -65,7 +64,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 
 func TestAccMemoryDBSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -88,7 +87,7 @@ func TestAccMemoryDBSnapshot_disappears(t *testing.T) {
 
 func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -111,7 +110,7 @@ func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 
 func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -134,7 +133,7 @@ func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 
 func TestAccMemoryDBSnapshot_create_withKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -161,7 +160,7 @@ func TestAccMemoryDBSnapshot_create_withKMS(t *testing.T) {
 
 func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_snapshot.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

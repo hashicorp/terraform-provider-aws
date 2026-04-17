@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,8 +24,8 @@ import (
 func TestAccCognitoIdentityPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
-	updatedName := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
+	updatedName := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -65,9 +64,9 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
-	developerProviderName := sdkacctest.RandString(10)
-	developerProviderNameUpdated := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
+	developerProviderName := acctest.RandString(t, 10)
+	developerProviderNameUpdated := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +104,7 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -155,7 +154,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -202,7 +201,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_cognito_identity_pool.test"
@@ -253,7 +252,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -315,7 +314,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -364,7 +363,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 func TestAccCognitoIdentityPool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -412,7 +411,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

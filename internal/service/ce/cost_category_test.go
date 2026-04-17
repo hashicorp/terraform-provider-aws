@@ -6,6 +6,7 @@ package ce_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -220,6 +221,42 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	})
 }
 
+func TestAccCECostCategory_splitChargeOrdering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var output awstypes.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_splitChargeOrdering(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					testAccCheckCostCategorySplitChargeRuleOrder(ctx, resourceName, t),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "split_charge_rule.*", map[string]string{
+						"targets.#":   "3",
+						"targets.0":   "APP-A",
+						"targets.1":   "APP-B",
+						"targets.2":   "APP-C",
+						"parameter.#": "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCECostCategory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
@@ -325,6 +362,47 @@ func testAccCheckCostCategoryDestroy(ctx context.Context, t *testing.T) resource
 			}
 
 			return fmt.Errorf("CE Cost Category %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckCostCategorySplitChargeRuleOrder(ctx context.Context, n string, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).CEClient(ctx)
+
+		output, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if len(output.SplitChargeRules) == 0 {
+			return fmt.Errorf("expected at least 1 split charge rule, got 0")
+		}
+
+		if len(output.SplitChargeRules[0].Parameters) == 0 {
+			return fmt.Errorf("expected at least 1 parameter in split charge rule, got 0")
+		}
+
+		splitChargeRuleTargetOrder := []string{"APP-A", "APP-B", "APP-C"}
+		splitChargeRuleValueOrder := []string{"10", "30", "60"}
+
+		splitChargeRuleTargets := output.SplitChargeRules[0].Targets
+		splitChargeRuleValues := output.SplitChargeRules[0].Parameters[0].Values
+
+		if !slices.Equal(splitChargeRuleTargets, splitChargeRuleTargetOrder) {
+			return fmt.Errorf("split charge rule target order mismatch, expected: %v, got: %v", splitChargeRuleTargetOrder, splitChargeRuleTargets)
+		}
+
+		if !slices.Equal(splitChargeRuleValues, splitChargeRuleValueOrder) {
+			return fmt.Errorf("split charge rule value order mismatch, expected: %v, got: %v", splitChargeRuleValueOrder, splitChargeRuleValues)
 		}
 
 		return nil
@@ -519,6 +597,49 @@ resource "aws_ce_cost_category" "test" {
   }
 }
 `, rName, method)
+}
+
+func testAccCostCategoryConfig_splitChargeOrdering(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+
+  rule {
+    value = "production"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+
+    type = "REGULAR"
+  }
+
+  split_charge_rule {
+    source = "ecs"
+    method = "FIXED"
+
+    targets = [
+      "APP-A",
+      "APP-B",
+      "APP-C",
+    ]
+
+    parameter {
+      type = "ALLOCATION_PERCENTAGES"
+
+      values = [
+        "10",
+        "30",
+        "60",
+      ]
+    }
+  }
+}
+`, rName)
 }
 
 func testAccCostCategoryConfig_tags1(rName, tagKey1, tagValue1 string) string {

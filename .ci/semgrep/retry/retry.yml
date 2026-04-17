@@ -37,7 +37,7 @@ rules:
       Returning zero values with a non-empty status will be incorrectly interpreted as "resource not found".
     paths:
       include:
-        - "internal/service"
+        - "/internal/service"
     patterns:
       - pattern-inside: |
           func $FUNC(...) retry.StateRefreshFunc {

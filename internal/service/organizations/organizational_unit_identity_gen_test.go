@@ -50,7 +50,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -60,7 +60,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &v),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -135,7 +135,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_basic(t *t
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckOrganizationalUnitDestroy(ctx),
+		CheckDestroy: testAccCheckOrganizationalUnitDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -144,7 +144,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_basic(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &v),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -195,7 +195,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_noRefreshN
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		CheckDestroy: testAccCheckOrganizationalUnitDestroy(ctx),
+		CheckDestroy: testAccCheckOrganizationalUnitDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -209,7 +209,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_noRefreshN
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &v),
+					testAccCheckOrganizationalUnitExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

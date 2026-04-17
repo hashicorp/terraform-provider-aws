@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ import (
 func TestAccEC2EBSVolumeAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_volume_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -52,18 +50,18 @@ func TestAccEC2EBSVolumeAttachment_basic(t *testing.T) {
 func TestAccEC2EBSVolumeAttachment_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_volume_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -84,10 +82,10 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 	ctx := acctest.Context(t)
 	var i awstypes.Instance
 	resourceName := "aws_volume_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	stopInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		err := tfec2.StopEBSVolumeAttachmentInstance(ctx, conn, aws.ToString(i.InstanceId), false, 10*time.Minute)
 
@@ -96,23 +94,23 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 		}
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentInstanceExists(ctx, "aws_instance.test", &i),
+					testAccCheckVolumeAttachmentInstanceExists(ctx, t, "aws_instance.test", &i),
 				),
 			},
 			{
 				PreConfig: stopInstance,
 				Config:    testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -129,13 +127,13 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_volume_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, false),
@@ -180,20 +178,20 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 	var i awstypes.Instance
 	var v awstypes.Volume
 	resourceName := "aws_volume_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentInstanceExists(ctx, "aws_instance.test", &i),
-					testAccCheckVolumeExists(ctx, "aws_ebs_volume.test", &v),
-					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					testAccCheckVolumeAttachmentInstanceExists(ctx, t, "aws_instance.test", &i),
+					testAccCheckVolumeExists(ctx, t, "aws_ebs_volume.test", &v),
+					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -205,18 +203,18 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 func TestAccEC2EBSVolumeAttachment_stopInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_volume_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSVolumeAttachmentConfig_stopInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					testAccCheckVolumeAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
@@ -233,7 +231,7 @@ func TestAccEC2EBSVolumeAttachment_stopInstance(t *testing.T) {
 	})
 }
 
-func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVolumeAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -244,7 +242,7 @@ func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("No EBS Volume Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes[names.AttrDeviceName])
 
@@ -252,7 +250,7 @@ func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.
 	}
 }
 
-func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
+func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, t *testing.T, n string, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -263,7 +261,7 @@ func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, n string, v
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVolumeAttachmentInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -277,9 +275,9 @@ func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, n string, v
 	}
 }
 
-func testAccCheckVolumeAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVolumeAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_volume_attachment" {

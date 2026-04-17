@@ -20,7 +20,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.19.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNamePolicy,

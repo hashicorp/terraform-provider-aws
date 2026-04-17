@@ -41,10 +41,7 @@ type withModel[T any] struct{}
 
 // validateModel validates the data source's model against a schema.
 func (d *withModel[T]) validateModel(ctx context.Context, state *tfsdk.State) diag.Diagnostics {
-	var diags diag.Diagnostics
-	var data T
-
-	diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &data)...)
+	data, diags := fwtypes.Nullified[T](ctx)
 	if diags.HasError() {
 		return diags
 	}

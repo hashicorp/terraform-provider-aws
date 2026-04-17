@@ -408,14 +408,9 @@ func testAccCheckAddonExists(ctx context.Context, t *testing.T, n string, v *typ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		clusterName, addonName, err := tfeks.AddonParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
-		output, err := tfeks.FindAddonByTwoPartKey(ctx, conn, clusterName, addonName)
+		output, err := tfeks.FindAddonByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["addon_name"])
 
 		if err != nil {
 			return err
@@ -436,12 +431,7 @@ func testAccCheckAddonDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			clusterName, addonName, err := tfeks.AddonParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfeks.FindAddonByTwoPartKey(ctx, conn, clusterName, addonName)
+			_, err := tfeks.FindAddonByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["addon_name"])
 
 			if retry.NotFound(err) {
 				continue

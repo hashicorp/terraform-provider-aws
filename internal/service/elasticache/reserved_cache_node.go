@@ -153,8 +153,10 @@ func (r *reservedCacheNodeResource) Create(ctx context.Context, request resource
 		return
 	}
 
+	reservedCacheNodeID := aws.ToString(resp.ReservedCacheNode.ReservedCacheNodeId)
+
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if err := waitReservedCacheNodeCreated(ctx, conn, aws.ToString(resp.ReservedCacheNode.ReservedCacheNodeId), createTimeout); err != nil {
+	if err := waitReservedCacheNodeCreated(ctx, conn, reservedCacheNodeID, createTimeout); err != nil {
 		response.Diagnostics.AddError(
 			"Creating ElastiCache Reserved Cache Node",
 			fmt.Sprintf("Creating ElastiCache Reserved Cache Node with Offering ID %q failed while waiting for completion.\nError: %s", data.ReservedCacheNodesOfferingID.ValueString(), err.Error()),
@@ -162,12 +164,21 @@ func (r *reservedCacheNodeResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, resp.ReservedCacheNode, &data, r.flexOpts()...)...)
+	reservation, err := findReservedCacheNodeByID(ctx, conn, reservedCacheNodeID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Creating ElastiCache Reserved Cache Node",
+			fmt.Sprintf("reading ElastiCache Reserved Cache Node (%s): %s", reservedCacheNodeID, err.Error()),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(flex.Flatten(ctx, reservation, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	duration := time.Duration(aws.ToInt32(resp.ReservedCacheNode.Duration)) * time.Second
+	duration := time.Duration(aws.ToInt32(reservation.Duration)) * time.Second
 	data.Duration = fwtypes.RFC3339DurationTimeDurationValue(duration)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

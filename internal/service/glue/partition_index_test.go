@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,7 +35,7 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTableName, "aws_glue_catalog_table.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_glue_catalog_database.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName+"i"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", "2"),
 				),
 			},
@@ -127,11 +126,11 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 func testAccPartitionIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
+  name = "%[1]sd"
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name               = %[1]q
+  name               = "%[1]st"
   database_name      = aws_glue_catalog_database.test.name
   owner              = "my_owner"
   retention          = 1
@@ -216,7 +215,7 @@ resource "aws_glue_partition_index" "test" {
   table_name    = aws_glue_catalog_table.test.name
 
   partition_index {
-    index_name = %[1]q
+    index_name = "%[1]si"
     keys       = ["my_column_1", "my_column_2"]
   }
 }
@@ -232,41 +231,34 @@ func testAccCheckPartitionIndexDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			if _, err := tfglue.FindPartitionIndexByName(ctx, conn, rs.Primary.ID); err != nil {
-				//Verify the error is what we want
-				if errs.IsA[*awstypes.EntityNotFoundException](err) {
-					continue
-				}
+			_, err := tfglue.FindPartitionIndexByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes["partition_index.0.index_name"])
 
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
 				return err
 			}
-			return fmt.Errorf("still exists")
+
+			return fmt.Errorf("Glue Partition Index %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckPartitionIndexExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckPartitionIndexExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
-		out, err := tfglue.FindPartitionIndexByName(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
 
-		if out == nil {
-			return fmt.Errorf("No Glue Partition Index Found")
-		}
+		_, err := tfglue.FindPartitionIndexByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes["partition_index.0.index_name"])
 
-		return nil
+		return err
 	}
 }

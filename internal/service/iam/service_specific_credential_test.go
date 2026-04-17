@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 	var cred awstypes.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSpecificCredentialConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "codecommit.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
@@ -59,18 +57,18 @@ func TestAccIAMServiceSpecificCredential_multi(t *testing.T) {
 
 	resourceName := "aws_iam_service_specific_credential.test"
 	resourceName2 := "aws_iam_service_specific_credential.test2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSpecificCredentialConfig_multi(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "codecommit.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
@@ -98,18 +96,18 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 	var cred awstypes.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
@@ -122,14 +120,14 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 			{
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
@@ -142,18 +140,18 @@ func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 	var cred awstypes.ServiceSpecificCredentialMetadata
 	resourceName := "aws_iam_service_specific_credential.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSpecificCredentialConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceSpecificCredential(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceSpecificCredential(), resourceName),
 				),
@@ -163,14 +161,14 @@ func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceSpecificCredentialExists(ctx context.Context, n string, v *awstypes.ServiceSpecificCredentialMetadata) resource.TestCheckFunc {
+func testAccCheckServiceSpecificCredentialExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServiceSpecificCredentialMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		output, err := tfiam.FindServiceSpecificCredentialByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrServiceName], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["service_specific_credential_id"])
 
@@ -184,9 +182,9 @@ func testAccCheckServiceSpecificCredentialExists(ctx context.Context, n string, 
 	}
 }
 
-func testAccCheckServiceSpecificCredentialDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServiceSpecificCredentialDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_service_specific_credential" {
@@ -258,18 +256,18 @@ func TestAccIAMServiceSpecificCredential_bedrockWithExpiration(t *testing.T) {
 	var cred awstypes.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceSpecificCredentialDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSpecificCredentialConfig_bedrockWithExpiration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
+					testAccCheckServiceSpecificCredentialExists(ctx, t, resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "bedrock.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),

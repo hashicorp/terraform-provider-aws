@@ -547,6 +547,35 @@ func testAccWorkspace_version(t *testing.T) {
 	})
 }
 
+func testAccWorkspace_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WorkspaceDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_kmsKeyID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckWorkspaceExists(ctx context.Context, t *testing.T, n string, v *awstypes.WorkspaceDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -900,4 +929,21 @@ resource "aws_grafana_workspace" "test" {
   grafana_version          = %[1]q
 }
 `, version))
+}
+
+func testAccWorkspaceConfig_kmsKeyID(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+  kms_key_id               = aws_kms_key.test.arn
+}
+`, rName))
 }

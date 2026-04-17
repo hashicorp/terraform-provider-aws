@@ -142,6 +142,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"nested_virtualization": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -693,6 +697,18 @@ func dataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"network_performance_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bandwidth_weighting": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"placement": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -760,6 +776,45 @@ func dataSourceLaunchTemplate() *schema.Resource {
 			"ram_disk_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"secondary_interfaces": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"device_index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"private_ip_address_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"private_ip_addresses": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"secondary_subnet_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"security_group_names": {
 				Type:     schema.TypeSet,

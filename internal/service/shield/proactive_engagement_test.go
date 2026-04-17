@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	"github.com/aws/aws-sdk-go-v2/service/shield/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,21 +24,21 @@ func testAccProactiveEngagement_basic(t *testing.T) {
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	var proactiveengagementassociation []types.EmergencyContact
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_proactive_engagement.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProactiveEngagementConfig_basic(rName, address1, address2, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
+					testAccCheckProactiveEngagementAssociationExists(ctx, t, resourceName, &proactiveengagementassociation),
 					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
@@ -60,21 +58,21 @@ func testAccProactiveEngagement_disabled(t *testing.T) {
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	var proactiveengagementassociation []types.EmergencyContact
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_proactive_engagement.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProactiveEngagementConfig_basic(rName, address1, address2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
+					testAccCheckProactiveEngagementAssociationExists(ctx, t, resourceName, &proactiveengagementassociation),
 					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
@@ -89,21 +87,21 @@ func testAccProactiveEngagement_disappears(t *testing.T) {
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 	var proactiveengagementassociation []types.EmergencyContact
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_proactive_engagement.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckProactiveEngagement(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProactiveEngagementConfig_basic(rName, address1, address2, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
+					testAccCheckProactiveEngagementAssociationExists(ctx, t, resourceName, &proactiveengagementassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceProactiveEngagement, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,9 +110,9 @@ func testAccProactiveEngagement_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProactiveEngagementAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProactiveEngagementAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_proactive_engagement" {
@@ -138,14 +136,14 @@ func testAccCheckProactiveEngagementAssociationDestroy(ctx context.Context) reso
 	}
 }
 
-func testAccCheckProactiveEngagementAssociationExists(ctx context.Context, n string, v *[]types.EmergencyContact) resource.TestCheckFunc {
+func testAccCheckProactiveEngagementAssociationExists(ctx context.Context, t *testing.T, n string, v *[]types.EmergencyContact) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 		output, err := tfshield.FindEmergencyContactSettings(ctx, conn)
 
@@ -160,7 +158,7 @@ func testAccCheckProactiveEngagementAssociationExists(ctx context.Context, n str
 }
 
 func testAccPreCheckProactiveEngagement(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 	input := &shield.DescribeEmergencyContactSettingsInput{}
 	_, err := conn.DescribeEmergencyContactSettings(ctx, input)

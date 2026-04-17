@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -102,16 +101,16 @@ func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 
 	configuration := testAccAPNSChannelCertConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckAPNSChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 			{
@@ -123,7 +122,7 @@ func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 			{
 				Config: testAccAPNSChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 		},
@@ -137,16 +136,16 @@ func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
 
 	configuration := testAccAPNSChannelTokenConfigurationFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPNSChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckAPNSChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 			{
@@ -158,14 +157,14 @@ func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
 			{
 				Config: testAccAPNSChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPNSChannelExists(ctx, resourceName, &channel),
+					testAccCheckAPNSChannelExists(ctx, t, resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAPNSChannelExists(ctx context.Context, n string, channel *awstypes.APNSChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSChannelExists(ctx context.Context, t *testing.T, n string, channel *awstypes.APNSChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -176,7 +175,7 @@ func testAccCheckAPNSChannelExists(ctx context.Context, n string, channel *awsty
 			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		output, err := tfpinpoint.FindAPNSChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
@@ -190,9 +189,9 @@ func testAccCheckAPNSChannelExists(ctx context.Context, n string, channel *awsty
 	}
 }
 
-func testAccCheckAPNSChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPNSChannelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_apns_channel" {

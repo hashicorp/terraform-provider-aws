@@ -124,6 +124,7 @@ type IdentityAttribute struct {
 	Optional               bool
 	ResourceAttributeName_ string
 	TestNotNull            bool
+	ValueType              string
 }
 
 func (a IdentityAttribute) Name() string {
@@ -220,6 +221,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 				} else {
 					identityAttribute.TestNotNull = b
 				}
+
+			case "valueType":
+				identityAttribute.ValueType = args.Keyword[k]
 
 			default:
 				errs = errors.Join(errs, fmt.Errorf("annotation \"@IdentityAttribute\": unexpected keyword parameter %q", k))

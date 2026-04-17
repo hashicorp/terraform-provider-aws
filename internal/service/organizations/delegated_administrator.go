@@ -40,6 +40,7 @@ import (
 // @Testing(useAlternateAccount=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.5.0")
 func resourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
@@ -222,11 +223,11 @@ func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
 	return delegatedAdministratorCreateResourceID(d.Get(names.AttrAccountID).(string), d.Get("service_principal").(string))
 }
 
-func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
+func (delegatedAdministratorImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		result := map[string]string{
+		result := map[string]any{
 			names.AttrAccountID: parts[0],
 			"service_principal": parts[1],
 		}

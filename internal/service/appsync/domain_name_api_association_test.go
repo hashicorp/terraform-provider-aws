@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var association awstypes.ApiAssociation
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -60,7 +59,7 @@ func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var association awstypes.ApiAssociation
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	rName := sdkacctest.RandString(8)
+	rName := acctest.RandString(t, 8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	acctest.Test(ctx, t, resource.TestCase{

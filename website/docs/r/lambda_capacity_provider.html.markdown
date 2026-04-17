@@ -73,6 +73,7 @@ The following arguments are optional:
 
 * `capacity_provider_scaling_config` - (Optional) Configuration block for scaling policy settings. See [Capacity Provider Scaling Config](#capacity_provider_scaling_config) below.
 * `instance_requirements` - (Optional) Configuration block for instance requirements settings. See [Instance Requirements](#instance_requirements) below.
+* `kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the Capacity Provider.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

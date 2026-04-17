@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "example" {
       "s3:ListCallerAccessGrants",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:access-grants/*"
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:access-grants/*"
     ]
     condition {
       test     = "StringEquals"

@@ -18,8 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +40,6 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineOutput")
 // @Testing(preIdentityVersion="v6.13.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
@@ -144,7 +142,7 @@ func resourceStateMachine() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 80-sdkid.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
@@ -424,9 +422,8 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	output, err := conn.DescribeStateMachine(ctx, input)
 
 	if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -441,8 +438,8 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStateMachine(conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
 		if retry.NotFound(err) {
@@ -458,10 +455,10 @@ func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn s
 }
 
 func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateMachineStatusActive, awstypes.StateMachineStatusDeleting),
 		Target:  []string{},
-		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
+		Refresh: statusStateMachine(conn, stateMachineArn),
 		Timeout: timeout,
 	}
 

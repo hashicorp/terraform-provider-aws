@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -185,7 +185,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -1586,7 +1586,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -3323,7 +3323,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{

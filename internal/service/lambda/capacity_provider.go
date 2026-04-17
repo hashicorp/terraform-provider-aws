@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -47,7 +46,6 @@ import (
 // @Testing(importStateIdFunc=testAccCheckCapacityProviderImportStateID)
 // @Testing(preIdentityVersion="v6.25.0")
 // @Testing(preCheck="testAccCapacityProviderPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 
@@ -353,10 +351,10 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 }
 
 func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending),
 		Target:                    enum.Slice(awstypes.CapacityProviderStateActive),
-		Refresh:                   statusCapacityProvider(ctx, conn, name),
+		Refresh:                   statusCapacityProvider(conn, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -370,10 +368,10 @@ func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, name s
 }
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
 		Target:                    []string{},
-		Refresh:                   statusCapacityProvider(ctx, conn, name),
+		Refresh:                   statusCapacityProvider(conn, name),
 		Timeout:                   timeout,
 		Delay:                     time.Second * 5,
 		ContinuousTargetOccurence: 2,
@@ -387,8 +385,8 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, name 
 	return nil, smarterr.NewError(err)
 }
 
-func statusCapacityProvider(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityProvider(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findCapacityProviderByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil

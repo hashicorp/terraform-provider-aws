@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -39,7 +38,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.NamespaceInfoV2")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
 
@@ -255,9 +253,8 @@ func findNamespace(ctx context.Context, conn *quicksight.Client, input *quicksig
 	output, err := conn.DescribeNamespace(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -306,10 +303,10 @@ type namespaceResourceModel struct {
 }
 
 func waitNamespaceCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string, timeout time.Duration) (*awstypes.NamespaceInfoV2, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.NamespaceStatusCreating),
 		Target:     enum.Slice(awstypes.NamespaceStatusCreated),
-		Refresh:    statusNamespace(ctx, conn, awsAccountID, namespace),
+		Refresh:    statusNamespace(conn, awsAccountID, namespace),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -324,10 +321,10 @@ func waitNamespaceCreated(ctx context.Context, conn *quicksight.Client, awsAccou
 }
 
 func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string, timeout time.Duration) (*awstypes.NamespaceInfoV2, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.NamespaceStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusNamespace(ctx, conn, awsAccountID, namespace),
+		Refresh:    statusNamespace(conn, awsAccountID, namespace),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -341,8 +338,8 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 	return nil, err
 }
 
-func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNamespace(conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
 		if retry.NotFound(err) {

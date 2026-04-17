@@ -23,12 +23,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
+// @IdentityAttribute("network_acl_id")
+// @IdentityAttribute("egress", valueType="bool")
+// @IdentityAttribute("rule_number", valueType="int")
+// @IdentityAttribute("protocol")
+// @ImportIDHandler("networkACLRuleImportID")
+// @CustomImport
+// @Testing(importStateIdFunc=testAccNetworkACLRuleImportStateIdentityFunc)
+// @Testing(preIdentityVersion="v6.38.0")
 func resourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLRuleCreate,
@@ -267,30 +276,13 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), networkACLRuleImportIDSeparator)
-
-	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), networkACLRuleImportIDSeparator)
-	}
-
-	naclID := parts[0]
-	ruleNumber, err := strconv.Atoi(parts[1])
-
-	if err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
 
-	protocol := parts[2]
-	egress, err := strconv.ParseBool(parts[3])
-
-	if err != nil {
-		return nil, err
-	}
+	naclID, ruleNumber, egress, protocol := d.Get("network_acl_id").(string), d.Get("rule_number").(int), d.Get("egress").(bool), d.Get(names.AttrProtocol).(string)
 
 	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
-	d.Set("egress", egress)
-	d.Set("network_acl_id", naclID)
-	d.Set("rule_number", ruleNumber)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -304,4 +296,47 @@ func networkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, 
 	fmt.Fprintf(&buf, "%t-", egress)
 	fmt.Fprintf(&buf, "%s-", protocol)
 	return fmt.Sprintf("nacl-%d", create.StringHashcode(buf.String()))
+}
+
+func parseNetworkACLRuleImportID(id string) (naclID, protocol string, egress bool, ruleNumber int, err error) {
+	idParts := strings.Split(id, networkACLRuleImportIDSeparator)
+	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
+		err = fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", id, networkACLRuleImportIDSeparator)
+		return "", "", false, 0, err
+	}
+
+	naclID = idParts[0]
+	protocol = idParts[2]
+
+	ruleNumber, err = strconv.Atoi(idParts[1])
+	if err != nil {
+		return "", "", false, 0, err
+	}
+
+	egress, err = strconv.ParseBool(idParts[3])
+	if err != nil {
+		return "", "", false, 0, err
+	}
+	return naclID, protocol, egress, ruleNumber, err
+}
+
+type networkACLRuleImportID struct{}
+
+func (networkACLRuleImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (networkACLRuleImportID) Parse(id string) (string, map[string]any, error) {
+	naclID, protocol, egress, ruleNumber, err := parseNetworkACLRuleImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	results := map[string]any{
+		"rule_number":      ruleNumber,
+		names.AttrProtocol: protocol,
+		"egress":           egress,
+		"network_acl_id":   naclID,
+	}
+	return id, results, nil
 }

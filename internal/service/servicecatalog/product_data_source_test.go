@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -21,14 +20,14 @@ func TestAccServiceCatalogProductDataSource_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
@@ -59,14 +58,14 @@ func TestAccServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProductDataSourceConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
