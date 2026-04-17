@@ -8,6 +8,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"iter"
 	"os"
 	"strings"
@@ -34,16 +35,17 @@ func (file *PackageFile) PackageName() string {
 }
 
 type Package struct {
-	name  string
 	files []*PackageFile
-}
-
-func (pkg *Package) Name() string {
-	return pkg.name
+	types *types.Package
 }
 
 func (pkg *Package) Files() []*PackageFile {
 	return pkg.files
+}
+
+// `Scope` returns the package scope.
+func (pkg *Package) Scope() *types.Scope {
+	return pkg.types.Scope()
 }
 
 func LoadPackage(sourcePackage string) (*Package, error) {
@@ -60,12 +62,12 @@ func LoadPackage(sourcePackage string) (*Package, error) {
 	pkg := pkgs[0]
 
 	return &Package{
-		name: pkg.Name,
 		files: tfslices.ApplyToAll(pkg.Syntax, func(file *ast.File) *PackageFile {
 			return &PackageFile{
 				file: file,
 			}
 		}),
+		types: pkg.Types,
 	}, nil
 }
 
