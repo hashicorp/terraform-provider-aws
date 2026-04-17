@@ -33,17 +33,21 @@ import (
 )
 
 // @SDKResource("aws_route53_zone", name="Hosted Zone")
+// @Testing(name="Zone")
 // @Tags(identifierAttribute="zone_id", resourceType="hostedzone")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53;route53.GetHostedZoneOutput")
+// @IdentityAttribute("zone_id")
+// @Testing(idAttrDuplicates="zone_id")
+// @Testing(domainTfVar="zoneName")
+// @Testing(preIdentityVersion="v6.41.0")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
 func resourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
 		ReadWithoutTimeout:   resourceZoneRead,
 		UpdateWithoutTimeout: resourceZoneUpdate,
 		DeleteWithoutTimeout: resourceZoneDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -207,8 +211,14 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceZoneFlatten(ctx, conn, d, meta.(*conns.AWSClient), output)...)
+}
+
+func resourceZoneFlatten(ctx context.Context, conn *route53.Client, d *schema.ResourceData, awsClient *conns.AWSClient, output *route53.GetHostedZoneOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
-	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), zoneID))
+	d.Set(names.AttrARN, zoneARN(ctx, awsClient, zoneID))
 	d.Set(names.AttrComment, "")
 	d.Set("delegation_set_id", "")
 	if v := output.HostedZone.Features; v != nil {
@@ -233,6 +243,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		d.Set(names.AttrComment, output.HostedZone.Config.Comment)
 
 		if output.HostedZone.Config.PrivateZone {
+			var err error
 			nameServers, err = findNameServersByZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string))
 
 			if err != nil {
@@ -469,7 +480,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 
 		output, err := conn.ChangeResourceRecordSets(ctx, &input)
 
-		if v, ok := errs.As[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
+		if v, ok := errors.AsType[*awstypes.InvalidChangeBatch](err); ok && len(v.Messages) > 0 {
 			err = fmt.Errorf("%s: %w", v.ErrorCode(), errors.Join(tfslices.ApplyToAll(v.Messages, errors.New)...))
 		}
 

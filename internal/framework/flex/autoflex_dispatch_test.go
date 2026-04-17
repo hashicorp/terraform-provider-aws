@@ -560,8 +560,9 @@ func TestExpandExpander(t *testing.T) {
 	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
+//go:fix inline
 func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
-	return &v
+	return new(v)
 }
 
 func TestExpandInterface(t *testing.T) {

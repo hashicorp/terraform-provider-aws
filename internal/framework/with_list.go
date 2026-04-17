@@ -125,8 +125,7 @@ func walkStructSetZeroAttrNull(ctx context.Context, value reflect.Value, diags *
 		return
 	}
 
-	for index := 0; index < value.NumField(); index++ {
-		field := value.Field(index)
+	for _, field := range value.Fields() {
 		if !field.CanSet() {
 			continue
 		}

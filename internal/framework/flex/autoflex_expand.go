@@ -1917,8 +1917,7 @@ func potentialXMLWrapperStructUncached(t reflect.Type) bool {
 	// Check if struct has the XML wrapper pattern:
 	// - One slice field (Items, Elements, Members, etc.)
 	// - One Quantity field (*int32)
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		fieldType := field.Type
 
 		// Check for slice field
@@ -1941,8 +1940,7 @@ func getXMLWrapperSliceFieldName(t reflect.Type) string {
 		return ""
 	}
 
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	for field := range t.Fields() {
 		if field.Type.Kind() == reflect.Slice {
 			return field.Name
 		}
@@ -2215,8 +2213,7 @@ func (expander autoExpander) isXMLWrapperCollapseTarget(structType reflect.Type)
 	hasQuantity := false
 	hasOtherFields := false
 
-	for i := 0; i < structType.NumField(); i++ {
-		field := structType.Field(i)
+	for field := range structType.Fields() {
 		fieldName := field.Name
 
 		if field.Type.Kind() == reflect.Slice {
@@ -2432,8 +2429,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		allFieldsNull := true
 		hasCollectionFields := false
 
-		for i := 0; i < typeFrom.NumField(); i++ {
-			sourceField := typeFrom.Field(i)
+		for sourceField := range typeFrom.Fields() {
 			sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 
 			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
@@ -2451,8 +2447,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		if hasCollectionFields && allFieldsNull {
 			// Check if any collection field has omitempty=false (should create zero-value)
 			shouldCreateZeroValue := false
-			for i := 0; i < typeFrom.NumField(); i++ {
-				sourceField := typeFrom.Field(i)
+			for sourceField := range typeFrom.Fields() {
 				sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 				if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 					switch sourceValue.(type) {
@@ -2471,8 +2466,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 				toFieldVal.SetZero()
 
 				// Mark all collection fields as processed
-				for i := 0; i < typeFrom.NumField(); i++ {
-					sourceField := typeFrom.Field(i)
+				for sourceField := range typeFrom.Fields() {
 					sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 					if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 						switch sourceValue.(type) {

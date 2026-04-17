@@ -237,7 +237,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+			if use, ok := errors.AsType[*retry.UnexpectedStateError](err); ok {
 				if use.State == string(awstypes.DirectoryStageFailed) {
 					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
 						"directory_id":       d.Id(),
@@ -292,7 +292,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 		err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			if err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-				if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+				if use, ok := errors.AsType[*retry.UnexpectedStateError](err); ok {
 					if use.State == string(awstypes.DataAccessStatusFailed) {
 						tflog.Info(ctx, "retrying failed Directory Data Access enablement", map[string]any{
 							"directory_id": d.Id(),
@@ -412,7 +412,7 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			if err := waitDirectoryDataAccess(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-				if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+				if use, ok := errors.AsType[*retry.UnexpectedStateError](err); ok {
 					if use.State == string(awstypes.DataAccessStatusFailed) {
 						tflog.Info(ctx, "retrying failed Directory Data Access enablement", map[string]any{
 							"directory_id": d.Id(),

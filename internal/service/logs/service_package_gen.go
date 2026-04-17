@@ -162,6 +162,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_cloudwatch_log_metric_filter",
 			Name:     "Metric Filter",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      metricFilterImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourcePolicy,
@@ -209,6 +217,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  newMetricFilterResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_metric_filter",
+			Name:     "Metric Filter",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrLogGroupName, true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
 		},
 		{
 			Factory:  newSubscriptionFilterResourceAsListResource,

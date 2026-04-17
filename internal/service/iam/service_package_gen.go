@@ -453,6 +453,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_user_policy_attachment",
 			Name:     "User Policy Attachment",
 			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("user", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      userPolicyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceUserSSHKey,
@@ -529,6 +537,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
 				inttypes.WithMutableIdentity(),
 			),
+		},
+		{
+			Factory:  newUserPolicyAttachmentResourceAsListResource,
+			TypeName: "aws_iam_user_policy_attachment",
+			Name:     "User Policy Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("user", true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
 		},
 	})
 }

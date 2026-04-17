@@ -177,17 +177,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_eks_addon.my_eks_addon
-  id = "my_cluster_name:my_addon_name"
+  to = aws_eks_addon.example
+  identity = {
+    cluster_name = "example-cluster"
+    addon_name   = "example-addon"
+  }
+}
+
+resource "aws_eks_addon" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `addon_name` (String) Name of the EKS add-on.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Add-Ons using `cluster_name` and `addon_name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_eks_addon.example
+  id = "example-cluster:example-addon"
+}
+```
+
+Using `terraform import`, import Add-Ons using `cluster_name` and `addon_name` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
+% terraform import aws_eks_addon.example example-cluster:example-addon
 ```
