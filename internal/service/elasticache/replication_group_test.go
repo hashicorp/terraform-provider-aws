@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -5211,6 +5212,136 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName, authToken, authTokenVersion, updateStrategy))
+}
+
+func testAccReplicationGroupConfig_authTokenMigrationBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.micro"
+  num_cache_clusters   = "1"
+  port                 = 6379
+  subnet_group_name    = aws_elasticache_subnet_group.test.name
+  security_group_ids   = [aws_security_group.test.id]
+  engine_version       = "6.2"
+  parameter_group_name = "default.redis6.x"
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName))
+}
+
+func testAccReplicationGroupConfig_authTokenUpdateStrategyMigration(rName string, authToken string, updateStrategy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  engine_version             = "6.2"
+  parameter_group_name       = "default.redis6.x"
+  transit_encryption_enabled = true
+  auth_token                 = %[2]q
+  auth_token_update_strategy = %[3]q
+  apply_immediately          = true
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, authToken, updateStrategy))
+}
+
+func testAccReplicationGroupConfig_userGroupMigration(rName string, userId string, userGroup string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[2]q
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "redis"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[3]q
+  engine        = "redis"
+  user_ids      = [aws_elasticache_user.test.user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  engine_version             = "6.2"
+  parameter_group_name       = "default.redis6.x"
+  transit_encryption_enabled = true
+  auth_token_update_strategy = "DELETE"
+  user_group_ids             = [aws_elasticache_user_group.test.id]
+  apply_immediately          = true
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, userId, userGroup))
 }
 
 func testAccReplicationGroupConfig_numberCacheClusters(rName string, numberCacheClusters int) string {
