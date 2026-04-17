@@ -1134,35 +1134,30 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChanges("auth_token", "auth_token_wo_version", "auth_token_update_strategy") {
-			authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
-			diags = append(diags, di...)
-			if diags.HasError() {
-				return diags
-			}
-
-			var authInput elasticache.ModifyReplicationGroupInput
-
-			if authTokenWO != "" {
-				authInput = elasticache.ModifyReplicationGroupInput{
-					ApplyImmediately:        aws.Bool(true),
-					AuthToken:               aws.String(authTokenWO),
-					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
-					ReplicationGroupId:      aws.String(d.Id()),
+			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
+			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
+				authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+				diags = append(diags, di...)
+				if diags.HasError() {
+					return diags
 				}
-			} else {
-				authInput = elasticache.ModifyReplicationGroupInput{
-					ApplyImmediately:        aws.Bool(true),
-					AuthToken:               aws.String(d.Get("auth_token").(string)),
-					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
-					ReplicationGroupId:      aws.String(d.Id()),
-				}
-			}
 
-			updateFuncs = append(updateFuncs, func() error {
-				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
-				// modifying to match out of band operations may result in this error
-				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
-					return nil
+				var authInput elasticache.ModifyReplicationGroupInput
+
+				if authTokenWO != "" {
+					authInput = elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:        aws.Bool(true),
+						AuthToken:               aws.String(authTokenWO),
+						AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
+						ReplicationGroupId:      aws.String(d.Id()),
+					}
+				} else {
+					authInput = elasticache.ModifyReplicationGroupInput{
+						ApplyImmediately:        aws.Bool(true),
+						AuthToken:               aws.String(d.Get("auth_token").(string)),
+						AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
+						ReplicationGroupId:      aws.String(d.Id()),
+					}
 				}
 
 				updateFuncs = append(updateFuncs, func() error {
