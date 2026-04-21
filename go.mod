@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.37.8
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.15
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.34.21
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.19.2
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.13
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.15
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.57.1
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.59.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.22
@@ -105,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.298.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.14
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.78.1
@@ -122,7 +122,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.24
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/evs v1.6.5
+	github.com/aws/aws-sdk-go-v2/service/evs v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.33.22
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.14
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.21
@@ -135,7 +135,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.22
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.14
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.8
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.6
@@ -147,7 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.72.7
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.15
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.21
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.49.3
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.22
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.5
@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.60.3
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.11
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/location v1.50.14
+	github.com/aws/aws-sdk-go-v2/service/location v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.15
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.48.1
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.21
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.24
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.16
-	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.30.2
