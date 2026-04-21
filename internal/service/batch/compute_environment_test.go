@@ -1933,7 +1933,7 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 
@@ -1980,7 +1980,7 @@ func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 // TestAccBatchComputeEnvironment_unmanagedVCPUsWithManaged tests that unmanaged_v_cpus parameter cannot be used with MANAGED type
 func TestAccBatchComputeEnvironment_unmanagedVCPUsWithManaged(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
