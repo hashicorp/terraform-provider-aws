@@ -1,5 +1,8 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
-# Adding a New Ephemeral Resource
+# Adding a New Ephemeral Resource Type
 
 New ephemeral resources are required when AWS introduces a new service or adds features to an existing service that necessitate a new ephemeral resource. Ephemeral resources produce ephemeral values and are never stored in the state. Any resource that produces a sensitive value can be an ephemeral resource, though some are more useful than others.
 
@@ -46,12 +49,16 @@ import (
 )
 
 // @EphemeralResource("aws_something_example", name="Example")
-func newEphemeralExample(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralExample{}, nil
+func newExampleEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &exampleEphemeralResource{}, nil
 }
 
-type ephemeralExample struct {
-	framework.EphemeralResourceWithConfigure
+type exampleEphemeralResource struct {
+	framework.EphemeralResourceWithModel[exampleEphemeralResourceModel]
+}
+
+type exampleEphemeralResourceModel {
+	// Fields corresponding to attributes in the Schema.
 }
 ```
 

@@ -139,6 +139,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `description` - (Optional) Description of the rule
 * `evaluation_mode` - (Optional) The modes the Config rule can be evaluated in. See [Evaluation Mode](#evaluation-mode) for more details.
@@ -197,17 +198,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Rule using the name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_config_config_rule.foo
+  to = aws_config_config_rule.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_config_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Rules using the `name`. For example:
+
+```terraform
+import {
+  to = aws_config_config_rule.example
   id = "example"
 }
 ```
 
-Using `terraform import`, import Config Rule using the name. For example:
+Using `terraform import`, import Config Rules using the `name`. For example:
 
 ```console
-% terraform import aws_config_config_rule.foo example
+% terraform import aws_config_config_rule.example example
 ```

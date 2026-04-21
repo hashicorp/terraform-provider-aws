@@ -44,6 +44,7 @@ resource "aws_verifiedaccess_instance" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description for the AWS Verified Access Instance.
 * `fips_enabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
 * `cidr_endpoints_custom_subdomain` - (Optional) The custom subdomain for the CIDR endpoints.

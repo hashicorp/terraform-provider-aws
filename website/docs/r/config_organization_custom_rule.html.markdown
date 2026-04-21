@@ -45,6 +45,7 @@ resource "aws_config_organization_custom_rule" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `lambda_function_arn` - (Required) Amazon Resource Name (ARN) of the rule Lambda Function
 * `name` - (Required) The name of the rule
 * `trigger_types` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`, and `ScheduledNotification`
@@ -73,7 +74,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Custom Rules using the name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_config_organization_custom_rule.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_organization_custom_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Custom Rules using the `name`. For example:
 
 ```terraform
 import {
@@ -82,7 +109,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Config Organization Custom Rules using the name. For example:
+Using `terraform import`, import Config Organization Custom Rules using the `name`. For example:
 
 ```console
 % terraform import aws_config_organization_custom_rule.example example

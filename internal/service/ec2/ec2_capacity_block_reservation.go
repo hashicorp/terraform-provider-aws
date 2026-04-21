@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -24,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,10 +42,9 @@ func newCapacityBlockReservationResource(context.Context) (resource.ResourceWith
 }
 
 type capacityBlockReservationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[capacityBlockReservationReservationModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-	framework.WithNoOpUpdate[capacityBlockReservationReservationModel]
 	framework.WithNoOpDelete
 }
 
@@ -217,7 +218,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 
 	cr, err := findCapacityReservationByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -239,6 +240,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 }
 
 type capacityBlockReservationReservationModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                     `tfsdk:"arn"`
 	AvailabilityZone        types.String                                                     `tfsdk:"availability_zone"`
 	CapacityBlockOfferingID types.String                                                     `tfsdk:"capacity_block_offering_id"`

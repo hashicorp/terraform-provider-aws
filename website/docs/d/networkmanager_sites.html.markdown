@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_sites"
 description: |-
-  Retrieve information about sites.
+  Provides details about existing Network Manager sites.
 ---
 
 # Data Source: aws_networkmanager_sites
 
-Retrieve information about sites.
+Provides details about existing Network Manager sites.
 
 ## Example Usage
 

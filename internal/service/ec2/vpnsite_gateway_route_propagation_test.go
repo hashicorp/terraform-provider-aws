@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -8,31 +8,29 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSiteVPNGatewayRoutePropagation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpn_gateway_route_propagation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayRoutePropagationConfig_basic(rName),
+				Config: testAccVPNGatewayRoutePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayRoutePropagationExists(ctx, resourceName),
+					testAccCheckVPNGatewayRoutePropagationExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -42,19 +40,19 @@ func TestAccSiteVPNGatewayRoutePropagation_basic(t *testing.T) {
 func TestAccSiteVPNGatewayRoutePropagation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpn_gateway_route_propagation.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx),
+		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayRoutePropagationConfig_basic(rName),
+				Config: testAccVPNGatewayRoutePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPNGatewayRoutePropagationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGatewayRoutePropagation(), resourceName),
+					testAccCheckVPNGatewayRoutePropagationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNGatewayRoutePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,7 +60,7 @@ func TestAccSiteVPNGatewayRoutePropagation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -79,13 +77,13 @@ func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, n string)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		return tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 	}
 }
 
-func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_gateway_route_propagation" {
@@ -98,11 +96,11 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 				return err
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+			conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 			err = tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -117,7 +115,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccSiteVPNGatewayRoutePropagationConfig_basic(rName string) string {
+func testAccVPNGatewayRoutePropagationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

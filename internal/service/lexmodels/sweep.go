@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels
@@ -44,7 +44,7 @@ func sweepBotAliases(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &lexmodelbuildingservice.GetBotsInput{}
 	conn := client.LexModelsClient(ctx)
@@ -109,7 +109,7 @@ func sweepBots(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &lexmodelbuildingservice.GetBotsInput{}
 	conn := client.LexModelsClient(ctx)
@@ -150,7 +150,7 @@ func sweepIntents(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &lexmodelbuildingservice.GetIntentsInput{}
 	conn := client.LexModelsClient(ctx)
@@ -191,7 +191,7 @@ func sweepSlotTypes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &lexmodelbuildingservice.GetSlotTypesInput{}
 	conn := client.LexModelsClient(ctx)

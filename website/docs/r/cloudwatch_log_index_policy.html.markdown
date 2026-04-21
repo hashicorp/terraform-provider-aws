@@ -29,8 +29,9 @@ resource "aws_cloudwatch_log_index_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `log_group_name` - (Required) Log group name to set the policy for.
 * `policy_document` - (Required) JSON policy document. This is a JSON formatted string.
 

@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_notifications_notification_configuration
+```
+
+```release-note:new-resource
+aws_notifications_event_rule
+```
+
+```release-note:new-resource
+aws_notificationscontacts_email_contact
+```
+
+```release-note:new-resource
+aws_notifications_channel_association
+```

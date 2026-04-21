@@ -1,0 +1,30 @@
+resource "aws_acmpca_certificate" "test" {
+{{- template "region" }}
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+{{- template "region" }}
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = var.rName
+    }
+  }
+}
+
+data "aws_partition" "current" {}

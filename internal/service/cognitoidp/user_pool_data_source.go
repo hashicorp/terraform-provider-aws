@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -26,7 +28,7 @@ func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure,
 }
 
 type userPoolDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[userPoolDataSourceModel]
 }
 
 func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -135,6 +137,7 @@ func (d *userPoolDataSource) Read(ctx context.Context, request datasource.ReadRe
 }
 
 type userPoolDataSourceModel struct {
+	framework.WithRegionModel
 	AccountRecoverySetting   fwtypes.ListNestedObjectValueOf[accountRecoverySettingTypeModel] `tfsdk:"account_recovery_setting"`
 	AdminCreateUserConfig    fwtypes.ListNestedObjectValueOf[adminCreateUserConfigTypeModel]  `tfsdk:"admin_create_user_config"`
 	ARN                      types.String                                                     `tfsdk:"arn"`

@@ -94,6 +94,7 @@ resource "aws_directory_service_directory" "two" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `conditional_forwarder_ip_addrs` - (Optional) Set of IPv4 addresses for the DNS server associated with the remote Directory.
   Can contain between 1 and 4 values.
 * `delete_associated_conditional_forwarder` - (Optional) Whether to delete the conditional forwarder when deleting the Trust relationship.

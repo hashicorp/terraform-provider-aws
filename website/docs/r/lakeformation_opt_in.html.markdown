@@ -21,8 +21,9 @@ resource "aws_lakeformation_opt_in" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) Lake Formation principal. Supported principals are IAM users or IAM roles. See [Principal](#principal) for more details.
 * `resource_data` - (Required) Structure for the resource. See [Resource](#resource) for more details.
 
@@ -70,6 +71,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `name` - Name of the database resource.Unique to the Data Catalog.
 * `catalog_id` - Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### LF-Tag
+
+* `key` - (Required) Key name for the LF-Tag.
+* `values` - (Required) Set of tag values for the LF-Tag key. At least one value is required. Each value can be 1-255 characters.
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
 ### LF-Tag Expression
 

@@ -24,10 +24,11 @@ resource "aws_placement_group" "web" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the placement group.
 * `partition_count` - (Optional) The number of partitions to create in the
   placement group.  Can only be specified when the `strategy` is set to
-  `partition`.  Valid values are 1 - 7 (default is `2`).
+  `partition`.  Must be at least `1`. (default is `2`).
 * `spread_level` - (Optional) Determines how placement groups spread instances. Can only be used
    when the `strategy` is set to `spread`. Can be `host` or `rack`. `host` can only be used for Outpost placement groups. Defaults to `rack`.
 * `strategy` - (Required) The placement strategy. Can be `cluster`, `partition` or `spread`.

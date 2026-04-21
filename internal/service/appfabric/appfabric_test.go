@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric_test
@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const serializeDelay = 10 * time.Second
@@ -21,10 +20,18 @@ func TestAccAppFabric_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AppBundle": {
-			acctest.CtBasic:      testAccAppBundle_basic,
-			acctest.CtDisappears: testAccAppBundle_disappears,
-			"cmk":                testAccAppBundle_cmk,
-			"tags":               testAccAppFabricAppBundle_tagsSerial,
+			acctest.CtBasic:                 testAccAppBundle_basic,
+			acctest.CtDisappears:            testAccAppBundle_disappears,
+			"cmk":                           testAccAppBundle_cmk,
+			"tags":                          testAccAppFabricAppBundle_tagsSerial,
+			"regionCreateNull":              testAccAppBundle_regionCreateNull,
+			"regionCreateNonNull":           testAccAppBundle_regionCreateNonNull,
+			"upgradeFromV5":                 testAccAppBundle_upgradeFromV5,
+			"upgradeFromV5PlanRefreshFalse": testAccAppBundle_upgradeFromV5PlanRefreshFalse,
+			"upgradeFromV5WithUpdatePlanRefreshFalse":    testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse,
+			"upgradeFromV5WithDefaultRegionRefreshFalse": testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse,
+			"upgradeFromV5WithNewRegionRefreshFalse":     testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse,
+			"Identity":                                   testAccAppFabricAppBundle_identitySerial,
 		},
 		"AppAuthorization": {
 			acctest.CtBasic:      testAccAppAuthorization_basic,
@@ -55,7 +62,7 @@ func TestAccAppFabric_serial(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 	input := &appfabric.ListAppBundlesInput{}
 	_, err := conn.ListAppBundles(ctx, input)

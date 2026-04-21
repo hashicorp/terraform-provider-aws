@@ -1,16 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -92,13 +92,18 @@ func dataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"volume_initialization_rate": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := ec2.DescribeVolumesInput{}
 
@@ -137,15 +142,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.SetId(aws.ToString(volume.VolumeId))
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
@@ -157,6 +154,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)
+	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
 	d.Set(names.AttrVolumeType, volume.VolumeType)
 
 	setTagsOut(ctx, volume.Tags)

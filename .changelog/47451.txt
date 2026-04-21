@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_subscription_filter: Add Resource Identity support
+```
+
+```release-note:new-list-resource
+aws_cloudwatch_log_subscription_filter
+```

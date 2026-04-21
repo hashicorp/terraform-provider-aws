@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
@@ -13,7 +13,7 @@ var (
 	FindWorkGroupByName               = findWorkGroupByName
 	QueryExecutionResult              = queryExecutionResult
 
-	ResourceCapacityReservation = newResourceCapacityReservation
+	ResourceCapacityReservation = newCapacityReservationResource
 	ResourceDataCatalog         = resourceDataCatalog
 	ResourceDatabase            = resourceDatabase
 	ResourceNamedQuery          = resourceNamedQuery

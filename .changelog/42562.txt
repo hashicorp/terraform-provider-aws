@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53profiles_resource_association: Change `resource_properties` to Computed to enable `vpc_endpoint` associations
+```

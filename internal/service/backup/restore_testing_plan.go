@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package backup
 
@@ -24,14 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,7 +49,7 @@ func newRestoreTestingPlanResource(_ context.Context) (resource.ResourceWithConf
 }
 
 type restoreTestingPlanResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[restoreTestingPlanResourceModel]
 }
 
 func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -164,7 +166,7 @@ func (r *restoreTestingPlanResource) Create(ctx context.Context, request resourc
 
 	name := data.RestoreTestingPlanName.ValueString()
 	input := &backup.CreateRestoreTestingPlanInput{
-		CreatorRequestId:   aws.String(sdkid.UniqueId()),
+		CreatorRequestId:   aws.String(create.UniqueId(ctx)),
 		RestoreTestingPlan: &awstypes.RestoreTestingPlanForCreate{},
 		Tags:               getTagsIn(ctx),
 	}
@@ -210,7 +212,7 @@ func (r *restoreTestingPlanResource) Read(ctx context.Context, request resource.
 	name := data.RestoreTestingPlanName.ValueString()
 	restoreTestingPlan, err := findRestoreTestingPlanByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -298,7 +300,7 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 }
 
 func (r *restoreTestingPlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*awstypes.RestoreTestingPlanForGet, error) {
@@ -314,8 +316,7 @@ func findRestoreTestingPlan(ctx context.Context, conn *backup.Client, input *bac
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -324,13 +325,14 @@ func findRestoreTestingPlan(ctx context.Context, conn *backup.Client, input *bac
 	}
 
 	if output == nil || output.RestoreTestingPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RestoreTestingPlan, nil
 }
 
 type restoreTestingPlanResourceModel struct {
+	framework.WithRegionModel
 	RecoveryPointSelection     fwtypes.ListNestedObjectValueOf[restoreRecoveryPointSelectionModel] `tfsdk:"recovery_point_selection"`
 	RestoreTestingPlanARN      types.String                                                        `tfsdk:"arn"`
 	RestoreTestingPlanName     types.String                                                        `tfsdk:"name"`

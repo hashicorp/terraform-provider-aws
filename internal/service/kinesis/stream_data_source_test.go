@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis_test
@@ -10,25 +10,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	resourceName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 2),
@@ -61,15 +59,15 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 
 func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	resourceName := "aws_kinesis_stream.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_encryption(rName, 2),
@@ -90,21 +88,53 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 	})
 }
 
+func TestAccKinesisStreamDataSource_maxRecordSizeInKiB(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName, 10240),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_record_size_in_kib", resourceName, "max_record_size_in_kib"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/40494
 func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 	const shardCount = 1100
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckShardLimitGreaterThanOrEqual(ctx, t, shardCount)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 1100),
@@ -119,7 +149,7 @@ func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
 func testAccPreCheckShardLimitGreaterThanOrEqual(ctx context.Context, t *testing.T, n int) {
 	t.Helper()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).KinesisClient(ctx)
 	output, err := tfkinesis.FindLimits(ctx, conn)
 
 	if acctest.PreCheckSkipError(err) {
@@ -173,6 +203,7 @@ data "aws_kinesis_stream" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -193,4 +224,17 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 `, rName, shardCount)
+}
+func testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName string, maxRecordSizeInKiB int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name                   = %[1]q
+  max_record_size_in_kib = %[2]d
+  shard_count            = 1
+}
+
+data "aws_kinesis_stream" "test" {
+  name = aws_kinesis_stream.test.name
+}
+`, rName, maxRecordSizeInKiB)
 }

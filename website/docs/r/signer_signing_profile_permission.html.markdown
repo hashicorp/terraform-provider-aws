@@ -54,6 +54,7 @@ resource "aws_signer_signing_profile_permission" "sp_permission_3" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `profile_name` - (Required) Name of the signing profile to add the cross-account permissions.
 * `action` - (Required) An AWS Signer action permitted as part of cross-account permissions. Valid values: `signer:StartSigningJob`, `signer:GetSigningProfile`, `signer:RevokeSignature`, or `signer:SignPayload`.
 * `principal` - (Required) The AWS principal to be granted a cross-account permission.

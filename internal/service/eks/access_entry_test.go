@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -9,39 +9,33 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSAccessEntry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					resource.TestCheckResourceAttrSet(resourceName, "access_entry_arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "0"),
@@ -62,28 +56,24 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 
 func TestAccEKSAccessEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceAccessEntry(), resourceName),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceAccessEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,29 +83,25 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 
 func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 	clusterResourceName := "aws_eks_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,27 +111,23 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 
 func TestAccEKSAccessEntry_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -158,7 +140,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 			{
 				Config: testAccAccessEntryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -167,7 +149,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 			{
 				Config: testAccAccessEntryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -178,27 +160,23 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 
 func TestAccEKSAccessEntry_type(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_type(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "kubernetes_groups.#", 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EC2_LINUX"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
@@ -215,27 +193,23 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 
 func TestAccEKSAccessEntry_username(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_username(rName, "user1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
@@ -250,7 +224,7 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 			{
 				Config: testAccAccessEntryConfig_username(rName, "user2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
@@ -263,27 +237,23 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 
 func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var accessentry types.AccessEntry
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_access_entry.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_eventualConsistency(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					testAccCheckAccessEntryExists(ctx, t, resourceName, &accessentry),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "kubernetes_groups.#", 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EC2_LINUX"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
@@ -298,9 +268,9 @@ func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessEntryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_access_entry" {
@@ -309,7 +279,7 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -324,14 +294,14 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckAccessEntryExists(ctx context.Context, n string, v *types.AccessEntry) resource.TestCheckFunc {
+func testAccCheckAccessEntryExists(ctx context.Context, t *testing.T, n string, v *types.AccessEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		output, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"])
 
@@ -349,6 +319,10 @@ func testAccAccessEntryConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -359,7 +333,7 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -472,7 +446,7 @@ resource "aws_iam_role" "test2" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -502,7 +476,7 @@ resource "aws_iam_role" "test2" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": "sts:AssumeRole"
     }

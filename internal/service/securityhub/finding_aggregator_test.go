@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,16 +21,16 @@ func testAccFindingAggregator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFindingAggregatorExists(ctx, resourceName),
+					testAccCheckFindingAggregatorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS"),
 					resource.TestCheckNoResourceAttr(resourceName, "specified_regions"),
 				),
@@ -44,7 +43,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 			{
 				Config: testAccFindingAggregatorConfig_specifiedRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFindingAggregatorExists(ctx, resourceName),
+					testAccCheckFindingAggregatorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "SPECIFIED_REGIONS"),
 					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "3"),
 				),
@@ -52,9 +51,16 @@ func testAccFindingAggregator_basic(t *testing.T) {
 			{
 				Config: testAccFindingAggregatorConfig_allRegionsExceptSpecified(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFindingAggregatorExists(ctx, resourceName),
+					testAccCheckFindingAggregatorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS_EXCEPT_SPECIFIED"),
 					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "2"),
+				),
+			},
+			{
+				Config: testAccFindingAggregatorConfig_NoRegions(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFindingAggregatorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "linking_mode", "NO_REGIONS"),
 				),
 			},
 		},
@@ -65,17 +71,17 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx),
+		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFindingAggregatorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceFindingAggregator(), resourceName),
+					testAccCheckFindingAggregatorExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceFindingAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,14 +89,14 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckFindingAggregatorExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
@@ -98,9 +104,9 @@ func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource
 	}
 }
 
-func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFindingAggregatorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_finding_aggregator" {
@@ -109,7 +115,7 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -160,4 +166,16 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
   depends_on = [aws_securityhub_account.example]
 }
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
+}
+
+func testAccFindingAggregatorConfig_NoRegions() string {
+	return `
+resource "aws_securityhub_account" "example" {}
+
+resource "aws_securityhub_finding_aggregator" "test_aggregator" {
+  linking_mode = "NO_REGIONS"
+
+  depends_on = [aws_securityhub_account.example]
+}
+`
 }

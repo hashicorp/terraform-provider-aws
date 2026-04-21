@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fis
 
@@ -14,15 +16,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -227,6 +229,10 @@ func resourceExperimentTemplate() *schema.Resource {
 									"log_group_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											verify.ValidARN,
+											validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+										),
 									},
 								},
 							},
@@ -370,7 +376,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := fis.CreateExperimentTemplateInput{
 		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]any)),
 		RoleArn:          aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -409,7 +415,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 	experimentTemplate, err := findExperimentTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FIS Experiment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -535,8 +541,7 @@ func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -545,7 +550,7 @@ func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string
 	}
 
 	if output == nil || output.ExperimentTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ExperimentTemplate, nil
@@ -1322,14 +1327,16 @@ func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 }
 
 func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
-	// See https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets
+	// See https://docs.aws.amazon.com/fis/latest/userguide/action-sequence.html#action-targets
 	allowedActionTargets := []string{
 		"AutoScalingGroups",
 		"Buckets",
 		"Cluster",
 		"Clusters",
 		"DBInstances",
+		"Functions",
 		"Instances",
+		"KinesisStreams",
 		"ManagedResources",
 		"Nodegroups",
 		"Pods",
@@ -1341,6 +1348,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Tasks",
 		"TransitGateways",
 		"Volumes",
+		"VPCEndpoints",
 	}
 
 	return validation.All(

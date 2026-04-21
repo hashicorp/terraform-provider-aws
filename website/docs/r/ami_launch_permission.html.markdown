@@ -45,6 +45,7 @@ resource "aws_ami_launch_permission" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) AWS account ID for the launch permission.
 * `group` - (Optional) Name of the group for the launch permission. Valid values: `"all"`.
 * `image_id` - (Required) ID of the AMI.

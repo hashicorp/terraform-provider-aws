@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -12,30 +14,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_endpoint_group", name="Custom Routing Endpoint Group")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingEndpointGroup")
 func resourceCustomRoutingEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingEndpointGroupCreate,
 		ReadWithoutTimeout:   resourceCustomRoutingEndpointGroupRead,
 		DeleteWithoutTimeout: resourceCustomRoutingEndpointGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -112,7 +113,7 @@ func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.Res
 	input := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
 		DestinationConfigurations: expandCustomRoutingDestinationConfigurations(d.Get("destination_configuration").(*schema.Set).List()),
 		EndpointGroupRegion:       aws.String(meta.(*conns.AWSClient).Region(ctx)),
-		IdempotencyToken:          aws.String(id.UniqueId()),
+		IdempotencyToken:          aws.String(create.UniqueId(ctx)),
 		ListenerArn:               aws.String(d.Get("listener_arn").(string)),
 	}
 
@@ -163,7 +164,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 
 	endpointGroup, err := findCustomRoutingEndpointGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Custom Routing Endpoint Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -229,8 +230,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 
 	if errs.IsA[*awstypes.EndpointGroupNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -239,7 +239,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil

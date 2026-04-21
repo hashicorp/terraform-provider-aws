@@ -77,6 +77,7 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_store_id` - (Required) Specifies the ID of the policy store in which you want to store this identity source.
 * `configuration`- (Required) Specifies the details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration) below.
 * `principal_entity_type`- (Optional) Specifies the namespace and data type of the principals generated for identities authenticated by the new identity source.
@@ -116,7 +117,7 @@ This resource supports the following arguments:
 #### Identity Token Only
 
 * `client_ids` - (Optional) The ID token audience, or client ID, claim values that you want to accept in your policy store from an OIDC identity provider.
-* `group_entity_type` - (Optional) The claim that determines the principal in OIDC access tokens.
+* `principal_id_claim` - (Optional) The claim that determines the principal in OIDC identity tokens.
 
 #### Open ID Group Configuration
 

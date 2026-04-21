@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -245,6 +247,26 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 										Computed: true,
 									},
 									"s3_prefix": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"ssm_parameter_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ami_account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"data_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"parameter_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

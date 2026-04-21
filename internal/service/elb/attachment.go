@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -14,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -58,7 +60,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.RegisterInstancesWithLoadBalancer(ctx, input)
 	}, errCodeInvalidTarget)
 
@@ -67,7 +69,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", lbName)))
+	d.SetId(sdkid.PrefixedUniqueId(fmt.Sprintf("%s-", lbName)))
 
 	return diags
 }
@@ -80,7 +82,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta an
 	instance := d.Get("instance").(string)
 	err := findLoadBalancerAttachmentByTwoPartKey(ctx, conn, lbName, instance)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Attachment (%s/%s) not found, removing from state", lbName, instance)
 		d.SetId("")
 		return diags

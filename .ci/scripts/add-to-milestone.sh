@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 MILESTONE_NAME=$(gh api graphql -F current="$MILESTONE" -f query='
 query($current: String!) {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -19,12 +18,12 @@ import (
 
 func TestAccKMSSecretsEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 	plaintext := "my-plaintext-string"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.KMSServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -49,8 +48,10 @@ func testAccSecretsEphemeralResourceConfig_basic(rName, secretString string) str
 		acctest.ConfigWithEchoProvider("ephemeral.aws_kms_secrets.test"),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  is_enabled  = true
+  description             = %[1]q
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_ciphertext" "test" {

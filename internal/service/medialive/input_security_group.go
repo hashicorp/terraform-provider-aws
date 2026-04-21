@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package medialive
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
 // @Testing(generator=false)
-func ResourceInputSecurityGroup() *schema.Resource {
+func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,
 		ReadWithoutTimeout:   resourceInputSecurityGroupRead,
@@ -113,9 +115,9 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
+	out, err := findInputSecurityGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive InputSecurityGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -191,7 +193,7 @@ func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
-		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
+		Refresh:                   statusInputSecurityGroup(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -209,7 +211,7 @@ func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputSecurityGroupStateUpdating),
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
-		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
+		Refresh:                   statusInputSecurityGroup(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -227,7 +229,7 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.InputSecurityGroupStateDeleted),
-		Refresh: statusInputSecurityGroup(ctx, conn, id),
+		Refresh: statusInputSecurityGroup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -239,10 +241,10 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 	return nil, err
 }
 
-func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := FindInputSecurityGroupByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+func statusInputSecurityGroup(conn *medialive.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findInputSecurityGroupByID(ctx, conn, id)
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -254,7 +256,7 @@ func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id st
 	}
 }
 
-func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
+func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
 	in := &medialive.DescribeInputSecurityGroupInput{
 		InputSecurityGroupId: aws.String(id),
 	}
@@ -263,8 +265,7 @@ func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -272,7 +273,7 @@ func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

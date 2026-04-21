@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Changelog Process
 
 HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.

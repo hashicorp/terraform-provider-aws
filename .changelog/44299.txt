@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iam_service_specific_credential: Add support for Bedrock API keys with `credential_age_days`, `service_credential_alias`, `service_credential_secret`, `create_date`, and `expiration_date` attributes
+```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -13,33 +13,31 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCPeeringConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcPeeringConnection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -58,20 +56,20 @@ func TestAccVPCPeeringConnection_basic(t *testing.T) {
 func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcPeeringConnection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCPeeringConnection(), resourceName),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCPeeringConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,19 +80,19 @@ func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 func TestAccVPCPeeringConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcPeeringConnection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -110,7 +108,7 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -119,7 +117,7 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -131,11 +129,11 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 func TestAccVPCPeeringConnection_options(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcPeeringConnection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		input := ec2.ModifyVpcPeeringConnectionOptionsInput{
@@ -149,18 +147,17 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 		return err
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_accepterRequesterOptions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName,
-						&v,
-					),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName,
+						&v),
 					// Requester's view:
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -199,9 +196,8 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionConfig_accepterRequesterOptions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName,
-						&v,
-					),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName,
+						&v),
 					// Requester's view:
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -232,13 +228,13 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 
 func TestAccVPCPeeringConnection_failedState(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPeeringConnectionConfig_failedState(rName),
@@ -250,16 +246,16 @@ func TestAccVPCPeeringConnection_failedState(t *testing.T) {
 
 func TestAccVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPeeringConnectionConfig_alternateRegionAutoAccept(rName, true),
@@ -272,24 +268,23 @@ func TestAccVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 func TestAccVPCPeeringConnection_region(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcPeeringConnection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_alternateRegionAutoAccept(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName,
-						&v,
-					),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName,
+						&v),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accept_status",
@@ -305,21 +300,20 @@ func TestAccVPCPeeringConnection_region(t *testing.T) {
 func TestAccVPCPeeringConnection_accept(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VpcPeeringConnection
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_autoAccept(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName,
-						&v,
-					),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName,
+						&v),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accept_status",
@@ -330,9 +324,8 @@ func TestAccVPCPeeringConnection_accept(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionConfig_autoAccept(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName,
-						&v,
-					),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName,
+						&v),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accept_status",
@@ -344,9 +337,8 @@ func TestAccVPCPeeringConnection_accept(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionConfig_autoAccept(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(ctx, resourceName,
-						&v,
-					),
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName,
+						&v),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accept_status",
@@ -369,13 +361,13 @@ func TestAccVPCPeeringConnection_accept(t *testing.T) {
 // Tests that VPC peering connection options can't be set on non-active connection.
 func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPeeringConnectionConfig_accepterRequesterOptionsNoAutoAccept(rName),
@@ -385,9 +377,9 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_peering_connection" {
@@ -396,7 +388,7 @@ func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfec2.FindVPCPeeringConnectionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -411,19 +403,32 @@ func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckVPCPeeringConnectionExists(ctx context.Context, n string, v *awstypes.VpcPeeringConnection) resource.TestCheckFunc {
-	return testAccCheckVPCPeeringConnectionExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
-}
-
-func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n string, v *awstypes.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckVPCPeeringConnectionExists(ctx context.Context, t *testing.T, n string, v *awstypes.VpcPeeringConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		output, err := tfec2.FindVPCPeeringConnectionByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n string, v *awstypes.VpcPeeringConnection, providerF acctest.ProviderFunc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)

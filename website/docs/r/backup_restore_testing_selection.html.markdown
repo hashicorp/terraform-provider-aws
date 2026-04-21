@@ -49,6 +49,7 @@ resource "aws_backup_restore_testing_selection" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the backup restore testing selection.
 * `restore_testing_plan_name` - (Required) The name of the restore testing plan.
 * `protected_resource_type` - (Required) The type of the protected resource.

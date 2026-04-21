@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -12,28 +14,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_guardduty_finding_ids", name="Finding Ids")
-func newDataSourceFindingIds(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceFindingIds{}, nil
+func newFindingIDsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &findingIDsDataSource{}, nil
 }
 
 const (
-	DSNameFindingIds = "Finding Ids Data Source"
+	dsNameFindingIds = "Finding Ids Data Source"
 )
 
-type dataSourceFindingIds struct {
-	framework.DataSourceWithConfigure
+type findingIDsDataSource struct {
+	framework.DataSourceWithModel[findingIDsDataSourceModel]
 }
 
-func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *findingIDsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"detector_id": schema.StringAttribute{
@@ -43,6 +46,7 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 				Computed: true,
 			},
 			"finding_ids": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -51,10 +55,10 @@ func (d *dataSourceFindingIds) Schema(ctx context.Context, req datasource.Schema
 	}
 }
 
-func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *findingIDsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().GuardDutyClient(ctx)
 
-	var data dataSourceFindingIdsData
+	var data findingIDsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -63,14 +67,14 @@ func (d *dataSourceFindingIds) Read(ctx context.Context, req datasource.ReadRequ
 	out, err := findFindingIds(ctx, conn, data.DetectorID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, DSNameFindingIds, data.DetectorID.String(), err),
+			create.ProblemStandardMessage(names.GuardDuty, create.ErrActionReading, dsNameFindingIds, data.DetectorID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	data.ID = types.StringValue(data.DetectorID.ValueString())
-	data.FindingIDs = flex.FlattenFrameworkStringValueList(ctx, out)
+	data.FindingIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, out)
 	data.HasFindings = types.BoolValue((len(out) > 0))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -90,8 +94,7 @@ func findFindingIds(ctx context.Context, conn *guardduty.Client, id string) ([]s
 
 		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -105,9 +108,10 @@ func findFindingIds(ctx context.Context, conn *guardduty.Client, id string) ([]s
 	return findingIds, nil
 }
 
-type dataSourceFindingIdsData struct {
-	DetectorID  types.String `tfsdk:"detector_id"`
-	HasFindings types.Bool   `tfsdk:"has_findings"`
-	FindingIDs  types.List   `tfsdk:"finding_ids"`
-	ID          types.String `tfsdk:"id"`
+type findingIDsDataSourceModel struct {
+	framework.WithRegionModel
+	DetectorID  types.String         `tfsdk:"detector_id"`
+	HasFindings types.Bool           `tfsdk:"has_findings"`
+	FindingIDs  fwtypes.ListOfString `tfsdk:"finding_ids"`
+	ID          types.String         `tfsdk:"id"`
 }

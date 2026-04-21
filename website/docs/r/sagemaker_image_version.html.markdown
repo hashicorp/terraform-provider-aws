@@ -15,9 +15,19 @@ Provides a SageMaker AI Image Version resource.
 ### Basic usage
 
 ```terraform
+resource "aws_sagemaker_image_version" "example" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = "012345678912.dkr.ecr.us-west-2.amazonaws.com/image:latest"
+}
+```
+
+### With Aliases
+
+```terraform
 resource "aws_sagemaker_image_version" "test" {
   image_name = aws_sagemaker_image.test.id
   base_image = "012345678912.dkr.ecr.us-west-2.amazonaws.com/image:latest"
+  aliases    = ["latest", "stable"]
 }
 ```
 
@@ -25,8 +35,10 @@ resource "aws_sagemaker_image_version" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `base_image` - (Required) The registry path of the container image on which this image version is based.
+* `aliases` - (Optional) A list of aliases for the image version.
 * `horovod` - (Optional) Indicates Horovod compatibility.
 * `job_type` - (Optional) Indicates SageMaker AI job type compatibility. Valid values are: `TRAINING`, `INFERENCE`, and `NOTEBOOK_KERNEL`.
 * `ml_framework` - (Optional) The machine learning framework vended in the image version.
@@ -39,24 +51,23 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the Image.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Image Version.
 * `version`- The version of the image. If not specified, the latest version is described.
 * `container_image` - The registry path of the container image that contains this image version.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Image Versions using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Image Versions using a comma-delimited string concatenating `image_name` and `version`. For example:
 
 ```terraform
 import {
-  to = aws_sagemaker_image_version.test_image
-  id = "my-code-repo"
+  to = aws_sagemaker_image_version.example
+  id = "example-name,1"
 }
 ```
 
-Using `terraform import`, import SageMaker AI Image Versions using the `name`. For example:
+Using `terraform import`, import SageMaker AI Image Versions using a comma-delimited string concatenating `image_name` and `version`. For example:
 
 ```console
-% terraform import aws_sagemaker_image_version.test_image my-code-repo
+% terraform import aws_sagemaker_image_version.example example-name,1
 ```

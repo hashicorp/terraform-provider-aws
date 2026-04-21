@@ -79,10 +79,47 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 }
 ```
 
+### Multi-variant Feature Flags
+
+```terraform
+resource "aws_appconfig_hosted_configuration_version" "example" {
+  application_id           = aws_appconfig_application.example.id
+  configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
+  description              = "Example Multi-variant Feature Flag Configuration Version"
+  content_type             = "application/json"
+
+  content = jsonencode({
+    flags = {
+      loggingenabled = {
+        name = "loggingEnabled"
+      }
+    },
+    values = {
+      loggingenabled = {
+        _variants = concat([
+          for user_id in var.appcfg_enableLogging_userIds : { # Flat list of userIds
+            enabled = true,
+            name    = "usersWithLoggingEnabled_${user_id}",
+            rule    = "(or (eq $userId \"${user_id}\"))"
+          }
+          ], [
+          {
+            enabled = false,
+            name    = "Default"
+          }
+        ])
+      }
+    },
+    version = "1"
+  })
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required, Forces new resource) Application ID.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
 * `content` - (Required, Forces new resource) Content of the configuration or the configuration data.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -49,7 +49,7 @@ func sweepFirewallPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListFirewallPoliciesInput{}
@@ -90,7 +90,7 @@ func sweepFirewalls(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListFirewallsInput{}
@@ -131,7 +131,7 @@ func sweepLoggingConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListFirewallsInput{}
@@ -172,7 +172,7 @@ func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkFirewallClient(ctx)
 	input := &networkfirewall.ListRuleGroupsInput{}

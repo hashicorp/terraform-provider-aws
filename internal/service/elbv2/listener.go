@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +31,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,16 +45,14 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Listener")
 // @Testing(importIgnore="default_action.0.forward")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -271,6 +272,53 @@ func resourceListener() *schema.Resource {
 								},
 							},
 						},
+						"jwt_validation": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrIssuer: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"jwks_endpoint": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"additional_claim": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFormat: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													MaxItems: 10,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"order": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -361,7 +409,6 @@ func resourceListener() *schema.Resource {
 						"ignore_client_certificate_expiry": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 						names.AttrMode: {
 							Type:         schema.TypeString,
@@ -382,12 +429,10 @@ func resourceListener() *schema.Resource {
 				ValidateFunc: validation.IsPortNumber,
 			},
 			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					return strings.ToUpper(v.(string))
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
 			},
 			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
@@ -542,6 +587,7 @@ func resourceListener() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			validateListenerActionsCustomDiff(names.AttrDefaultAction),
+			validateMutualAuthenticationCustomDiff,
 		),
 	}
 }
@@ -641,7 +687,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(aws.ToString(output.Listeners[0].ListenerArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findListenerByARN(ctx, conn, d.Id())
 	})
 
@@ -679,7 +725,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	listener, err := findListenerByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -689,6 +735,14 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
+	if err := resourceListenerFlatten(ctx, meta.(*conns.AWSClient), listener, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceListenerFlatten(ctx context.Context, awsClient *conns.AWSClient, listener *awstypes.Listener, d *schema.ResourceData) error {
 	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
@@ -700,11 +754,11 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	sortListenerActions(listener.DefaultActions)
 
 	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
+		return fmt.Errorf("setting default_action: %w", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
 	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
+		return fmt.Errorf("setting mutual_authentication: %w", err)
 	}
 	d.Set(names.AttrPort, listener.Port)
 	d.Set(names.AttrProtocol, listener.Protocol)
@@ -712,16 +766,16 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// DescribeListenerAttributes is not supported for 'TLS' protocol listeners.
 	if listener.Protocol != awstypes.ProtocolEnumTls {
-		attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
+		attributes, err := findListenerAttributesByARN(ctx, awsClient.ELBV2Client(ctx), d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+			return fmt.Errorf("reading ELBv2 Listener (%s) attributes: %w", d.Id(), err)
 		}
 
 		listenerAttributes.flatten(d, attributes)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -767,7 +821,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
@@ -822,8 +876,7 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 
 	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -832,7 +885,7 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil
@@ -1038,7 +1091,7 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 }
 
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateListener(ctx, input)
 	})
 
@@ -1061,9 +1114,7 @@ func findListenerByARN(ctx context.Context, conn *elasticloadbalancingv2.Client,
 
 	// Eventual consistency check.
 	if aws.ToString(output.ListenerArn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -1088,8 +1139,7 @@ func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, inp
 
 		if errs.IsA[*awstypes.ListenerNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1163,6 +1213,11 @@ func expandListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diag
 	case awstypes.ActionTypeEnumAuthenticateOidc:
 		if v, ok := tfMap["authenticate_oidc"].([]any); ok {
 			action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
+		}
+
+	case awstypes.ActionTypeEnumJwtValidation:
+		if v, ok := tfMap["jwt_validation"].([]any); ok && len(v) > 0 {
+			action.JwtValidationConfig = expandListenerActionJWTValidationConfig(v)
 		}
 	}
 
@@ -1273,6 +1328,57 @@ func expandListenerFixedResponseConfig(l []any) *awstypes.FixedResponseActionCon
 	return fr
 }
 
+func expandListenerActionJWTValidationConfig(l []any) *awstypes.JwtValidationActionConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+
+	if !ok {
+		return nil
+	}
+
+	jwt := &awstypes.JwtValidationActionConfig{
+		Issuer:       aws.String(tfMap[names.AttrIssuer].(string)),
+		JwksEndpoint: aws.String(tfMap["jwks_endpoint"].(string)),
+	}
+
+	if v, ok := tfMap["additional_claim"].(*schema.Set); ok && v.Len() > 0 {
+		jwt.AdditionalClaims = expandJwtValidationActionAdditionalClaim(tfMap["additional_claim"].(*schema.Set).List())
+	}
+
+	return jwt
+}
+
+func expandJwtValidationActionAdditionalClaim(l []any) []awstypes.JwtValidationActionAdditionalClaim {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var claims []awstypes.JwtValidationActionAdditionalClaim
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		claim := awstypes.JwtValidationActionAdditionalClaim{
+			Format: awstypes.JwtValidationActionAdditionalClaimFormatEnum(tfMap[names.AttrFormat].(string)),
+			Name:   aws.String(tfMap[names.AttrName].(string)),
+		}
+
+		if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+			claim.Values = flex.ExpandStringValueSet(v)
+		}
+
+		claims = append(claims, claim)
+	}
+
+	return claims
+}
+
 func expandListenerRedirectActionConfig(l []any) *awstypes.RedirectActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1341,16 +1447,7 @@ func expandMutualAuthenticationAttributes(tfList []any) *awstypes.MutualAuthenti
 	}
 
 	switch mode := tfMap[names.AttrMode].(string); mode {
-	case mutualAuthenticationOff:
-		return &awstypes.MutualAuthenticationAttributes{
-			Mode: aws.String(mode),
-		}
-	case mutualAuthenticationPassthrough:
-		return &awstypes.MutualAuthenticationAttributes{
-			Mode:          aws.String(mode),
-			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
-		}
-	default:
+	case mutualAuthenticationVerify:
 		apiObject := &awstypes.MutualAuthenticationAttributes{
 			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
 			Mode:                          aws.String(mode),
@@ -1361,6 +1458,11 @@ func expandMutualAuthenticationAttributes(tfList []any) *awstypes.MutualAuthenti
 		}
 
 		return apiObject
+
+	default:
+		return &awstypes.MutualAuthenticationAttributes{
+			Mode: aws.String(mode),
+		}
 	}
 }
 
@@ -1449,6 +1551,9 @@ func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects 
 			}
 
 			tfMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(apiObject.AuthenticateOidcConfig, clientSecret)
+
+		case awstypes.ActionTypeEnumJwtValidation:
+			tfMap["jwt_validation"] = flattenListenerActionJWTValidationConfig(apiObject.JwtValidationConfig)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1521,28 +1626,28 @@ func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticat
 		return []any{}
 	}
 
-	if mode := aws.ToString(apiObject.Mode); mode == mutualAuthenticationOff {
+	switch mode := aws.ToString(apiObject.Mode); mode {
+	case mutualAuthenticationVerify:
+		tfMap := map[string]any{
+			"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
+			names.AttrMode:                   mode,
+		}
+		if apiObject.IgnoreClientCertificateExpiry != nil {
+			tfMap["ignore_client_certificate_expiry"] = aws.ToBool(apiObject.IgnoreClientCertificateExpiry)
+		}
+		if apiObject.TrustStoreArn != nil {
+			tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
+		}
+
+		return []any{tfMap}
+
+	default:
 		return []any{
 			map[string]any{
 				names.AttrMode: mode,
 			},
 		}
 	}
-
-	tfMap := map[string]any{
-		"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
-	}
-	if apiObject.IgnoreClientCertificateExpiry != nil {
-		tfMap["ignore_client_certificate_expiry"] = aws.ToBool(apiObject.IgnoreClientCertificateExpiry)
-	}
-	if apiObject.Mode != nil {
-		tfMap[names.AttrMode] = aws.ToString(apiObject.Mode)
-	}
-	if apiObject.TrustStoreArn != nil {
-		tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
-	}
-
-	return []any{tfMap}
 }
 
 func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []any {
@@ -1694,6 +1799,41 @@ func flattenListenerActionForwardConfigTargetGroupStickinessConfig(config *awsty
 	return []any{m}
 }
 
+func flattenListenerActionJWTValidationConfig(apiObject *awstypes.JwtValidationActionConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrIssuer: apiObject.Issuer,
+		"jwks_endpoint":  apiObject.JwksEndpoint,
+	}
+	if len(apiObject.AdditionalClaims) > 0 {
+		tfMap["additional_claim"] = flattenJwtValidationActionAdditionalClaims(apiObject.AdditionalClaims)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenJwtValidationActionAdditionalClaims(claims []awstypes.JwtValidationActionAdditionalClaim) []any {
+	if len(claims) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, claim := range claims {
+		tfMap := map[string]any{
+			names.AttrFormat: claim.Format,
+			names.AttrName:   claim.Name,
+			names.AttrValues: flex.FlattenStringValueSet(claim.Values),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
 func flattenListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []any {
 	if apiObject == nil {
 		return []any{}
@@ -1755,7 +1895,7 @@ func alpnPolicyEnum_Values() []string {
 }
 
 func validateListenerActionsCustomDiff(attrName string) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	return func(_ context.Context, d *schema.ResourceDiff, _ any) error {
 		var diags diag.Diagnostics
 
 		configRaw := d.GetRawConfig()
@@ -1876,6 +2016,15 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 					string(actionType),
 				))
 			}
+
+		case awstypes.ActionTypeEnumJwtValidation:
+			if jv := action.GetAttr("jwt_validation"); jv.IsNull() || jv.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("jwt_validation"),
+					actionPath.GetAttr(names.AttrType),
+					string(actionType),
+				))
+			}
 		}
 	}
 }
@@ -1933,6 +2082,16 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		}
 	}
 
+	if v, ok := action["jwt_validation"].([]any); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumJwtValidation {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("jwt_validation"),
+				actionPath.GetAttr(names.AttrType),
+				string(actionType),
+			))
+		}
+	}
+
 	if v, ok := action["redirect"].([]any); ok && len(v) > 0 {
 		if actionType != awstypes.ActionTypeEnumRedirect {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
@@ -1940,6 +2099,71 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
+		}
+	}
+}
+
+func validateMutualAuthenticationCustomDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	mutualAuthPath := cty.GetAttrPath("mutual_authentication")
+	mutualAuth := configRaw.GetAttr("mutual_authentication")
+	if mutualAuth.IsWhollyKnown() && !mutualAuth.IsNull() {
+		mutualAuthListPlantimeValidate(mutualAuthPath, mutualAuth, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func mutualAuthListPlantimeValidate(mutualAuthPath cty.Path, mutualAuth cty.Value, diags *diag.Diagnostics) {
+	it := mutualAuth.ElementIterator()
+	for it.Next() {
+		i, mutualAuth := it.Element()
+		mutualAuthPath := mutualAuthPath.Index(i)
+
+		mutualAuthPlantimeValidate(mutualAuthPath, mutualAuth, diags)
+	}
+}
+
+func mutualAuthPlantimeValidate(mutualAuthPath cty.Path, mutualAuth cty.Value, diags *diag.Diagnostics) {
+	modePath := mutualAuthPath.GetAttr(names.AttrMode)
+	mode := mutualAuth.GetAttr(names.AttrMode)
+	if !mode.IsKnown() {
+		return
+	}
+	if mode.IsNull() {
+		return
+	}
+
+	trustStoreARNPath := mutualAuthPath.GetAttr("trust_store_arn")
+	trustStoreARN := mutualAuth.GetAttr("trust_store_arn")
+
+	switch mode := mode.AsString(); mode {
+	case mutualAuthenticationVerify:
+		if trustStoreARN.IsNull() {
+			*diags = append(*diags, errs.NewAttributeRequiredWhenError(trustStoreARNPath, modePath, mode))
+		}
+
+	default:
+		advertisePath := mutualAuthPath.GetAttr("advertise_trust_store_ca_names")
+		advertise := mutualAuth.GetAttr("advertise_trust_store_ca_names")
+		if !advertise.IsNull() {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(advertisePath, modePath, mode))
+		}
+
+		ignorePath := mutualAuthPath.GetAttr("ignore_client_certificate_expiry")
+		ignore := mutualAuth.GetAttr("ignore_client_certificate_expiry")
+		if !ignore.IsNull() {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(ignorePath, modePath, mode))
+		}
+
+		if !trustStoreARN.IsNull() {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(trustStoreARNPath, modePath, mode))
 		}
 	}
 }

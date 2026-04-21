@@ -107,15 +107,16 @@ resource "aws_glue_trigger" "example" {
 
 This resource supports the following arguments:
 
-* `actions` – (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
-* `description` – (Optional) A description of the new trigger.
-* `enabled` – (Optional) Start the trigger. Defaults to `true`.
-* `name` – (Required) The name of the trigger.
-* `predicate` – (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. See [Predicate](#predicate) Below.
-* `schedule` – (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `actions` - (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
+* `description` - (Optional) A description of the new trigger.
+* `enabled` - (Optional) Start the trigger. Defaults to `true`.
+* `name` - (Required) The name of the trigger.
+* `predicate` - (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. See [Predicate](#predicate) Below.
+* `schedule` - (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `start_on_creation` – (Optional) Set to true to start `SCHEDULED` and `CONDITIONAL` triggers when created. True is not supported for `ON_DEMAND` triggers.
-* `type` – (Required) The type of trigger. Valid values are `CONDITIONAL`, `EVENT`, `ON_DEMAND`, and `SCHEDULED`.
+* `start_on_creation` - (Optional) Set to true to start `SCHEDULED` and `CONDITIONAL` triggers when created. True is not supported for `ON_DEMAND` triggers.
+* `type` - (Required) The type of trigger. Valid values are `CONDITIONAL`, `EVENT`, `ON_DEMAND`, and `SCHEDULED`.
 * `workflow_name` - (Optional) A workflow to which the trigger should be associated to. Every workflow graph (DAG) needs a starting trigger (`ON_DEMAND` or `SCHEDULED` type) and can contain multiple additional `CONDITIONAL` triggers.
 * `event_batching_condition` - (Optional) Batch condition that must be met (specified number of events received or batch time window expired) before EventBridge event trigger fires. See [Event Batching Condition](#event-batching-condition).
 

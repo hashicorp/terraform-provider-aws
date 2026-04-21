@@ -21,21 +21,33 @@ resource "aws_appstream_directory_config" "example" {
     account_name     = "NAME OF ACCOUNT"
     account_password = "PASSWORD OF ACCOUNT"
   }
+
+  certificate_based_auth_properties {
+    certificate_authority_arn = "ARN OF CERTIFICATE AUTHORITY"
+    status                    = "STATUS OF CERTIFICATE BASED AUTHENTICATION"
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_name` - (Required) Fully qualified name of the directory.
 * `organizational_unit_distinguished_names` - (Required) Distinguished names of the organizational units for computer accounts.
 * `service_account_credentials` - (Required) Configuration block for the name of the directory and organizational unit (OU) to use to join the directory config to a Microsoft Active Directory domain. See [`service_account_credentials`](#service_account_credentials) below.
+* `certificate_based_auth_properties` - (Optional) Configuration block for the certificate-based authentication properties used to authenticate SAML 2.0 Identity Provider (IdP) user identities to Active Directory domain-joined streaming instances. See [`certificate_based_auth_properties`](#certificate_based_auth_properties) below.
 
 ### `service_account_credentials`
 
 * `account_name` - (Required) User name of the account. This account must have the following privileges: create computer objects, join computers to the domain, and change/reset the password on descendant computer objects for the organizational units specified.
 * `account_password` - (Required) Password for the account.
+
+### `certificate_based_auth_properties`
+
+* `certificate_authority_arn` - (Optional) The ARN of the AWS Certificate Manager Private CA resource.
+* `status` - (Optional) The status of the certificate-based authentication properties. Valid values - ["DISABLED", "ENABLED", "ENABLED_NO_DIRECTORY_LOGIN_FALLBACK"].
 
 ## Attribute Reference
 

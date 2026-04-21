@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca_test
@@ -20,7 +20,7 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 
 	domain := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,8 +82,8 @@ data "aws_partition" "current" {}
 
 const testAccCertificateDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate" "test" {
-  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
-  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
+  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
+  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
 }
 
 data "aws_caller_identity" "current" {}

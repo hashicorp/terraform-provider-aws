@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -65,7 +65,7 @@ func sweepHealthChecks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53Client(ctx)
 	input := &route53.ListHealthChecksInput{}
@@ -113,7 +113,7 @@ func sweepKeySigningKeys(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53Client(ctx)
 	input := &route53.ListHostedZonesInput{}
@@ -316,7 +316,7 @@ func sweepZones(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.Route53Client(ctx)
 	input := &route53.ListHostedZonesInput{}

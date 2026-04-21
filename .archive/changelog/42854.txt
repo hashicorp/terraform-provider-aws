@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them
+```
+
+```release-note:bug
+resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them
+```
+
+```release-note:enhancement
+data-source/aws_neptune_engine_version: Add several arguments and attributes to support dynamic selection of versions including `latest`, `has_major_target`, `preferred_major_targets`, and `preferred_upgrade_targets`
+```

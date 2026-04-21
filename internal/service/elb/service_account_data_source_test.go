@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -14,10 +14,10 @@ import (
 
 func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedAccountID := tfelb.AccountIDPerRegionMap[acctest.Region()]
+	expectedAccountID := tfelb.ServiceAccountPerRegionMap[acctest.Region()]
 	dataSourceName := "data.aws_elb_service_account.main"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -35,10 +35,10 @@ func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 
 func TestAccELBServiceAccountDataSource_region(t *testing.T) {
 	ctx := acctest.Context(t)
-	expectedAccountID := tfelb.AccountIDPerRegionMap[acctest.Region()]
+	expectedAccountID := tfelb.ServiceAccountPerRegionMap[acctest.Region()]
 	dataSourceName := "data.aws_elb_service_account.regional"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,6 +62,6 @@ const testAccServiceAccountDataSourceConfig_explicitRegion = `
 data "aws_region" "current" {}
 
 data "aws_elb_service_account" "regional" {
-  region = data.aws_region.current.name
+  region = data.aws_region.current.region
 }
 `

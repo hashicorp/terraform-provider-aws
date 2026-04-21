@@ -24,6 +24,7 @@ resource "aws_cloudwatch_log_destination" "test_destination" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the log destination.
 * `role_arn` - (Required) The ARN of an IAM role that grants Amazon CloudWatch Logs permissions to put data into the target.
 * `target_arn` - (Required) The ARN of the target Amazon Kinesis stream resource for the destination.

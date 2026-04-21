@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -13,21 +13,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 )
 
 func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
+	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -35,12 +33,12 @@ func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(lightsailDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -49,10 +47,10 @@ func testAccDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", sdkacctest.RandString(5))
+	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(t, 5))
 	resourceName := "aws_lightsail_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -60,13 +58,13 @@ func testAccDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(lightsailDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDomain(), resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,7 +72,7 @@ func testAccDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	})
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -85,7 +83,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 			return errors.New("No Lightsail Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		resp, err := conn.GetDomain(ctx, &lightsail.GetDomainInput{
 			DomainName: aws.String(rs.Primary.ID),
@@ -103,14 +101,14 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 	}
 }
 
-func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_domain" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 			resp, err := conn.GetDomain(ctx, &lightsail.GetDomainInput{
 				DomainName: aws.String(rs.Primary.ID),

@@ -68,7 +68,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `disable_session_tags` - (Optional) Disable the tags that are automatically added to role session by Amazon EKS.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be chained to the the IAM role specified as `role_arn`.
 
 ## Attribute Reference
 
@@ -76,21 +79,50 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `association_arn` - The Amazon Resource Name (ARN) of the association.
 * `association_id` - The ID of the association.
+* `external_id` - The unique identifier for this association for a target IAM role. You put this value in the trust policy of the target role, in a Condition to match the sts.ExternalId.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a comma (`,`). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_eks_pod_identity_association.example
-  id = "example,a-12345678"
+  identity = {
+    cluster_name   = "example-cluster"
+    association_id = "a-yrpsdroc4ei7k6xps"
+  }
+}
+
+resource "aws_eks_pod_identity_association" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a comma (`,`). For example:
+### Identity Schema
+
+#### Required
+
+* `cluster_name` (String) Name of the EKS Cluster.
+* `association_id` (String) ID of the association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pod Identity Associations using `cluster_name` and `association_id` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_eks_pod_identity_association.example
+  id = "example-cluster,a-yrpsdroc4ei7k6xps"
+}
+```
+
+Using `terraform import`, import Pod Identity Associations using `cluster_name` and `association_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_eks_pod_identity_association.example example,a-12345678
+% terraform import aws_eks_pod_identity_association.example example-cluster,a-yrpsdroc4ei7k6xps
 ```

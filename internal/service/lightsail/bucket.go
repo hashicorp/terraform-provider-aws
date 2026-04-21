@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lightsail
 
@@ -12,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,10 +63,6 @@ func ResourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"support_code": {
 				Type:     schema.TypeString,
@@ -116,7 +114,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	out, err := FindBucketById(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucket, d.Id())
 		d.SetId("")
 		return diags
@@ -131,7 +129,6 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("bundle_id", out.BundleId)
 	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrRegion, out.Location.RegionName)
 	d.Set("support_code", out.SupportCode)
 	d.Set(names.AttrURL, out.Url)
 
@@ -200,8 +197,7 @@ func FindBucketById(ctx context.Context, conn *lightsail.Client, id string) (*ty
 
 	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -210,7 +206,7 @@ func FindBucketById(ctx context.Context, conn *lightsail.Client, id string) (*ty
 	}
 
 	if out == nil || len(out.Buckets) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &out.Buckets[0], nil
