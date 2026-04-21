@@ -30,11 +30,56 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Clusters",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDaemonDataSource,
+			TypeName: "aws_ecs_daemon",
+			Name:     "Daemon",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDaemonTaskDefinitionDataSource,
+			TypeName: "aws_ecs_daemon_task_definition",
+			Name:     "Daemon Task Definition",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDaemonTaskDefinitionsDataSource,
+			TypeName: "aws_ecs_daemon_task_definitions",
+			Name:     "Daemon Task Definitions",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDaemonsDataSource,
+			TypeName: "aws_ecs_daemons",
+			Name:     "Daemons",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newDaemonResource,
+			TypeName: "aws_ecs_daemon",
+			Name:     "Daemon",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  newDaemonTaskDefinitionResource,
+			TypeName: "aws_ecs_daemon_task_definition",
+			Name:     "Daemon Task Definition",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 		{
 			Factory:  newExpressGatewayServiceResource,
 			TypeName: "aws_ecs_express_gateway_service",
@@ -45,6 +90,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  daemonResourceAsListResource,
+			TypeName: "aws_ecs_daemon",
+			Name:     "Daemon",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
+			Factory:  daemonTaskDefinitionResourceAsListResource,
+			TypeName: "aws_ecs_daemon_task_definition",
+			Name:     "Daemon Task Definition",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

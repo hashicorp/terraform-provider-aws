@@ -1,0 +1,1030 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package ecs_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// ============================================
+// UNIT TESTS
+// ============================================
+
+// ============================================
+// ACCEPTANCE TESTS
+// ============================================
+
+func TestAccECSDaemonTaskDefinition_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "family", rName),
+					resource.TestCheckResourceAttr(resourceName, "cpu", "512"),
+					resource.TestCheckResourceAttr(resourceName, "memory", "1024"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.name", "nginx"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.image", "nginx:latest"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.cpu", "256"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.memory", "512"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.essential", "true"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceDaemonTaskDefinition, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_executionRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_executionRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.execution", "arn"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_taskRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_taskRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.task", "arn"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_volume(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_volume(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "2"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_multipleContainers(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_multipleContainers(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.#", "2"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef1, taskDef2 awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef1),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+				),
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_containerDefinitionsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef2),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
+					testAccCheckDaemonTaskDefinitionNotEqual(&taskDef1, &taskDef2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionHealthCheck(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_healthCheck(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.command.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.interval", "30"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.retries", "3"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.start_period", "10"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.0.timeout", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionLogConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_logConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-group", "/ecs/daemon"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-region", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.options.awslogs-stream-prefix", "ecs"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionEnvironment(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_environment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.environment.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionMountPoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_mountPoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.source_volume", "data"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.container_path", "/usr/share/nginx/html"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionAllNestedBlocks(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_allNestedBlocks(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.log_configuration.0.log_driver", "awslogs"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.mount_point.0.source_volume", "data"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_containerDefinitionOptionalFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_optionalFields(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.working_directory", "/app"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.user", "nginx"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.privileged", "false"),
+					resource.TestCheckResourceAttr(resourceName, "container_definition.0.readonly_root_filesystem", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_volumeWithoutHostPath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_volumeWithoutHostPath(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						names.AttrName: "scratch",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_noCpuMemory(t *testing.T) {
+	ctx := acctest.Context(t)
+	var taskDef awstypes.DaemonTaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_noCpuMemory(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, resourceName, &taskDef),
+					resource.TestCheckResourceAttr(resourceName, "family", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "cpu"),
+					resource.TestCheckNoResourceAttr(resourceName, "memory"),
+				),
+			},
+		},
+	})
+}
+
+// Helper functions
+
+func testAccCheckDaemonTaskDefinitionExists(ctx context.Context, n string, v ...*awstypes.DaemonTaskDefinition) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		output, err := tfecs.FindDaemonTaskDefinitionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
+		if err != nil {
+			return err
+		}
+
+		if len(v) > 0 {
+			*v[0] = *output
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckDaemonTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecs_daemon_task_definition" {
+				continue
+			}
+
+			dtd, err := tfecs.FindDaemonTaskDefinitionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			// Accept DELETE_IN_PROGRESS as destroyed (temporary workaround for backend issue)
+			if dtd.Status == "DELETE_IN_PROGRESS" {
+				continue
+			}
+
+			return fmt.Errorf("ECS Daemon Task Definition %s still exists with status %s", rs.Primary.ID, dtd.Status)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckDaemonTaskDefinitionNotEqual(v1, v2 *awstypes.DaemonTaskDefinition) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(v1.DaemonTaskDefinitionArn) == aws.ToString(v2.DaemonTaskDefinitionArn) {
+			return fmt.Errorf("ECS Daemon Task Definitions are equal")
+		}
+		return nil
+	}
+}
+
+// Config generators
+
+func testAccDaemonTaskDefinitionConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccDaemonTaskDefinitionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccDaemonTaskDefinitionConfig_executionRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "execution" {
+  name = "%[1]s-execution"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_ecs_daemon_task_definition" "test" {
+  family             = %[1]q
+  cpu                = "512"
+  memory             = "1024"
+  execution_role_arn = aws_iam_role.execution.arn
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_taskRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "task" {
+  name = "%[1]s-task"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_ecs_daemon_task_definition" "test" {
+  family        = %[1]q
+  cpu           = "512"
+  memory        = "1024"
+  task_role_arn = aws_iam_role.task.arn
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_volume(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+
+  volume {
+    name      = "data"
+    host_path = "/mnt/data"
+  }
+
+  volume {
+    name      = "logs"
+    host_path = "/var/log"
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_multipleContainers(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "app"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+
+  container_definition {
+    name      = "sidecar"
+    image     = "busybox:latest"
+    cpu       = 128
+    memory    = 256
+    essential = false
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_containerDefinitionsUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:alpine"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_healthCheck(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    health_check {
+      command      = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval     = 30
+      retries      = 3
+      start_period = 10
+      timeout      = 5
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_logConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "execution" {
+  name = "%[1]s-execution"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_ecs_daemon_task_definition" "test" {
+  family             = %[1]q
+  cpu                = "512"
+  memory             = "1024"
+  execution_role_arn = aws_iam_role.execution.arn
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = "/ecs/daemon"
+        "awslogs-region"        = "us-west-2"
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_environment(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    environment {
+      name  = "ENV_VAR_1"
+      value = "value1"
+    }
+
+    environment {
+      name  = "ENV_VAR_2"
+      value = "value2"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_mountPoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    mount_point {
+      source_volume  = "data"
+      container_path = "/usr/share/nginx/html"
+      read_only      = true
+    }
+  }
+
+  volume {
+    name      = "data"
+    host_path = "/mnt/data"
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_allNestedBlocks(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "execution" {
+  name = "%[1]s-execution"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_ecs_daemon_task_definition" "test" {
+  family             = %[1]q
+  cpu                = "512"
+  memory             = "1024"
+  execution_role_arn = aws_iam_role.execution.arn
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    health_check {
+      command  = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval = 30
+      retries  = 3
+      timeout  = 5
+    }
+
+    log_configuration {
+      log_driver = "awslogs"
+      options = {
+        "awslogs-group"         = "/ecs/daemon"
+        "awslogs-region"        = "us-west-2"
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+
+    environment {
+      name  = "APP_ENV"
+      value = "production"
+    }
+
+    mount_point {
+      source_volume  = "data"
+      container_path = "/usr/share/nginx/html"
+      read_only      = true
+    }
+  }
+
+  volume {
+    name      = "data"
+    host_path = "/mnt/data"
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_optionalFields(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name                    = "nginx"
+    image                   = "nginx:latest"
+    cpu                     = 256
+    memory                  = 512
+    essential               = true
+    working_directory       = "/app"
+    user                    = "nginx"
+    privileged              = false
+    readonly_root_filesystem = true
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_volumeWithoutHostPath(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    mount_point {
+      source_volume  = "scratch"
+      container_path = "/tmp"
+    }
+  }
+
+  volume {
+    name = "scratch"
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_noCpuMemory(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+
+  container_definition {
+    name      = "nginx"
+    image     = "nginx:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+}
+`, rName)
+}
