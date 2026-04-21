@@ -771,10 +771,10 @@ resource "aws_codebuild_fleet" "test" {
 func testAccFleetConfig_proxyConfiguration1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "BUILD_GENERAL1_SMALL"
-  environment_type  = "LINUX_CONTAINER"
-  name              = %[1]q
+  base_capacity    = 1
+  compute_type     = "BUILD_GENERAL1_SMALL"
+  environment_type = "LINUX_CONTAINER"
+  name             = %[1]q
 
   proxy_configuration {
     default_behavior = "DENY_ALL"
@@ -792,10 +792,10 @@ resource "aws_codebuild_fleet" "test" {
 func testAccFleetConfig_proxyConfiguration2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "BUILD_GENERAL1_SMALL"
-  environment_type  = "LINUX_CONTAINER"
-  name              = %[1]q
+  base_capacity    = 1
+  compute_type     = "BUILD_GENERAL1_SMALL"
+  environment_type = "LINUX_CONTAINER"
+  name             = %[1]q
 
   proxy_configuration {
     default_behavior = "ALLOW_ALL"
@@ -813,10 +813,10 @@ resource "aws_codebuild_fleet" "test" {
 func testAccFleetConfig_proxyConfiguration3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "BUILD_GENERAL1_SMALL"
-  environment_type  = "LINUX_CONTAINER"
-  name              = %[1]q
+  base_capacity    = 1
+  compute_type     = "BUILD_GENERAL1_SMALL"
+  environment_type = "LINUX_CONTAINER"
+  name             = %[1]q
 
   proxy_configuration {
     default_behavior = "DENY_ALL"
