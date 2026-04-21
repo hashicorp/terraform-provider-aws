@@ -29,6 +29,7 @@ resource "aws_sagemaker_endpoint" "e" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.

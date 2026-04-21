@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,22 +71,22 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 func TestAccELBV2ListenerRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 	listenerResourceName := "aws_lb_listener.test"
 	targetGroupResourceName := "aws_lb_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -118,20 +118,20 @@ func TestAccELBV2ListenerRule_basic(t *testing.T) {
 func TestAccELBV2ListenerRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListenerRule(), resourceName),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListenerRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,19 +143,19 @@ func TestAccELBV2ListenerRule_updateForwardBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName = rName[:min(len(rName), 30)]
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_forwardBasic(rName, "test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", "aws_lb_target_group.test1", names.AttrARN),
@@ -173,7 +173,7 @@ func TestAccELBV2ListenerRule_updateForwardBasic(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_forwardBasic(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", "aws_lb_target_group.test2", names.AttrARN),
@@ -195,25 +195,25 @@ func TestAccELBV2ListenerRule_updateForwardBasic(t *testing.T) {
 func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-weighted-%s", sdkacctest.RandString(13))
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
-	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	lbName := fmt.Sprintf("testrule-weighted-%s", acctest.RandString(t, 13))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
+	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 
 	resourceName := "aws_lb_listener_rule.weighted"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 	targetGroup1ResourceName := "aws_lb_target_group.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_forwardWeighted(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -233,8 +233,8 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_changeForwardWeightedStickiness(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -254,8 +254,8 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_changeForwardWeightedToBasic(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -277,20 +277,20 @@ func TestAccELBV2ListenerRule_ActionForward_TargetGroupARNToForwardBlock_NoChang
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_TargetGroupARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
@@ -308,7 +308,7 @@ func TestAccELBV2ListenerRule_ActionForward_TargetGroupARNToForwardBlock_NoChang
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -337,20 +337,20 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_AddStickiness(t *testin
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -374,7 +374,7 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_AddStickiness(t *testin
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockStickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -403,20 +403,20 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_RemoveStickiness(t *tes
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockStickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -440,7 +440,7 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_RemoveStickiness(t *tes
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -469,20 +469,20 @@ func TestAccELBV2ListenerRule_ActionForward_TargetGroupARNToForwardBlock_WeightA
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_TargetGroupARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
@@ -500,7 +500,7 @@ func TestAccELBV2ListenerRule_ActionForward_TargetGroupARNToForwardBlock_WeightA
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -529,20 +529,20 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlockToTargetGroupARN_NoChang
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -566,7 +566,7 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlockToTargetGroupARN_NoChang
 			{
 				Config: testAccListenerRuleConfig_actionForward_TargetGroupARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
@@ -589,20 +589,20 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlockToTargetGroupARN_WeightA
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -626,7 +626,7 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlockToTargetGroupARN_WeightA
 			{
 				Config: testAccListenerRuleConfig_actionForward_TargetGroupARN(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
@@ -649,20 +649,20 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_AddAction(t *testing.T)
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -686,7 +686,7 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_AddAction(t *testing.T)
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockAddAction(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "authenticate-oidc"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
@@ -717,20 +717,20 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_RemoveAction(t *testing
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockAddAction(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "authenticate-oidc"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
@@ -756,7 +756,7 @@ func TestAccELBV2ListenerRule_ActionForward_ForwardBlock_RemoveAction(t *testing
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -785,21 +785,21 @@ func TestAccELBV2ListenerRule_ActionForward_IgnoreFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName = rName[:min(len(rName), 30)]
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_actionForward_ForwardBlockMultiTargetWithIgnore(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "1"),
@@ -824,24 +824,24 @@ func TestAccELBV2ListenerRule_ActionForward_IgnoreFields(t *testing.T) {
 func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(t, 13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 
 	resourceName := "aws_alb_listener_rule.static"
 	frontEndListenerResourceName := "aws_alb_listener.front_end"
 	targetGroupResourceName := "aws_alb_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_backwardsCompatibility(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -872,22 +872,22 @@ func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
+	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandString(t, 14))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_redirect(lbName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -910,8 +910,8 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_redirect(lbName, "param1=value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -934,8 +934,8 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_redirect(lbName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -962,22 +962,22 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-fixedresponse-%s", sdkacctest.RandString(9))
+	lbName := fmt.Sprintf("testrule-fixedresponse-%s", acctest.RandString(t, 9))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_fixedResponse(lbName, "Fixed response content"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1002,27 +1002,27 @@ func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(t, 13))
 
 	resourceName := "aws_lb_listener_rule.static"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_fixedResponse(lbName, "Fixed Response 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.message_body", "Fixed Response 1"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_fixedResponse(lbName, "Fixed Response 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.message_body", "Fixed Response 2"),
 				),
 			},
@@ -1033,26 +1033,26 @@ func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &before),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_updatePriority(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &after),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &after),
 					testAccCheckListenerRuleNotRecreated(t, &before, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "101"),
 				),
@@ -1064,25 +1064,25 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &before),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &before),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_changeARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &after),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &after),
 					testAccCheckListenerRuleRecreated(t, &before, &after),
 				),
 			},
@@ -1093,22 +1093,22 @@ func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_priorityFirst(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.first", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.first", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.first", names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.third", names.AttrPriority, "3"),
 				),
@@ -1116,44 +1116,44 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_priorityLastNoPriority(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", names.AttrPriority, "4"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityLastSpecifyPriority(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", names.AttrPriority, "7"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityLastNoPriority(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", names.AttrPriority, "7"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityLastSpecifyPriority(rName, "6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", names.AttrPriority, "6"),
 				),
 			},
 			{
 				Config: testAccListenerRuleConfig_priorityParallelism(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.0", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.1", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.2", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.3", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.4", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.5", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.6", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.7", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.8", &rule),
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.9", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.0", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.1", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.2", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.3", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.4", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.5", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.6", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.7", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.8", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.parallelism.9", &rule),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.0", names.AttrPriority),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.1", names.AttrPriority),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.2", names.AttrPriority),
@@ -1169,7 +1169,7 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_priority50000(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.priority50000", &rule),
+					testAccCheckListenerRuleExists(ctx, t, "aws_lb_listener_rule.priority50000", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.priority50000", names.AttrPriority, "50000"),
 				),
 			},
@@ -1190,7 +1190,7 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	var conf awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 	listenerResourceName := "aws_lb_listener.test"
 	targetGroupResourceName := "aws_lb_target_group.test"
@@ -1198,17 +1198,17 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	cognitoPoolClientResourceName := "aws_cognito_user_pool_client.test"
 	cognitoPoolDomainResourceName := "aws_cognito_user_pool_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -1238,22 +1238,22 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	var conf awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 	listenerResourceName := "aws_lb_listener.test"
 	targetGroupResourceName := "aws_lb_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -1277,24 +1277,75 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRule_jwtValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+	listenerResourceName := "aws_lb_listener.test"
+	targetGroupResourceName := "aws_lb_target_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_jwtValidation(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "jwt-validation"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.issuer", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.jwks_endpoint", "https://example.com/.well-known/jwks.json"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.additional_claim.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
+						names.AttrFormat: "string-array",
+						names.AttrName:   "claim_name1",
+						"values.#":       "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
+						names.AttrFormat: "single-string",
+						names.AttrName:   "claim_name2",
+						"values.#":       "1",
+						"values.0":       acctest.CtValue1,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2ListenerRule_Action_defaultOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_action_defaultOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
@@ -1318,19 +1369,19 @@ func TestAccELBV2ListenerRule_Action_specifyOrder(t *testing.T) {
 	var rule awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_action_specifyOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.order", "4"),
@@ -1355,23 +1406,23 @@ func TestAccELBV2ListenerRule_Action_actionDisappears(t *testing.T) {
 	var rule awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_action_defaultOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
-					testAccCheckListenerRuleActionOrderDisappears(ctx, &rule, 1),
+					testAccCheckListenerRuleActionOrderDisappears(ctx, t, &rule, 1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1435,13 +1486,13 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
 		t.Run(string(name), func(t *testing.T) {
 			ctx := acctest.Context(t)
-			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-			resource.ParallelTest(t, resource.TestCase{
+			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+				CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 				Steps: []resource.TestStep{
 					{
 						Config:      testAccListenerRuleConfig_EmptyAction(rName, testcase.actionType),
@@ -1457,15 +1508,15 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
+	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandString(t, 14))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy: testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -1476,8 +1527,8 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 				},
 				Config: testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "redirect"),
@@ -1485,6 +1536,11 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -1493,9 +1549,15 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 						VersionConstraint: "5.36.0",
 					},
 				},
-				Config:             testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1505,11 +1567,11 @@ func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	err_many := regexache.MustCompile("Only one of host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be set in a condition block")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccListenerRuleConfig_conditionAttributesCountHTTPHeader(),
@@ -1538,34 +1600,35 @@ func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandString(t, 12))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionHostHeader(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
-						"host_header.#":          "1",
-						"host_header.0.values.#": "2",
-						"http_header.#":          "0",
-						"http_request_method.#":  "0",
-						"path_pattern.#":         "0",
-						"query_string.#":         "0",
-						"source_ip.#":            "0",
+						"host_header.#":                "1",
+						"host_header.0.values.#":       "2",
+						"host_header.0.regex_values.#": "0",
+						"http_header.#":                "0",
+						"http_request_method.#":        "0",
+						"path_pattern.#":               "0",
+						"query_string.#":               "0",
+						"source_ip.#":                  "0",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "www.example.com"),
@@ -1575,25 +1638,66 @@ func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionHostHeaderRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandString(t, 12))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_conditionHostHeaderRegex(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+						"host_header.#":                "1",
+						"host_header.0.values.#":       "0",
+						"host_header.0.regex_values.#": "2",
+						"http_header.#":                "0",
+						"http_request_method.#":        "0",
+						"path_pattern.#":               "0",
+						"query_string.#":               "0",
+						"source_ip.#":                  "0",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.regex_values.*", "^example\\.com$"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.regex_values.*", "^www[0-9]+\\.example\\.com$"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandString(t, 12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionHTTPHeader(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1603,6 +1707,7 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "X-Forwarded-For",
 						"http_header.0.values.#":         "2",
+						"http_header.0.regex_values.#":   "0",
 						"http_request_method.#":          "0",
 						"path_pattern.#":                 "0",
 						"query_string.#":                 "0",
@@ -1615,6 +1720,7 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "Zz9~|_^.-+*'&%$#!0aA",
 						"http_header.0.values.#":         "1",
+						"http_header.0.regex_values.#":   "0",
 						"http_request_method.#":          "0",
 						"path_pattern.#":                 "0",
 						"query_string.#":                 "0",
@@ -1627,13 +1733,55 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionHTTPHeaderRegex(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandString(t, 12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_conditionHTTPHeaderRegex(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+						"host_header.#":                  "0",
+						"http_header.#":                  "1",
+						"http_header.0.http_header_name": "User-Agent",
+						"http_header.0.values.#":         "0",
+						"http_header.0.regex_values.#":   "2",
+						"http_request_method.#":          "0",
+						"path_pattern.#":                 "0",
+						"query_string.#":                 "0",
+						"source_ip.#":                    "0",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.regex_values.*", "A.+"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.regex_values.*", "B.*C"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccListenerRuleConfig_conditionHTTPHeaderInvalid(),
@@ -1646,22 +1794,22 @@ func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-httpRequest-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-httpRequest-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionHTTPRequestMethod(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1686,22 +1834,22 @@ func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionPathPattern(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1723,25 +1871,66 @@ func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
+func TestAccELBV2ListenerRule_conditionPathPatternRegex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-queryString-%s", sdkacctest.RandString(11))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(t, 11))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_conditionPathPatternRegex(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+						"host_header.#":                 "0",
+						"http_header.#":                 "0",
+						"http_request_method.#":         "0",
+						"path_pattern.#":                "1",
+						"path_pattern.0.values.#":       "0",
+						"path_pattern.0.regex_values.#": "2",
+						"query_string.#":                "0",
+						"source_ip.#":                   "0",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.regex_values.*", "^\\/api\\/(.*)$"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.regex_values.*", "^\\/api2\\/(.*)$"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-queryString-%s", acctest.RandString(t, 11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionQueryString(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1790,22 +1979,22 @@ func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-sourceIp-%s", sdkacctest.RandString(14))
+	lbName := fmt.Sprintf("testrule-sourceIp-%s", acctest.RandString(t, 14))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionSourceIP(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1830,7 +2019,7 @@ func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-mixed-%s", sdkacctest.RandString(17))
+	lbName := fmt.Sprintf("testrule-mixed-%s", acctest.RandString(t, 17))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
@@ -1839,17 +2028,17 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionMixed(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
@@ -1867,8 +2056,8 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_conditionMixedUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
@@ -1886,8 +2075,8 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_conditionMixedUpdated2(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
@@ -1909,22 +2098,22 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandString(t, 13))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionMultiple(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1993,22 +2182,22 @@ func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
-	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandString(t, 13))
 
 	resourceName := "aws_lb_listener_rule.static"
 	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleConfig_conditionMultiple(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
@@ -2047,8 +2236,8 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 			{
 				Config: testAccListenerRuleConfig_conditionMultipleUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
@@ -2088,7 +2277,87 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	})
 }
 
-func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *awstypes.Rule, actionOrderToDelete int) resource.TestCheckFunc {
+func TestAccELBV2ListenerRule_transform(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_transform(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
+						"host_header_rewrite_config.#":                   "1",
+						"host_header_rewrite_config.0.rewrite.#":         "1",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite-(.+).com$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+			},
+			{
+				Config: testAccListenerRuleConfig_transformUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                                   string(awstypes.TransformTypeEnumHostHeaderRewrite),
+						"host_header_rewrite_config.#":                   "1",
+						"host_header_rewrite_config.0.rewrite.#":         "1",
+						"host_header_rewrite_config.0.rewrite.0.regex":   "^mywebsite2-(.+).com$",
+						"host_header_rewrite_config.0.rewrite.0.replace": "internal.dev.$1.myweb.com",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp2/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+			},
+			{
+				Config: testAccListenerRuleConfig_transformRemoveOneEntry(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transform.*", map[string]string{
+						names.AttrType:                           string(awstypes.TransformTypeEnumUrlRewrite),
+						"url_rewrite_config.#":                   "1",
+						"url_rewrite_config.0.rewrite.#":         "1",
+						"url_rewrite_config.0.rewrite.0.regex":   "^/dp2/([A-Za-z0-9]+)/?$",
+						"url_rewrite_config.0.rewrite.0.replace": "/product.php?id=$1",
+					}),
+				),
+			},
+			{
+				// Remove all transforms
+				Config: testAccListenerRuleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "transform.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, t *testing.T, rule *awstypes.Rule, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newActions []awstypes.Action
 
@@ -2103,7 +2372,7 @@ func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *aw
 			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 		input := &elasticloadbalancingv2.ModifyRuleInput{
 			Actions: newActions,
@@ -2136,14 +2405,14 @@ func testAccCheckListenerRuleRecreated(t *testing.T, before, after *awstypes.Rul
 	}
 }
 
-func testAccCheckListenerRuleExists(ctx context.Context, n string, v *awstypes.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleExists(ctx context.Context, t *testing.T, n string, v *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -2157,18 +2426,19 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, v *awstypes.R
 	}
 }
 
-func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckListenerRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {
 				continue
 			}
 
+			ctx = conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
+
 			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2181,6 +2451,18 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 
 		return nil
 	}
+}
+
+func matchApplicationListenerRuleARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(applicationListenerRuleARNPattern(lbName)+`$`))
+}
+
+func applicationListenerRuleARNPattern(lbName string) string {
+	return listenerRuleARNPattern(applicationPattern(lbName))
+}
+
+func listenerRuleARNPattern(s string) string {
+	return `listener-rule/` + listenerPattern(s) + `/[a-z0-9]{16}`
 }
 
 func testAccListenerRuleConfig_base(rName string) string {
@@ -2249,12 +2531,12 @@ resource "aws_lb_target_group" "test" {
 func testAccListenerRuleConfig_baseWithHTTPListener(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 
@@ -2268,14 +2550,14 @@ resource "aws_lb_listener" "test" {
 func testAccListenerRuleConfig_baseWithHTTPSListener(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 
@@ -2398,7 +2680,7 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -2553,7 +2835,7 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -2898,7 +3180,7 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3170,7 +3452,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3283,7 +3565,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3411,12 +3693,12 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_lb_listener" "test2" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "8080"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 
@@ -3684,14 +3966,14 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -3765,19 +4047,81 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 
   tags = {
     Name = %[1]q
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerRuleConfig_jwtValidation(rName, key, certificate string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
@@ -3833,14 +4177,14 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -3968,14 +4312,14 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -4077,13 +4421,13 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -4183,7 +4527,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -4279,7 +4623,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_lb_listener_rule" "error" {
-  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.region}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
   priority     = 100
 
   action {
@@ -4389,7 +4733,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -4488,6 +4832,16 @@ condition {
 `, lbName)
 }
 
+func testAccListenerRuleConfig_conditionHostHeaderRegex(lbName string) string {
+	return testAccListenerRuleConfig_conditionBase(`
+condition {
+  host_header {
+    regex_values = ["^example\\.com$", "^www[0-9]+\\.example\\.com$"]
+  }
+}
+`, lbName)
+}
+
 func testAccListenerRuleConfig_conditionHTTPHeader(lbName string) string {
 	return testAccListenerRuleConfig_conditionBase(`
 condition {
@@ -4506,6 +4860,17 @@ condition {
 `, lbName)
 }
 
+func testAccListenerRuleConfig_conditionHTTPHeaderRegex(lbName string) string {
+	return testAccListenerRuleConfig_conditionBase(`
+condition {
+  http_header {
+    http_header_name = "User-Agent"
+    regex_values     = ["A.+", "B.*C"]
+  }
+}
+`, lbName)
+}
+
 func testAccListenerRuleConfig_conditionHTTPHeaderInvalid() string {
 	return `
 data "aws_partition" "current" {}
@@ -4513,7 +4878,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.region}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
   priority     = 100
 
   action {
@@ -4551,6 +4916,16 @@ func testAccListenerRuleConfig_conditionPathPattern(lbName string) string {
 condition {
   path_pattern {
     values = ["/public/*", "/cgi-bin/*"]
+  }
+}
+`, lbName)
+}
+
+func testAccListenerRuleConfig_conditionPathPatternRegex(lbName string) string {
+	return testAccListenerRuleConfig_conditionBase(`
+condition {
+  path_pattern {
+    regex_values = ["^\\/api\\/(.*)$", "^\\/api2\\/(.*)$"]
   }
 }
 `, lbName)
@@ -4721,4 +5096,114 @@ condition {
   }
 }
 `, lbName)
+}
+
+func testAccListenerRuleConfig_transform(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleConfig_transformUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp2/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite2-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleConfig_transformRemoveOneEntry(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp2/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
+`)
 }

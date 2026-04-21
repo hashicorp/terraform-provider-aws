@@ -44,9 +44,9 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `direction` - (Required) Direction of DNS queries to or from the Route 53 Resolver endpoint.
-Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
-or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
+Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC), `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC) or `INBOUND_DELEGATION` (resolver delegates queries to Route 53 private hosted zones from your network).
 * `ip_address` - (Required) Subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
 * `name` - (Optional) Friendly name of the Route 53 Resolver endpoint.
@@ -54,8 +54,10 @@ to your network (for outbound endpoints) or on the way from your network to your
 Valid values are `DoH`, `Do53`, or `DoH-FIPS`.
 * `resolver_endpoint_type` - (Optional) Endpoint IP type. This endpoint type is applied to all IP addresses.
 Valid values are `IPV6`,`IPV4` or `DUALSTACK` (both IPv4 and IPv6).
+* `rni_enhanced_metrics_enabled` - (Optional) Boolean indicating whether RNI enhanced metrics are enabled for the Resolver endpoint. Defaults to `false`. Once set, changing the value back to `false` requires explicitly specifying `false` rather than removing the argument.
 * `security_group_ids` - (Required) ID of one or more security groups that you want to use to control access to this VPC.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target_name_server_metrics_enabled` - (Optional) Boolean indicating whether target name server metrics are enabled for the outbound Resolver endpoints. Defaults to `false`. This argument is supported only for outbound endpoints. Once set, changing the value back to `false` requires explicitly specifying `false` rather than removing the argument.
 
 The `ip_address` object supports the following:
 

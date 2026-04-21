@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the inference profile.
 * `tags` - (Optional) Key-value mapping of resource tags for the inference profile.
 
@@ -78,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Inference Profile using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Inference Profile using the `name`. For example:
 
 ```terraform
 import {
@@ -87,7 +88,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock Inference Profile using the `example_id_arg`. For example:
+Using `terraform import`, import Bedrock Inference Profile using the `name`. For example:
 
 ```console
 % terraform import aws_bedrock_inference_profile.example inference_profile-id-12345678

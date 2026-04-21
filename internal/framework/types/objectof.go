@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -54,8 +55,7 @@ func (t objectTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t objectTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("ObjectTypeOf[%T]", zero)
+	return fmt.Sprintf("ObjectTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t objectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
@@ -134,24 +134,21 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 }
 
 func objectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	t := new(T)
-	diags.Append(NullOutObjectPtrFields(ctx, t)...)
+	t, diags := Nullified[T](ctx)
 	if diags.HasError() {
 		return nil, diags
 	}
 
-	return t, diags
+	return &t, diags
 }
 
 // NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
 func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	var diags diag.Diagnostics
 	val := reflect.ValueOf(t)
-	typ := val.Type().Elem()
 
-	if typ.Kind() != reflect.Struct {
+	if kind := val.Type().Elem().Kind(); kind != reflect.Struct {
+		diags.AddError("NullOutObjectPtrFields", fmt.Sprintf("target must be a pointer to struct, got %T", t))
 		return diags
 	}
 
@@ -163,10 +160,9 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 			continue
 		}
 
-		attrValue, err := NullValueOf(ctx, fieldVal.Interface())
-
-		if err != nil {
-			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
+		attrValue, d := NullValueOf(ctx, fieldVal.Interface())
+		diags.Append(d...)
+		if diags.HasError() {
 			return diags
 		}
 
@@ -178,6 +174,14 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	}
 
 	return diags
+}
+
+// Nullified returns a value for T with all applicable fields nulled.
+// `T` must be a struct.
+func Nullified[T any](ctx context.Context) (T, diag.Diagnostics) {
+	t := inttypes.Zero[T]()
+	diags := NullOutObjectPtrFields(ctx, &t)
+	return t, diags
 }
 
 // ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.
@@ -250,5 +254,5 @@ func NewObjectValueOf[T any](ctx context.Context, t *T) (ObjectValueOf[T], diag.
 }
 
 func NewObjectValueOfMust[T any](ctx context.Context, t *T) ObjectValueOf[T] {
-	return fwdiag.Must(NewObjectValueOf[T](ctx, t))
+	return fwdiag.Must(NewObjectValueOf(ctx, t))
 }

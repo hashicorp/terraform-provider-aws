@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -17,6 +17,7 @@ func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccImageBlockPublicAccess_basic,
+		"Identity":      testAccEC2ImageBlockPublicAccess_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -26,20 +27,22 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_image_block_public_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("unblocked"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "unblocked"),
 				),
 			},
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("block-new-sharing"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
 			},

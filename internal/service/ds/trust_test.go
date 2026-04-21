@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -10,37 +10,39 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSTrust_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
@@ -74,25 +76,25 @@ func TestAccDSTrust_basic(t *testing.T) {
 func TestAccDSTrust_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfds.ResourceTrust, resourceName),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfds.ResourceTrust, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,24 +105,24 @@ func TestAccDSTrust_disappears(t *testing.T) {
 func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_domain_trailingPeriod(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", fmt.Sprintf("%s.", domainNameOther)),
 				),
 			},
@@ -141,29 +143,29 @@ func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 func TestAccDSTrust_twoWayBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	resourceOtherName := "aws_directory_service_trust.other"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_twoWayBasic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v1),
+					testAccCheckTrustExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerified)),
 					resource.TestCheckNoResourceAttr(resourceName, "trust_state_reason"),
 
-					testAccCheckTrustExists(ctx, resourceOtherName, &v2),
+					testAccCheckTrustExists(ctx, t, resourceOtherName, &v2),
 					resource.TestCheckResourceAttr(resourceOtherName, "trust_state", string(awstypes.TrustStateVerified)),
 					resource.TestCheckNoResourceAttr(resourceOtherName, "trust_state_reason"),
 				),
@@ -185,29 +187,29 @@ func TestAccDSTrust_twoWayBasic(t *testing.T) {
 func TestAccDSTrust_oneWayBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	resourceOtherName := "aws_directory_service_trust.other"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_oneWay(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v1),
+					testAccCheckTrustExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerified)),
 					resource.TestCheckNoResourceAttr(resourceName, "trust_state_reason"),
 
-					testAccCheckTrustExists(ctx, resourceOtherName, &v2),
+					testAccCheckTrustExists(ctx, t, resourceOtherName, &v2),
 					resource.TestCheckResourceAttr(resourceOtherName, "trust_state", string(awstypes.TrustStateCreated)),
 					resource.TestCheckNoResourceAttr(resourceOtherName, "trust_state_reason"),
 				),
@@ -229,24 +231,24 @@ func TestAccDSTrust_oneWayBasic(t *testing.T) {
 func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_SelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerifyFailed)), // Updating single-sided config
 				),
@@ -264,7 +266,7 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 			{
 				Config: testAccTrustConfig_SelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthDisabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerifyFailed)),
 				),
@@ -286,24 +288,24 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 func TestAccDSTrust_twoWaySelectiveAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_twoWaySelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerified)),
 				),
@@ -321,7 +323,7 @@ func TestAccDSTrust_twoWaySelectiveAuth(t *testing.T) {
 			{
 				Config: testAccTrustConfig_twoWaySelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthDisabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerified)),
 				),
@@ -343,24 +345,24 @@ func TestAccDSTrust_twoWaySelectiveAuth(t *testing.T) {
 func TestAccDSTrust_TrustType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_TrustType(rName, domainName, domainNameOther, awstypes.TrustTypeExternal),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "trust_type", string(awstypes.TrustTypeExternal)),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerifyFailed)), // Updating single-sided config
 				),
@@ -382,30 +384,44 @@ func TestAccDSTrust_TrustType(t *testing.T) {
 func TestAccDSTrust_TrustTypeSpecifyDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "trust_type", string(awstypes.TrustTypeForest)),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("trust_type"), tfknownvalue.StringExact(awstypes.TrustTypeForest)),
+				},
 			},
 			{
-				Config:   testAccTrustConfig_TrustType(rName, domainName, domainNameOther, awstypes.TrustTypeForest),
-				PlanOnly: true,
+				Config: testAccTrustConfig_TrustType(rName, domainName, domainNameOther, awstypes.TrustTypeForest),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -414,24 +430,24 @@ func TestAccDSTrust_TrustTypeSpecifyDefault(t *testing.T) {
 func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 				),
 			},
@@ -448,7 +464,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 			{
 				Config: testAccTrustConfig_ConditionalForwarderIPs(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "1"),
 				),
 			},
@@ -469,24 +485,24 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_trust.test"
 	domainName := acctest.RandomDomainName()
 	domainNameOther := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustConfig_deleteAssociatedConditionalForwarder(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustExists(ctx, resourceName, &v),
+					testAccCheckTrustExists(ctx, t, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", acctest.CtTrue),
@@ -506,7 +522,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) resource.TestCheckFunc {
+func testAccCheckTrustExists(ctx context.Context, t *testing.T, n string, v *awstypes.Trust) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -517,7 +533,7 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 			return fmt.Errorf("No Directory Service Trust ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		output, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
@@ -531,9 +547,9 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 	}
 }
 
-func testAccCheckTrustDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTrustDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_trust" {
@@ -542,7 +558,7 @@ func testAccCheckTrustDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

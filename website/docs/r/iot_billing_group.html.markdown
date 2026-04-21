@@ -30,6 +30,7 @@ resource "aws_iot_billing_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Billing Group.
 * `properties` - (Optional) The Billing Group properties. Defined below.
 * `tags` - (Optional) Key-value mapping of resource tags

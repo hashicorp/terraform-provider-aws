@@ -51,6 +51,7 @@ resource "aws_cloudwatch_log_destination_policy" "test_destination_policy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination_name` - (Required) A name for the subscription filter
 * `access_policy` - (Required) The policy document. This is a JSON formatted string.
 * `force_update` - (Optional) Specify true if you are updating an existing destination policy to grant permission to an organization ID instead of granting permission to individual AWS accounts.

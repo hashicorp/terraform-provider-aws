@@ -37,8 +37,9 @@ resource "aws_glue_security_configuration" "example" {
 
 This resource supports the following arguments:
 
-* `encryption_configuration` – (Required) Configuration block containing encryption configuration. Detailed below.
-* `name` – (Required) Name of the security configuration.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `encryption_configuration` - (Required) Configuration block containing encryption configuration. Detailed below.
+* `name` - (Required) Name of the security configuration.
 
 ### encryption_configuration Argument Reference
 

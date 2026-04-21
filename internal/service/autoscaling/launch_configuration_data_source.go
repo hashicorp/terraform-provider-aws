@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -195,7 +197,6 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	name := d.Get(names.AttrName).(string)
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, name)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", name, err)
 	}
@@ -228,7 +229,6 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("user_data", lc.UserData)
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", name, err)
 	}

@@ -32,8 +32,9 @@ resource "aws_kinesis_stream_consumer" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) Name of the stream consumer.
-* `stream_arn` – (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
+* `stream_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
 
 ## Attribute Reference
 
@@ -60,4 +61,4 @@ Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resou
 % terraform import aws_kinesis_stream_consumer.example arn:aws:kinesis:us-west-2:123456789012:stream/example/consumer/example:1616044553
 ```
 
-[1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
+[1]: https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html

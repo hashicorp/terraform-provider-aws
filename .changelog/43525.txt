@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_inspector2_enabler: Support `CODE_REPOSITORY` as a valid value for `resource_types`
+```
+
+```release-note:enhancement
+resource/aws_inspector2_organization_configuration: Add `auto_enable.code_repository` argument
+```

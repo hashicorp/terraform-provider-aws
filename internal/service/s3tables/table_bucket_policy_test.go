@@ -1,23 +1,19 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,22 +21,22 @@ func TestAccS3TablesTableBucketPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var tablebucketpolicy s3tables.GetTableBucketPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketPolicyExists(ctx, resourceName, &tablebucketpolicy),
+					testAccCheckTableBucketPolicyExists(ctx, t, resourceName, &tablebucketpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
 				),
@@ -61,23 +57,23 @@ func TestAccS3TablesTableBucketPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var tablebucketpolicy s3tables.GetTableBucketPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketPolicyExists(ctx, resourceName, &tablebucketpolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTableBucketPolicy, resourceName),
+					testAccCheckTableBucketPolicyExists(ctx, t, resourceName, &tablebucketpolicy),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTableBucketPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,49 +81,48 @@ func TestAccS3TablesTableBucketPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTableBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTableBucketPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3tables_table_bucket_policy" {
 				continue
 			}
 
-			_, err := tfs3tables.FindTableBucketPolicy(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTableBucketPolicy, rs.Primary.ID, err)
+			_, err := tfs3tables.FindTableBucketPolicyByARN(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTableBucketPolicy, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Table Bucket Policy %s still exists", rs.Primary.Attributes["table_bucket_arn"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTableBucketPolicyExists(ctx context.Context, name string, tablebucketpolicy *s3tables.GetTableBucketPolicyOutput) resource.TestCheckFunc {
+func testAccCheckTableBucketPolicyExists(ctx context.Context, t *testing.T, n string, v *s3tables.GetTableBucketPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucketPolicy, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.Attributes["table_bucket_arn"] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucketPolicy, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+		output, err := tfs3tables.FindTableBucketPolicyByARN(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
 
-		resp, err := tfs3tables.FindTableBucketPolicy(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucketPolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*tablebucketpolicy = *resp
+		*v = *output
 
 		return nil
 	}

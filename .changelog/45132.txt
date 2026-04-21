@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_emr_managed_scaling_policy: Add `scaling_strategy` and `utilization_performance_index` arguments
+```

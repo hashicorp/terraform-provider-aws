@@ -28,6 +28,7 @@ resource "aws_service_discovery_private_dns_namespace" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the namespace.
 * `vpc` - (Required) The ID of VPC that you want to associate the namespace with.
 * `description` - (Optional) The description that you specify for the namespace when you create it.

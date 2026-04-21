@@ -45,6 +45,7 @@ resource "aws_lex_slot_type" "flower_types" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that
 the slot type can take. Each value can have a list of synonyms, which are additional values that help
 train the machine learning model about the values that it resolves for a slot. Attributes are

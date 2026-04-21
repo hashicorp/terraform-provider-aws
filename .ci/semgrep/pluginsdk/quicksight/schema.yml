@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: quicksight-schema-string-len-between-required
     languages: [go]
     message: String attributes with length validation should use stringLenBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -21,7 +24,7 @@ rules:
     message: String attributes with length validation should use stringLenBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -38,7 +41,7 @@ rules:
     message: String attributes with length validation should use stringLenBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern-either:
@@ -64,7 +67,7 @@ rules:
     message: String attributes with enum validation should use stringEnumSchema[<type>](<required>)
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern-either:
@@ -102,7 +105,7 @@ rules:
     message: Int attributes with between validation should use intBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -119,7 +122,7 @@ rules:
     message: Int attributes with between validation should use intBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -136,7 +139,7 @@ rules:
     message: Float attributes with between validation should use floatBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |
@@ -153,7 +156,7 @@ rules:
     message: Float attributes with between validation should use floatBetweenSchema
     paths:
       include:
-        - internal/service/quicksight/schema
+        - "/internal/service/quicksight/schema"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |

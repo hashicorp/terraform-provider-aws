@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -31,18 +29,15 @@ func TestAccDataZoneGlossaryTerm_basic(t *testing.T) {
 	}
 
 	var glossaryterm datazone.GetGlossaryTermOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	gName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_glossary_term.test"
 	glossaryName := "aws_datazone_glossary.test"
 	glossarySecond := "aws_datazone_glossary_term.second"
 
-	domianName := "aws_datazone_domain.test"
+	domainName := "aws_datazone_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -50,19 +45,20 @@ func TestAccDataZoneGlossaryTerm_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlossaryTermDestroy(ctx),
+		CheckDestroy:             testAccCheckGlossaryTermDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlossaryTermConfig_basic(rName, gName, dName, pName),
+				Config: testAccGlossaryTermConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlossaryTermExists(ctx, resourceName, &glossaryterm),
+					testAccCheckGlossaryTermExists(ctx, t, resourceName, &glossaryterm),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domianName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "glossary_identifier", glossaryName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "long_description", "long_description"),
 					resource.TestCheckResourceAttr(resourceName, "short_description", "short_desc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "term_relations.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.classifies.0", glossarySecond, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.is_a.0", glossarySecond, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -86,16 +82,15 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 	}
 
 	var glossaryterm1, glossaryterm2 datazone.GetGlossaryTermOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	gName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_glossary_term.test"
 	domainName := "aws_datazone_domain.test"
 	glossaryName := "aws_datazone_glossary.test"
+	glossarySecond := "aws_datazone_glossary_term.second"
+	glossaryThird := "aws_datazone_glossary_term.third"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -103,12 +98,12 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlossaryTermDestroy(ctx),
+		CheckDestroy:             testAccCheckGlossaryTermDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlossaryTermConfig_basic(rName, gName, dName, pName),
+				Config: testAccGlossaryTermConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlossaryTermExists(ctx, resourceName, &glossaryterm1),
+					testAccCheckGlossaryTermExists(ctx, t, resourceName, &glossaryterm1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "glossary_identifier", glossaryName, names.AttrID),
@@ -118,6 +113,9 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, "term_relations.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.classifies.0", glossarySecond, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.is_a.0", glossarySecond, names.AttrID),
 				),
 			},
 			{
@@ -128,9 +126,9 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 				ImportStateIdFunc:       testAccAuthorizerGlossaryTermImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccGlossaryTermConfig_update(rName, gName, dName, pName),
+				Config: testAccGlossaryTermConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlossaryTermExists(ctx, resourceName, &glossaryterm2),
+					testAccCheckGlossaryTermExists(ctx, t, resourceName, &glossaryterm2),
 					testAccCheckGlossaryTermNotRecreated(&glossaryterm1, &glossaryterm2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "glossary_identifier"),
@@ -140,6 +138,9 @@ func TestAccDataZoneGlossaryTerm_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttr(resourceName, "term_relations.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.classifies.0", glossaryThird, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "term_relations.0.is_a.0", glossaryThird, names.AttrID),
 				),
 			},
 			{
@@ -159,13 +160,10 @@ func TestAccDataZoneGlossaryTerm_disappears(t *testing.T) {
 	}
 
 	var glossaryterm datazone.GetGlossaryTermOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	gName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_glossary_term.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -173,13 +171,13 @@ func TestAccDataZoneGlossaryTerm_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlossaryTermDestroy(ctx),
+		CheckDestroy:             testAccCheckGlossaryTermDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlossaryTermConfig_basic(rName, gName, dName, pName),
+				Config: testAccGlossaryTermConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlossaryTermExists(ctx, resourceName, &glossaryterm),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceGlossaryTerm, resourceName),
+					testAccCheckGlossaryTermExists(ctx, t, resourceName, &glossaryterm),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceGlossaryTerm, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,9 +185,9 @@ func TestAccDataZoneGlossaryTerm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGlossaryTermDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGlossaryTermDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_glossary_term" {
@@ -227,7 +225,7 @@ func testAccAuthorizerGlossaryTermImportStateIdFunc(resourceName string) resourc
 	}
 }
 
-func testAccCheckGlossaryTermExists(ctx context.Context, name string, glossaryterm *datazone.GetGlossaryTermOutput) resource.TestCheckFunc {
+func testAccCheckGlossaryTermExists(ctx context.Context, t *testing.T, name string, glossaryterm *datazone.GetGlossaryTermOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -238,7 +236,7 @@ func testAccCheckGlossaryTermExists(ctx context.Context, name string, glossaryte
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameGlossaryTerm, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		resp, err := tfdatazone.FindGlossaryTermByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_identifier"])
 		if err != nil {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameGlossaryTerm, rs.Primary.ID, err)
@@ -260,17 +258,8 @@ func testAccCheckGlossaryTermNotRecreated(before, after *datazone.GetGlossaryTer
 	}
 }
 
-func testAccGlossaryTermConfig_basic(rName, gName, dName, pName string) string {
-	return acctest.ConfigCompose(testAccGlossaryConfig_basic(gName, "", dName, pName), fmt.Sprintf(`
-resource "aws_datazone_glossary_term" "second" {
-  domain_identifier   = aws_datazone_domain.test.id
-  glossary_identifier = aws_datazone_glossary.test.id
-  long_description    = "long_description"
-  name                = %[2]q
-  short_description   = "short_desc"
-  status              = "ENABLED"
-}
-
+func testAccGlossaryTermConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccGlossaryConfig_basic(rName), fmt.Sprintf(`
 resource "aws_datazone_glossary_term" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
@@ -283,29 +272,20 @@ resource "aws_datazone_glossary_term" "test" {
     is_a       = [aws_datazone_glossary_term.second.id]
   }
 }
-`, rName, gName))
-}
 
-func testAccGlossaryTermConfig_update(rName, gName, dName, pName string) string {
-	return acctest.ConfigCompose(testAccGlossaryConfig_basic(gName, "", dName, pName), fmt.Sprintf(`
 resource "aws_datazone_glossary_term" "second" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
   long_description    = "long_description"
-  name                = %[2]q
+  name                = "%[1]s-2"
   short_description   = "short_desc"
   status              = "ENABLED"
 }
-
-resource "aws_datazone_glossary_term" "third" {
-  domain_identifier   = aws_datazone_domain.test.id
-  glossary_identifier = aws_datazone_glossary.test.id
-  long_description    = "long_description"
-  name                = %[3]q
-  short_description   = "short_desc"
-  status              = "ENABLED"
+`, rName))
 }
 
+func testAccGlossaryTermConfig_update(rName string) string {
+	return acctest.ConfigCompose(testAccGlossaryConfig_basic(rName), fmt.Sprintf(`
 resource "aws_datazone_glossary_term" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_identifier = aws_datazone_glossary.test.id
@@ -318,5 +298,23 @@ resource "aws_datazone_glossary_term" "test" {
     is_a       = [aws_datazone_glossary_term.third.id]
   }
 }
-`, rName, gName, dName))
+
+resource "aws_datazone_glossary_term" "second" {
+  domain_identifier   = aws_datazone_domain.test.id
+  glossary_identifier = aws_datazone_glossary.test.id
+  long_description    = "long_description"
+  name                = "%[1]s-2"
+  short_description   = "short_desc"
+  status              = "ENABLED"
+}
+
+resource "aws_datazone_glossary_term" "third" {
+  domain_identifier   = aws_datazone_domain.test.id
+  glossary_identifier = aws_datazone_glossary.test.id
+  long_description    = "long_description"
+  name                = "%[1]s-3"
+  short_description   = "short_desc"
+  status              = "ENABLED"
+}
+`, rName))
 }

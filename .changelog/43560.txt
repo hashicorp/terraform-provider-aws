@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssm_patch_baseline: Add `available_security_updates_compliance_status` argument
+```
+
+```release-note:enhancement
+data-source/aws_ssm_patch_baseline: Add `available_security_updates_compliance_status` argument
+```

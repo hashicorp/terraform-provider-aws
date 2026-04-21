@@ -40,6 +40,7 @@ resource "aws_ec2_managed_prefix_list_entry" "entry_1" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Please note that due to API limitations, updating only the description of an entry will require recreating the entry.
 * `prefix_list_id` - (Required) The ID of the prefix list.

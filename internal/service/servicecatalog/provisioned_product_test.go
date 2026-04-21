@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -11,14 +11,15 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,19 +27,19 @@ import (
 func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
@@ -86,25 +87,25 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 				),
 			},
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, "10.10.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
@@ -149,19 +150,19 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, "10.1.0.0/16", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "1"),
@@ -186,7 +187,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 			{
 				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, "10.1.0.0/16", 3, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "3"),
@@ -198,7 +199,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "0"),
 				),
@@ -211,21 +212,21 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	productName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	productNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	productName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	productNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_productName(rName, "10.1.0.0/16", productName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 				),
@@ -234,7 +235,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 				// update the product name, but keep provisioned product name as-is to trigger an in-place update
 				Config: testAccProvisionedProductConfig_productName(rName, "10.1.0.0/16", productNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 				),
@@ -263,28 +264,28 @@ func TestAccServiceCatalogProvisionedProduct_ProvisioningArtifactName_update(t *
 	productResourceName := "aws_servicecatalog_product.test"
 	artifactResourceName := "aws_servicecatalog_provisioning_artifact.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	artifactName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	artifactName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod1, pprod2 awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod1),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod1),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", productResourceName, "provisioning_artifact_parameters.0.name"),
 				),
 			},
 			{
 				Config: testAccProvisionedProductConfig_ProvisionedArtifactName_update(rName, "10.1.0.0/16", artifactName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod2),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod2),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", artifactResourceName, names.AttrName),
 					testAccCheckProvisionedProductProvisioningArtifactIDChanged(&pprod1, &pprod2),
 				),
@@ -297,19 +298,19 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_computedOutputs(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						names.AttrDescription: "VPC ID",
@@ -325,7 +326,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 			{
 				Config: testAccProvisionedProductConfig_computedOutputs(rName, "10.1.0.1/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						names.AttrDescription: "VPC ID",
@@ -346,20 +347,20 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -369,13 +370,13 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 
 func TestAccServiceCatalogProvisionedProduct_errorOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccProvisionedProductConfig_error(rName, "10.1.0.0/16"),
@@ -388,19 +389,19 @@ func TestAccServiceCatalogProvisionedProduct_errorOnCreate(t *testing.T) {
 func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 				),
 			},
 			{
@@ -411,7 +412,7 @@ func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 				// Check we can still run a complete apply after the previous update error
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 				),
 			},
 		},
@@ -421,20 +422,20 @@ func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.0"),
 					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.0"),
@@ -447,7 +448,7 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 			{
 				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, "1.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.5"),
 					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.5"),
@@ -457,22 +458,139 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 	})
 }
 
-func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestCheckFunc {
+// Validates that a provisioned product in tainted status properly triggers an update
+// on subsequent applies.
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/42585
+func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+	artifactsDataSourceName := "data.aws_servicecatalog_provisioning_artifacts.product_artifacts"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	initialArtifactID := "provisioning_artifact_details.0.id"
+	newArtifactID := "provisioning_artifact_details.1.id"
+	var v awstypes.ProvisionedProductDetail
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1 - Setup
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "original"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("original"),
+						}),
+					})),
+				},
+			},
+			// Step 2 - Trigger a failure, leaving the provisioned product tainted
+			{
+				Config:      testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated"),
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+								"use_previous_value": knownvalue.Bool(false),
+								names.AttrValue:      knownvalue.StringExact(acctest.CtTrue),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+								"use_previous_value": knownvalue.Bool(false),
+								names.AttrValue:      knownvalue.StringExact("updated"),
+							}),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("TAINTED")),
+					// Verify state is rolled back to the parameters from the original setup run
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("original"),
+						}),
+					})),
+				},
+			},
+			// Step 3 - Verify an update is planned, even without configuration changes
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
+			},
+			// Step 4 - Resolve the failure, verifying an update is completed
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("updated"),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckProvisionedProductDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_provisioned_product" {
 				continue
 			}
 
-			input := &servicecatalog.DescribeProvisionedProductInput{
-				Id:             aws.String(rs.Primary.ID),
-				AcceptLanguage: aws.String(rs.Primary.Attributes["accept_language"]),
-			}
-			_, err := conn.DescribeProvisionedProduct(ctx, input)
+			_, err := tfservicecatalog.FindProvisionedProductByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["accept_language"])
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -480,29 +598,29 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("Service Catalog Provisioned Product (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("Service Catalog Provisioned Product %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckProvisionedProductExists(ctx context.Context, resourceName string, pprod *awstypes.ProvisionedProductDetail) resource.TestCheckFunc {
+func testAccCheckProvisionedProductExists(ctx context.Context, t *testing.T, n string, v *awstypes.ProvisionedProductDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
-		out, err := tfservicecatalog.WaitProvisionedProductReady(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
+		output, err := tfservicecatalog.FindProvisionedProductByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["accept_language"])
+
 		if err != nil {
-			return fmt.Errorf("describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		*pprod = *out.ProvisionedProductDetail
+		*v = *output.ProvisionedProductDetail
 
 		return nil
 	}
@@ -844,7 +962,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 
   stack_set_provisioning_preferences {
     accounts                = [data.aws_caller_identity.current.account_id]
-    regions                 = [data.aws_region.current.name]
+    regions                 = [data.aws_region.current.region]
     failure_tolerance_count = %[3]d
     max_concurrency_count   = %[4]d
   }
@@ -987,4 +1105,72 @@ resource "aws_s3_bucket" "conflict" {
   bucket = %[2]q
 }
 `, rName, conflictingBucketName, tagValue))
+}
+
+func testAccProvisionedProductConfig_retryTaintedUpdate(rName string, useNewVersion bool, simulateFailure bool, extraParam string) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedProductPortfolioBaseConfig(rName),
+		fmt.Sprintf(`
+locals {
+  initial_provisioning_artifact = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[0]
+  new_provisioning_artifact     = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[1]
+}
+
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                     = %[1]q
+  product_id               = aws_servicecatalog_product.test.id
+  provisioning_artifact_id = %[2]t ? local.new_provisioning_artifact.id : local.initial_provisioning_artifact.id
+
+  provisioning_parameters {
+    key   = "FailureSimulation"
+    value = "%[3]t"
+  }
+
+  provisioning_parameters {
+    key   = "ExtraParam"
+    value = %[4]q
+  }
+}
+
+resource "aws_servicecatalog_product" "test" {
+  description = %[1]q
+  name        = %[1]q
+  owner       = "test"
+  type        = "CLOUD_FORMATION_TEMPLATE"
+
+  provisioning_artifact_parameters {
+    name         = "%[1]s - Initial"
+    description  = "Initial"
+    template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+    type         = "CLOUD_FORMATION_TEMPLATE"
+  }
+}
+
+resource "aws_servicecatalog_provisioning_artifact" "new_version" {
+  product_id = aws_servicecatalog_product.test.id
+
+  name         = "%[1]s - New"
+  description  = "New"
+  template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+  type         = "CLOUD_FORMATION_TEMPLATE"
+}
+
+data "aws_servicecatalog_provisioning_artifacts" "product_artifacts" {
+  product_id = aws_servicecatalog_product.test.id
+
+  depends_on = [aws_servicecatalog_provisioning_artifact.new_version]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "product_template.yaml"
+
+  source = "${path.module}/testdata/retry-tainted-update/product_template.yaml"
+}
+`, rName, useNewVersion, simulateFailure, extraParam))
 }

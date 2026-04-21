@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` arguments
+```
+
+```release-note:enhancement
+data-source/aws_dynamodb_table: Add `warm_throughput` and `global_secondary_index.warm_throughput` attributes
+```

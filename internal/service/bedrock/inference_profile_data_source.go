@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -14,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,7 +31,7 @@ func newInferenceProfileDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type inferenceProfileDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[inferenceProfileDataSourceModel]
 }
 
 func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -106,8 +108,7 @@ func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedr
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -116,13 +117,14 @@ func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 type inferenceProfileDataSourceModel struct {
+	framework.WithRegionModel
 	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
 	Description          types.String                                                `tfsdk:"description"`
 	InferenceProfileARN  fwtypes.ARN                                                 `tfsdk:"inference_profile_arn"`

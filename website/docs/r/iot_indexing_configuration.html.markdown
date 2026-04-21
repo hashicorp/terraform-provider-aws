@@ -48,6 +48,7 @@ resource "aws_iot_indexing_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `thing_group_indexing_configuration` - (Optional) Thing group indexing configuration. See below.
 * `thing_indexing_configuration` - (Optional) Thing indexing configuration. See below.
 

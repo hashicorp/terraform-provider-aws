@@ -27,6 +27,7 @@ data "aws_efs_mount_target" "by_id" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_point_id` - (Optional) ID or ARN of the access point whose mount target that you want to find. It must be included if a `file_system_id` and `mount_target_id` are not included.
 * `file_system_id` - (Optional) ID or ARN of the file system whose mount target that you want to find. It must be included if an `access_point_id` and `mount_target_id` are not included.
 * `mount_target_id` - (Optional) ID or ARN of the mount target that you want to find. It must be included in your request if an `access_point_id` and `file_system_id` are not included.
@@ -38,6 +39,8 @@ This data source exports the following attributes in addition to the arguments a
 * `file_system_arn` - Amazon Resource Name of the file system for which the mount target is intended.
 * `subnet_id` - ID of the mount target's subnet.
 * `ip_address` - Address at which the file system may be mounted via the mount target.
+* `ip_address_type` - IP address type for the mount target.
+* `ipv6_address` - IPv6 address at which the file system may be mounted via the mount target.
 * `security_groups` - List of VPC security group IDs attached to the mount target.
 * `dns_name` - DNS name for the EFS file system.
 * `mount_target_dns_name` - The DNS name for the given subnet/AZ per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).

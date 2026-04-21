@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_s3_bucket_acl
+```
+
+```release-note:bug
+list-resource/aws_s3_bucket: Restricts listed buckets to expected region.
+```

@@ -1,0 +1,6 @@
+```release-note:breaking-change
+data-source/aws_ami: The severity of the diagnostic returned when `most_recent` is `true` and owner and image ID filter criteria has been increased to an error. Existing configurations which were previously receiving a warning diagnostic will now fail to apply. To prevent this error, set the `owner` argument or include a `filter` block with an `image-id` or `owner-id` name/value pair. To continue using unsafe filter values with `most_recent` set to `true`, set the new `allow_unsafe_filter` argument to `true`. This is not recommended.
+```
+```release-note:enhancement
+data-source/aws_ami: Add `allow_unsafe_filter` argument
+```

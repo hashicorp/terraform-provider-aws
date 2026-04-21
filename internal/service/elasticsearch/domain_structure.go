@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch
@@ -298,33 +298,48 @@ func getUserDBEnabled(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandLogPublishingOptions(m *schema.Set) map[string]awstypes.LogPublishingOption {
-	options := make(map[string]awstypes.LogPublishingOption)
+func expandLogPublishingOptions(tfList []any) map[string]awstypes.LogPublishingOption {
+	apiObjects := make(map[string]awstypes.LogPublishingOption)
 
-	for _, vv := range m.List() {
-		lo := vv.(map[string]any)
-		options[lo["log_type"].(string)] = awstypes.LogPublishingOption{
-			CloudWatchLogsLogGroupArn: aws.String(lo[names.AttrCloudWatchLogGroupARN].(string)),
-			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
 		}
+
+		apiObject := awstypes.LogPublishingOption{
+			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		}
+
+		if v, ok := tfMap[names.AttrCloudWatchLogGroupARN].(string); ok && v != "" {
+			apiObject.CloudWatchLogsLogGroupArn = aws.String(v)
+		}
+
+		apiObjects[tfMap["log_type"].(string)] = apiObject
 	}
 
-	return options
+	return apiObjects
 }
 
-func flattenLogPublishingOptions(o map[string]awstypes.LogPublishingOption) []map[string]any {
-	m := make([]map[string]any, 0)
-	for logType, val := range o {
-		mm := map[string]any{
-			"log_type":        logType,
-			names.AttrEnabled: aws.ToBool(val.Enabled),
-		}
-
-		if val.CloudWatchLogsLogGroupArn != nil {
-			mm[names.AttrCloudWatchLogGroupARN] = aws.ToString(val.CloudWatchLogsLogGroupArn)
-		}
-
-		m = append(m, mm)
+func flattenLogPublishingOptions(apiObjects map[string]awstypes.LogPublishingOption) []any {
+	if len(apiObjects) == 0 {
+		return nil
 	}
-	return m
+
+	tfList := make([]any, 0)
+
+	for k, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+			"log_type":        k,
+		}
+
+		if v := apiObject.CloudWatchLogsLogGroupArn; v != nil {
+			tfMap[names.AttrCloudWatchLogGroupARN] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

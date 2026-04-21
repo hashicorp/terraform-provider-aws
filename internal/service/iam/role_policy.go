@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,20 +30,22 @@ import (
 
 const (
 	rolePolicyNameMaxLen       = 128
-	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - id.UniqueIDSuffixLength
+	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - sdkid.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role_policy", name="Role Policy")
+// @IdentityAttribute("role")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{role}:{name}")
+// @ImportIDHandler("rolePolicyImportID")
+// @Testing(existsType="string")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
 		ReadWithoutTimeout:   resourceRolePolicyRead,
 		UpdateWithoutTimeout: resourceRolePolicyPut,
 		DeleteWithoutTimeout: resourceRolePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -90,7 +94,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	policyName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	roleName := d.Get(names.AttrRole).(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
@@ -105,10 +109,10 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
+		d.SetId(createRolePolicyImportID(roleName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
-			return FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 		})
 
 		if err != nil {
@@ -123,14 +127,14 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyDocument, err := FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+	policyDocument, err := findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Role Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -162,7 +166,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -184,7 +188,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
+func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
 	input := &iam.GetRolePolicyInput{
 		PolicyName: aws.String(policyName),
 		RoleName:   aws.String(roleName),
@@ -194,8 +198,7 @@ func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return "", &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -204,13 +207,17 @@ func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	}
 
 	if output == nil || output.PolicyDocument == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.PolicyDocument), nil
 }
 
-func RolePolicyParseID(id string) (roleName, policyName string, err error) {
+func createRolePolicyImportID(roleName, policyName string) string {
+	return fmt.Sprintf("%s:%s", roleName, policyName)
+}
+
+func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("role_policy id must be of the form <role name>:<policy name>")
@@ -220,4 +227,23 @@ func RolePolicyParseID(id string) (roleName, policyName string, err error) {
 	roleName = parts[0]
 	policyName = parts[1]
 	return
+}
+
+type rolePolicyImportID struct{}
+
+func (rolePolicyImportID) Create(d *schema.ResourceData) string {
+	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
+}
+
+func (rolePolicyImportID) Parse(id string) (string, map[string]any, error) {
+	roleName, policyName, err := rolePolicyParseID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrRole: roleName,
+		names.AttrName: policyName,
+	}
+	return id, result, nil
 }

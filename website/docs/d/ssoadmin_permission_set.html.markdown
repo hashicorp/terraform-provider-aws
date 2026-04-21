@@ -29,11 +29,12 @@ output "arn" {
 
 This data source supports the following arguments:
 
-~> **NOTE:** Either `arn` or `name` must be configured.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the permission set.
 * `instance_arn` - (Required) ARN of the SSO Instance associated with the permission set.
 * `name` - (Optional) Name of the SSO Permission Set.
+
+~> **NOTE:** Either `arn` or `name` must be configured.
 
 ## Attribute Reference
 

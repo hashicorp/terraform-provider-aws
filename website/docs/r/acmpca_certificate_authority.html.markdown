@@ -109,6 +109,7 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
@@ -151,6 +152,7 @@ the custom OCSP responder endpoint. Defined below.
 #### crl_configuration
 
 * `custom_cname` - (Optional) Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point. Use this value if you don't want the name of your S3 bucket to be public. Must be less than or equal to 253 characters in length.
+* `custom_path` - (Optional) Configures a custom path for the CRL in S3. If specified, the CRL will be written to `s3://<s3_bucket_name>/<custom_path>/<crl_file>`. Must conform to the pattern `[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*` and be between 0 and 253 characters in length.
 * `enabled` - (Optional) Boolean value that specifies whether certificate revocation lists (CRLs) are enabled. Defaults to `false`.
 * `expiration_in_days` - (Optional, Required if `enabled` is `true`) Number of days until a certificate expires. Must be between 1 and 5000.
 * `s3_bucket_name` - (Optional, Required if `enabled` is `true`) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be between 3 and 255 characters in length.
@@ -182,6 +184,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `1m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_acmpca_certificate_authority.example
+  identity = {
+    "arn" = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the ACM PCA certificate authority.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 

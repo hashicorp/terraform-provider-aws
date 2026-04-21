@@ -33,11 +33,10 @@ resource "aws_route53_record" "www" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
-  Defaults to the region from the AWS provider configuration.
+* `region` - (Optional) Name of the Region whose AWS ELB HostedZoneId is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS ELB HostedZoneId in the selected region.
+* `id` - ID of the AWS ELB HostedZoneId in the selected Region.

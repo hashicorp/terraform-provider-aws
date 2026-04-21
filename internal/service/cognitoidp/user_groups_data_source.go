@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -12,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +28,7 @@ func newUserGroupsDataSource(context.Context) (datasource.DataSourceWithConfigur
 }
 
 type userGroupsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[userGroupsDataSourceModel]
 }
 
 func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -86,8 +88,7 @@ func findGroupsByUserPoolID(ctx context.Context, conn *cognitoidentityprovider.C
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -102,6 +103,7 @@ func findGroupsByUserPoolID(ctx context.Context, conn *cognitoidentityprovider.C
 }
 
 type userGroupsDataSourceModel struct {
+	framework.WithRegionModel
 	Groups     fwtypes.ListNestedObjectValueOf[groupTypeModel] `tfsdk:"groups"`
 	ID         types.String                                    `tfsdk:"id"`
 	UserPoolID types.String                                    `tfsdk:"user_pool_id"`

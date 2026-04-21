@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,19 +23,19 @@ func TestAccAPIGatewayRestAPIPut_basic(t *testing.T) {
 	}
 
 	var restAPI apigateway.GetRestApiOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api_put.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIPutConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
+					testAccCheckRESTAPIPutExists(ctx, t, resourceName, &restAPI),
 					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
@@ -64,35 +62,35 @@ func TestAccAPIGatewayRestAPIPut_multistage(t *testing.T) {
 	}
 
 	var restAPI apigateway.GetRestApiOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api_put.testv1"
 	resourceName2 := "aws_api_gateway_rest_api_put.testv2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIPutConfig_multistage(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRESTAPIPutExists(ctx, resourceName, &restAPI),
-					testAccCheckRESTAPIPutExists(ctx, resourceName2, &restAPI),
+					testAccCheckRESTAPIPutExists(ctx, t, resourceName, &restAPI),
+					testAccCheckRESTAPIPutExists(ctx, t, resourceName2, &restAPI),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRESTAPIPutExists(ctx context.Context, n string, v *apigateway.GetRestApiOutput) resource.TestCheckFunc {
+func testAccCheckRESTAPIPutExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetRestApiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindRestAPIByID(ctx, conn, rs.Primary.Attributes["rest_api_id"])
 

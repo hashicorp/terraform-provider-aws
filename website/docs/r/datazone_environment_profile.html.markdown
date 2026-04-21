@@ -87,12 +87,12 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   domain_id                = aws_datazone_domain.test.id
   environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
   provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
-  enabled_regions          = [data.aws_region.test.name]
+  enabled_regions          = [data.aws_region.test.region]
 }
 
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
+  aws_account_region               = data.aws_region.test.region
   description                      = "description"
   environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   name                             = "example-name"
@@ -107,17 +107,15 @@ resource "aws_datazone_environment_profile" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Required) -  Id of the AWS account being used.
 * `aws_account_region` - (Required) -  Desired region for environment profile.
 * `domain_identifier` - (Required) -  Domain Identifier for environment profile.
 * `name` - (Required) -  Name of the environment profile.
 * `environment_blueprint_identifier` - (Required) -  ID of the blueprint which the environment will be created with.
 * `project_identifier` - (Required) -  Project identifier for environment profile.
-
-The following arguments are optional:
-
 * `description` - (Optional) Description of environment profile.
 * `user_parameters` - (Optional) -  Array of user parameters of the environment profile with the following attributes:
     * `name` - (Required) -  Name of the environment profile parameter.

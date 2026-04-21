@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -253,6 +255,18 @@ func dataSourceDomain() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"deployment_strategy_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"deployment_strategy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"domain_endpoint_v2_hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -321,14 +335,33 @@ func dataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"identity_center_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled_api_access": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"identity_center_instance_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"roles_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subject_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"kibana_endpoint": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
@@ -364,8 +397,7 @@ func dataSourceDomain() *schema.Resource {
 			},
 			"off_peak_window_options": {
 				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrEnabled: {
@@ -503,7 +535,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrEndpoint, ds.Endpoint)
 	d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-	d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
@@ -549,7 +580,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		if endpoints["vpcv2"] != nil {
 			d.Set("endpoint_v2", endpoints["vpcv2"])
 			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
@@ -564,7 +594,6 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		}
 		if ds.EndpointV2 != nil {
 			d.Set("endpoint_v2", ds.EndpointV2)
@@ -580,10 +609,18 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	if ds.IdentityCenterOptions != nil {
+		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting identity_center_options: %s", err)
+		}
+	}
 	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
+	}
+	if err := d.Set("deployment_strategy_options", flattenDeploymentStrategyOptions(ds.DeploymentStrategyOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_strategy_options: %s", err)
 	}
 
 	if ds.OffPeakWindowOptions != nil {

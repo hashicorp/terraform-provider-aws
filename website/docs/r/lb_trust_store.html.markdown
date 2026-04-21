@@ -42,10 +42,10 @@ resource "aws_lb_listener" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ca_certificates_bundle_s3_bucket` - (Required) S3 Bucket name holding the client certificate CA bundle.
 * `ca_certificates_bundle_s3_key` - (Required) S3 object key holding the client certificate CA bundle.
 * `ca_certificates_bundle_s3_object_version` - (Optional) Version Id of CA bundle S3 bucket object, if versioned, defaults to latest if omitted.
-
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Cannot be longer than 6 characters.
 * `name` - (Optional, Forces new resource) Name of the Trust Store. If omitted, Terraform will assign a random, unique name. This name must be unique per region per account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -61,6 +61,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb_trust_store.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:truststore/my-trust-store/73e2d6bc24d8a067"
+  }
+}
+
+resource "aws_lb_trust_store" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the trust store.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Trust Stores using their ARN. For example:
 

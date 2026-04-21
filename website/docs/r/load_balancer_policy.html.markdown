@@ -104,6 +104,7 @@ resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `load_balancer_name` - (Required) The load balancer on which the policy is defined.
 * `policy_name` - (Required) The name of the load balancer policy.
 * `policy_type_name` - (Required) The policy type.

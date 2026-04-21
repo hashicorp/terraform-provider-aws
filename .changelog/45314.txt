@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_transfer_connector: Add `egress_config` argument to support VPC Lattice connectivity for SFTP connectors
+```
+
+```release-note:enhancement
+resource/aws_transfer_connector: Make `url` argument optional to support VPC Lattice connectors
+```
+
+```release-note:enhancement
+data-source/aws_transfer_connector: Add `egress_config` attribute to expose VPC Lattice connectivity configuration
+```

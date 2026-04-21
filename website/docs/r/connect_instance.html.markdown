@@ -55,6 +55,7 @@ resource "aws_connect_instance" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_resolve_best_voices_enabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contact_flow_logs_enabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
 * `contact_lens_enabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.
@@ -87,6 +88,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_connect_instance.example
+  identity = {
+    id = "f1288a1f-6193-445a-b47e-af739b2"
+  }
+}
+
+resource "aws_connect_instance" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the connect instance.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Connect instances using the `id`. For example:
 

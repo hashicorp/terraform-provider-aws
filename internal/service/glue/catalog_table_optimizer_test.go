@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -10,14 +10,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/glue"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,18 +25,18 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -63,18 +61,18 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_update(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -85,7 +83,7 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 			{
 				Config: testAccCatalogTableOptimizerConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -103,19 +101,19 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTableOptimizer, resourceName),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalogTableOptimizer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,18 +127,18 @@ func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_retentionConfiguration(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -149,6 +147,7 @@ func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.snapshot_retention_period_in_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.number_of_snapshots_to_retain", "3"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.clean_expired_files", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.run_rate_in_hours", "24"),
 				),
 			},
 			{
@@ -161,7 +160,7 @@ func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 			{
 				Config: testAccCatalogTableOptimizerConfig_retentionConfiguration(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -170,6 +169,62 @@ func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.snapshot_retention_period_in_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.number_of_snapshots_to_retain", "3"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.clean_expired_files", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.run_rate_in_hours", "24"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCatalogTableOptimizer_RetentionConfigurationWithRunRateInHours(t *testing.T) {
+	ctx := acctest.Context(t)
+	var catalogTableOptimizer glue.GetTableOptimizerOutput
+
+	resourceName := "aws_glue_catalog_table_optimizer.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableOptimizerConfig_retentionConfigurationWithRunRateInHours(rName, 7, 6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.snapshot_retention_period_in_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.number_of_snapshots_to_retain", "3"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.clean_expired_files", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.run_rate_in_hours", "6"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    testAccCatalogTableOptimizerStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrTableName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccCatalogTableOptimizerConfig_retentionConfigurationWithRunRateInHours(rName, 6, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.snapshot_retention_period_in_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.number_of_snapshots_to_retain", "3"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.clean_expired_files", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.retention_configuration.0.iceberg_configuration.0.run_rate_in_hours", "4"),
 				),
 			},
 		},
@@ -182,18 +237,18 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfiguration(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -201,6 +256,7 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.orphan_file_retention_period_in_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.location", fmt.Sprintf("s3://%s/files/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.run_rate_in_hours", "24"),
 				),
 			},
 			{
@@ -213,7 +269,7 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 			{
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfiguration(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
@@ -221,6 +277,60 @@ func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.orphan_file_retention_period_in_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.location", fmt.Sprintf("s3://%s/files/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.run_rate_in_hours", "24"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHours(t *testing.T) {
+	ctx := acctest.Context(t)
+	var catalogTableOptimizer glue.GetTableOptimizerOutput
+
+	resourceName := "aws_glue_catalog_table_optimizer.test"
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfigurationWithRunRateInHours(rName, 7, 6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "orphan_file_deletion"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.orphan_file_retention_period_in_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.location", fmt.Sprintf("s3://%s/files/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.run_rate_in_hours", "6"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    testAccCatalogTableOptimizerStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrTableName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfigurationWithRunRateInHours(rName, 6, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, t, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "orphan_file_deletion"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.orphan_file_retention_period_in_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.location", fmt.Sprintf("s3://%s/files/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.orphan_file_deletion_configuration.0.iceberg_configuration.0.run_rate_in_hours", "4"),
 				),
 			},
 		},
@@ -239,7 +349,7 @@ func testAccCatalogTableOptimizerStateIDFunc(resourceName string) resource.Impor
 	}
 }
 
-func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName string, catalogTableOptimizer *glue.GetTableOptimizerOutput) resource.TestCheckFunc {
+func testAccCheckCatalogTableOptimizerExists(ctx context.Context, t *testing.T, resourceName string, catalogTableOptimizer *glue.GetTableOptimizerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -250,7 +360,7 @@ func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName s
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, resourceName, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 		resp, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
 			rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 
@@ -264,18 +374,18 @@ func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName s
 	}
 }
 
-func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_catalog_table_optimizer" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 			_, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
 				rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -344,9 +454,9 @@ resource "aws_iam_role_policy" "test" {
           "glue:GetTable"
         ]
         Resource = [
-          "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.test.name}/${aws_glue_catalog_table.test.name}",
-          "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.test.name}",
-          "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+          "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.test.name}/${aws_glue_catalog_table.test.name}",
+          "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.test.name}",
+          "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
         ]
       },
       {
@@ -356,7 +466,7 @@ resource "aws_iam_role_policy" "test" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/iceberg-compaction/logs:*"
+        Resource = "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/iceberg-compaction/logs:*"
       }
     ]
   })
@@ -472,8 +582,37 @@ resource "aws_glue_catalog_table_optimizer" "test" {
       }
     }
   }
+  depends_on = [aws_iam_role_policy.test]
 }
 `, retentionPeriod))
+}
+
+func testAccCatalogTableOptimizerConfig_retentionConfigurationWithRunRateInHours(rName string, retentionPeriod, runRateInHours int) string {
+	return acctest.ConfigCompose(
+		testAccCatalogTableOptimizerConfig_baseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_table_optimizer" "test" {
+  catalog_id    = data.aws_caller_identity.current.account_id
+  database_name = aws_glue_catalog_database.test.name
+  table_name    = aws_glue_catalog_table.test.name
+  type          = "retention"
+
+  configuration {
+    role_arn = aws_iam_role.test.arn
+    enabled  = true
+
+    retention_configuration {
+      iceberg_configuration {
+        snapshot_retention_period_in_days = %[1]d
+        number_of_snapshots_to_retain     = 3
+        clean_expired_files               = true
+        run_rate_in_hours                 = %[2]d
+      }
+    }
+  }
+  depends_on = [aws_iam_role_policy.test]
+}
+`, retentionPeriod, runRateInHours))
 }
 
 func testAccCatalogTableOptimizerConfig_orphanFileDeletionConfiguration(rName string, retentionPeriod int) string {
@@ -497,6 +636,34 @@ resource "aws_glue_catalog_table_optimizer" "test" {
       }
     }
   }
+  depends_on = [aws_iam_role_policy.test]
 }
 `, retentionPeriod))
+}
+
+func testAccCatalogTableOptimizerConfig_orphanFileDeletionConfigurationWithRunRateInHours(rName string, retentionPeriod, runRateInHours int) string {
+	return acctest.ConfigCompose(
+		testAccCatalogTableOptimizerConfig_baseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_table_optimizer" "test" {
+  catalog_id    = data.aws_caller_identity.current.account_id
+  database_name = aws_glue_catalog_database.test.name
+  table_name    = aws_glue_catalog_table.test.name
+  type          = "orphan_file_deletion"
+
+  configuration {
+    role_arn = aws_iam_role.test.arn
+    enabled  = true
+
+    orphan_file_deletion_configuration {
+      iceberg_configuration {
+        orphan_file_retention_period_in_days = %[1]d
+        location                             = "s3://${aws_s3_bucket.bucket.bucket}/files/"
+        run_rate_in_hours                    = %[2]d
+      }
+    }
+  }
+  depends_on = [aws_iam_role_policy.test]
+}
+`, retentionPeriod, runRateInHours))
 }

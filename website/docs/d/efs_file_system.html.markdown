@@ -33,6 +33,7 @@ data "aws_efs_file_system" "by_tag" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Optional) ID that identifies the file system (e.g., fs-ccfc0d65).
 * `creation_token` - (Optional) Restricts the list to the file system with this creation token.
 * `tags` - (Optional) Restricts the list to the file system with these tags.

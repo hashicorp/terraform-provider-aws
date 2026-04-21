@@ -36,6 +36,7 @@ resource "aws_guardduty_member" "member" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) AWS account ID for member account.
 * `detector_id` - (Required) The detector ID of the GuardDuty account where you want to create member accounts.
 * `email` - (Required) Email address for member account.
@@ -47,7 +48,6 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the GuardDuty member
 * `relationship_status` - The status of the relationship between the member account and its primary account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).
 
 ## Timeouts

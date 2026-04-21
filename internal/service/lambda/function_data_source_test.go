@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,11 +15,11 @@ import (
 
 func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,12 +47,14 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "response_streaming_invoke_arn", resourceName, "response_streaming_invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRole, resourceName, names.AttrRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, "runtime", resourceName, "runtime"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_job_arn", resourceName, "signing_job_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_profile_version_arn", resourceName, "signing_profile_version_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_hash", resourceName, "code_sha256"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_size", resourceName, "source_code_size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_kms_key_arn", resourceName, "source_kms_key_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTimeout, resourceName, names.AttrTimeout),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tracing_config.#", resourceName, "tracing_config.#"),
@@ -67,11 +68,11 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -91,13 +92,40 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
+func TestAccLambdaFunctionDataSource_versionWithReservedConcurrency(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_versionWithReservedConcurrency(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -118,11 +146,11 @@ func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -143,12 +171,12 @@ func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	lambdaAliasResourceName := "aws_lambda_alias.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -168,11 +196,11 @@ func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -194,11 +222,11 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -220,11 +248,11 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -249,11 +277,11 @@ func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -273,13 +301,13 @@ func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
 	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccImageLatestPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -297,11 +325,11 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -318,11 +346,11 @@ func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -341,7 +369,7 @@ func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_loggingConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 	checkFunc := resource.ComposeAggregateTestCheckFunc(
@@ -353,7 +381,7 @@ func TestAccLambdaFunctionDataSource_loggingConfig(t *testing.T) {
 		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.system_log_level", resourceName, "logging_config.0.system_log_level"),
 	)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -365,6 +393,76 @@ func TestAccLambdaFunctionDataSource_loggingConfig(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_loggingConfigText(rName),
 				Check:  checkFunc,
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_tenancyConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_tenancyConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tenancy_config.#", resourceName, "tenancy_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tenancy_config.0.tenant_isolation_mode", resourceName, "tenancy_config.0.tenant_isolation_mode"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_durableConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_durableConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "durable_config.#", resourceName, "durable_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "durable_config.0.execution_timeout", resourceName, "durable_config.0.execution_timeout"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "durable_config.0.retention_period", resourceName, "durable_config.0.retention_period"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_capacityProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_capacityProvider(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "capacity_provider_config.#", resourceName, "capacity_provider_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "capacity_provider_config.0.lambda_managed_instances_capacity_provider_config.0.capacity_provider_arn", resourceName, "capacity_provider_config.0.lambda_managed_instances_capacity_provider_config.0.capacity_provider_arn"),
+				),
 			},
 		},
 	})
@@ -460,6 +558,25 @@ resource "aws_lambda_function" "test" {
   publish       = true
   role          = aws_iam_role.lambda.arn
   runtime       = "nodejs20.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = 1
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_versionWithReservedConcurrency(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = %[1]q
+  handler                        = "exports.example"
+  publish                        = true
+  role                           = aws_iam_role.lambda.arn
+  runtime                        = "nodejs20.x"
+  reserved_concurrent_executions = 10
 }
 
 data "aws_lambda_function" "test" {
@@ -802,4 +919,71 @@ data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
 }
 `, rName, rName+"_custom"))
+}
+
+func testAccFunctionDataSourceConfig_tenancyConfig(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs20.x"
+
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_capacityProvider(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/capacityprovider.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "index.handler"
+  runtime       = "python3.14"
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.test.arn
+    }
+  }
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_durableConfig(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs22.x"
+  durable_config {
+    execution_timeout = 300
+    retention_period  = 7
+  }
+}
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
 }

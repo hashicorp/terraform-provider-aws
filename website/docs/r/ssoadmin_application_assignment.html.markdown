@@ -15,7 +15,7 @@ Terraform resource for managing an AWS SSO Admin Application Assignment.
 
 ```terraform
 resource "aws_ssoadmin_application_assignment" "example" {
-  application_arn = aws_ssoadmin_application.example.application_arn
+  application_arn = aws_ssoadmin_application.example.arn
   principal_id    = aws_identitystore_user.example.user_id
   principal_type  = "USER"
 }
@@ -25,7 +25,7 @@ resource "aws_ssoadmin_application_assignment" "example" {
 
 ```terraform
 resource "aws_ssoadmin_application_assignment" "example" {
-  application_arn = aws_ssoadmin_application.example.application_arn
+  application_arn = aws_ssoadmin_application.example.arn
   principal_id    = aws_identitystore_group.example.group_id
   principal_type  = "GROUP"
 }
@@ -33,8 +33,9 @@ resource "aws_ssoadmin_application_assignment" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_arn` - (Required) ARN of the application.
 * `principal_id` - (Required) An identifier for an object in IAM Identity Center, such as a user or group.
 * `principal_type` - (Required) Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.

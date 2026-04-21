@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package account
 
@@ -20,7 +22,7 @@ func newPrimaryContactDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type primaryContactDataSOurce struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[primaryContactDataSourceModel]
 }
 
 func (d *primaryContactDataSOurce) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

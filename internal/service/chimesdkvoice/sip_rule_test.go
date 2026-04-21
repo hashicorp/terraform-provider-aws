@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -9,13 +9,11 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,21 +21,21 @@ func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipRule *awstypes.SipRule
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSipRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSipRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
+					testAccCheckSipRuleExists(ctx, t, resourceName, chimeSipRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
@@ -60,22 +58,22 @@ func TestAccChimeSDKVoiceSipRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipRule *awstypes.SipRule
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSipRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSipRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipRule(), resourceName),
+					testAccCheckSipRuleExists(ctx, t, resourceName, chimeSipRule),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceSipRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,22 +85,22 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var chimeSipRule *awstypes.SipRule
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSipRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSipRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSipRuleConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
+					testAccCheckSipRuleExists(ctx, t, resourceName, chimeSipRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
@@ -115,7 +113,7 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 			{
 				Config: testAccSipRuleConfig_update(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
+					testAccCheckSipRuleExists(ctx, t, resourceName, chimeSipRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtTrue),
 				),
@@ -129,7 +127,7 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 	})
 }
 
-func testAccCheckSipRuleExists(ctx context.Context, name string, sr *awstypes.SipRule) resource.TestCheckFunc {
+func testAccCheckSipRuleExists(ctx context.Context, t *testing.T, name string, sr *awstypes.SipRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -140,7 +138,7 @@ func testAccCheckSipRuleExists(ctx context.Context, name string, sr *awstypes.Si
 			return fmt.Errorf("no ChimeSdkVoice Sip Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChimeSDKVoiceClient(ctx)
 
 		resp, err := tfchimesdkvoice.FindSIPResourceWithRetry(ctx, false, func() (*awstypes.SipRule, error) {
 			return tfchimesdkvoice.FindSIPRuleByID(ctx, conn, rs.Primary.ID)
@@ -156,19 +154,19 @@ func testAccCheckSipRuleExists(ctx context.Context, name string, sr *awstypes.Si
 	}
 }
 
-func testAccCheckSipRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSipRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkvoice_sip_rule" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ChimeSDKVoiceClient(ctx)
 
 			_, err := tfchimesdkvoice.FindSIPResourceWithRetry(ctx, false, func() (*awstypes.SipRule, error) {
 				return tfchimesdkvoice.FindSIPRuleByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -222,7 +220,7 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
@@ -243,7 +241,7 @@ resource "aws_chimesdkvoice_sip_rule" "test" {
   target_applications {
     priority                 = 1
     sip_media_application_id = aws_chimesdkvoice_sip_media_application.test.id
-    aws_region               = data.aws_region.current.name
+    aws_region               = data.aws_region.current.region
   }
 }
 `, rName))
@@ -261,7 +259,7 @@ resource "aws_chimesdkvoice_sip_rule" "test" {
   target_applications {
     priority                 = 1
     sip_media_application_id = aws_chimesdkvoice_sip_media_application.test.id
-    aws_region               = data.aws_region.current.name
+    aws_region               = data.aws_region.current.region
   }
 }
 `, rName))

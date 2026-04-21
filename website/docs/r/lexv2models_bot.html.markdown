@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `members` - List of bot members in a network to be created. See [`bot_members`](#bot-members).
 * `tags` - List of tags to add to the bot. You can only add tags when you create a bot.
 * `type` - Type of a bot to create. Possible values are `"Bot"` and `"BotNetwork"`.

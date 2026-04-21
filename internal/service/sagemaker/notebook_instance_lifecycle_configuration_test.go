@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -9,33 +9,31 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_create"),
@@ -56,19 +54,19 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) 
 func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -76,10 +74,10 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T)
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
 
-					resource.TestCheckResourceAttr(resourceName, "on_create", itypes.Base64EncodeOnce([]byte("echo bla"))),
-					resource.TestCheckResourceAttr(resourceName, "on_start", itypes.Base64EncodeOnce([]byte("echo blub"))),
+					resource.TestCheckResourceAttr(resourceName, "on_create", inttypes.Base64EncodeOnce([]byte("echo bla"))),
+					resource.TestCheckResourceAttr(resourceName, "on_start", inttypes.Base64EncodeOnce([]byte("echo blub"))),
 				),
 			},
 			{
@@ -94,19 +92,19 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T)
 func TestAccSageMakerNotebookInstanceLifecycleConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -119,7 +117,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -128,7 +126,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -140,20 +138,20 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_tags(t *testing.T) {
 func TestAccSageMakerNotebookInstanceLifecycleConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceNotebookInstanceLifeCycleConfiguration(), resourceName),
+					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, t, resourceName, &lifecycleConfig),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceNotebookInstanceLifeCycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,7 +159,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_disappears(t *testin
 	})
 }
 
-func testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx context.Context, resourceName string, lifecycleConfig *sagemaker.DescribeNotebookInstanceLifecycleConfigOutput) resource.TestCheckFunc {
+func testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx context.Context, t *testing.T, resourceName string, lifecycleConfig *sagemaker.DescribeNotebookInstanceLifecycleConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -172,7 +170,7 @@ func testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx context.Contex
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindNotebookInstanceLifecycleConfigByName(ctx, conn, rs.Primary.ID)
 
@@ -186,18 +184,18 @@ func testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx context.Contex
 	}
 }
 
-func testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_notebook_instance_lifecycle_configuration" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 			_, err := tfsagemaker.FindNotebookInstanceLifecycleConfigByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

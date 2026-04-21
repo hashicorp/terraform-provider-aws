@@ -43,6 +43,7 @@ resource "aws_vpc" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipam_pool_id` - (Optional) ID of the IPAM pool you would like information on.
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -69,7 +70,15 @@ This data source exports the following attributes in addition to the arguments a
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
 * `publicly_advertisable` - Defines whether or not IPv6 pool space is publicly advertisable over the internet.
 * `source_ipam_pool_id` - ID of the source IPAM pool.
+* `source_resource` - Resource used to create the resource planning pool.
 * `tags` - Map of tags to assigned to the resource.
+
+### source_resource
+
+* `resource_id` - (Required) ID of the resource.
+* `resource_owner` - (Required) Owner of the resource.
+* `resource_region` - (Required) Region where the resource exists. Must match the `locale` of the parent IPAM Pool.
+* `resource_type` - (Required) Type of the resource. (`vpc`)
 
 ## Timeouts
 
